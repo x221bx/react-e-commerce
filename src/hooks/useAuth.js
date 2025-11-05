@@ -1,5 +1,6 @@
+// src/features/auth/authSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { auth, db } from "../../services/firebase";
+import { auth, db } from "../services/firebase";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -53,38 +54,19 @@ const mapAuthError = (e, ctx = "generic") => {
 };
 
 // --- Thunks ---
-
-// ✅ تسجيل الدخول والتحقق من نوع المستخدم
 export const signInWithIdentifier = createAsyncThunk(
   "auth/signInWithIdentifier",
   async ({ identifier, password }, { rejectWithValue }) => {
     try {
       const email = await resolveEmail(identifier);
-      const cred = await signInWithEmailAndPassword(auth, email, password);
-
-      // جلب بيانات المستخدم من Firestore
-      const userRef = doc(db, "users", cred.user.uid);
-      const userSnap = await getDoc(userRef);
-
-      if (!userSnap.exists()) {
-        throw new Error("User document not found in Firestore");
-      }
-
-      const userData = userSnap.data();
-      return {
-        uid: cred.user.uid,
-        email: cred.user.email,
-        name: userData.name || cred.user.displayName,
-          isAdmin: userData.isAdmin || false,
-          role: userData.isAdmin ? "admin" : "user", // ✨ تمت الإضافة هنا
-      };
+      await signInWithEmailAndPassword(auth, email, password);
+      return true;
     } catch (e) {
       return rejectWithValue(mapAuthError(e, "login"));
     }
   }
 );
 
-// ✅ تسجيل مستخدم جديد
 export const signUp = createAsyncThunk(
   "auth/signUp",
   async ({ name, email, username, password }, { rejectWithValue }) => {
@@ -94,6 +76,7 @@ export const signUp = createAsyncThunk(
 
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(cred.user, { displayName: name });
+
       await setDoc(doc(db, "users", cred.user.uid), {
         email,
         name,
@@ -149,14 +132,8 @@ const slice = createSlice({
     },
   },
   extraReducers: (b) => {
-    b.addCase(signInWithIdentifier.fulfilled, (s, a) => {
-      s.user = a.payload;
-      s.isInitialized = true;
-      s.error = null;
-    });
     b.addCase(signInWithIdentifier.rejected, (s, a) => {
       s.error = a.payload;
-      s.isInitialized = true;
     });
     b.addCase(signUp.rejected, (s, a) => {
       s.error = a.payload;
@@ -166,7 +143,6 @@ const slice = createSlice({
     });
     b.addCase(signOut.fulfilled, (s) => {
       s.user = null;
-      s.isInitialized = false;
     });
   },
 });
@@ -178,3 +154,4 @@ export default slice.reducer;
 // --- Selectors ---
 export const selectCurrentUser = (s) => s.auth.user;
 export const selectIsAuthInitialized = (s) => s.auth.isInitialized;
+// export const selectAuthError = (s) => s.auth.error;
