@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion as Motion } from "framer-motion";
 import { UseTheme } from "../../theme/ThemeProvider";
 
 export default function AiAssistant() {
@@ -12,12 +13,28 @@ export default function AiAssistant() {
 
   const send = (q) => alert(`AI assistant: ${q}`);
 
+  // ✨ Animation
+  const fadeUp = {
+    hidden: { opacity: 0, y: 40 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6, ease: "easeOut" },
+    },
+  };
+
   return (
-    <aside className="flex-1 lg:max-w-md transition-all duration-500">
+    <Motion.aside
+      variants={fadeUp}
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: true, amount: 0.3 }}
+      className="flex-1 lg:max-w-md transition-all duration-500"
+    >
       <div
         className={`p-6 rounded-2xl h-full flex flex-col shadow-lg transition-colors duration-500 ${
           theme === "dark"
-            ? "bg-[#0e1b1b]/95 text-[#B8E4E6] shadow-[0_3px_20px_rgba(184,228,230,0.1)]"
+            ? "bg-[#142121]/95 text-[#B8E4E6] shadow-[0_3px_20px_rgba(184,228,230,0.1)]"
             : "bg-[#e7f3e7] text-[#1a1a1a] shadow-[0_3px_12px_rgba(0,0,0,0.08)]"
         }`}
       >
@@ -32,9 +49,7 @@ export default function AiAssistant() {
 
         <p
           className={`mt-2 text-sm ${
-            theme === "dark"
-              ? "text-[#B8E4E6]/80"
-              : "text-gray-700"
+            theme === "dark" ? "text-[#B8E4E6]/80" : "text-gray-700"
           }`}
         >
           Our AI farming assistant is here to help. Get instant answers to your
@@ -45,7 +60,7 @@ export default function AiAssistant() {
         <div
           className={`mt-4 flex-grow flex flex-col justify-between rounded-xl p-4 shadow-inner transition-colors duration-500 ${
             theme === "dark"
-              ? "bg-[#1b2a2a] text-[#B8E4E6]"
+              ? "bg-[#1d2e2e] text-[#B8E4E6]"
               : "bg-[#f8fff8] text-gray-800"
           }`}
         >
@@ -53,17 +68,17 @@ export default function AiAssistant() {
           <div className="flex-grow space-y-2">
             <p
               className={`text-xs ${
-                theme === "dark"
-                  ? "text-[#B8E4E6]/70"
-                  : "text-gray-500"
+                theme === "dark" ? "text-[#B8E4E6]/70" : "text-gray-500"
               }`}
             >
               Try a prompt:
             </p>
 
             {presets.map((t, i) => (
-              <button
+              <Motion.button
                 key={i}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
                 onClick={() => send(t)}
                 className={`w-full text-left text-sm rounded-md p-2 transition-colors duration-300 ${
                   theme === "dark"
@@ -72,7 +87,7 @@ export default function AiAssistant() {
                 }`}
               >
                 “{t}”
-              </button>
+              </Motion.button>
             ))}
           </div>
 
@@ -84,7 +99,7 @@ export default function AiAssistant() {
             }}
             className={`mt-4 flex items-center gap-2 rounded-lg p-2 border transition-colors duration-500 ${
               theme === "dark"
-                ? "border-[#B8E4E6]/30 bg-[#0e1b1b]/60 focus-within:ring-2 focus-within:ring-[#B8E4E6]/60"
+                ? "border-[#B8E4E6]/30 bg-[#142121]/60 focus-within:ring-2 focus-within:ring-[#B8E4E6]/60"
                 : "border-gray-300 bg-[#f2faf2] focus-within:ring-2 focus-within:ring-[#2F7E80]/40"
             }`}
           >
@@ -99,8 +114,10 @@ export default function AiAssistant() {
               }`}
             />
 
-            <button
+            <Motion.button
               type="submit"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               className={`rounded-md p-2 transition-colors duration-300 ${
                 theme === "dark"
                   ? "bg-[#B8E4E6] text-[#0e1b1b] hover:bg-[#a7d8da]"
@@ -108,10 +125,10 @@ export default function AiAssistant() {
               }`}
             >
               <span className="material-symbols-outlined text-base">send</span>
-            </button>
+            </Motion.button>
           </form>
         </div>
       </div>
-    </aside>
+    </Motion.aside>
   );
 }

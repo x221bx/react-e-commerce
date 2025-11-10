@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { motion as Motion } from "framer-motion";
 import { Heart } from "lucide-react";
 import { UseTheme } from "../../theme/ThemeProvider";
+import Button from "../ui/Button";
 
 export default function ProductCard({
   product,
@@ -26,29 +27,30 @@ export default function ProductCard({
       isFav ? prev.filter((n) => n !== product.name) : [...prev, product.name]
     );
 
-  const fadeScale = {
-    hidden: { opacity: 0, scale: 0.9, y: 20 },
-    show: {
+  // ✨ أنيميشن الظهور الناعم من تحت
+  const fadeUp = {
+    hidden: { opacity: 0, y: 40 },
+    show: (delay = 0) => ({
       opacity: 1,
-      scale: 1,
       y: 0,
-      transition: { duration: 0.4, type: "spring", delay: index * 0.08 },
-    },
+      transition: { duration: 0.6, delay, ease: "easeOut" },
+    }),
   };
 
   return (
     <Motion.div
-      variants={fadeScale}
       initial="hidden"
-      animate="show"
+      whileInView="show"
+      viewport={{ once: true, amount: 0.3 }}
+      variants={fadeUp}
+      custom={index * 0.1}
       whileHover={{ y: -4, scale: 1.02 }}
       transition={{ type: "spring", stiffness: 200, damping: 15 }}
-      className={`relative flex flex-col gap-3 p-4 rounded-xl transition-all duration-300
-        shadow-[0_3px_15px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_25px_rgba(184,228,230,0.08)]
+      className={`relative flex flex-col gap-3 p-4 rounded-xl transition-all duration-500 overflow-hidden
         ${
           theme === "dark"
-            ? "bg-[#0e1b1b]/95 text-[#B8E4E6]"
-            : "bg-white text-[#1a1a1a]"
+            ? "bg-[#0e1b1b]/95 text-[#B8E4E6] shadow-[0_4px_20px_rgba(184,228,230,0.08)] hover:shadow-[0_6px_25px_rgba(184,228,230,0.15)]"
+            : "bg-white text-[#1a1a1a] shadow-[0_3px_15px_rgba(0,0,0,0.1)] hover:shadow-[0_5px_20px_rgba(0,0,0,0.15)]"
         }`}
     >
       {/* ❤️ Favorite Button */}
@@ -80,43 +82,42 @@ export default function ProductCard({
       {/* 🖼️ Product Image */}
       <Motion.div
         whileHover={{ scale: 1.05 }}
-        transition={{ duration: 0.3 }}
+        transition={{ duration: 0.4 }}
         className="relative z-10 w-full aspect-square bg-center bg-cover rounded-lg shadow-inner"
         style={{ backgroundImage: `url('${product.img}')` }}
       />
 
       {/* 📝 Product Info */}
       <div className="flex flex-col gap-2 text-center relative z-10">
-        <p
+        <Motion.p
+          variants={fadeUp}
+          custom={0.2}
           className={`text-base font-semibold ${
             theme === "dark" ? "text-[#B8E4E6]" : "text-[#1a1a1a]"
           }`}
         >
           {product.name}
-        </p>
+        </Motion.p>
 
-        <p
+        <Motion.p
+          variants={fadeUp}
+          custom={0.3}
           className={`text-lg font-bold ${
             theme === "dark" ? "text-[#B8E4E6]" : "text-[#2F7E80]"
           }`}
         >
           ${product.price}
-        </p>
+        </Motion.p>
 
         {/* 🛒 Add Button */}
-        <Motion.button
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => onAdd(product)}
-          className={`w-full h-10 rounded-lg font-semibold transition-all duration-300
-            ${
-              theme === "dark"
-                ? "bg-[#B8E4E6] text-[#0e1b1b] hover:bg-[#a7d8da]"
-                : "bg-[#2F7E80] text-white hover:bg-[#256b6d]"
-            }`}
-        >
-          Add to Cart
-        </Motion.button>
+        <Motion.div variants={fadeUp} custom={0.4}>
+          <Button
+            text="Add to Cart"
+            full
+            onClick={() => onAdd(product)}
+            className="mt-1"
+          />
+        </Motion.div>
       </div>
     </Motion.div>
   );

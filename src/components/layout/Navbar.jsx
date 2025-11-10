@@ -5,6 +5,7 @@ import { selectCurrentUser, signOut } from "../../features/auth/authSlice";
 import { UseTheme } from "../../theme/ThemeProvider";
 import { motion as Motion, AnimatePresence } from "framer-motion";
 import SearchBar from "../search/SearchBar";
+import Button from "../../components/ui/Button"; // ✅ استيراد الزرار الموحد
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
@@ -108,28 +109,37 @@ export default function Navbar() {
           {/* 👤 Auth */}
           {user ? (
             <>
-              {/* ✅ الترحيب المخصص */}
               <span className="hidden lg:flex text-sm bg-white/15 px-3 py-1 rounded-full items-center text-[#B8E4E6]">
                 {user.role === "admin"
                   ? "Hi, Admin 👑"
                   : `Hi, ${user.name || "User"}`}
               </span>
 
-              <button
-                onClick={handleLogout}
-                className="bg-white text-[#0e1b1b] px-3 py-1 rounded-lg text-sm font-semibold hover:bg-[#B8E4E6]/90 transition"
-              >
-                Logout
-              </button>
+              {/* ✅ زرار Logout كمبوننت موحد */}
+             <Button
+              text="Logout"
+              onClick={handleLogout}
+              className={`px-3 py-1 rounded-md text-[13px] font-medium transition-all duration-300
+                ${
+                  theme === "dark"
+                    ? "bg-[#2F7E80]/70 text-[#0e1b1b] hover:bg-[#2F7E80]/90" // ← النص بقى غامق في الدارك
+                    : "bg-[#2F7E80] text-white hover:bg-[#256b6d]"
+                }`}
+             />
             </>
           ) : (
             <>
-              <NavLink
-                to="/login"
-                className="bg-white text-[#0e1b1b] px-3 py-1 rounded-lg text-sm font-semibold hover:bg-[#B8E4E6]/90 transition"
-              >
-                Login
-              </NavLink>
+              {/* ✅ زرار Login كمبوننت موحد */}
+              <Button
+                text="Login"
+                onClick={() => navigate("/login")}
+                className={`px-3 py-1 rounded-md text-[13px] font-medium transition-all duration-300
+                  ${
+                    theme === "dark"
+                      ? "bg-[#2F7E80]/70 text-[#0e1b1b] hover:bg-[#2F7E80]/90" // ← نفس التعديل هنا
+                      : "bg-[#2F7E80] text-white hover:bg-[#256b6d]"
+                  }`}
+              />
               <NavLink
                 to="/register"
                 className="text-sm font-medium hover:text-white/90 transition"
@@ -190,28 +200,28 @@ export default function Navbar() {
 
               <div className="border-t border-[#B8E4E6]/20 pt-3 mt-2 flex flex-col gap-2">
                 {user ? (
-                  <button
+                  <Button
+                    text="Logout"
                     onClick={() => {
                       handleLogout();
                       setOpen(false);
                     }}
-                    className="text-left py-2 hover:text-white/90 transition"
-                  >
-                    Logout
-                  </button>
+                    className="w-full bg-white text-[#0e1b1b] hover:bg-[#B8E4E6]/90"
+                  />
                 ) : (
                   <>
-                    <NavLink
-                      to="/login"
-                      onClick={() => setOpen(false)}
-                      className="py-2 hover:text-white/90"
-                    >
-                      Login
-                    </NavLink>
+                    <Button
+                      text="Login"
+                      onClick={() => {
+                        navigate("/login");
+                        setOpen(false);
+                      }}
+                      className="w-full bg-white text-[#0e1b1b] hover:bg-[#B8E4E6]/90"
+                    />
                     <NavLink
                       to="/register"
                       onClick={() => setOpen(false)}
-                      className="py-2 hover:text-white/90"
+                      className="py-2 hover:text-white/90 text-center"
                     >
                       Register
                     </NavLink>

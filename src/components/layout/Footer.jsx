@@ -1,12 +1,27 @@
 import { Link } from "react-router-dom";
 import { FaFacebookF, FaInstagram, FaTwitter, FaGlobe } from "react-icons/fa";
 import { UseTheme } from "../../theme/ThemeProvider";
+import { motion as Motion } from "framer-motion";
 
 export default function Footer() {
   const { theme } = UseTheme();
 
+  // ✨ Animation setup
+  const fadeUp = {
+    hidden: { opacity: 0, y: 40 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6, ease: "easeOut" },
+    },
+  };
+
   return (
-    <footer
+    <Motion.footer
+      variants={fadeUp}
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: true, amount: 0.3 }}
       className={`transition-colors duration-300 ${
         theme === "dark"
           ? "bg-[#0e1b1b] text-[#B8E4E6]"
@@ -78,11 +93,14 @@ export default function Footer() {
       {/* 🔸 Copy Rights */}
       <div
         className={`mt-10 pt-5 border-t text-center text-sm transition-colors duration-300 ${
-          theme === "dark" ? "border-gray-700 text-gray-400" : "border-white/30 text-white/80"
+          theme === "dark"
+            ? "border-gray-700 text-gray-400"
+            : "border-white/30 text-white/80"
         }`}
       >
-        © {new Date().getFullYear()} <span className="font-semibold">Farm Vet Shop</span>. All rights reserved.
+        © {new Date().getFullYear()}{" "}
+        <span className="font-semibold">Farm Vet Shop</span>. All rights reserved.
       </div>
-    </footer>
+    </Motion.footer>
   );
 }
