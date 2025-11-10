@@ -1,37 +1,27 @@
 @import "tailwindcss";
 
-:root {
-  --nav-h: 4rem;
+html {
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-@theme {
-  --color-mint-500: oklch(0.72 0.11 178);
+body {
+  @theme {
+    --color-bg-light: #ffffff;
+    --color-text-light: #1a1a1a;
+    --color-bg-dark: #0d1b1b;
+    --color-text-dark: #e7f3eb;
+  }
+
+  background-color: var(--color-bg-light);
+  color: var(--color-text-light);
 }
 
-@keyframes fade-in {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+.dark body {
+  background-color: var(--color-bg-dark);
+  color: var(--color-text-dark);
 }
 
-.animate-fade-in {
-  animation: fade-in .25s ease-out;
-}
-
-
-.fontsStats {
-  font-family: "Buenos Aires Trial", sans-serif;
-  font-weight: 200;
-  font-size: 45px;
-  line-height: 1;
-  background: linear-gradient(90deg, #136cb5 0%, #49bbbd 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  text-fill-color: transparent;
-}
-
-html,
-body,
-#root {
-  height: 100%;
+.dark header {
+  background-color: #0b1818 !important;
+  color: #E9F9F7 !important;
 }

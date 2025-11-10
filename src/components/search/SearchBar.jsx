@@ -1,76 +1,141 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { UseTheme } from "../../theme/ThemeProvider";
 
 export default function SearchBar({
-  value,
-  onChange,
-  data = [],
-  onSelect,
-  placeholder = "Search..."
+  products = [], // 🧩 تمررها من صفحة shop أو من Redux
+  placeholder = "Search products...",
+  onSearch, // ✅ callback (للموبايل علشان يقفل المنيو)
 }) {
+  const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
+  const [results, setResults] = useState([]);
+  const navigate = useNavigate();
+  const { theme } = UseTheme();
 
-  const filtered = value
-    ? data.filter((item) =>
-        item.name.toLowerCase().includes(value.toLowerCase())
-      )
-    : [];
+  // 🔍 تصفية المنتجات حسب الكلمة
+  useEffect(() => {
+    if (query.trim() && products.length > 0) {
+      const filtered = products.filter((item) =>
+        item.name.toLowerCase().includes(query.toLowerCase())
+      );
+      setResults(filtered);
+    } else {
+      setResults([]);
+    }
+  }, [query]);
+
+  // 🧭 عند الضغط على Enter أو زر البحث
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (query.trim()) {
+      navigate(`/shop?search=${encodeURIComponent(query.trim())}`);
+      setFocused(false);
+      setResults([]);
+      if (onSearch) onSearch(query.trim()); // ✅ للموبايل: يقفل المنيو بعد البحث
+    }
+  };
+
+  // 🧠 عند اختيار اقتراح من القائمة
+  const handleSelect = (item) => {
+    setQuery(item.name);
+    navigate(`/shop?search=${encodeURIComponent(item.name)}`);
+    setFocused(false);
+    setResults([]);
+    if (onSearch) onSearch(item.name); // ✅ يقفل المنيو لو في موبايل
+  };
 
   return (
-    <div className="relative w-full">
-      
-      {/* Search box */}
-      <div
-        className="
-          w-full flex items-center gap-3 rounded-xl border border-gray-300 
-          px-4 py-2 bg-white shadow-sm
-          focus-within:border-green-500 focus-within:ring-2 focus-within:ring-green-400/50
-          transition-all duration-200
-        "
+    <div className="relative w-full sm:w-64 md:w-72">
+      {/* 🔎 صندوق البحث */}
+      <form
+        onSubmit={handleSubmit}
+        className={`flex items-center h-10 rounded-lg px-2 transition-all duration-300 border w-full
+          ${
+            theme === "dark"
+              ? "bg-white/10 border-[#B8E4E6]/20 hover:bg-white/20"
+              : "bg-white/15 border-[#B8E4E6]/20 hover:bg-white/25"
+          }`}
       >
-        <span className="material-icons text-green-600 text-xl">search</span>
+        {/* أيقونة البحث */}
+        <span
+          className={`material-symbols-outlined px-2 text-lg transition-colors ${
+            theme === "dark" ? "text-[#B8E4E6]" : "text-[#B8E4E6]"
+          }`}
+        >
+      
+        </span>
 
+        {/* حقل الإدخال */}
         <input
           type="text"
-          value={value}
+          value={query}
           onFocus={() => setFocused(true)}
-          onBlur={() => setTimeout(() => setFocused(false), 150)}
-          onChange={(e) => onChange && onChange(e.target.value)}
+          onBlur={() => setTimeout(() => setFocused(false), 200)}
+          onChange={(e) => setQuery(e.target.value)}
           placeholder={placeholder}
-          className="
-            flex-1 outline-none bg-transparent text-[15px]
-            placeholder:text-gray-400 text-gray-700
-          "
+          className={`flex-1 bg-transparent outline-none text-sm placeholder:opacity-70
+            ${
+              theme === "dark"
+                ? "text-[#B8E4E6] placeholder:text-[#B8E4E6]/70"
+                : "text-[#B8E4E6] placeholder:text-[#B8E4E6]/70"
+            }`}
         />
-      </div>
+      </form>
 
-      {/* Results dropdown */}
-      {focused && value && (
+      {/* ✨ تأثير الفوكس */}
+      {focused && (
         <div
-          className="
-            absolute mt-2 w-full bg-white shadow-lg border rounded-xl 
-            max-h-60 overflow-y-auto z-50 animate-fade-in
-          "
-        >
-          {/* لو مفيش نتائج */}
-          {filtered.length === 0 && (
-            <div className="px-4 py-3 text-sm text-gray-500 text-center select-none">
-              No Results
-            </div>
-          )}
+          className={`absolute inset-0 rounded-lg ring-2 pointer-events-none transition-all duration-300 
+            ${
+              theme === "dark"
+                ? "ring-[#B8E4E6]/40"
+                : "ring-[#B8E4E6]/50"
+            }`}
+        />
+      )}
 
-          {filtered.map((item) => (
+      {/* 🧠 قائمة الاقتراحات */}
+      {focused && results.length > 0 && (
+        <div
+          className={`absolute mt-2 w-full rounded-lg shadow-lg border max-h-56 overflow-y-auto z-50 transition-all
+            ${
+              theme === "dark"
+                ? "bg-[#0e1b1b] border-[#B8E4E6]/30"
+                : "bg-white border-[#B8E4E6]/30"
+            }`}
+        >
+          {results.map((item) => (
             <button
               key={item.id}
-              onMouseDown={() => onSelect && onSelect(item)}
-              className="
-                w-full text-left px-4 py-2 hover:bg-green-50 transition
-                flex items-center gap-2
-              "
+              onMouseDown={() => handleSelect(item)}
+              className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 transition-colors
+                ${
+                  theme === "dark"
+                    ? "text-[#B8E4E6] hover:bg-[#B8E4E6]/10"
+                    : "text-[#142727] hover:bg-[#B8E4E6]/20"
+                }`}
             >
-              <span className="material-icons text-green-500 text-lg">inventory_2</span>
-              <span className="text-gray-700">{item.name}</span>
+              <span className="material-symbols-outlined text-base opacity-70">
+                inventory_2
+              </span>
+              {item.name}
             </button>
           ))}
+        </div>
+      )}
+
+      {/* ⚠️ لو مفيش نتائج */}
+      {focused && query.trim() && results.length === 0 && (
+        <div
+          className={`absolute mt-2 w-full rounded-lg shadow-md border px-4 py-2 text-sm text-center z-50
+            ${
+              theme === "dark"
+                ? "bg-[#0e1b1b] border-[#B8E4E6]/30 text-[#B8E4E6]/80"
+                : "bg-white border-[#B8E4E6]/30 text-[#142727]/80"
+            }`}
+        >
+          No results found
         </div>
       )}
     </div>
