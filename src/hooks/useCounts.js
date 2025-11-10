@@ -4,6 +4,7 @@ import {
   query,
   where,
   getCountFromServer,
+<<<<<<< HEAD
   getDocs,
 } from "firebase/firestore";
 import { db } from "../services/firebase.js";
@@ -11,6 +12,12 @@ import { db } from "../services/firebase.js";
 /* ----------------------------------------
  🛍️ عدد كل المنتجات
 ---------------------------------------- */
+=======
+} from "firebase/firestore";
+import { db } from "../services/firebase.js";
+
+// عدد كل المنتجات
+>>>>>>> 2bf9a10 (feat(admin): setup admin dashboard layout and routing)
 export function useProductsCount() {
   return useQuery({
     queryKey: ["count", "products", "total"],
@@ -23,9 +30,13 @@ export function useProductsCount() {
   });
 }
 
+<<<<<<< HEAD
 /* ----------------------------------------
  ✅ عدد المنتجات المتوفرة فقط
 ---------------------------------------- */
+=======
+// عدد المنتجات المتوفرة فقط
+>>>>>>> 2bf9a10 (feat(admin): setup admin dashboard layout and routing)
 export function useProductsAvailableCount() {
   return useQuery({
     queryKey: ["count", "products", "available"],
@@ -41,9 +52,13 @@ export function useProductsAvailableCount() {
   });
 }
 
+<<<<<<< HEAD
 /* ----------------------------------------
  🏷️ عدد التصنيفات (زراعية / بيطرية)
 ---------------------------------------- */
+=======
+// عدد التصنيفات (الزراعية أو البيطرية)
+>>>>>>> 2bf9a10 (feat(admin): setup admin dashboard layout and routing)
 export function useCategoriesCount() {
   return useQuery({
     queryKey: ["count", "categories", "total"],
@@ -55,6 +70,7 @@ export function useCategoriesCount() {
     staleTime: 15_000,
   });
 }
+<<<<<<< HEAD
 
 /* ----------------------------------------
  👥 عدد المستخدمين الكلي
@@ -104,3 +120,5 @@ export function useUsersStats() {
     staleTime: 30_000,
   });
 }
+=======
+>>>>>>> 2bf9a10 (feat(admin): setup admin dashboard layout and routing)

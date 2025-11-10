@@ -1,16 +1,8 @@
-import tailwindcss from "@tailwindcss/vite";
-import lineClamp from "@tailwindcss/line-clamp";
-
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,jsx,ts,tsx}",
-  ],
+  darkMode: 'class',
   theme: {
     extend: {},
   },
-  plugins: [
-    lineClamp,
-  ],
+  plugins: [],
 };

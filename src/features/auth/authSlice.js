@@ -71,14 +71,12 @@ export const signInWithIdentifier = createAsyncThunk(
       }
 
       const userData = userSnap.data();
-
-      // ✅ هنا الإضافة الجديدة فقط
       return {
         uid: cred.user.uid,
         email: cred.user.email,
         name: userData.name || cred.user.displayName,
-        isAdmin: userData.isAdmin || false,
-        role: userData.isAdmin ? "admin" : "user", // ✨ تمت الإضافة هنا
+          isAdmin: userData.isAdmin || false,
+          role: userData.isAdmin ? "admin" : "user", // ✨ تمت الإضافة هنا
       };
     } catch (e) {
       return rejectWithValue(mapAuthError(e, "login"));
@@ -96,8 +94,6 @@ export const signUp = createAsyncThunk(
 
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(cred.user, { displayName: name });
-
-      // 👇 المستخدم الجديد مش أدمن افتراضيًا
       await setDoc(doc(db, "users", cred.user.uid), {
         email,
         name,
