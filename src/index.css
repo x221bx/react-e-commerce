@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+:root {
+  --nav-h: 4rem;
+}
+
+@theme {
+  --color-mint-500: oklch(0.72 0.11 178);
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in {
+  animation: fade-in .25s ease-out;
+}
+
+
+.fontsStats {
+  font-family: "Buenos Aires Trial", sans-serif;
+  font-weight: 200;
+  font-size: 45px;
+  line-height: 1;
+  background: linear-gradient(90deg, #136cb5 0%, #49bbbd 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
