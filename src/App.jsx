@@ -1,18 +1,20 @@
 import { Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./Authcomponents/ProtectedRoute";
 import Navbar from "./components/layout/Navbar";
+import { Toaster } from "react-hot-toast";
 
-// auth
+// auth pages
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Reset from "./pages/Reset";
 
-// public
+// public pages
 import Home from "./pages/Home";
-import Shop from "./pages/Shop"; // 👈 مؤقتًا فاضية
-import Favorites from "./pages/Favorites"; // 👈 جديدة
-
-// admin
+import Products from "./pages/Products";
+import Favorites from "./pages/Favorites";
+import Cart from "./pages/Cart";
+import ProductDetails from "./pages/ProductDetails";
+// admin pages
 import AdminLayout from "./admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminProducts from "./pages/admin/AdminProducts";
@@ -22,26 +24,25 @@ import AdminCategories from "./pages/admin/AdminCategories";
 export default function App() {
   return (
     <div className="min-h-screen transition-colors duration-300">
+      {/* Navbar */}
       <Navbar />
+
+      {/* Toast Notifications */}
+      <Toaster position="top-right" reverseOrder={false} />
+
+      {/* Routes */}
       <Routes>
+        {/* Public Routes */}
         <Route path="/" element={<Home />} />
-        <Route path="/shop" element={<Shop />} />
-
-        {/* 🧡 Favorites محمية */}
-        <Route
-          path="/favorites"
-          element={
-            <ProtectedRoute>
-              <Favorites />
-            </ProtectedRoute>
-          }
-        />
-
+        <Route path="/products" element={<Products />} />
+        <Route path="/favorites" element={<Favorites />} />
+        <Route path="/products/:id" element={<ProductDetails />} />
+        <Route path="/cart" element={<Cart />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/reset" element={<Reset />} />
 
-        {/* 🛠️ Admin Routes */}
+        {/* Admin Routes */}
         <Route element={<ProtectedRoute requireAdmin={true} />}>
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
@@ -52,7 +53,7 @@ export default function App() {
           </Route>
         </Route>
 
-        {/* 🚫 Forbidden Page */}
+        {/* Forbidden */}
         <Route
           path="/403"
           element={
