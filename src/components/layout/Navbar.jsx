@@ -116,16 +116,16 @@ export default function Navbar() {
               </span>
 
               {/* ✅ زرار Logout كمبوننت موحد */}
-             <Button
-              text="Logout"
-              onClick={handleLogout}
-              className={`px-3 py-1 rounded-md text-[13px] font-medium transition-all duration-300
+              <Button
+                text="Logout"
+                onClick={handleLogout}
+                className={`px-3 py-1 rounded-md text-[13px] font-medium transition-all duration-300
                 ${
                   theme === "dark"
                     ? "bg-[#2F7E80]/70 text-[#0e1b1b] hover:bg-[#2F7E80]/90" // ← النص بقى غامق في الدارك
                     : "bg-[#2F7E80] text-white hover:bg-[#256b6d]"
                 }`}
-             />
+              />
             </>
           ) : (
             <>

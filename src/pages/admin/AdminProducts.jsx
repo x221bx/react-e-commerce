@@ -149,7 +149,7 @@ export default function AdminProducts() {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-sm shadow-sm focus:border-[#2B7A0B] focus:outline-none focus:ring-2 focus:ring-[#2B7A0B]/20"
+            className="rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-sm shadow-sm focus:border-[#203232] focus:outline-none focus:ring-2 focus:ring-[#2B7A0B]/20"
           >
             {SORT_FIELDS.map((s) => (
               <option key={s.value} value={s.value}>
@@ -434,7 +434,7 @@ function ResponsiveStatusFilter({ value, onChange }) {
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-sm shadow-sm focus:border-[#2B7A0B] focus:outline-none focus:ring-2 focus:ring-[#2B7A0B]/20"
+          className="rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-sm shadow-sm focus:border-[#203232] focus:outline-none focus:ring-2 focus:ring-[#2B7A0B]/20"
         >
           {items.map((it) => (
             <option key={it.value} value={it.value}>
@@ -457,7 +457,7 @@ function ResponsiveStatusFilter({ value, onChange }) {
                   className={[
                     "whitespace-nowrap px-3 py-1.5 text-sm font-medium transition",
                     active
-                      ? "bg-[#2B7A0B]/10 text-[#205F09] ring-1 ring-[#2B7A0B]/30"
+                      ? "bg-[#2B7A0B]/10 text-[#203232] ring-1 ring-[#2B7A0B]/30"
                       : "text-gray-700 hover:bg-[#2B7A0B]/5",
                   ].join(" ")}
                 >
