@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+html {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body {
+  @theme {
+    --color-bg-light: #ffffff;
+    --color-text-light: #1a1a1a;
+    --color-bg-dark: #0d1b1b;
+    --color-text-dark: #e7f3eb;
+  }
+
+  background-color: var(--color-bg-light);
+  color: var(--color-text-light);
+}
+
+.dark body {
+  background-color: var(--color-bg-dark);
+  color: var(--color-text-dark);
+}
+
+.dark header {
+  background-color: #0b1818 !important;
+  color: #E9F9F7 !important;
+}
