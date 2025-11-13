@@ -8,7 +8,9 @@ import {
 } from "firebase/firestore";
 import { db } from "../services/firebase.js";
 
-// ✅ عدد كل المنتجات
+/* ----------------------------------------
+ 🛍️ عدد كل المنتجات
+---------------------------------------- */
 export function useProductsCount() {
   return useQuery({
     queryKey: ["count", "products", "total"],
@@ -21,7 +23,9 @@ export function useProductsCount() {
   });
 }
 
-// ✅ عدد المنتجات المتوفرة فقط
+/* ----------------------------------------
+ ✅ عدد المنتجات المتوفرة فقط
+---------------------------------------- */
 export function useProductsAvailableCount() {
   return useQuery({
     queryKey: ["count", "products", "available"],
@@ -37,7 +41,9 @@ export function useProductsAvailableCount() {
   });
 }
 
-// ✅ عدد التصنيفات
+/* ----------------------------------------
+ 🏷️ عدد التصنيفات (زراعية / بيطرية)
+---------------------------------------- */
 export function useCategoriesCount() {
   return useQuery({
     queryKey: ["count", "categories", "total"],
@@ -50,7 +56,9 @@ export function useCategoriesCount() {
   });
 }
 
-// ✅ عدد المستخدمين
+/* ----------------------------------------
+ 👥 عدد المستخدمين الكلي
+---------------------------------------- */
 export function useUsersCount() {
   return useQuery({
     queryKey: ["count", "users", "total"],
@@ -63,29 +71,35 @@ export function useUsersCount() {
   });
 }
 
-// ✅ إحصائيات المستخدمين (بيانات وهمية مؤقتًا)
+/* ----------------------------------------
+ 📈 إحصائيات المستخدمين (Daily & Monthly)
+---------------------------------------- */
 export function useUsersStats() {
   return useQuery({
-    queryKey: ["stats", "users"],
+    queryKey: ["users-stats"],
     queryFn: async () => {
-      const snapshot = await getDocs(collection(db, "users"));
-      const users = snapshot.docs.map((doc) => doc.data());
+      const snap = await getDocs(collection(db, "users"));
+      const users = snap.docs.map((d) => d.data());
 
-      const statsMap = {};
-      users.forEach((user) => {
-        const date = user.createdAt?.toDate?.() || new Date();
-        const month = date.toLocaleString("default", { month: "short" });
-        const year = date.getFullYear();
-        const key = `${month}-${year}`;
-        if (!statsMap[key]) {
-          statsMap[key] = { date: key, daily: 0, monthly: 0, yearly: 0 };
-        }
-        statsMap[key].daily += 1;
-        statsMap[key].monthly += 1;
-        statsMap[key].yearly += 1;
+      // 🗓️ تجميع حسب التاريخ (اليوم)
+      const daily = {};
+      users.forEach((u) => {
+        const date = new Date(
+          u.createdAt?.seconds ? u.createdAt.seconds * 1000 : Date.now()
+        )
+          .toISOString()
+          .split("T")[0]; // YYYY-MM-DD
+        daily[date] = (daily[date] || 0) + 1;
       });
 
-      return Object.values(statsMap);
+      // 📅 تحويل البيانات لتنسيق الرسم البياني
+      const data = Object.entries(daily).map(([date, count]) => ({
+        date,
+        daily: count,
+        monthly: count * 30, // تمثيل تقريبي للزيادة الشهرية
+      }));
+
+      return data.sort((a, b) => new Date(a.date) - new Date(b.date));
     },
     staleTime: 30_000,
   });
