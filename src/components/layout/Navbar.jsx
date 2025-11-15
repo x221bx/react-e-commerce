@@ -31,7 +31,6 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // 🎨 Navbar background
   const navbarBg =
     theme === "dark"
       ? scrolled
@@ -40,6 +39,12 @@ export default function Navbar() {
       : scrolled
       ? "bg-[#101d1d]/85 text-[#B8E4E6] backdrop-blur-md"
       : "bg-[#142727]/85 text-[#B8E4E6] backdrop-blur-md";
+
+  // ✅ إجمالي عدد المنتجات في الكارت (بالـ quantity)
+  const cartCount = cart.reduce(
+    (sum, item) => sum + (item.quantity || 1),
+    0
+  );
 
   return (
     <header
@@ -126,9 +131,9 @@ export default function Navbar() {
             className="relative h-10 w-10 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center transition"
           >
             <FiShoppingCart size={20} />
-            {cart.length > 0 && (
+            {cartCount > 0 && (
               <span className="absolute -top-1 -right-1 bg-cyan-600/65 text-xs rounded-full px-1.5 py-0.5">
-                {cart.length}
+                {cartCount}
               </span>
             )}
           </button>

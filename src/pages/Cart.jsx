@@ -1,7 +1,11 @@
-// src/pages/Cart.jsx
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { removeFromCart, clearCart } from "../features/cart/cartSlice";
+import {
+  removeFromCart,
+  clearCart,
+  addToCart,
+  decreaseQuantity,
+} from "../features/cart/cartSlice";
 import { Link } from "react-router-dom";
 import { FiTrash2, FiShoppingCart } from "react-icons/fi";
 
@@ -9,7 +13,11 @@ export default function Cart() {
   const dispatch = useDispatch();
   const { items } = useSelector((state) => state.cart);
 
-  const totalPrice = items.reduce((sum, item) => sum + (item.price || 0), 0);
+  const totalPrice = items.reduce(
+    (sum, item) =>
+      sum + Number(item.price || 0) * (item.quantity || 1),
+    0
+  );
 
   return (
     <div className="min-h-screen bg-[#f5fff5] text-[#203232]">
@@ -32,20 +40,42 @@ export default function Cart() {
                     className="py-4 flex flex-col md:flex-row items-center gap-4"
                   >
                     <img
-                      src={
-                        item.thumbnailUrl ||
-                        "https://via.placeholder.com/150?text=No+Image"
-                      }
-                      alt={item.title}
+                      src={item.thumbnailUrl || item.img}
+                      alt={item.title || item.name}
                       className="w-40 h-40 rounded-lg object-cover border border-gray-200"
                     />
+
                     <div className="flex-1 text-center md:text-left">
-                      <h3 className="text-lg font-semibold">{item.title}</h3>
-                      <p className="text-sm text-gray-500">{item.category}</p>
+                      <h3 className="text-lg font-semibold">
+                        {item.name || item.title}
+                      </h3>
+
                       <p className="font-medium text-[#2d6a4f] mt-1">
-                        {Number(item.price || 0).toLocaleString()} EGP
+                        {Number(item.price).toLocaleString()} EGP
                       </p>
+
+                      {/* Quantity Controls */}
+                      <div className="mt-3 flex items-center justify-center md:justify-start gap-3">
+                        <button
+                          onClick={() => dispatch(decreaseQuantity(item.id))}
+                          className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center text-lg leading-none hover:bg-gray-100 transition"
+                        >
+                          -
+                        </button>
+
+                        <span className="min-w-[40px] text-center font-semibold">
+                          {item.quantity || 1}
+                        </span>
+
+                        <button
+                          onClick={() => dispatch(addToCart(item))}
+                          className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center text-lg leading-none hover:bg-gray-100 transition"
+                        >
+                          +
+                        </button>
+                      </div>
                     </div>
+
                     <button
                       onClick={() => dispatch(removeFromCart(item.id))}
                       className="rounded-xl bg-red-500 text-white px-4 py-2 text-sm font-semibold shadow hover:bg-red-600 transition"
@@ -60,6 +90,7 @@ export default function Cart() {
                 <div className="font-semibold text-lg">
                   Total: {totalPrice.toLocaleString()} EGP
                 </div>
+
                 <div className="flex gap-4 flex-wrap">
                   <button
                     onClick={() => dispatch(clearCart())}
@@ -67,6 +98,7 @@ export default function Cart() {
                   >
                     Clear Cart
                   </button>
+
                   <Link
                     to="/checkout"
                     className="flex items-center gap-2 rounded-xl bg-[#52b788] px-4 py-2 text-sm font-semibold text-white shadow hover:bg-[#40916c] transition"

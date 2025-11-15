@@ -1,11 +1,8 @@
-// src/pages/ProductDetails.jsx
 import { useParams, Link } from "react-router-dom";
-import { useProduct } from "../hooks/useProduct"; // بديل useCourse
+import { useProduct } from "../hooks/useProduct";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  pushFavourites,
-  removeFavourite,
-} from "../features/favorites/favoritesSlice";
+import { toggleFavourite } from "../features/favorites/favoritesSlice";
+
 import { addToCart } from "../features/cart/cartSlice";
 import { FiHeart, FiShoppingCart, FiArrowLeft } from "react-icons/fi";
 import React from "react";
@@ -13,19 +10,22 @@ import React from "react";
 export default function ProductDetails() {
   const { id } = useParams();
   const dispatch = useDispatch();
+
   const favorites = useSelector((state) => state.favorites);
   const cart = useSelector((state) => state.cart.items);
 
-  // Hook لجلب بيانات المنتج الزراعي
+  // ☑️ product.id ممكن يكون رقم — و id من params string
+  const numericId = Number(id);
+
+  // جلب بيانات المنتج
   const { data: product, isLoading, isError, error } = useProduct(id);
 
-  const isFavorite = favorites.some((f) => f.id === id);
-  const inCart = cart.some((c) => c.id === id);
+  const isFavorite = favorites.some((f) => f.id === numericId);
+  const inCart = cart.some((c) => c.id === numericId);
 
   const handleToggleFavorite = () => {
     if (!product) return;
-    if (isFavorite) dispatch(removeFavourite(id));
-    else dispatch(pushFavourites(product));
+    dispatch(toggleFavourite(product));
   };
 
   const handleAddToCart = () => {
@@ -40,10 +40,9 @@ export default function ProductDetails() {
   return (
     <div className="relative min-h-screen text-white px-4 py-12 sm:px-6 lg:px-8">
       {/* Background */}
-
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
-      {/* Breadcrumb / Back */}
+      {/* Breadcrumb */}
       <div className="mb-6">
         <Link
           to="/products"
@@ -60,14 +59,15 @@ export default function ProductDetails() {
           {product.thumbnailUrl ? (
             <img
               src={product.thumbnailUrl}
-              alt={product.title}
-              className="h-90 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+              alt={product.title || product.name}
+              className="h-90 w-full object-cover"
             />
           ) : (
             <div className="grid h-60 w-full place-items-center bg-white/5 text-xs text-white/50">
               No Image
             </div>
           )}
+
           {/* CTA Buttons */}
           <div className="absolute bottom-4 right-4 flex flex-wrap gap-2">
             <button
@@ -97,13 +97,16 @@ export default function ProductDetails() {
 
         {/* Product Info */}
         <div className="p-8 space-y-6">
-          <h1 className="text-3xl font-bold text-white">{product.name}</h1>
+          <h1 className="text-3xl font-bold text-white">
+            {product.name || product.title}
+          </h1>
+
           <p className="text-white/80">{product.description}</p>
 
           <div className="flex flex-wrap items-center gap-4 text-sm">
             <span className="rounded-full bg-[#49BBBD]/20 px-4 py-1 font-medium text-[#49BBBD]">
               Price: {Number(product.price || 0).toLocaleString()}{" "}
-              {product.currency || "USD"}
+              {product.currency || "EGP"}
             </span>
 
             {product.category && (

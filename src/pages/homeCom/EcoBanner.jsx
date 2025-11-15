@@ -1,8 +1,10 @@
 import { motion as Motion } from "framer-motion";
 import { UseTheme } from "../../theme/ThemeProvider";
+import { useNavigate } from "react-router-dom";
 
-export default function HelpBanner({ onClick }) {
+export default function HelpBanner() {
   const { theme } = UseTheme();
+  const navigate = useNavigate();
 
   const fadeUp = {
     hidden: { opacity: 0, y: 30 },
@@ -12,6 +14,8 @@ export default function HelpBanner({ onClick }) {
       transition: { duration: 0.6, delay, ease: "easeOut" },
     }),
   };
+
+  const goTocontsctus = () => navigate("/contactus");
 
   return (
     <section className="my-14">
@@ -35,7 +39,6 @@ export default function HelpBanner({ onClick }) {
             backgroundRepeat: "no-repeat",
           }}
         >
-          {/* النصوص */}
           <div className="flex flex-col gap-4 max-w-xl">
             <Motion.h2
               variants={fadeUp}
@@ -58,13 +61,12 @@ export default function HelpBanner({ onClick }) {
             </Motion.p>
           </div>
 
-          {/* الزرار */}
           <Motion.button
             variants={fadeUp}
             custom={0.6}
             whileHover={{ scale: 1.06 }}
             whileTap={{ scale: 0.95 }}
-            onClick={onClick}
+            onClick={goTocontsctus}
             className={`h-12 px-6 min-w-[180px] rounded-lg font-bold shadow-md transition-colors duration-300 ${
               theme === "dark"
                 ? "bg-[#B8E4E6] text-[#0e1b1b] hover:bg-[#a7d8da]"
