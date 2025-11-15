@@ -14,6 +14,9 @@ import Products from "./pages/Products";
 import Favorites from "./pages/Favorites";
 import Cart from "./pages/Cart";
 import ProductDetails from "./pages/ProductDetails";
+import About from "./pages/About";
+import ContactUs from "./pages/contactus";
+import Checkout from "./pages/Checkout";
 // admin pages
 import AdminLayout from "./admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -41,6 +44,10 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/reset" element={<Reset />} />
+        <Route path="/about" element={<About />} />
+         <Route path="/contactus" element={<ContactUs />} />
+         <Route path="/checkout" element={<Checkout />} />
+
 
         {/* Admin Routes */}
         <Route element={<ProtectedRoute requireAdmin={true} />}>

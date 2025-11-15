@@ -7,7 +7,7 @@ export default function Hero({ title, subtitle, bg }) {
   const { theme } = UseTheme();
   const navigate = useNavigate();
 
-  const handleCTA = () => navigate("/shop");
+  const handleCTA = () => navigate("/products");
 
   // ✨ أنيميشن الفايد البسيط من تحت
   const fadeUp = {
