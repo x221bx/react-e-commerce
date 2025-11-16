@@ -1,6 +1,6 @@
 // src/services/firebase.js
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { getAuth, updateProfile } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
@@ -21,5 +21,6 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app); // المصادقة (تسجيل الدخول / إنشاء حساب)
 export const db = getFirestore(app); // قاعدة بيانات Firestore
 export const storage = getStorage(app); // تخزين الملفات والصور
+export { updateProfile }; // تحديث ملف المستخدم
 
 export default app; // 🔁 تصدير التطبيق نفسه في حال احتاجته ملفات أخرى

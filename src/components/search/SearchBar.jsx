@@ -12,6 +12,18 @@ export default function SearchBar({
   const [results, setResults] = useState([]);
   const navigate = useNavigate();
   const { theme } = UseTheme();
+  const isDark = theme === "dark";
+  const surfaceClasses = isDark
+    ? "bg-white/10 border-[#B8E4E6]/20 hover:bg-white/20"
+    : "bg-white border-slate-200 shadow-sm hover:border-emerald-200";
+  const iconColor = isDark ? "text-[#B8E4E6]" : "text-slate-400";
+  const inputColors = isDark
+    ? "text-[#B8E4E6] placeholder:text-[#B8E4E6]/70"
+    : "text-slate-700 placeholder:text-slate-400";
+  const dropdownSurface = isDark
+    ? "bg-[#0e1b1b] border-[#B8E4E6]/30 text-[#B8E4E6]"
+    : "bg-white border-slate-200 text-slate-700 shadow-lg";
+  const dropdownHover = isDark ? "hover:bg-[#B8E4E6]/10" : "hover:bg-slate-50";
 
   // 🔍 تصفية المنتجات حسب الكلمة
   useEffect(() => {
@@ -50,20 +62,15 @@ export default function SearchBar({
       {/* 🔎 صندوق البحث */}
       <form
         onSubmit={handleSubmit}
-        className={`flex items-center h-10 rounded-lg px-2 transition-all duration-300 border w-full
-          ${
-            theme === "dark"
-              ? "bg-white/10 border-[#B8E4E6]/20 hover:bg-white/20"
-              : "bg-white/15 border-[#B8E4E6]/20 hover:bg-white/25"
-          }`}
+        className={`flex items-center h-10 rounded-lg px-2 transition-all duration-300 border w-full focus-within:ring-2 focus-within:ring-emerald-200/70 dark:focus-within:ring-[#B8E4E6]/40 ${surfaceClasses}`}
+        aria-label="Search products"
       >
         {/* أيقونة البحث */}
         <span
-          className={`material-symbols-outlined px-2 text-lg transition-colors ${
-            theme === "dark" ? "text-[#B8E4E6]" : "text-[#B8E4E6]"
-          }`}
+          className={`material-symbols-outlined px-2 text-lg transition-colors ${iconColor}`}
+          aria-hidden="true"
         >
-      
+          search
         </span>
 
         {/* حقل الإدخال */}
@@ -74,47 +81,27 @@ export default function SearchBar({
           onBlur={() => setTimeout(() => setFocused(false), 200)}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={placeholder}
-          className={`flex-1 bg-transparent outline-none text-sm placeholder:opacity-70
-            ${
-              theme === "dark"
-                ? "text-[#B8E4E6] placeholder:text-[#B8E4E6]/70"
-                : "text-[#B8E4E6] placeholder:text-[#B8E4E6]/70"
-            }`}
+          className={`flex-1 bg-transparent text-sm placeholder:opacity-80 focus:outline-none ${inputColors}`}
         />
       </form>
 
       {/* ✨ تأثير الفوكس */}
       {focused && (
         <div
-          className={`absolute inset-0 rounded-lg ring-2 pointer-events-none transition-all duration-300 
-            ${
-              theme === "dark"
-                ? "ring-[#B8E4E6]/40"
-                : "ring-[#B8E4E6]/50"
-            }`}
+          className={`absolute inset-0 rounded-lg ring-2 pointer-events-none transition-all duration-300 ${isDark ? "ring-[#B8E4E6]/40" : "ring-emerald-100"}`}
         />
       )}
 
       {/* 🧠 قائمة الاقتراحات */}
       {focused && results.length > 0 && (
         <div
-          className={`absolute mt-2 w-full rounded-lg shadow-lg border max-h-56 overflow-y-auto z-50 transition-all
-            ${
-              theme === "dark"
-                ? "bg-[#0e1b1b] border-[#B8E4E6]/30"
-                : "bg-white border-[#B8E4E6]/30"
-            }`}
+          className={`absolute mt-2 w-full rounded-lg border max-h-56 overflow-y-auto z-50 transition-all ${dropdownSurface}`}
         >
           {results.map((item) => (
             <button
               key={item.id}
               onMouseDown={() => handleSelect(item)}
-              className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 transition-colors
-                ${
-                  theme === "dark"
-                    ? "text-[#B8E4E6] hover:bg-[#B8E4E6]/10"
-                    : "text-[#142727] hover:bg-[#B8E4E6]/20"
-                }`}
+              className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 transition-colors ${dropdownHover}`}
             >
               <span className="material-symbols-outlined text-base opacity-70">
                 inventory_2
@@ -128,12 +115,7 @@ export default function SearchBar({
       {/* ⚠️ لو مفيش نتائج */}
       {focused && query.trim() && results.length === 0 && (
         <div
-          className={`absolute mt-2 w-full rounded-lg shadow-md border px-4 py-2 text-sm text-center z-50
-            ${
-              theme === "dark"
-                ? "bg-[#0e1b1b] border-[#B8E4E6]/30 text-[#B8E4E6]/80"
-                : "bg-white border-[#B8E4E6]/30 text-[#142727]/80"
-            }`}
+          className={`absolute mt-2 w-full rounded-lg border px-4 py-2 text-sm text-center z-50 ${dropdownSurface}`}
         >
           No results found
         </div>
@@ -141,3 +123,4 @@ export default function SearchBar({
     </div>
   );
 }
+
