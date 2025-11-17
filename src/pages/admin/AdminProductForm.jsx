@@ -17,6 +17,7 @@ const Schema = Yup.object({
   price: Yup.number().min(0, "Min 0").required("Required"),
   currency: Yup.string().oneOf(["USD", "EGP"]).required("Required"),
   categoryId: Yup.string().required("Required"),
+  quantity: Yup.number().min(0, "Min 0").required("Required"),
   isAvailable: Yup.boolean().required(),
 });
 
@@ -39,6 +40,7 @@ export default function AdminProductForm() {
           price: product.price ?? 0,
           currency: product.currency || "USD",
           categoryId: product.categoryId || "",
+          quantity: product.quantity ?? 0,
           isAvailable: !!product.isAvailable,
         }
       : {
@@ -48,6 +50,7 @@ export default function AdminProductForm() {
           price: 0,
           currency: "USD",
           categoryId: "",
+          quantity: 0,
           isAvailable: true,
         };
 
@@ -204,6 +207,22 @@ export default function AdminProductForm() {
 
                   <div>
                     <label className="block text-sm font-medium">
+                      Quantity
+                    </label>
+                    <Field
+                      name="quantity"
+                      type="number"
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-[#49BBBD] focus:outline-none"
+                    />
+                    <ErrorMessage
+                      name="quantity"
+                      component="p"
+                      className="text-xs text-red-600"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium">
                       Currency
                     </label>
                     <Field
@@ -220,16 +239,16 @@ export default function AdminProductForm() {
                       className="text-xs text-red-600"
                     />
                   </div>
-
-                  <label className="flex items-center gap-2">
-                    <Field
-                      name="isAvailable"
-                      type="checkbox"
-                      className="h-4 w-4"
-                    />
-                    <span className="text-sm font-medium">Available</span>
-                  </label>
                 </div>
+
+                <label className="flex items-center gap-2">
+                  <Field
+                    name="isAvailable"
+                    type="checkbox"
+                    className="h-4 w-4"
+                  />
+                  <span className="text-sm font-medium">Available</span>
+                </label>
 
                 <div className="pt-2 text-right text-xs text-gray-500">
                   * `title_lc` & `createdAt` handled automatically in mutations.

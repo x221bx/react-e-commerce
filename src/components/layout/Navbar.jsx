@@ -1,19 +1,21 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { selectCurrentUser, signOut } from "../../features/auth/authSlice";
 import { UseTheme } from "../../theme/ThemeProvider";
 import { motion as Motion, AnimatePresence } from "framer-motion";
-import { FiHeart, FiShoppingCart } from "react-icons/fi";
+import { FiHeart, FiShoppingCart, FiBell } from "react-icons/fi";
 import toast from "react-hot-toast";
 import i18n from "../../i18n";
 import { useTranslation } from "react-i18next";
 
 import SearchBar from "../search/SearchBar";
 import Button from "../../components/ui/Button";
+import { useNotifications } from "../../hooks/useNotifications";
 
 export default function Navbar() {
-  const [open, setOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [currentLang, setCurrentLang] = useState(i18n.language || 'en');
   const { theme, toggle } = UseTheme();
@@ -23,6 +25,12 @@ export default function Navbar() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const dropdownRef = useRef(null);
+
+  const { notifications, unreadCount, markRead } = useNotifications({
+    uid: user?.uid,
+    role: user?.role,
+  });
 
   const handleLogout = () => {
     dispatch(signOut());
@@ -63,6 +71,17 @@ export default function Navbar() {
     };
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setNotificationsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const isDark = theme === "dark";
 
   const navbarBg = isDark
@@ -91,6 +110,17 @@ export default function Navbar() {
     (sum, item) => sum + (item.quantity || 1),
     0
   );
+
+  const formatTimestamp = (value) => {
+    if (!value) return "";
+    if (value.toDate) {
+      return value.toDate().toLocaleString();
+    }
+    if (value.seconds) {
+      return new Date(value.seconds * 1000).toLocaleString();
+    }
+    return "";
+  };
 
   return (
     <header
@@ -185,6 +215,98 @@ export default function Navbar() {
             )}
           </button>
 
+          {user && (
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setNotificationsOpen((prev) => !prev)}
+                className={`relative h-10 w-10 rounded-lg flex items-center justify-center transition ${subtleControlBg}`}
+                aria-label="Notifications"
+              >
+                <FiBell size={18} />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 rounded-full bg-rose-500 text-[11px] font-semibold text-white px-1.5 py-0.5">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+
+              <AnimatePresence>
+                {notificationsOpen && (
+                  <Motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    className={`absolute right-0 mt-3 w-[22rem] max-h-96 overflow-auto rounded-2xl border shadow-2xl ${
+                      isDark
+                        ? "bg-[#0e1b1b] border-teal-100/10 text-[#B8E4E6]"
+                        : "bg-white border-emerald-100 text-slate-900"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
+                      <p className="text-sm font-semibold">
+                        {t("notifications.title", { defaultValue: "Notifications" })}
+                      </p>
+                      <button
+                        onClick={() => {
+                          setNotificationsOpen(false);
+                          navigate("/notifications");
+                        }}
+                        className="text-xs font-semibold text-emerald-600 hover:text-emerald-500"
+                      >
+                        {t("notifications.view_all", { defaultValue: "See all" })}
+                      </button>
+                    </div>
+
+                    <div className="divide-y divide-emerald-50/60 dark:divide-white/5">
+                      {notifications.length === 0 && (
+                        <p className="px-4 py-6 text-sm text-slate-500 dark:text-slate-400">
+                          {t("notifications.empty", { defaultValue: "No notifications yet" })}
+                        </p>
+                      )}
+
+                      {notifications.slice(0, 20).map((notification) => (
+                        <button
+                          key={notification.id}
+                          type="button"
+                          onClick={async () => {
+                            if (!notification.read) {
+                              await markRead(notification.id);
+                            }
+                            setNotificationsOpen(false);
+                            if (notification.orderId) {
+                              navigate(`/orders/${notification.orderId}`);
+                            } else if (notification.productId) {
+                              navigate(`/products/${notification.productId}`);
+                            } else {
+                              navigate("/notifications");
+                            }
+                          }}
+                          className={`w-full text-left px-4 py-3 flex items-start justify-between gap-3 transition ${
+                            notification.read
+                              ? ""
+                              : isDark
+                              ? "bg-emerald-300/10"
+                              : "bg-emerald-50"
+                          }`}
+                        >
+                          <div>
+                            <p className="text-sm font-semibold">{notification.title}</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                              {notification.message}
+                            </p>
+                          </div>
+                          <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                            {formatTimestamp(notification.createdAt)}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </Motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
+
           {/* 👤 Auth */}
           {user ? (
             <>
@@ -224,7 +346,7 @@ export default function Navbar() {
 
           {/* 📱 Menu */}
           <button
-            onClick={() => setOpen((o) => !o)}
+            onClick={() => setMobileOpen((o) => !o)}
             className={`md:hidden h-10 w-10 rounded-lg transition ${
               isDark ? "bg-white/15 hover:bg-white/25" : "bg-emerald-50 hover:bg-emerald-100 text-slate-700"
             }`}
@@ -236,7 +358,7 @@ export default function Navbar() {
 
       {/* 📱 Mobile Menu */}
       <AnimatePresence>
-        {open && (
+        {mobileOpen && (
           <Motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -251,7 +373,7 @@ export default function Navbar() {
               <button
                 onClick={() => {
                   toggleLanguage();
-                  setOpen(false);
+                  setMobileOpen(false);
                 }}
                 className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"
               >
@@ -259,14 +381,14 @@ export default function Navbar() {
               </button>
 
               {user && (
-                <NavLink to="/account/settings" onClick={() => setOpen(false)}>
+                <NavLink to="/account/settings" onClick={() => setMobileOpen(false)}>
                   {t('nav.account')} & Settings
                 </NavLink>
               )}
-              <NavLink to="/favorites" onClick={() => setOpen(false)}>
+              <NavLink to="/favorites" onClick={() => setMobileOpen(false)}>
                 {t('nav.favorites')} ❤️
               </NavLink>
-              <NavLink to="/cart" onClick={() => setOpen(false)}>
+              <NavLink to="/cart" onClick={() => setMobileOpen(false)}>
                 {t('nav.cart')} 🛒
               </NavLink>
             </div>

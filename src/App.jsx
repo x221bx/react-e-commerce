@@ -17,6 +17,9 @@ import ProductDetails from "./pages/ProductDetails";
 import About from "./pages/About";
 import ContactUs from "./pages/contactus";
 import Checkout from "./pages/Checkout";
+import Notifications from "./pages/Notifications";
+
+// account/settings
 import UserSettings from "./pages/UserSettings";
 import AccountLayout from "./pages/account/AccountLayout";
 import OrderTracking from "./pages/account/OrderTracking";
@@ -26,6 +29,7 @@ import FavoriteArticles from "./pages/account/FavoriteArticles";
 import AiConversations from "./pages/account/AiConversations";
 import SupportCenter from "./pages/account/SupportCenter";
 import PaymentMethods from "./pages/account/PaymentMethods";
+
 // admin pages
 import AdminLayout from "./admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -51,10 +55,11 @@ export default function App() {
         <Route path="/products/:id" element={<ProductDetails />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/notifications" element={<Notifications />} />
         <Route path="/register" element={<Register />} />
         <Route path="/reset" element={<Reset />} />
         <Route path="/about" element={<About />} />
-         <Route path="/contactus" element={<ContactUs />} />
+        <Route path="/contactus" element={<ContactUs />} />
         <Route path="/checkout" element={<Checkout />} />
 
         {/* Authenticated User Routes */}
