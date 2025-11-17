@@ -7,6 +7,7 @@ import { motion as Motion, AnimatePresence } from "framer-motion";
 import { FiHeart, FiShoppingCart } from "react-icons/fi";
 import toast from "react-hot-toast";
 import i18n from "../../i18n";
+import { useTranslation } from "react-i18next";
 
 import SearchBar from "../search/SearchBar";
 import Button from "../../components/ui/Button";
@@ -21,17 +22,28 @@ export default function Navbar() {
   const favorites = useSelector((state) => state.favorites);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleLogout = () => {
     dispatch(signOut());
     toast.success("Logged out successfully 👋");
   };
 
-  const toggleLanguage = () => {
+  const toggleLanguage = async () => {
     const newLang = currentLang === 'en' ? 'ar' : 'en';
-    i18n.changeLanguage(newLang);
-    setCurrentLang(newLang);
-    toast.success(`Language changed to ${newLang === 'en' ? 'English' : 'العربية'}`);
+    try {
+      await i18n.changeLanguage(newLang);
+      setCurrentLang(newLang);
+
+      // Update document direction for RTL support
+      document.documentElement.dir = newLang === 'ar' ? 'rtl' : 'ltr';
+      document.documentElement.lang = newLang;
+
+      toast.success(`Language changed to ${newLang === 'en' ? 'English' : 'العربية'}`);
+    } catch (error) {
+      console.error('Language change failed:', error);
+      toast.error('Failed to change language');
+    }
   };
 
   useEffect(() => {
@@ -109,7 +121,7 @@ export default function Navbar() {
               `${navLinkBase} ${isActive ? navLinkActive : navLinkIdle}`
             }
           >
-            Products
+            {t('nav.products')}
           </NavLink>
 
           {user?.role === "admin" && (
@@ -142,7 +154,7 @@ export default function Navbar() {
           <button
             onClick={toggle}
             className={`h-10 w-10 rounded-lg flex items-center justify-center transition ${subtleControlBg}`}
-            title={theme === "dark" ? "Light Mode" : "Dark Mode"}
+            title={t(theme === "dark" ? "common.light_mode" : "common.dark_mode")}
           >
             {theme === "dark" ? "🌙" : "☀️"}
           </button>
@@ -184,7 +196,7 @@ export default function Navbar() {
                     : "bg-slate-900 text-white hover:bg-slate-800"
                 }`}
               >
-                Account
+                {t('nav.account')}
               </button>
               <Button
                 text="Logout"
@@ -248,14 +260,14 @@ export default function Navbar() {
 
               {user && (
                 <NavLink to="/account/settings" onClick={() => setOpen(false)}>
-                  Account & Settings
+                  {t('nav.account')} & Settings
                 </NavLink>
               )}
               <NavLink to="/favorites" onClick={() => setOpen(false)}>
-                Favorites ❤️
+                {t('nav.favorites')} ❤️
               </NavLink>
               <NavLink to="/cart" onClick={() => setOpen(false)}>
-                Cart 🛒
+                {t('nav.cart')} 🛒
               </NavLink>
             </div>
           </Motion.div>
