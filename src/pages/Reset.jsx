@@ -1,10 +1,9 @@
-// src/pages/Reset.jsx
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import AuthLayout from "../Authcomponents/AuthLayout";
-import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { resetPassword, clearAuthError } from "../features/auth/authSlice";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
 const ResetSchema = Yup.object({
@@ -12,30 +11,20 @@ const ResetSchema = Yup.object({
 });
 
 export default function Reset() {
-  const [serverMsg, setServerMsg] = useState(null);
   const dispatch = useDispatch();
-  // const error = useSelector(selectAuthError);
+  const [serverMsg, setServerMsg] = useState(null);
 
   useEffect(() => {
-    return () => {
-      dispatch(clearAuthError());
-    };
+    return () => dispatch(clearAuthError());
   }, [dispatch]);
 
   return (
     <AuthLayout
-      title="Reset your password"
-      subtitle="We’ll send a password reset link to your email."
-      imageSrc="/reset-password.svg"
+      title="Reset Password"
+      subtitle="We will send you a reset link."
     >
       {serverMsg && (
-        <div
-          className={`-mt-10 mb-3 rounded-lg px-3 py-2 text-sm ${
-            serverMsg.startsWith("If")
-              ? "bg-green-50 text-green-700"
-              : "bg-red-50 text-red-700"
-          }`}
-        >
+        <div className="mb-3 rounded-lg bg-green-200/70 text-green-900 p-2 text-sm text-center">
           {serverMsg}
         </div>
       )}
@@ -44,56 +33,49 @@ export default function Reset() {
         initialValues={{ emailOrUsername: "" }}
         validationSchema={ResetSchema}
         onSubmit={async (vals, { setSubmitting, setFieldError }) => {
-          setServerMsg(null);
-          const resultAction = await dispatch(resetPassword(vals));
+          const result = await dispatch(resetPassword(vals));
           setSubmitting(false);
 
-          if (resetPassword.rejected.match(resultAction)) {
-            const err = resultAction.payload;
+          if (resetPassword.rejected.match(result)) {
+            const err = result.payload;
             if (err?.fieldErrors) {
-              Object.entries(err.fieldErrors).forEach(([k, msg]) => {
-                setFieldError(k, msg);
-              });
+              Object.entries(err.fieldErrors).forEach(([k, msg]) =>
+                setFieldError(k, msg)
+              );
             }
-            setServerMsg(err?.message || "Reset failed.");
           } else {
             setServerMsg("If the account exists, a reset email has been sent.");
           }
         }}
       >
         {({ isSubmitting }) => (
-          <Form className="space-y-4">
+          <Form className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Email or Username
-              </label>
+              <label className="text-white">Email or Username</label>
               <Field
                 name="emailOrUsername"
-                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="mt-1 w-full rounded-lg p-2 border border-gray-300"
               />
-              <div className="mt-1 h-5">
-                <ErrorMessage
-                  name="emailOrUsername"
-                  component="p"
-                  className="text-xs text-red-600"
-                />
-              </div>
+              <ErrorMessage
+                name="emailOrUsername"
+                component="p"
+                className="text-xs text-red-200 mt-1"
+              />
             </div>
 
             <button
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex w-full items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:opacity-60"
+              className="w-full bg-teal-500 hover:bg-teal-600 text-white
+                        py-3 rounded-xl text-lg font-semibold shadow-md"
             >
-              {isSubmitting ? "Sending…" : "Send reset email"}
+              {isSubmitting ? "Sending…" : "Send email"}
             </button>
 
-            <p className="text-sm text-gray-600">
-              <Link
-                to="/login"
-                className="font-medium text-blue-600 hover:text-blue-700"
-              >
-                Back to login
+            <p className="text-sm text-gray-200 text-center">
+              Back to{" "}
+              <Link to="/login" className="text-white underline">
+                Login
               </Link>
             </p>
           </Form>

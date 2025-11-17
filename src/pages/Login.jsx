@@ -1,4 +1,3 @@
-// src/pages/Login.jsx
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
 import AuthLayout from "../Authcomponents/AuthLayout";
@@ -30,27 +29,16 @@ export default function Login() {
   const onSuccess = () => navigate(redirectTo, { replace: true });
 
   useEffect(() => {
-    return () => {
-      dispatch(clearAuthError());
-    };
+    return () => dispatch(clearAuthError());
   }, [dispatch]);
 
   return (
     <AuthLayout
       title="Sign in to your account"
       subtitle="Welcome back! Please login to continue."
-      from="from-[#49BBBD]"
-      via="via-[#36A2A4]"
-      to="to-[#2F7E80]"
-      imageSrc="/login.svg"
-      brandName="Farm Vet Shop"
     >
       {serverMsg && (
-        <div
-          role="status"
-          aria-live="polite"
-          className="-mt-10 mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"
-        >
+        <div className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
           {serverMsg}
         </div>
       )}
@@ -65,15 +53,12 @@ export default function Login() {
 
           if (signInWithIdentifier.rejected.match(resultAction)) {
             const err = resultAction.payload;
-            if (err?.fieldErrors) {
+            err?.fieldErrors &&
               Object.entries(err.fieldErrors).forEach(([k, msg]) => {
                 setFieldError(k, msg);
               });
-            }
             setServerMsg(err?.message || "Login failed.");
-          } else {
-            onSuccess();
-          }
+          } else onSuccess();
         }}
       >
         {({ isSubmitting }) => (
@@ -81,48 +66,41 @@ export default function Login() {
             <FieldRow
               name="identifier"
               label="Email or Username"
-              placeholder="me@example.com or myusername"
-              autoComplete="username"
+              placeholder="email@example.com"
             />
 
-            <div>
-              <div className="flex items-center justify-between">
-                <Link
-                  to="/reset"
-                  className="text-sm text-blue-600 hover:text-blue-700"
-                >
-                  Forgot password?
-                </Link>
-              </div>
-              <PasswordField
-                name="password"
-                autoComplete="current-password"
-                label="Password"
-              />
+            <PasswordField name="password" label="Password" />
+
+            <div className="flex justify-end">
+              <Link
+                to="/reset"
+                className="text-sm font-medium text-[#2F7E80] hover:underline"
+              >
+                Forgot password?
+              </Link>
             </div>
 
             <button
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex w-full items-center justify-center rounded-2xl bg-blue-400 px-4 py-3.5 text-[17px] font-semibold text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:opacity-60"
+              className="w-full rounded-xl bg-[#2F7E80] text-white py-3 font-semibold shadow-md hover:bg-[#276e70]"
             >
               {isSubmitting ? "Signing in…" : "Login"}
             </button>
 
-            <p className="text-sm text-gray-600">
+            <p className="text-center text-sm text-gray-700">
               Don’t have an account?{" "}
               <Link
                 to="/register"
-                className="font-medium text-blue-600 hover:text-blue-700"
+                className="text-[#2F7E80] font-semibold hover:underline"
               >
                 Create one
               </Link>
             </p>
 
             {user && (
-              <div className="rounded-lg bg-green-50 px-3 py-2 text-xs text-green-700">
-                You’re signed in as{" "}
-                <span className="font-medium">{user.name || user.email}</span>.
+              <div className="rounded-lg bg-green-50 px-3 py-2 text-xs text-green-700 text-center">
+                Signed in as {user.name || user.email}
               </div>
             )}
           </Form>
