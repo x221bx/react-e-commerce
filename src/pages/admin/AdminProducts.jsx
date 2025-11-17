@@ -8,17 +8,16 @@ import {
   FiEdit2,
   FiTrash2,
   FiPackage,
-  FiTag,
 } from "react-icons/fi";
 import PageHeader from "../../admin/PageHeader";
-import { useProductsSorted } from "../../hooks/useProductsSorted"; // renamed hook
-import { useDeleteProduct } from "../../hooks/useProductMutations"; // renamed hook
+import { useProductsSorted } from "../../hooks/useProductsSorted";
+import { useDeleteProduct } from "../../hooks/useProductMutations";
 import { usePagination } from "../../hooks/usePagination";
 import { useCategoriesSorted } from "../../hooks/useCategoriesSorted";
 import Pager from "../../admin/Pager";
 import ConfirmDialog from "../../admin/ConfirmDialog";
 import { useTranslation } from "react-i18next";
-import { localizeProduct, localizeCategory } from "../../utils/localizeContent"; // renamed util
+import { localizeProduct, localizeCategory } from "../../utils/localizeContent";
 
 /* ------------------------ constants ------------------------ */
 const SORT_FIELDS = [
@@ -34,7 +33,6 @@ export default function AdminProducts() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
 
-  // URL-derived state
   const statusFromUrl = (params.get("filter") || "all").toLowerCase();
   const [status, setStatus] = useState(
     VALID_STATUS.has(statusFromUrl) ? statusFromUrl : "all"
@@ -47,7 +45,6 @@ export default function AdminProducts() {
   );
   const pageFromUrl = Math.max(1, Number(params.get("page") || 1));
 
-  // data
   const {
     data: all = [],
     isLoading,
@@ -60,7 +57,6 @@ export default function AdminProducts() {
     status,
   });
 
-  // categories → localized name map
   const { data: categories = [] } = useCategoriesSorted({ dir: "asc" });
   const { t: tCat } = useTranslation();
   const catMap = useMemo(() => {
@@ -69,7 +65,6 @@ export default function AdminProducts() {
     return m;
   }, [categories, tCat]);
 
-  // pagination (resilient): reset when filters/search/sort/pageSize change
   const {
     paginatedData,
     currentPage,
@@ -84,14 +79,12 @@ export default function AdminProducts() {
     initialPage: pageFromUrl,
     resetKeys: [status, q, sortBy, dir, pageSize],
     onPageChange: (p) => {
-      // sync ?page= in URL without touching other params
       const next = new URLSearchParams(params.toString());
       next.set("page", String(p));
       setParams(next, { replace: true });
     },
   });
 
-  // keep URL (except page) in sync when UI state changes
   useEffect(() => {
     const next = new URLSearchParams(params.toString());
     next.set("filter", status);
@@ -99,9 +92,7 @@ export default function AdminProducts() {
     next.set("sortBy", sortBy);
     next.set("dir", dir);
     next.set("pageSize", String(pageSize));
-    // do NOT touch page here; page syncing handled by onPageChange above
     setParams(next, { replace: true });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, q, sortBy, dir, pageSize]);
 
   const { mutateAsync: deleteProduct, isPending: deleting } =
@@ -125,12 +116,9 @@ export default function AdminProducts() {
         icon={<FiPackage />}
       />
 
-      {/* Toolbar */}
       <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="flex min-w-0 flex-1 flex-col gap-2 md:flex-row md:items-center">
           <ResponsiveStatusFilter value={status} onChange={setStatus} />
-
-          {/* Search */}
           <div className="relative w-full md:max-w-md">
             <FiSearch className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
@@ -144,7 +132,6 @@ export default function AdminProducts() {
           </div>
         </div>
 
-        {/* Sort / dir / page size */}
         <div className="flex items-center gap-2">
           <select
             value={sortBy}
@@ -181,7 +168,6 @@ export default function AdminProducts() {
         </div>
       </div>
 
-      {/* Data states */}
       {isLoading && <SkeletonTable rows={6} />}
       {isError && (
         <div className="rounded-lg border border-rose-200 bg-rose-50 p-4 text-rose-700">
@@ -204,7 +190,6 @@ export default function AdminProducts() {
         />
       )}
 
-      {/* ===== Mobile list (cards) ===== */}
       {!isLoading && !isError && all.length > 0 && (
         <div className="space-y-3 md:hidden">
           {paginatedData.map((p) => (
@@ -227,12 +212,8 @@ export default function AdminProducts() {
 
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-semibold text-gray-900">
-                    {localizeProduct(p, t).name}
+                    {localizeProduct(p, t).title}
                   </div>
-                  <div className="truncate text-sm font-semibold text-gray-900">
-                    {localizeProduct(p, t).name}
-                  </div>
-
                   <div className="mt-2 flex flex-wrap items-center gap-1.5">
                     <span className="rounded-md bg-gray-100 px-2 py-0.5 text-[11px] text-gray-700 ring-1 ring-gray-200">
                       {catMap[p.categoryId] || "—"}
@@ -241,6 +222,9 @@ export default function AdminProducts() {
                     <span className="text-[11px] text-gray-500">
                       {formatDate(p.createdAt)}
                     </span>
+                  </div>
+                  <div className="mt-1 text-xs text-gray-500">
+                    Quantity: {p.quantity ?? 0}
                   </div>
                 </div>
               </div>
@@ -274,7 +258,6 @@ export default function AdminProducts() {
         </div>
       )}
 
-      {/* ===== Desktop table ===== */}
       {!isLoading && !isError && all.length > 0 && (
         <div className="hidden md:block">
           <div className="overflow-x-auto">
@@ -283,15 +266,12 @@ export default function AdminProducts() {
                 <tr className="bg-gray-50 text-left text-sm text-gray-600">
                   <Th>{t("admin.products", { defaultValue: "Products" })}</Th>
                   <Th>{t("sort.price", { defaultValue: "Price" })}</Th>
+                  <Th>Quantity</Th>
                   <Th>
                     {t("admin.categories", { defaultValue: "Categories" })}
                   </Th>
                   <Th>
                     {t("admin.status.available", { defaultValue: "Available" })}
-                    /
-                    {t("admin.status.unavailable", {
-                      defaultValue: "Out of stock",
-                    })}
                   </Th>
                   <Th className="w-36">
                     {t("sort.createdAt", { defaultValue: "Created At" })}
@@ -330,6 +310,7 @@ export default function AdminProducts() {
                         </span>
                       </span>
                     </Td>
+                    <Td>{p.quantity ?? 0}</Td>
                     <Td>
                       <span className="rounded-md bg-gray-100 px-2 py-0.5 text-xs text-gray-700 ring-1 ring-gray-200">
                         {catMap[p.categoryId] || "—"}
@@ -381,7 +362,6 @@ export default function AdminProducts() {
         </div>
       )}
 
-      {/* Delete confirm */}
       <ConfirmDialog
         open={!!toDelete}
         title={t("confirm.delete_product_title", {
@@ -411,7 +391,6 @@ export default function AdminProducts() {
 }
 
 /* ------------------- small components & helpers ------------------- */
-
 function ResponsiveStatusFilter({ value, onChange }) {
   const { t } = useTranslation();
   const items = [
@@ -428,7 +407,6 @@ function ResponsiveStatusFilter({ value, onChange }) {
 
   return (
     <>
-      {/* Mobile: select */}
       <label className="md:hidden">
         <span className="sr-only">Status</span>
         <select
@@ -444,7 +422,6 @@ function ResponsiveStatusFilter({ value, onChange }) {
         </select>
       </label>
 
-      {/* md+: horizontally scrollable pill group */}
       <div className="hidden md:block">
         <div className="max-w-full overflow-x-auto">
           <div className="inline-flex min-w-max overflow-hidden rounded-lg border border-gray-200 bg-white p-0.5 shadow-sm">
@@ -495,7 +472,7 @@ function StatusBadge({ available, small = false }) {
   const { t } = useTranslation();
   const base =
     "inline-flex items-center gap-1 rounded-full px-2 py-0.5 ring-1 text-xs font-medium";
-  if (available) {
+  if (available)
     return (
       <span
         className={`${base} ${
@@ -505,7 +482,6 @@ function StatusBadge({ available, small = false }) {
         • {t("admin.status.available", { defaultValue: "Available" })}
       </span>
     );
-  }
   return (
     <span
       className={`${base} ${
@@ -531,20 +507,19 @@ function SkeletonTable({ rows = 6 }) {
   return (
     <div className="divide-y divide-gray-100">
       {Array.from({ length: rows }).map((_, i) => (
-        <div key={i} className="flex items-center gap-3 py-3">
-          <div className="h-10 w-10 rounded-lg bg-gray-100" />
-          <div className="h-4 w-40 rounded bg-gray-100" />
-          <div className="h-4 w-20 rounded bg-gray-100" />
+        <div key={i} className="animate-pulse bg-white py-4">
+          <div className="h-4 rounded bg-gray-200" />
         </div>
       ))}
     </div>
   );
 }
+
 function EmptyState({ title, note }) {
   return (
-    <div className="grid place-items-center rounded-lg border border-gray-200 bg-gray-50/60 p-8 text-center">
-      <div className="text-lg font-semibold text-gray-900">{title}</div>
-      {note && <div className="mt-1 text-sm text-gray-600">{note}</div>}
+    <div className="rounded-lg border border-gray-200 bg-white p-4 text-gray-500">
+      <div className="font-semibold text-gray-900">{title}</div>
+      <div className="mt-1 text-sm">{note}</div>
     </div>
   );
 }

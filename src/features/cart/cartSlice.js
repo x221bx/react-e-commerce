@@ -1,6 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { db } from "../../services/firebase";
+import { doc, updateDoc, increment } from "firebase/firestore";
 
-// 🛒 Load existing cart (if any)
 const savedCart = JSON.parse(localStorage.getItem("cartItems") || "[]");
 
 const cartSlice = createSlice({
@@ -12,43 +13,38 @@ const cartSlice = createSlice({
   reducers: {
     addToCart: (state, action) => {
       const product = action.payload;
-
-      // 🔍 Check if item exists in cart
       const exists = state.items.find((i) => i.id === product.id);
 
       if (exists) {
-        // 👉 لو موجود: زوّد الكمية فقط
-        exists.quantity = (exists.quantity || 1) + 1;
+        if ((exists.quantity || 1) < (product.stock || Infinity)) {
+          exists.quantity = (exists.quantity || 1) + 1;
+          exists.maxReached = false;
+        } else {
+          exists.maxReached = true;
+        }
       } else {
-        // 👉 لو جديد: أضِفه مع quantity = 1
         state.items.push({
           ...product,
           quantity: 1,
+          maxReached: false,
         });
       }
 
       localStorage.setItem("cartItems", JSON.stringify(state.items));
     },
 
-    removeFromCart: (state, action) => {
-      // لو عايز تشيل منتج بالكامل
-      state.items = state.items.filter((i) => i.id !== action.payload);
-      localStorage.setItem("cartItems", JSON.stringify(state.items));
-    },
-
     decreaseQuantity: (state, action) => {
       const id = action.payload;
       const item = state.items.find((i) => i.id === id);
-
-      if (item) {
-        if (item.quantity > 1) {
-          item.quantity -= 1;
-        } else {
-          // لو وصلت 1 وقلّلت → اشيله
-          state.items = state.items.filter((i) => i.id !== id);
-        }
+      if (item && item.quantity > 1) {
+        item.quantity -= 1;
+        item.maxReached = false;
       }
+      localStorage.setItem("cartItems", JSON.stringify(state.items));
+    },
 
+    removeFromCart: (state, action) => {
+      state.items = state.items.filter((i) => i.id !== action.payload);
       localStorage.setItem("cartItems", JSON.stringify(state.items));
     },
 
@@ -56,11 +52,29 @@ const cartSlice = createSlice({
       state.items = [];
       localStorage.setItem("cartItems", JSON.stringify([]));
     },
+
+    // 🔹 Sync stock in Firestore
+    syncStock: (state, action) => {
+      const { id, change } = action.payload;
+      const item = state.items.find((i) => i.id === id);
+      if (item) {
+        const ref = doc(db, "products", item.id);
+        const newStock = (item.stock || 0) - change; // خصم أو زيادة
+        updateDoc(ref, { quantity: Math.max(0, newStock) }).catch(
+          console.error
+        );
+        item.stock = Math.max(0, newStock);
+      }
+    },
   },
 });
 
-// Export actions
-export const { addToCart, removeFromCart, clearCart, decreaseQuantity } =
-  cartSlice.actions;
+export const {
+  addToCart,
+  decreaseQuantity,
+  removeFromCart,
+  clearCart,
+  syncStock,
+} = cartSlice.actions;
 
 export default cartSlice.reducer;

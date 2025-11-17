@@ -17,6 +17,7 @@ import ProductDetails from "./pages/ProductDetails";
 import About from "./pages/About";
 import ContactUs from "./pages/contactus";
 import Checkout from "./pages/Checkout";
+import Notifications from "./pages/Notifications";
 // admin pages
 import AdminLayout from "./admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -27,13 +28,9 @@ import AdminCategories from "./pages/admin/AdminCategories";
 export default function App() {
   return (
     <div className="min-h-screen transition-colors duration-300">
-      {/* Navbar */}
       <Navbar />
-
-      {/* Toast Notifications */}
       <Toaster position="top-right" reverseOrder={false} />
 
-      {/* Routes */}
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Home />} />
@@ -42,12 +39,12 @@ export default function App() {
         <Route path="/products/:id" element={<ProductDetails />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/notifications" element={<Notifications />} />
         <Route path="/register" element={<Register />} />
         <Route path="/reset" element={<Reset />} />
         <Route path="/about" element={<About />} />
-         <Route path="/contactus" element={<ContactUs />} />
-         <Route path="/checkout" element={<Checkout />} />
-
+        <Route path="/contactus" element={<ContactUs />} />
+        <Route path="/checkout" element={<Checkout />} />
 
         {/* Admin Routes */}
         <Route element={<ProtectedRoute requireAdmin={true} />}>

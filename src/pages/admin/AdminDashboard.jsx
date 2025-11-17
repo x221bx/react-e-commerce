@@ -5,6 +5,7 @@ import {
   FiCheckCircle,
   FiClock,
   FiUsers,
+  FiAlertCircle,
 } from "react-icons/fi";
 import PageHeader from "../../admin/PageHeader";
 import {
@@ -55,14 +56,17 @@ export default function AdminDashboard() {
     qText: "",
     status: "all",
   });
-  const recent3 = (recent || []).slice(0, 3); // ثلاث منتجات فقط في الصف
+  const recent3 = (recent || []).slice(0, 3);
+
+  // 🔔 Low stock alerts
+  const lowStock = (recent || []).filter((p) => p.stock <= 5);
 
   return (
     <>
       <PageHeader title="Dashboard Overview" />
 
       {/* 🔢 كروت الإحصائيات */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
         <StatCard
           title="Total Products"
           value={totalProducts}
@@ -92,6 +96,12 @@ export default function AdminDashboard() {
           value={totalUsers}
           icon={<FiUsers className="text-[#F39C12]" />}
           link={{ to: "/admin/users", label: "Manage" }}
+        />
+        <StatCard
+          title="Low Stock Alerts"
+          value={lowStock.length}
+          icon={<FiAlertCircle className="text-[#E67E22]" />}
+          link={{ to: "/admin/products?filter=lowstock", label: "Check" }}
         />
       </div>
 
@@ -124,7 +134,7 @@ export default function AdminDashboard() {
         </ResponsiveContainer>
       </section>
 
-      {/* 👥 Users Bar Chart with per Year */}
+      {/* 👥 Users Bar Chart */}
       <section className="mt-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
         <h2 className="mb-4 text-base font-semibold text-gray-900">
           User Growth Analytics
@@ -161,7 +171,7 @@ export default function AdminDashboard() {
         </ResponsiveContainer>
       </section>
 
-      {/* 🆕 قسم أحدث المنتجات - كروت */}
+      {/* 🆕 أحدث المنتجات */}
       <section className="mt-10">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-base font-semibold text-gray-900">
