@@ -7,6 +7,7 @@ import ThemeProvider from "./theme/ThemeProvider.jsx";
 import App from "./App.jsx";
 import "./index.css";
 import { store } from "./redux/store";
+import "./i18n";
 
 const queryClient = new QueryClient();
 
