@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "./Authcomponents/ProtectedRoute";
 import Navbar from "./components/layout/Navbar";
 import { Toaster } from "react-hot-toast";
@@ -18,6 +18,18 @@ import About from "./pages/About";
 import ContactUs from "./pages/contactus";
 import Checkout from "./pages/Checkout";
 import Notifications from "./pages/Notifications";
+
+// account/settings
+import UserSettings from "./pages/UserSettings";
+import AccountLayout from "./pages/account/AccountLayout";
+import OrderTracking from "./pages/account/OrderTracking";
+import OrderHistory from "./pages/account/OrderHistory";
+import SavedProducts from "./pages/account/SavedProducts";
+import FavoriteArticles from "./pages/account/FavoriteArticles";
+import AiConversations from "./pages/account/AiConversations";
+import SupportCenter from "./pages/account/SupportCenter";
+import PaymentMethods from "./pages/account/PaymentMethods";
+
 // admin pages
 import AdminLayout from "./admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -28,9 +40,13 @@ import AdminCategories from "./pages/admin/AdminCategories";
 export default function App() {
   return (
     <div className="min-h-screen transition-colors duration-300">
+      {/* Navbar */}
       <Navbar />
+
+      {/* Toast Notifications */}
       <Toaster position="top-right" reverseOrder={false} />
 
+      {/* Routes */}
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Home />} />
@@ -45,6 +61,22 @@ export default function App() {
         <Route path="/about" element={<About />} />
         <Route path="/contactus" element={<ContactUs />} />
         <Route path="/checkout" element={<Checkout />} />
+
+        {/* Authenticated User Routes */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/settings" element={<UserSettings />} />
+          <Route path="/account" element={<AccountLayout />}>
+            <Route index element={<Navigate to="tracking" replace />} />
+            <Route path="settings" element={<UserSettings variant="embedded" />} />
+            <Route path="payments" element={<PaymentMethods />} />
+            <Route path="orders" element={<OrderHistory />} />
+            <Route path="tracking" element={<OrderTracking />} />
+            <Route path="saved" element={<SavedProducts />} />
+            <Route path="articles" element={<FavoriteArticles />} />
+            <Route path="ai" element={<AiConversations />} />
+            <Route path="support" element={<SupportCenter />} />
+          </Route>
+        </Route>
 
         {/* Admin Routes */}
         <Route element={<ProtectedRoute requireAdmin={true} />}>
