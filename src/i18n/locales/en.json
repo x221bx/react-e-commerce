@@ -23,11 +23,6 @@
                  "forgot":  "Forgot?",
                  "create_account":  "Create Account"
              },
-    "notifications": {
-        "title": "Notifications",
-        "view_all": "See all",
-        "empty": "No notifications yet"
-    },
     "admin":  {
                   "dashboard":  "Dashboard",
                   "courses":  "Courses",
