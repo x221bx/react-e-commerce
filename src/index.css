@@ -21,10 +21,7 @@ body {
   color: #f0f9f7; /* أفتح قليلاً لتحسين التباين */
 }
 
-.dark header {
-  background-color: #0c1a1a !important;
-  color: #f0f9f7 !important;
-}
+ 
 
 /* RTL Support */
 [dir="rtl"] {
