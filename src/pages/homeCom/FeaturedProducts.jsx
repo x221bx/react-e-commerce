@@ -12,7 +12,7 @@ export default function FeaturedProducts() {
 
   // ⛔ لا تعمل map هنا عشان متكسرش الـid
   // ⭕ استخدم أول 8 منتجات كما هي
-  const featured = data.slice(0, 8);
+  const featured = data.slice(0, 4);
 
   if (isLoading) {
     return (
