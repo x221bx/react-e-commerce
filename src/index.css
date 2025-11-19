@@ -17,11 +17,36 @@ body {
 }
 
 .dark body {
-  background-color: var(--color-bg-dark);
-  color: var(--color-text-dark);
+  background-color: #0a1616; /* أغمق قليلاً من الأصلي */
+  color: #f0f9f7; /* أفتح قليلاً لتحسين التباين */
 }
 
 .dark header {
-  background-color: #0b1818 !important;
-  color: #E9F9F7 !important;
+  background-color: #0c1a1a !important;
+  color: #f0f9f7 !important;
+}
+
+/* RTL Support */
+[dir="rtl"] {
+  text-align: right;
+}
+
+[dir="rtl"] .navbar {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .nav-item {
+  text-align: right;
+}
+
+[dir="rtl"] .form-input {
+  text-align: right;
+}
+
+[dir="rtl"] .btn-group {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .card-content {
+  text-align: right;
 }
