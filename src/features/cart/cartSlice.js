@@ -1,6 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { db } from "../../services/firebase";
-import { doc, updateDoc, increment } from "firebase/firestore";
+import { doc, updateDoc } from "firebase/firestore";
 
 const savedCart = JSON.parse(localStorage.getItem("cartItems") || "[]");
 
@@ -13,10 +13,20 @@ const cartSlice = createSlice({
   reducers: {
     addToCart: (state, action) => {
       const product = action.payload;
-      const exists = state.items.find((i) => i.id === product.id);
+
+      // 🧼 تنظيف المنتج قبل دخوله Redux
+      const safeProduct = { ...product };
+      if (safeProduct.createdAt?.seconds) {
+        safeProduct.createdAt = safeProduct.createdAt.seconds * 1000;
+      }
+      if (safeProduct.updatedAt?.seconds) {
+        safeProduct.updatedAt = safeProduct.updatedAt.seconds * 1000;
+      }
+
+      const exists = state.items.find((i) => i.id === safeProduct.id);
 
       if (exists) {
-        if ((exists.quantity || 1) < (product.stock || Infinity)) {
+        if ((exists.quantity || 1) < (safeProduct.stock || Infinity)) {
           exists.quantity = (exists.quantity || 1) + 1;
           exists.maxReached = false;
         } else {
@@ -24,7 +34,7 @@ const cartSlice = createSlice({
         }
       } else {
         state.items.push({
-          ...product,
+          ...safeProduct,
           quantity: 1,
           maxReached: false,
         });
@@ -53,16 +63,13 @@ const cartSlice = createSlice({
       localStorage.setItem("cartItems", JSON.stringify([]));
     },
 
-    // 🔹 Sync stock in Firestore
     syncStock: (state, action) => {
       const { id, change } = action.payload;
       const item = state.items.find((i) => i.id === id);
       if (item) {
         const ref = doc(db, "products", item.id);
-        const newStock = (item.stock || 0) - change; // خصم أو زيادة
-        updateDoc(ref, { quantity: Math.max(0, newStock) }).catch(
-          console.error
-        );
+        const newStock = (item.stock || 0) - change;
+        updateDoc(ref, { quantity: Math.max(0, newStock) }).catch(console.error);
         item.stock = Math.max(0, newStock);
       }
     },

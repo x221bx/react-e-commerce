@@ -10,12 +10,25 @@ export default function ProductCard({ product, index = 0 }) {
   const dispatch = useDispatch();
   const { theme } = UseTheme();
 
-  // ❤️ check if this product is already in favorites
+  // 🧼 Helper لتنضيف المنتج قبل دخوله Redux
+  const safeProduct = (p) => {
+    const clean = { ...p };
+
+    // إزالة أو تحويل أي Firestore Timestamp
+    if (clean.createdAt?.seconds) {
+      clean.createdAt = clean.createdAt.seconds * 1000;
+    }
+    if (clean.updatedAt?.seconds) {
+      clean.updatedAt = clean.updatedAt.seconds * 1000;
+    }
+
+    return clean;
+  };
+
   const isFav = useSelector((state) =>
     state.favorites.some((f) => f.id === product.id)
   );
 
-  // 🛒 check if product already in cart
   const inCart = useSelector((state) =>
     state.cart.items.some((c) => c.id === product.id)
   );
@@ -45,17 +58,17 @@ export default function ProductCard({ product, index = 0 }) {
             : "bg-white text-[#1a1a1a] shadow-[0_3px_15px_rgba(0,0,0,0.1)] hover:shadow-[0_5px_20px_rgba(0,0,0,0.15)]"
         }`}
     >
-      {/* ❤️ Favourite toggle button */}
+      {/* ❤️ Favourite toggle */}
       <Motion.button
         whileTap={{ scale: 0.9 }}
-        onClick={() => dispatch(toggleFavourite(product))}
+        onClick={() => dispatch(toggleFavourite(safeProduct(product)))}
         aria-label="favorite"
         className="absolute top-3 right-3 z-20 p-2 rounded-full shadow-md border backdrop-blur-md bg-white/70 border-gray-200 hover:bg-gray-100 transition"
       >
         <Heart size={20} className={isFav ? "text-red-600" : "text-gray-400"} />
       </Motion.button>
 
-      {/* 🖼️ Product Image */}
+      {/* 🖼️ Image */}
       <Motion.div
         whileHover={{ scale: 1.05 }}
         transition={{ duration: 0.4 }}
@@ -65,17 +78,13 @@ export default function ProductCard({ product, index = 0 }) {
         }}
       />
 
-      {/* 📄 Product Info */}
+      {/* 📄 Info */}
       <div className="flex flex-col gap-2 text-center relative z-10">
         <Motion.p variants={fadeUp} custom={0.2} className="text-base font-semibold">
           {product.name || product.title}
         </Motion.p>
 
-        <Motion.p
-          variants={fadeUp}
-          custom={0.3}
-          className="text-lg font-bold text-[#2F7E80]"
-        >
+        <Motion.p variants={fadeUp} custom={0.3} className="text-lg font-bold text-[#2F7E80]">
           {Number(product.price).toLocaleString()} EGP
         </Motion.p>
 
@@ -85,10 +94,8 @@ export default function ProductCard({ product, index = 0 }) {
             text={inCart ? "In Cart" : "Add to Cart"}
             full
             disabled={inCart}
-            onClick={() => !inCart && dispatch(addToCart(product))}
-            className={`mt-1 ${
-              inCart ? "opacity-60 cursor-not-allowed" : ""
-            }`}
+            onClick={() => !inCart && dispatch(addToCart(safeProduct(product)))}
+            className={`mt-1 ${inCart ? "opacity-60 cursor-not-allowed" : ""}`}
           />
         </Motion.div>
       </div>

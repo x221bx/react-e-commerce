@@ -37,6 +37,9 @@ import AdminProducts from "./pages/admin/AdminProducts";
 import AdminProductForm from "./pages/admin/AdminProductForm";
 import AdminCategories from "./pages/admin/AdminCategories";
 
+// --- ADDED ---
+import ChatBot from "./components/Ai/ChatBot";
+
 export default function App() {
   return (
     <div className="min-h-screen transition-colors duration-300">
@@ -102,6 +105,9 @@ export default function App() {
           }
         />
       </Routes>
+
+      {/* --- ADDED: ChatBot Component --- */}
+      <ChatBot />
     </div>
   );
 }
