@@ -15,6 +15,7 @@ import { useNotifications } from "../../hooks/useNotifications";
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [currentLang, setCurrentLang] = useState(i18n.language || "en");
@@ -29,7 +30,7 @@ export default function Navbar() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const dropdownRef = useRef(null);
-
+// eslint-disable-next-line no-unused-vars
   const { notifications, unreadCount, markRead } = useNotifications({
     uid: user?.uid,
     role: user?.role,
@@ -66,7 +67,6 @@ export default function Navbar() {
 
   const isDark = theme === "dark";
 
-  // ===================== GLASS THEME COLORS =======================
   const navbarColorDark =
     "bg-[#0c1717]/45 backdrop-blur-2xl text-[#B8E4E6] shadow-[0_2px_5px_rgba(0,0,0,0.45)] border-b border-white/10";
 
@@ -90,18 +90,16 @@ export default function Navbar() {
   const navLinkIdle = "text-[#B8E4E6]/80 hover:text-white";
 
   const cartCount = cart.reduce((s, i) => s + (i.quantity || 1), 0);
-
+// eslint-disable-next-line no-unused-vars
   const formatTimestamp = (v) =>
     v?.toDate?.() ? v.toDate().toLocaleString() : "";
-
-  // ========================================================================================
 
   return (
     <header
       className={`sticky top-0 z-50 transition-all duration-500 ${navbarBg}`}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap px-4 sm:px-6 md:px-8 py-3 gap-y-3">
-
+        
         {/* 🌿 Logo */}
         <NavLink className="text-lg sm:text-xl font-semibold tracking-tight" to="/">
           🌿 Farm Vet Shop
@@ -109,27 +107,11 @@ export default function Navbar() {
 
         {/* 🧭 Desktop Nav */}
         <nav className="hidden lg:flex items-center gap-x-6 lg:gap-x-6">
-          <NavLink
-            to="/"
-            className={({ isActive }) =>
-              `${navLinkBase} ${
-                isActive ? navLinkActive : navLinkIdle
-              }`
-            }
-          >
-            Home
-          </NavLink>
+          <NavLink to="/" className={({ isActive }) =>
+            `${navLinkBase} ${isActive ? navLinkActive : navLinkIdle}`}>Home</NavLink>
 
-          <NavLink
-            to="/products"
-            className={({ isActive }) =>
-              `${navLinkBase} ${
-                isActive ? navLinkActive : navLinkIdle
-              }`
-            }
-          >
-            {t("nav.products")}
-          </NavLink>
+          <NavLink to="/products" className={({ isActive }) =>
+            `${navLinkBase} ${isActive ? navLinkActive : navLinkIdle}`}>{t("nav.products")}</NavLink>
 
           {user?.role === "admin" && (
             <NavLink className={`${navLinkBase} ${navLinkIdle}`} to="/admin">
@@ -157,10 +139,7 @@ export default function Navbar() {
           </button>
 
           {/* ❤️ Favorites */}
-          <button
-            onClick={() => navigate("/favorites")}
-            className={`relative h-9 w-9 rounded-lg flex items-center justify-center ${subtleControlBg}`}
-          >
+          <button onClick={() => navigate("/favorites")} className={`relative h-9 w-9 rounded-lg flex items-center justify-center ${subtleControlBg}`}>
             <FiHeart size={18} />
             {favorites.length > 0 && (
               <span className="absolute -top-1 -right-1 bg-pink-500 text-xs rounded-full px-1">
@@ -170,10 +149,7 @@ export default function Navbar() {
           </button>
 
           {/* 🛒 Cart */}
-          <button
-            onClick={() => navigate("/cart")}
-            className={`relative h-9 w-9 rounded-lg flex items-center justify-center ${subtleControlBg}`}
-          >
+          <button onClick={() => navigate("/cart")} className={`relative h-9 w-9 rounded-lg flex items-center justify-center ${subtleControlBg}`}>
             <FiShoppingCart size={18} />
             {cartCount > 0 && (
               <span className="absolute -top-1 -right-1 bg-cyan-600 text-xs rounded-full px-1">
@@ -196,62 +172,6 @@ export default function Navbar() {
                   </span>
                 )}
               </button>
-
-              <AnimatePresence>
-                {notificationsOpen && (
-                  <Motion.div
-                    initial={{ opacity: 0, y: -6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -6 }}
-                    className={`absolute right-0 mt-2 w-[20rem] max-h-96 overflow-auto rounded-2xl border shadow-xl ${mobileMenuBg}`}
-                  >
-                    <div className="p-3 border-b border-white/10 flex justify-between">
-                      <span className="text-sm font-semibold">Notifications</span>
-                      <button
-                        onClick={() => {
-                          setNotificationsOpen(false);
-                          navigate("/notifications");
-                        }}
-                        className="text-xs text-[#9af59d]"
-                      >
-                        See all
-                      </button>
-                    </div>
-
-                    <div className="divide-y divide-white/10">
-                      {notifications.length === 0 ? (
-                        <p className="p-4 text-sm opacity-60">No notifications</p>
-                      ) : (
-                        notifications.slice(0, 20).map((n) => (
-                          <button
-                            key={n.id}
-                            className="w-full text-left p-3 flex justify-between hover:bg-white/10"
-                            onClick={async () => {
-                              if (!n.read) await markRead(n.id);
-                              navigate(
-                                n.orderId
-                                  ? `/orders/${n.orderId}`
-                                  : n.productId
-                                  ? `/products/${n.productId}`
-                                  : "/notifications"
-                              );
-                              setNotificationsOpen(false);
-                            }}
-                          >
-                            <span>
-                              <div className="text-sm font-semibold">{n.title}</div>
-                              <div className="text-xs opacity-70">{n.message}</div>
-                            </span>
-                            <span className="text-[10px] opacity-60">
-                              {formatTimestamp(n.createdAt)}
-                            </span>
-                          </button>
-                        ))
-                      )}
-                    </div>
-                  </Motion.div>
-                )}
-              </AnimatePresence>
             </div>
           )}
 
@@ -265,21 +185,32 @@ export default function Navbar() {
             </button>
           )}
 
-          {/* Login / Register */}
+          {/* 🔐 LOGIN / REGISTER (Desktop) */}
           {!user && (
             <>
               <Button
                 text="Login"
                 onClick={() => navigate("/login")}
-                className="hidden sm:block px-3 py-1 text-sm bg-[#2F7E80] text-white hover:bg-[#236a6c]"
+                className="hidden md:block px-3 py-1 text-sm bg-[#2F7E80] text-white hover:bg-[#236a6c]"
               />
+
               <NavLink
                 to="/register"
-                className="hidden sm:block text-sm underline opacity-80 hover:opacity-100"
+                className="hidden md:block text-sm underline opacity-80 hover:opacity-100"
               >
                 Register
               </NavLink>
             </>
+          )}
+
+          {/* 🚪 LOGOUT (Desktop) */}
+          {user && (
+            <button
+              onClick={handleLogout}
+              className="hidden md:block px-3 py-1 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700"
+            >
+              Logout
+            </button>
           )}
 
           {/* 📱 Mobile Menu Button */}
@@ -327,14 +258,49 @@ export default function Navbar() {
                 🔔 Notifications
               </NavLink>
 
+              {/* 👤 Account & Logout */}
               {user && (
-                <NavLink
-                  to="/settings"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  👤 Account
-                </NavLink>
+                <>
+                  <NavLink
+                    to="/settings"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    👤 Account
+                  </NavLink>
+
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setMobileOpen(false);
+                    }}
+                    className="text-red-400 py-2"
+                  >
+                    🚪 Logout
+                  </button>
+                </>
               )}
+
+              {/* 🔐 LOGIN / REGISTER MOBILE */}
+              {!user && (
+                <>
+                  <NavLink
+                    to="/login"
+                    onClick={() => setMobileOpen(false)}
+                    className="py-2"
+                  >
+                    🔐 Login
+                  </NavLink>
+
+                  <NavLink
+                    to="/register"
+                    onClick={() => setMobileOpen(false)}
+                    className="py-2"
+                  >
+                    📝 Register
+                  </NavLink>
+                </>
+              )}
+
             </div>
           </Motion.div>
         )}
