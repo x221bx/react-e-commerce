@@ -3,7 +3,7 @@ import { navItems, navCategories } from "../utils/constants";
 
 export const useSettingsNavigation = () => {
   const [activeSection, setActiveSection] = useState("personal");
-  const [activeCategory, setActiveCategory] = useState("general");
+  const [activeCategory, setActiveCategory] = useState("profile");
 
   const filteredNavItems = useMemo(
     () => navItems.filter((item) => item.category === activeCategory),

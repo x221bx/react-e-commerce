@@ -1,65 +1,47 @@
 // UserSettings Validation Functions
-import { getErrorMessage } from './translations';
+import { getSettingsMessage } from './translations';
 
 export const validateProfileField = (field, value) => {
   switch (field) {
     case "email":
-      if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-        return getErrorMessage('invalidEmail');
+      if (value) {
+        // More robust email validation
+        const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+        if (!emailRegex.test(value) || value.length > 254) {
+          return getSettingsMessage('invalidEmail');
+        }
       }
       break;
     case "firstName":
-      if (!value.trim()) return getErrorMessage('firstNameRequired');
-      if (value.trim().length < 2) return getErrorMessage('firstNameTooShort');
-      if (value.trim().length > 50) return getErrorMessage('firstNameTooLong');
+      if (!value.trim()) return getSettingsMessage('firstNameRequired');
+      if (value.trim().length < 2) return getSettingsMessage('firstNameTooShort');
+      if (value.trim().length > 50) return getSettingsMessage('firstNameTooLong');
       break;
     case "lastName":
-      if (!value.trim()) return getErrorMessage('lastNameRequired');
-      if (value.trim().length < 2) return getErrorMessage('lastNameTooShort');
-      if (value.trim().length > 50) return getErrorMessage('lastNameTooLong');
+      if (!value.trim()) return getSettingsMessage('lastNameRequired');
+      if (value.trim().length < 2) return getSettingsMessage('lastNameTooShort');
+      if (value.trim().length > 50) return getSettingsMessage('lastNameTooLong');
+      break;
+    case "username":
+      if (!value.trim()) return getSettingsMessage('usernameRequired');
+      if (value.trim().length < 3) return getSettingsMessage('usernameTooShort');
+      if (value.trim().length > 30) return getSettingsMessage('usernameTooLong');
+      if (!/^[a-zA-Z0-9_]+$/.test(value.trim())) return getSettingsMessage('usernameInvalid');
       break;
     case "phone":
        if (value) {
          // Remove all non-digit characters except +
          const cleanNumber = value.replace(/[^\d+]/g, "");
-         // Check if it starts with + followed by digits, or just digits
-         // Minimum 10 digits (including country code), maximum 15 digits
-         // Must start with + or digit, and contain at least 10 digits total
-         const phoneRegex = /^(\+\d{1,3})?\d{7,14}$/;
-         if (!phoneRegex.test(cleanNumber) || cleanNumber.replace(/\D/g, '').length < 10) {
-           return getErrorMessage('invalidPhone');
+         // Check for valid international format: +country_code + local_number
+         // Total digits should be between 10-15, must start with + or digit
+         const digitCount = cleanNumber.replace(/\D/g, '').length;
+         const phoneRegex = /^(\+\d{1,4})?\d{6,14}$/;
+
+         if (!phoneRegex.test(cleanNumber) || digitCount < 7 || digitCount > 15) {
+           return getSettingsMessage('invalidPhone');
          }
        }
        break;
-    case "photoURL":
-      if (value && !/^https?:\/\/.+\.(jpg|jpeg|png|gif|webp)$/i.test(value)) {
-        return getErrorMessage('invalidImageUrl');
-      }
-      break;
-    case "birthDate":
-      if (value) {
-        const date = new Date(value);
-        if (Number.isNaN(date.getTime())) {
-          return getErrorMessage('invalidDate');
-        }
-        if (date > new Date()) {
-          return getErrorMessage('invalidDate'); // Could add specific message for future dates
-        }
-      }
-      break;
-    case "gender":
-      if (
-        value &&
-        !["male", "female"].includes(value)
-      ) {
-        return getErrorMessage('invalidGender');
-      }
-      break;
-    case "profession":
-      if (value && value.trim().length > 80) {
-        return getErrorMessage('professionTooLong');
-      }
-      break;
     default:
       return "";
   }
@@ -69,18 +51,18 @@ export const validateProfileField = (field, value) => {
 export const validateSecurityField = (field, value, formData) => {
   switch (field) {
     case "currentPassword":
-      if (!value) return getErrorMessage('currentPasswordRequired');
+      if (!value) return getSettingsMessage('currentPasswordRequired');
       break;
     case "newPassword":
-      if (!value) return getErrorMessage('newPasswordRequired');
-      if (value.length < 8) return getErrorMessage('passwordTooShort');
+      if (!value) return getSettingsMessage('newPasswordRequired');
+      if (value.length < 8) return getSettingsMessage('passwordTooShort');
       if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(value)) {
-        return getErrorMessage('passwordWeak');
+        return getSettingsMessage('passwordWeak');
       }
       break;
     case "confirmPassword":
-      if (!value) return getErrorMessage('newPasswordRequired'); // Reusing message for confirmation
-      if (value !== formData.newPassword) return getErrorMessage('passwordsNotMatch');
+      if (!value) return getSettingsMessage('newPasswordRequired'); // Reusing message for confirmation
+      if (value !== formData.newPassword) return getSettingsMessage('passwordsNotMatch');
       break;
     default:
       return "";

@@ -66,7 +66,7 @@ const PreferencesSection = ({
         <button
           type="submit"
           disabled={isSavingPreferences}
-          className="inline-flex items-center rounded-xl bg-slate-900 px-5 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-70 dark:bg-emerald-500 dark:hover:bg-emerald-600"
+          className="inline-flex items-center rounded-xl bg-green-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-70 dark:bg-green-500 dark:hover:bg-green-600"
         >
           {isSavingPreferences ? "Saving..." : t('settings.save_display_settings')}
         </button>

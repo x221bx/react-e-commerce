@@ -7,20 +7,27 @@ export const SelectInput = ({ label, value, onChange, children, required, error 
       {label}
       {required && <span className="text-red-500" aria-label="required">*</span>}
     </span>
-    <select
-      value={value || ""}
-      onChange={onChange}
-      aria-label={label}
-      aria-required={required}
-      aria-invalid={!!error}
-      className={`h-11 rounded-xl border px-3 text-sm font-normal shadow-sm transition focus:outline-none focus:ring-2 ${
-        error
-          ? "border-red-300 bg-red-50 text-red-900 focus:border-red-500 focus:ring-red-100 dark:border-red-700 dark:bg-red-950/30 dark:text-red-100 dark:focus:border-red-500 dark:focus:ring-red-500/30"
-          : "border-slate-200 bg-white text-slate-700 focus:border-emerald-400 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-emerald-500 dark:focus:ring-emerald-500/30"
-      }`}
-    >
-      {children}
-    </select>
+    <div className="relative">
+      <select
+        value={value || ""}
+        onChange={onChange}
+        aria-label={label}
+        aria-required={required}
+        aria-invalid={!!error}
+        className={`h-11 w-full appearance-none rounded-xl border px-3 pr-8 text-sm font-normal shadow-sm transition focus:outline-none focus:ring-2 ${
+          error
+            ? "border-red-300 bg-red-50 text-red-900 focus:border-red-500 focus:ring-red-100 dark:border-red-700 dark:bg-red-950/30 dark:text-red-100 dark:focus:border-red-500 dark:focus:ring-red-500/30"
+            : "border-slate-300 bg-white text-slate-900 focus:border-emerald-500 focus:ring-emerald-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-emerald-500 dark:focus:ring-emerald-500/30"
+        }`}
+      >
+        {children}
+      </select>
+      <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+        <svg className="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </div>
+    </div>
     {error && (
       <p className="text-sm text-red-600 dark:text-red-400" role="alert">
         {error}
@@ -75,7 +82,10 @@ export const PasswordInput = ({
   required
 }) => (
   <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
-    {label}
+    <span className="flex items-center gap-1">
+      {label}
+      {required && <span className="text-red-500" aria-label="required">*</span>}
+    </span>
     <div className="relative">
       <input
         type={showPassword ? "text" : "password"}
@@ -83,20 +93,27 @@ export const PasswordInput = ({
         value={value}
         onChange={onChange}
         required={required}
-        className={`h-11 w-full rounded-xl border px-3 pr-10 text-sm font-normal shadow-sm transition focus:outline-none focus:ring-2 ${
+        aria-label={label}
+        aria-required={required}
+        aria-invalid={!!error}
+        className={`h-11 w-full rounded-xl border px-3 pr-12 text-sm font-normal shadow-sm transition focus:outline-none focus:ring-2 ${
           error
             ? "border-red-300 bg-red-50 text-red-900 focus:border-red-500 focus:ring-red-100 dark:border-red-700 dark:bg-red-950/30 dark:text-red-100 dark:focus:border-red-500 dark:focus:ring-red-500/30"
-            : "border-slate-200 bg-white text-slate-700 focus:border-emerald-400 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-emerald-500 dark:focus:ring-emerald-500/30"
+            : "border-slate-300 bg-white text-slate-900 focus:border-emerald-500 focus:ring-emerald-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-emerald-500 dark:focus:ring-emerald-500/30"
         }`}
       />
       <button
         type="button"
         onClick={onToggleVisibility}
-        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
+        className={`absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-lg transition focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
+          error
+            ? "text-red-600 hover:text-red-700 hover:bg-red-100 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/30"
+            : "text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-700"
+        }`}
         aria-label={showPassword ? "Hide password" : "Show password"}
         aria-expanded={showPassword}
       >
-        {showPassword ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+        {showPassword ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
       </button>
     </div>
     {error && (

@@ -11,6 +11,7 @@ import {
   LifeBuoy,
   LogOut,
   CreditCard,
+  MessageSquareWarning,
 } from "lucide-react";
 import {
   selectCurrentUser,
@@ -66,6 +67,12 @@ const navItems = [
     labelKey: "account.feedback_support",
     descriptionKey: "account.support_description",
     icon: LifeBuoy,
+  },
+  {
+    to: "complaints",
+    labelKey: "account.complaints",
+    descriptionKey: "account.complaints_description",
+    icon: MessageSquareWarning,
   },
 ];
 
@@ -124,7 +131,7 @@ export default function AccountLayout() {
   return (
     <div className={`min-h-screen py-10 transition-colors ${mainBackground}`}>
       <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 sm:px-6 lg:flex-row lg:gap-8 lg:px-8">
-        <aside className={`w-full shrink-0 rounded-3xl p-6 shadow-lg ring-1 lg:w-72 ${asideSurface}`}>
+        <aside className={`w-full shrink-0 rounded-3xl p-6 shadow-lg ring-1 lg:w-72 ${asideSurface} text-slate-900 dark:text-slate-100`}>
           <div className="flex items-center gap-4">
             <div className={`flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl text-lg font-semibold ring-1 ${avatarSurface}`}>
               {user?.photoURL || user?.photoUrl ? (
@@ -185,7 +192,7 @@ export default function AccountLayout() {
         </aside>
 
         <section
-          className={`flex-1 rounded-3xl p-6 shadow-lg ring-1 transition-colors ${sectionRing} ${sectionSurface}`}
+          className={`flex-1 rounded-3xl p-6 shadow-lg ring-1 transition-colors ${sectionRing} ${sectionSurface} text-slate-900 dark:text-slate-100`}
         >
           <Outlet />
         </section>

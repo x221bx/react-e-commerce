@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { selectCurrentUser, signOut } from "../../features/auth/authSlice";
@@ -107,11 +107,20 @@ export default function Navbar() {
 
         {/* 🧭 Desktop Nav */}
         <nav className="hidden lg:flex items-center gap-x-6 lg:gap-x-6">
-          <NavLink to="/" className={({ isActive }) =>
-            `${navLinkBase} ${isActive ? navLinkActive : navLinkIdle}`}>Home</NavLink>
+          <NavLink
+            to="/"
+            className={({ isActive }) =>
+              `${navLinkBase} ${isActive ? navLinkActive : navLinkIdle}`
+            }
+          >
+            {t("nav.home", "Home")}
+          </NavLink>
 
           <NavLink to="/products" className={({ isActive }) =>
             `${navLinkBase} ${isActive ? navLinkActive : navLinkIdle}`}>{t("nav.products")}</NavLink>
+
+          <NavLink to="/articles" className={({ isActive }) =>
+            `${navLinkBase} ${isActive ? navLinkActive : navLinkIdle}`}>{t("nav.articles", "Articles")}</NavLink>
 
           {user?.role === "admin" && (
             <NavLink className={`${navLinkBase} ${navLinkIdle}`} to="/admin">
@@ -139,7 +148,13 @@ export default function Navbar() {
           </button>
 
           {/* ❤️ Favorites */}
-          <button onClick={() => navigate("/favorites")} className={`relative h-9 w-9 rounded-lg flex items-center justify-center ${subtleControlBg}`}>
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              navigate("/favorites");
+            }}
+            className={`relative h-9 w-9 rounded-lg flex items-center justify-center ${subtleControlBg}`}
+          >
             <FiHeart size={18} />
             {favorites.length > 0 && (
               <span className="absolute -top-1 -right-1 bg-pink-500 text-xs rounded-full px-1">
@@ -149,7 +164,13 @@ export default function Navbar() {
           </button>
 
           {/* 🛒 Cart */}
-          <button onClick={() => navigate("/cart")} className={`relative h-9 w-9 rounded-lg flex items-center justify-center ${subtleControlBg}`}>
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              navigate("/cart");
+            }}
+            className={`relative h-9 w-9 rounded-lg flex items-center justify-center ${subtleControlBg}`}
+          >
             <FiShoppingCart size={18} />
             {cartCount > 0 && (
               <span className="absolute -top-1 -right-1 bg-cyan-600 text-xs rounded-full px-1">
@@ -178,7 +199,10 @@ export default function Navbar() {
           {/* 👤 Account Icon */}
           {user && (
             <button
-              onClick={() => navigate("/settings")}
+              onClick={(e) => {
+                e.preventDefault();
+                navigate("/account/settings");
+              }}
               className="flex h-9 w-9 rounded-full items-center justify-center bg-white/20 hover:bg-white/30 text-white"
             >
               <FiUser size={18} />
@@ -190,16 +214,22 @@ export default function Navbar() {
             <>
               <Button
                 text="Login"
-                onClick={() => navigate("/login")}
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate("/login");
+                }}
                 className="hidden md:block px-3 py-1 text-sm bg-[#2F7E80] text-white hover:bg-[#236a6c]"
               />
 
-              <NavLink
-                to="/register"
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate("/register");
+                }}
                 className="hidden md:block text-sm underline opacity-80 hover:opacity-100"
               >
                 Register
-              </NavLink>
+              </button>
             </>
           )}
 
@@ -246,58 +276,99 @@ export default function Navbar() {
                 🌐 {currentLang === "en" ? "العربية" : "English"}
               </button>
 
-              <NavLink to="/favorites" onClick={() => setMobileOpen(false)}>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  setMobileOpen(false);
+                  navigate("/favorites");
+                }}
+                className="py-2 text-left w-full"
+              >
                 ❤️ Favorites
-              </NavLink>
+              </button>
 
-              <NavLink to="/cart" onClick={() => setMobileOpen(false)}>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  setMobileOpen(false);
+                  navigate("/cart");
+                }}
+                className="py-2 text-left w-full"
+              >
                 🛒 Cart
-              </NavLink>
+              </button>
 
-              <NavLink to="/notifications" onClick={() => setMobileOpen(false)}>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  setMobileOpen(false);
+                  navigate("/articles");
+                }}
+                className="py-2 text-left w-full"
+              >
+                📰 {t("nav.articles", "Articles")}
+              </button>
+
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  setMobileOpen(false);
+                  navigate("/notifications");
+                }}
+                className="py-2 text-left w-full"
+              >
                 🔔 Notifications
-              </NavLink>
+              </button>
 
-              {/* 👤 Account & Logout */}
               {user && (
                 <>
-                  <NavLink
-                    to="/settings"
-                    onClick={() => setMobileOpen(false)}
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setMobileOpen(false);
+                      navigate("/account/settings");
+                    }}
+                    className="py-2 text-left w-full"
                   >
                     👤 Account
-                  </NavLink>
+                  </button>
 
                   <button
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.preventDefault();
                       handleLogout();
                       setMobileOpen(false);
                     }}
-                    className="text-red-400 py-2"
+                    className="text-red-400 py-2 text-left w-full"
                   >
                     🚪 Logout
                   </button>
                 </>
               )}
 
-              {/* 🔐 LOGIN / REGISTER MOBILE */}
               {!user && (
                 <>
-                  <NavLink
-                    to="/login"
-                    onClick={() => setMobileOpen(false)}
-                    className="py-2"
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setMobileOpen(false);
+                      navigate("/login");
+                    }}
+                    className="py-2 text-left w-full"
                   >
                     🔐 Login
-                  </NavLink>
+                  </button>
 
-                  <NavLink
-                    to="/register"
-                    onClick={() => setMobileOpen(false)}
-                    className="py-2"
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setMobileOpen(false);
+                      navigate("/register");
+                    }}
+                    className="py-2 text-left w-full"
                   >
                     📝 Register
-                  </NavLink>
+                  </button>
                 </>
               )}
 

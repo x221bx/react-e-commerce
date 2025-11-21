@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { navCategories, navItems } from "../utils/constants";
 import ProfileAvatar from "./ProfileAvatar";
+import { UseTheme } from "../../../theme/ThemeProvider";
 
 const buildInitials = (name) =>
   (name || "User")
@@ -21,11 +23,14 @@ const Navigation = ({
   user,
   profileForm,
 }) => {
+  const { theme } = UseTheme();
+  const isDarkMode = theme === "dark";
+  const { t } = useTranslation();
   const displayName = useMemo(() => {
     if (profileForm?.firstName || profileForm?.lastName) {
       return `${profileForm.firstName || ""} ${profileForm.lastName || ""}`.trim();
     }
-    return user?.name || "Your Profile";
+    return user?.name || t("settings.personal_info", "Your Profile");
   }, [profileForm?.firstName, profileForm?.lastName, user?.name]);
 
   const email = user?.email || profileForm?.email || "—";
@@ -33,29 +38,81 @@ const Navigation = ({
   const [avatarError, setAvatarError] = useState(false);
   const initials = useMemo(() => buildInitials(displayName), [displayName]);
 
+  const getCategoryLabel = (category) => {
+    if (!category) return "";
+    if (category.labelKey) {
+      return t(category.labelKey, { defaultValue: category.label || "" });
+    }
+    return category.label || "";
+  };
+  const getCategoryDescription = (category) => {
+    if (!category) return "";
+    if (category.descriptionKey) {
+      return t(category.descriptionKey, { defaultValue: category.description || "" });
+    }
+    return category.description || "";
+  };
+  const getCategoryHelper = (category) => {
+    if (!category) return "";
+    if (category.helperKey) {
+      return t(category.helperKey, { defaultValue: category.helper || "" });
+    }
+    return category.helper || "";
+  };
+  const getItemLabel = (item) => {
+    if (!item) return "";
+    if (item.labelKey) {
+      return t(item.labelKey, { defaultValue: item.label || "" });
+    }
+    return item.label || "";
+  };
+  const getItemDescription = (item) => {
+    if (!item) return "";
+    if (item.descriptionKey) {
+      return t(item.descriptionKey, { defaultValue: item.description || "" });
+    }
+    return item.description || "";
+  };
+
+  const activeCategoryLabel = getCategoryLabel(activeCategoryCopy) || "Profile";
+  const activeCategoryDescription = getCategoryDescription(activeCategoryCopy) || "Personal information and security";
+  const activeCategoryHelper = getCategoryHelper(activeCategoryCopy) || "Keep your personal and security details accurate.";
+
+  const categoryActiveClasses = isDarkMode
+    ? "bg-slate-700 text-emerald-100 shadow"
+    : "bg-gradient-to-r from-green-50 to-amber-50 text-green-900 shadow";
+  const categoryIdleClasses = isDarkMode
+    ? "text-slate-300 hover:text-white"
+    : "text-slate-600 hover:text-slate-900";
+  const sectionActiveClasses = isDarkMode
+    ? "bg-emerald-900/30 text-emerald-200 border border-emerald-800"
+    : "bg-emerald-50 text-emerald-700 border border-emerald-200";
+  const sectionIdleClasses = isDarkMode
+    ? "text-slate-300 hover:bg-slate-800/70 hover:text-white"
+    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900";
+
   if (variant === "embedded") {
     return (
       <div className="space-y-6">
         {/* Category Tabs - Mobile-First Design */}
-        <div className="flex gap-1 p-1 bg-slate-100 rounded-2xl dark:bg-slate-800">
+        <div className="flex gap-1 rounded-2xl bg-slate-100 p-1 dark:bg-slate-800">
           {navCategories.map((category) => {
             const isCategoryActive = category.id === activeCategory;
+            const CategoryIcon = category.icon;
             return (
               <button
                 key={category.id}
                 type="button"
                 onClick={() => handleCategoryChange(category.id)}
-                className={`flex-1 flex flex-col items-center gap-2 py-3 px-2 rounded-xl text-xs font-medium transition-all touch-manipulation min-h-[60px] ${
-                  isCategoryActive
-                    ? "bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white"
-                    : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                className={`flex-1 min-h-[60px] rounded-xl px-2 py-2 text-xs font-medium transition-all touch-manipulation flex flex-col items-center justify-center gap-1 ${
+                  isCategoryActive ? categoryActiveClasses : categoryIdleClasses
                 }`}
                 aria-pressed={isCategoryActive}
               >
-                <span className="text-lg" role="img" aria-label={category.label}>
-                  {category.icon}
+                <CategoryIcon className="h-4 w-4 flex-shrink-0" />
+                <span className="text-center leading-tight text-[10px] px-1">
+                  {getCategoryLabel(category)}
                 </span>
-                <span className="text-center leading-tight">{category.label}</span>
               </button>
             );
           })}
@@ -64,11 +121,11 @@ const Navigation = ({
         {/* Section List with Descriptions */}
         <div className="space-y-3">
           <div>
-            <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
-              {activeCategoryCopy?.label}
+            <h3 className={`text-sm font-semibold ${isDarkMode ? "text-slate-100" : "text-slate-900"}`}>
+              {activeCategoryLabel}
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              {activeCategoryCopy?.description}
+            <p className={`mt-1 text-xs ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+              {activeCategoryDescription}
             </p>
           </div>
 
@@ -80,20 +137,20 @@ const Navigation = ({
                 <button
                   key={item.id}
                   onClick={() => scrollToSection(item.id)}
-                  className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all touch-manipulation ${
-                    isActive
-                      ? "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-200 dark:border-emerald-800"
-                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800/70 dark:hover:text-white"
+                  className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all touch-manipulation ${
+                    isActive ? sectionActiveClasses : sectionIdleClasses
                   }`}
                   aria-current={isActive ? "true" : undefined}
                 >
-                  <IconComponent className="h-5 w-5 flex-shrink-0" />
+                  <IconComponent className="h-4 w-4 flex-shrink-0" />
                   <div className="flex-1 text-left min-w-0">
-                    <div className="font-medium truncate">{item.label}</div>
-                    <div className="text-xs opacity-75 truncate">{item.description}</div>
+                    <div className="font-medium truncate text-sm">{getItemLabel(item)}</div>
+                    <div className="text-xs opacity-75 truncate leading-tight">
+                      {getItemDescription(item)}
+                    </div>
                   </div>
                   {isActive && (
-                    <div className="w-2 h-2 bg-emerald-500 rounded-full flex-shrink-0" aria-hidden="true"></div>
+                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full flex-shrink-0 ml-1" aria-hidden="true"></div>
                   )}
                 </button>
               );
@@ -107,35 +164,40 @@ const Navigation = ({
   // Standalone navigation
   return (
     <>
-      <div className="rounded-3xl bg-white/95 p-6 shadow-lg ring-1 ring-slate-100 dark:bg-slate-900 dark:ring-slate-800">
+      <div className="rounded-3xl bg-white p-6 ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800">
         <div className="flex items-center gap-4">
           <ProfileAvatar
             photo={!avatarError ? navPhoto : ""}
             initials={initials}
             onError={() => setAvatarError(true)}
             size="md"
+            name={displayName}
           />
           <div>
             <p className="text-lg font-semibold text-slate-900 dark:text-white">
-              {displayName || "Your Profile"}
+              {displayName || t("settings.personal_info", "Your Profile")}
             </p>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
+            <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">
               {email}
             </p>
           </div>
         </div>
         <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
-          Keep your profile details updated so we can personalize farm and vet recommendations for you.
+          {t(
+            "settings.profile_helper_text",
+            "Keep your farming profile updated so we can provide personalized agricultural recommendations and veterinary care tips."
+          )}
         </p>
       </div>
 
-      <div className="rounded-3xl bg-white/95 p-4 shadow-lg ring-1 ring-slate-100 dark:bg-slate-900/80 dark:ring-slate-800">
+      <div className="rounded-3xl bg-white p-4 ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800">
         <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-          Focus area
+          {t("settings.navigation.focus_area", "Focus area")}
         </p>
         <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
           {navCategories.map((category) => {
             const isCategoryActive = category.id === activeCategory;
+            const CategoryIcon = category.icon;
             return (
               <button
                 key={category.id}
@@ -143,31 +205,38 @@ const Navigation = ({
                 onClick={() => handleCategoryChange(category.id)}
                 className={`rounded-2xl px-3 py-2 text-sm font-semibold transition ${
                   isCategoryActive
-                    ? "bg-emerald-600 text-white shadow-sm shadow-emerald-200/40 dark:bg-emerald-500 dark:shadow-emerald-900/40"
+                    ? "bg-gradient-to-r from-green-600 to-green-700 text-white dark:bg-green-500"
                     : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
                 }`}
                 aria-pressed={isCategoryActive}
               >
-                {category.label}
+                <span className="inline-flex items-center gap-2">
+                  <CategoryIcon className="h-4 w-4 flex-shrink-0" />
+                  <span className="truncate">{getCategoryLabel(category)}</span>
+                </span>
               </button>
             );
           })}
         </div>
         <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
-          {activeCategoryCopy.helper}
+          {activeCategoryHelper}
         </p>
       </div>
 
       <nav
-        className="rounded-3xl bg-white/95 p-4 shadow-lg ring-1 ring-slate-100 dark:bg-slate-900/80 dark:ring-slate-800"
-        aria-label="Profile settings sections"
+        className="rounded-3xl bg-white p-4 ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800"
+        aria-label={t("settings.navigation.aria_label", "Profile settings sections")}
       >
         {navCategories.map((category) => {
           const items = navItems.filter((item) => item.category === category.id);
+          const CategoryIcon = category.icon;
           return (
             <div key={category.id} className="space-y-2">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                {category.label}
+                <span className="inline-flex items-center gap-2">
+                  <CategoryIcon className="h-4 w-4 flex-shrink-0" />
+                  <span className="truncate">{getCategoryLabel(category)}</span>
+                </span>
               </p>
               <div className="space-y-2">
                 {items.map((item) => {
@@ -177,15 +246,20 @@ const Navigation = ({
                     <button
                       key={item.id}
                       onClick={() => scrollToSection(item.id)}
-                      className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition ${
+                      className={`flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition ${
                         isActive
-                          ? "bg-emerald-50/80 text-emerald-700 shadow-sm dark:bg-emerald-900/30 dark:text-emerald-200"
-                          : "text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/70"
+                          ? "bg-gradient-to-r from-green-100 to-green-50 text-green-800 dark:bg-green-900/30 dark:text-green-200"
+                          : "text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800/70"
                       }`}
                       aria-current={isActive ? "true" : undefined}
                     >
-                      <IconComponent className="h-4 w-4" />
-                      {item.label}
+                      <IconComponent className="h-4 w-4 flex-shrink-0" />
+                      <div className="flex flex-col text-left min-w-0">
+                        <span className="truncate">{getItemLabel(item)}</span>
+                        <span className="text-xs font-normal text-slate-500 dark:text-slate-400 truncate">
+                          {getItemDescription(item)}
+                        </span>
+                      </div>
                     </button>
                   );
                 })}
