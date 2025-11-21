@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { saveUserFavorites } from "../../services/userDataService";
 
 // Helper function to get user-specific favorites key
 const getFavoritesKey = (userId) => userId ? `favorites_${userId}` : "favorites";

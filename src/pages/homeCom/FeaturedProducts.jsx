@@ -11,7 +11,7 @@ export default function FeaturedProducts() {
   });
 
   // ⛔ لا تعمل map هنا عشان متكسرش الـid
-  // ⭕ استخدم أول 8 منتجات كما هي
+  // ⭕ استخدم أول 4 منتجات كما هي
   const featured = data.slice(0, 4);
 
   if (isLoading) {
@@ -54,11 +54,7 @@ export default function FeaturedProducts() {
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
         {featured.map((p, i) => (
-          <ProductCard
-            key={p.id}
-            product={p}     // ⬅️ نبعته كامل زي ما هو
-            index={i}
-          />
+          <ProductCard key={p.id} product={p} index={i} />
         ))}
       </div>
     </section>
