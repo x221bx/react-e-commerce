@@ -1,5 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { saveUserCart, getUserCart, subscribeToUserCart } from "../../services/userDataService";
+import { doc, updateDoc } from "firebase/firestore";
 
 const cartSlice = createSlice({
   name: "cart",
