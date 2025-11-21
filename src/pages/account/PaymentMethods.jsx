@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import Input from "../../components/ui/Input";
 import { UseTheme } from "../../theme/ThemeProvider";
+import { useTranslation } from "react-i18next";
 
 const initialMethods = [
   {
@@ -44,6 +45,7 @@ const walletLabels = {
 
 export default function PaymentMethods() {
   const { theme } = UseTheme();
+  const { t } = useTranslation();
   const [methods, setMethods] = useState(initialMethods);
   const [cardForm, setCardForm] = useState({
     holder: "",
@@ -58,6 +60,8 @@ export default function PaymentMethods() {
   });
   const [isAddingCard, setIsAddingCard] = useState(false);
   const [isAddingWallet, setIsAddingWallet] = useState(false);
+  const [cardErrors, setCardErrors] = useState({});
+  const [walletErrors, setWalletErrors] = useState({});
   const isDark = theme === "dark";
 
   const defaultMethod = useMemo(
@@ -98,60 +102,123 @@ export default function PaymentMethods() {
     ? "focus:border-emerald-500 focus:ring-emerald-500/30"
     : "focus:border-emerald-400 focus:ring-emerald-100";
 
+  const luhnCheck = (raw) => {
+    let sum = 0;
+    let shouldDouble = false;
+    for (let i = raw.length - 1; i >= 0; i -= 1) {
+      let digit = parseInt(raw[i], 10);
+      if (Number.isNaN(digit)) return false;
+      if (shouldDouble) {
+        digit *= 2;
+        if (digit > 9) digit -= 9;
+      }
+      sum += digit;
+      shouldDouble = !shouldDouble;
+    }
+    return sum % 10 === 0;
+  };
+
+  const validateExpiry = (value) => {
+    const match = /^(\d{2})\/(\d{2})$/.exec(value);
+    if (!match) return false;
+    const [_, month, year] = match;
+    const monthNum = Number(month);
+    if (monthNum < 1 || monthNum > 12) return false;
+    const fullYear = 2000 + Number(year);
+    const expiry = new Date(fullYear, monthNum - 1, 1);
+    expiry.setMonth(expiry.getMonth() + 1);
+    return expiry > new Date();
+  };
+
   const handleCardFormChange = (field, value) => {
     setCardForm((prev) => ({ ...prev, [field]: value }));
+    setCardErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
   const handleWalletFormChange = (field, value) => {
     setWalletForm((prev) => ({ ...prev, [field]: value }));
+    setWalletErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
-  const handleAddCard = (event) => {
-    event.preventDefault();
-    if (!cardForm.holder || cardForm.number.length < 12 || !cardForm.exp) return;
 
-    setIsAddingCard(true);
-    setTimeout(() => {
-      setMethods((prev) => [
-        ...prev,
-        {
-          id: generateId(),
-          type: "card",
-          brand: detectBrand(cardForm.number),
-          holder: cardForm.holder.trim(),
-          last4: cardForm.number.slice(-4),
-          exp: cardForm.exp,
-          nickname: cardForm.nickname.trim(),
-          isDefault: prev.length === 0,
-        },
-      ]);
-      setCardForm({ holder: "", number: "", exp: "", cvv: "", nickname: "" });
-      setIsAddingCard(false);
-    }, 400);
-  };
+    const handleAddCard = (event) => {
+      event.preventDefault();
+      const errors = {};
+      const holder = cardForm.holder.trim();
+      const sanitizedNumber = cardForm.number.replace(/\s+/g, "");
+      const cvvTrimmed = cardForm.cvv.trim();
+  
+      if (!holder) {
+        errors.holder = t("payments.errors.holder", "Please enter the card holder name.");
+      }
+      if (sanitizedNumber.length < 13 || sanitizedNumber.length > 19 || !luhnCheck(sanitizedNumber)) {
+        errors.number = t("payments.errors.number", "Enter a valid card number.");
+      }
+      if (!validateExpiry(cardForm.exp)) {
+        errors.exp = t("payments.errors.expiry", "Expiry must be MM/YY and in the future.");
+      }
+      if (cvvTrimmed.length < 3 || cvvTrimmed.length > 4 || /\D/.test(cvvTrimmed)) {
+        errors.cvv = t("payments.errors.cvv", "Enter the 3 or 4 digit CVV.");
+      }
+  
+      if (Object.keys(errors).length) {
+        setCardErrors(errors);
+        return;
+      }
+  
+      setIsAddingCard(true);
+      setTimeout(() => {
+        setMethods((prev) => [
+          ...prev,
+          {
+            id: generateId(),
+            type: "card",
+            brand: detectBrand(sanitizedNumber),
+            holder,
+            last4: sanitizedNumber.slice(-4),
+            exp: cardForm.exp,
+            nickname: cardForm.nickname.trim(),
+            isDefault: prev.length === 0,
+          },
+        ]);
+        setCardForm({ holder: "", number: "", exp: "", cvv: "", nickname: "" });
+        setCardErrors({});
+        setIsAddingCard(false);
+      }, 600);
+    };
+  
+    const handleAddWallet = (event) => {
+      event.preventDefault();
+      const errors = {};
+      const email = walletForm.email.trim();
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        errors.email = t("payments.errors.email", "Enter a valid email address.");
+      }
+  
+      if (Object.keys(errors).length) {
+        setWalletErrors(errors);
+        return;
+      }
+  
+      setIsAddingWallet(true);
+      setTimeout(() => {
+        setMethods((prev) => [
+          ...prev,
+          {
+            id: generateId(),
+            type: "wallet",
+            provider: walletForm.provider,
+            email,
+            isDefault: methods.length === 0,
+          },
+        ]);
+        setWalletForm({ provider: "paypal", email: "" });
+        setWalletErrors({});
+        setIsAddingWallet(false);
+      }, 600);
+    };
 
-  const handleAddWallet = (event) => {
-    event.preventDefault();
-    if (!walletForm.email.includes("@")) return;
-
-    setIsAddingWallet(true);
-    setTimeout(() => {
-      setMethods((prev) => [
-        ...prev,
-        {
-          id: generateId(),
-          type: "wallet",
-          provider: walletForm.provider,
-          email: walletForm.email.trim(),
-          isDefault: prev.length === 0,
-        },
-      ]);
-      setWalletForm({ provider: "paypal", email: "" });
-      setIsAddingWallet(false);
-    }, 400);
-  };
-
-  const handleDeleteMethod = (id) => {
+const handleDeleteMethod = (id) => {
     setMethods((prev) => prev.filter((method) => method.id !== id));
   };
 
@@ -174,7 +241,7 @@ export default function PaymentMethods() {
           <div>
             <h1 className={`text-3xl font-semibold ${headingColor}`}>Payment Methods</h1>
             <p className={`text-sm ${subText}`}>
-              Store cards or wallets you trust. Everything renders responsively across the
+              Store cards and wallets you trust. Everything renders responsively across the
               account hub.
             </p>
           </div>
@@ -206,6 +273,7 @@ export default function PaymentMethods() {
                 onMakeDefault={() => handleSetDefault(method.id)}
                 onDelete={() => handleDeleteMethod(method.id)}
                 isDark={isDark}
+                t={t}
               />
             ))}
             {methods.length === 0 && (
@@ -220,45 +288,47 @@ export default function PaymentMethods() {
           <div className={`rounded-3xl border p-5 shadow-lg ${panelSurface}`}>
             <div className={`mb-4 flex items-center gap-2 ${headingColor}`}>
               <CreditCard className="h-4 w-4" />
-              <p className="text-sm font-semibold">Add new card</p>
+              <p className="text-sm font-semibold">
+                {t("payments.form.cardTitle", "Add new card")}
+              </p>
             </div>
             <form onSubmit={handleAddCard} className="space-y-4">
               <Input
-                label="Card holder name"
+                label={t("payments.form.cardHolder", "Card holder name")}
                 value={cardForm.holder}
                 onChange={(e) => handleCardFormChange("holder", e.target.value)}
-                required
+                error={cardErrors.holder}
               />
               <Input
-                label="Card number"
+                label={t("payments.form.cardNumber", "Card number")}
                 value={cardForm.number}
                 onChange={(e) => handleCardFormChange("number", e.target.value.replace(/\s+/g, ""))}
                 placeholder="4242 4242 4242 4242"
-                maxLength={16}
-                required
+                maxLength={19}
+                error={cardErrors.number}
               />
               <div className="grid gap-3 sm:grid-cols-2">
                 <Input
-                  label="Expiry (MM/YY)"
+                  label={t("payments.form.expiry", "Expiry (MM/YY)")}
                   value={cardForm.exp}
                   onChange={(e) => handleCardFormChange("exp", e.target.value)}
                   placeholder="04/27"
-                  required
+                  error={cardErrors.exp}
                 />
                 <Input
-                  label="CVV"
+                  label={t("payments.form.cvv", "CVV")}
                   value={cardForm.cvv}
                   onChange={(e) => handleCardFormChange("cvv", e.target.value.slice(0, 4))}
                   placeholder="123"
                   maxLength={4}
-                  required
+                  error={cardErrors.cvv}
                 />
               </div>
               <Input
-                label="Nickname (optional)"
+                label={t("payments.form.nickname", "Nickname (optional)")}
                 value={cardForm.nickname}
                 onChange={(e) => handleCardFormChange("nickname", e.target.value)}
-                placeholder="Farm purchases"
+                placeholder={t("payments.form.nicknamePlaceholder", "Farm purchases")}
               />
               <div className="flex gap-3">
                 <button
@@ -267,14 +337,16 @@ export default function PaymentMethods() {
                   className={`inline-flex flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold transition disabled:opacity-70 ${quietButton}`}
                 >
                   <Plus className="h-4 w-4" />
-                  {isAddingCard ? "Saving..." : "Save card"}
+                  {isAddingCard
+                    ? t("payments.form.saving", "Saving...")
+                    : t("payments.form.saveCard", "Save card")}
                 </button>
                 <button
                   type="button"
                   onClick={() => setCardForm({ holder: "", number: "", exp: "", cvv: "", nickname: "" })}
                   className="text-sm font-semibold text-emerald-500 hover:underline"
                 >
-                  Reset
+                  {t("payments.form.reset", "Reset")}
                 </button>
               </div>
             </form>
@@ -283,11 +355,13 @@ export default function PaymentMethods() {
           <div className={`rounded-3xl border p-5 shadow-lg ${panelSurface}`}>
             <div className={`mb-4 flex items-center gap-2 ${headingColor}`}>
               <WalletCards className="h-4 w-4" />
-              <p className="text-sm font-semibold">Link wallet</p>
+              <p className="text-sm font-semibold">
+                {t("payments.form.walletTitle", "Link wallet")}
+              </p>
             </div>
             <form onSubmit={handleAddWallet} className="space-y-4">
               <label className={`flex flex-col gap-2 text-sm font-medium ${labelColor}`}>
-                Provider
+                {t("payments.form.walletProvider", "Provider")}
                 <select
                   value={walletForm.provider}
                   onChange={(e) => handleWalletFormChange("provider", e.target.value)}
@@ -299,11 +373,11 @@ export default function PaymentMethods() {
                 </select>
               </label>
               <Input
-                label="Account email"
+                label={t("payments.form.walletEmail", "Account email")}
                 value={walletForm.email}
                 onChange={(e) => handleWalletFormChange("email", e.target.value)}
                 placeholder="team@farmhub.dev"
-                required
+                error={walletErrors.email}
               />
               <button
                 type="submit"
@@ -311,17 +385,20 @@ export default function PaymentMethods() {
                 className={`inline-flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold transition disabled:opacity-70 ${quietButton}`}
               >
                 <Plus className="h-4 w-4" />
-                {isAddingWallet ? "Linking..." : "Link wallet"}
+                {isAddingWallet
+                  ? t("payments.form.linking", "Linking...")
+                  : t("payments.form.linkWallet", "Link wallet")}
               </button>
             </form>
           </div>
+
         </aside>
       </div>
     </div>
   );
 }
 
-function PaymentMethodCard({ method, onMakeDefault, onDelete, isDark }) {
+function PaymentMethodCard({ method, onMakeDefault, onDelete, isDark, t }) {
   const isCard = method.type === "card";
   const badge =
     isCard && brandCopy[method.brand]
@@ -365,7 +442,7 @@ function PaymentMethodCard({ method, onMakeDefault, onDelete, isDark }) {
         {method.isDefault && (
           <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${defaultBadge}`}>
             <Star className="h-3 w-3" />
-            Default
+            {t("payments.status.defaultBadge", "Default")}
           </span>
         )}
       </div>
@@ -382,7 +459,7 @@ function PaymentMethodCard({ method, onMakeDefault, onDelete, isDark }) {
             className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 transition ${outlineButton}`}
           >
             <Star className="h-3 w-3" />
-            Make default
+            {t("payments.actions.makeDefault", "Make default")}
           </button>
         )}
         <button
@@ -391,7 +468,7 @@ function PaymentMethodCard({ method, onMakeDefault, onDelete, isDark }) {
           className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 transition ${destructiveButton}`}
         >
           <Trash2 className="h-3 w-3" />
-          Delete
+          {t("payments.actions.delete", "Delete")}
         </button>
       </div>
     </div>

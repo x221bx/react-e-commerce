@@ -15,26 +15,30 @@ const SectionCard = ({
   const isDark = theme === "dark";
   const palette = sectionToneStyles[tone] || sectionToneStyles.neutral;
   const surface = palette[isDark ? "dark" : "light"];
-  const eyebrowColor = isDark ? "text-emerald-200" : "text-emerald-600";
+  const eyebrowColor = isDark ? "text-green-300" : "text-green-700";
   const headingColor = isDark ? "text-white" : "text-slate-900";
-  const descriptionColor = isDark ? "text-slate-300" : "text-slate-500";
+  const descriptionColor = isDark ? "text-slate-400" : "text-slate-600";
 
   return (
     <section
       ref={innerRef}
       id={sectionId}
-      className={`rounded-3xl p-6 shadow-sm transition-colors ${surface}`}
+      className={`rounded-3xl p-6 transition-colors ${surface}`}
     >
-      <div className="mb-6 space-y-2">
-        <p className={`text-sm font-semibold uppercase tracking-wide ${eyebrowColor}`}>
+      <header className="mb-8 space-y-3">
+        <p className={`text-xs font-bold uppercase tracking-wider ${eyebrowColor} opacity-80`}>
           {eyebrow}
         </p>
-        <h2 className={`text-2xl font-semibold ${headingColor}`}>
+        <h2 className={`text-xl font-bold ${headingColor} leading-tight`}>
           {title}
         </h2>
-        <p className={`text-sm ${descriptionColor}`}>{description}</p>
+        <p className={`text-sm ${descriptionColor} leading-relaxed max-w-2xl`}>
+          {description}
+        </p>
+      </header>
+      <div className="space-y-6">
+        {children}
       </div>
-      {children}
     </section>
   );
 };
