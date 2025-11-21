@@ -25,9 +25,12 @@ export default function ProductCard({ product, index = 0 }) {
     return clean;
   };
 
-  const isFav = useSelector((state) =>
-    state.favorites.some((f) => f.id === product.id)
+  const favorites = useSelector(
+    (state) => state.favorites?.items ?? state.favorites ?? []
   );
+  const isFav = Array.isArray(favorites)
+    ? favorites.some((f) => f?.id === product.id)
+    : false;
 
   const inCart = useSelector((state) =>
     state.cart.items.some((c) => c.id === product.id)

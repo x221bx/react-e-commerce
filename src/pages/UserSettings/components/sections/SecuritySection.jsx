@@ -1,6 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import SectionCard from "../SectionCard";
 import { PasswordInput, PasswordStrengthIndicator } from "../FormComponents";
+import { sendPasswordReset } from "../../services/userSettingsService";
+import toast from "react-hot-toast";
 
 const SecuritySection = ({
   sectionId,
@@ -16,19 +19,41 @@ const SecuritySection = ({
   setShowNewPassword,
   setShowConfirmPassword,
   passwordStrength,
-  securityErrors
-}) => (
-  <SectionCard
-    sectionId={sectionId}
-    innerRef={securityRef}
-    eyebrow="Security"
-    title="Keep your account protected"
-    description="Use a unique password and refresh it frequently."
-    tone="highlight"
-  >
+  securityErrors,
+  user
+}) => {
+  const { t } = useTranslation();
+  const [isSendingReset, setIsSendingReset] = useState(false);
+
+  const handleForgotPassword = async () => {
+    if (!user?.email) {
+      toast.error(t("settings.forgotPasswordNoEmail", "No email address found for your account."));
+      return;
+    }
+
+    setIsSendingReset(true);
+    try {
+      await sendPasswordReset(user.email);
+      toast.success(t("settings.forgotPasswordSuccess", "Password reset email sent! Check your inbox."));
+    } catch (error) {
+      toast.error(error.message || t("settings.forgotPasswordError", "Failed to send reset email."));
+    } finally {
+      setIsSendingReset(false);
+    }
+  };
+
+  return (
+    <SectionCard
+      sectionId={sectionId}
+      innerRef={securityRef}
+      eyebrow={t("settings.securitySection", "Security")}
+      title={t("settings.securityTitle", "Keep your account protected")}
+      description={t("settings.securityDescription", "Use a unique password and refresh it frequently.")}
+      tone="highlight"
+    >
     <form onSubmit={handlePasswordSubmit} className="space-y-4">
       <PasswordInput
-        label="Current Password"
+        label={t("settings.currentPassword", "Current Password")}
         name="currentPassword"
         value={securityForm.currentPassword}
         onChange={(e) => handleSecurityChange("currentPassword", e.target.value)}
@@ -37,10 +62,22 @@ const SecuritySection = ({
         error={securityErrors.currentPassword}
         required
       />
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={handleForgotPassword}
+          disabled={isSendingReset}
+          className="text-sm text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 underline disabled:opacity-50"
+        >
+          {isSendingReset
+            ? t("settings.sendingReset", "Sending...")
+            : t("settings.forgotPassword", "Forgot password?")}
+        </button>
+      </div>
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
           <PasswordInput
-            label="New Password"
+            label={t("settings.newPassword", "New Password")}
             name="newPassword"
             value={securityForm.newPassword}
             onChange={(e) => handleSecurityChange("newPassword", e.target.value)}
@@ -54,7 +91,7 @@ const SecuritySection = ({
           )}
         </div>
         <PasswordInput
-          label="Confirm New Password"
+          label={t("settings.confirmNewPassword", "Confirm New Password")}
           name="confirmPassword"
           value={securityForm.confirmPassword}
           onChange={(e) => handleSecurityChange("confirmPassword", e.target.value)}
@@ -65,20 +102,20 @@ const SecuritySection = ({
         />
       </div>
 
-      <div className="rounded-2xl border border-emerald-100/80 bg-emerald-50/60 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-900/20 dark:text-emerald-200">
-        Tip: combine at least 12 characters with numbers and symbols. Avoid
-        reusing passwords from other services.
+      <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+        {t("settings.passwordTip", "Tip: combine at least 12 characters with numbers and symbols. Avoid reusing passwords from other services.")}
       </div>
 
       <button
         type="submit"
         disabled={isUpdatingPassword}
-        className="inline-flex items-center rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-70 dark:bg-emerald-500 dark:hover:bg-emerald-600"
+        className="inline-flex items-center rounded-xl bg-green-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-70 dark:bg-green-500 dark:hover:bg-green-600"
       >
-        {isUpdatingPassword ? "Updating..." : "Update password"}
+        {isUpdatingPassword ? t("settings.updatingPassword", "Updating...") : t("settings.updatePassword", "Update password")}
       </button>
     </form>
   </SectionCard>
-);
+  );
+};
 
 export default SecuritySection;

@@ -20,6 +20,11 @@ const translateWithFallback = (key, locale) => {
   return key;
 };
 
-export const getErrorMessage = (key, locale) => translateWithFallback(key, locale);
+export const getSettingsMessage = (key, locale) =>
+  translateWithFallback(key, locale);
+
+// Backwards compatibility for older imports
+export const getErrorMessage = (key, locale) =>
+  getSettingsMessage(key, locale);
 
 export const getCurrentLocale = () => i18n.language || "en";

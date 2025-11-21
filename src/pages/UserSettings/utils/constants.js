@@ -3,41 +3,76 @@ import {
   BellRing,
   Globe,
   ShieldCheck,
-  UserRound,
+  User,
+  Tractor,
+  Sprout,
+  Stethoscope,
 } from "lucide-react";
 
 // UserSettings Constants
 export const MAX_AVATAR_SIZE = 2 * 1024 * 1024; // 2MB
 
 export const navItems = [
-  { id: "personal", label: "Personal Info", icon: UserRound, category: "profile", description: "Update your personal details" },
-  { id: "security", label: "Security", icon: ShieldCheck, category: "profile", description: "Password and account security" },
-  { id: "notifications", label: "Notifications", icon: BellRing, category: "preferences", description: "Manage your alerts" },
-  { id: "preferences", label: "Preferences", icon: Globe, category: "preferences", description: "Language and display settings" },
-  { id: "account", label: "Account", icon: AlertTriangle, category: "account", description: "Account management" },
+  {
+    id: "personal",
+    label: "Personal Info",
+    labelKey: "settings.navigation.items.personal.label",
+    description: "Update your farming profile",
+    descriptionKey: "settings.navigation.items.personal.description",
+    icon: User,
+    category: "profile",
+  },
+  {
+    id: "security",
+    label: "Security",
+    labelKey: "settings.navigation.items.security.label",
+    description: "Secure your account",
+    descriptionKey: "settings.navigation.items.security.description",
+    icon: ShieldCheck,
+    category: "profile",
+  },
+  {
+    id: "notifications",
+    label: "Notifications",
+    labelKey: "settings.navigation.items.notifications.label",
+    description: "Alerts and updates",
+    descriptionKey: "settings.navigation.items.notifications.description",
+    icon: BellRing,
+    category: "profile",
+  },
+  {
+    id: "account",
+    label: "Account",
+    labelKey: "settings.navigation.items.account.label",
+    description: "Farm account management",
+    descriptionKey: "settings.navigation.items.account.description",
+    icon: Tractor,
+    category: "account",
+  },
 ];
 
 export const navCategories = [
   {
     id: "profile",
     label: "Profile",
-    icon: "👤",
-    description: "Personal information and security",
-    color: "emerald"
-  },
-  {
-    id: "preferences",
-    label: "Preferences",
-    icon: "⚙️",
-    description: "Customize your experience",
-    color: "blue"
+    labelKey: "settings.navigation.categories.profile.label",
+    icon: Stethoscope,
+    description: "Your identity, security, and notifications",
+    descriptionKey: "settings.navigation.categories.profile.description",
+    helper: "Keep your personal and security details accurate.",
+    helperKey: "settings.navigation.categories.profile.helper",
+    color: "green",
   },
   {
     id: "account",
     label: "Account",
-    icon: "👑",
-    description: "Account management",
-    color: "red"
+    labelKey: "settings.navigation.categories.account.label",
+    icon: Tractor,
+    description: "Manage your account",
+    descriptionKey: "settings.navigation.categories.account.description",
+    helper: "Take action on your profile status and data requests.",
+    helperKey: "settings.navigation.categories.account.helper",
+    color: "orange",
   },
 ];
 
@@ -60,11 +95,35 @@ export const emptySecurityForm = {
   confirmPassword: "",
 };
 
-export const notificationCopy = {
-  productUpdates: "Weekly highlights about new agri-vet products and bundles.",
-  orderUpdates: "Delivery tracking and billing reminders for every purchase.",
-  securityAlerts: "Sign-in alerts and unusual activity notifications.",
-  marketingEmails: "Seasonal promotions and educational content.",
+export const notificationOptions = {
+  productUpdates: {
+    label: "Product Updates",
+    labelKey: "settings.notificationOptions.productUpdates.label",
+    description:
+      "Weekly highlights about new agri-vet products and bundles.",
+    descriptionKey:
+      "settings.notificationOptions.productUpdates.description",
+  },
+  orderUpdates: {
+    label: "Order Updates",
+    labelKey: "settings.notificationOptions.orderUpdates.label",
+    description: "Delivery tracking and billing reminders for every purchase.",
+    descriptionKey: "settings.notificationOptions.orderUpdates.description",
+  },
+  securityAlerts: {
+    label: "Security Alerts",
+    labelKey: "settings.notificationOptions.securityAlerts.label",
+    description: "Sign-in alerts and unusual activity notifications.",
+    descriptionKey:
+      "settings.notificationOptions.securityAlerts.description",
+  },
+  marketingEmails: {
+    label: "Marketing Emails",
+    labelKey: "settings.notificationOptions.marketingEmails.label",
+    description: "Seasonal promotions and educational content.",
+    descriptionKey:
+      "settings.notificationOptions.marketingEmails.description",
+  },
 };
 
 export const notificationGroups = [
@@ -105,15 +164,15 @@ export const accountActionCopy = {
 
 export const sectionToneStyles = {
   neutral: {
-    light: "border border-slate-100 bg-white/95",
-    dark: "border border-slate-800 bg-slate-900/80",
+    light: "border border-green-200/30 bg-white/90 backdrop-blur-sm",
+    dark: "border border-slate-700 bg-slate-900/90",
   },
   highlight: {
-    light: "border border-emerald-100 bg-gradient-to-b from-white/95 to-emerald-50/60",
-    dark: "border border-emerald-900/30 bg-gradient-to-b from-slate-900/80 to-emerald-950/30",
+    light: "border border-green-300/60 bg-gradient-to-b from-white/95 to-green-50/80 backdrop-blur-sm",
+    dark: "border border-green-800/40 bg-gradient-to-b from-slate-900/90 to-green-950/40",
   },
   danger: {
-    light: "border border-red-100 bg-red-50/80",
+    light: "border border-red-200/50 bg-red-50/90 backdrop-blur-sm",
     dark: "border border-red-900/40 bg-red-950/30",
   },
 };

@@ -1,16 +1,31 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { db } from "../../services/firebase";
-import { doc, updateDoc } from "firebase/firestore";
-
-const savedCart = JSON.parse(localStorage.getItem("cartItems") || "[]");
+import { saveUserCart, getUserCart, subscribeToUserCart } from "../../services/userDataService";
 
 const cartSlice = createSlice({
   name: "cart",
   initialState: {
-    items: savedCart,
+    items: [],
+    userId: null,
+    loading: false,
   },
 
   reducers: {
+    setUser: (state, action) => {
+      state.userId = action.payload?.uid || null;
+      state.loading = true;
+    },
+
+    setCartItems: (state, action) => {
+      state.items = action.payload;
+      state.loading = false;
+    },
+
+    clearUserData: (state) => {
+      state.items = [];
+      state.userId = null;
+      state.loading = false;
+    },
+
     addToCart: (state, action) => {
       const product = action.payload;
 
@@ -40,7 +55,10 @@ const cartSlice = createSlice({
         });
       }
 
-      localStorage.setItem("cartItems", JSON.stringify(state.items));
+      // Save to Firebase
+      if (state.userId) {
+        saveUserCart(state.userId, state.items).catch(console.error);
+      }
     },
 
     decreaseQuantity: (state, action) => {
@@ -50,17 +68,29 @@ const cartSlice = createSlice({
         item.quantity -= 1;
         item.maxReached = false;
       }
-      localStorage.setItem("cartItems", JSON.stringify(state.items));
+
+      // Save to Firebase
+      if (state.userId) {
+        saveUserCart(state.userId, state.items).catch(console.error);
+      }
     },
 
     removeFromCart: (state, action) => {
       state.items = state.items.filter((i) => i.id !== action.payload);
-      localStorage.setItem("cartItems", JSON.stringify(state.items));
+
+      // Save to Firebase
+      if (state.userId) {
+        saveUserCart(state.userId, state.items).catch(console.error);
+      }
     },
 
     clearCart: (state) => {
       state.items = [];
-      localStorage.setItem("cartItems", JSON.stringify([]));
+
+      // Save to Firebase
+      if (state.userId) {
+        saveUserCart(state.userId, []).catch(console.error);
+      }
     },
 
     syncStock: (state, action) => {
@@ -77,6 +107,9 @@ const cartSlice = createSlice({
 });
 
 export const {
+  setUser,
+  setCartItems,
+  clearUserData,
   addToCart,
   decreaseQuantity,
   removeFromCart,

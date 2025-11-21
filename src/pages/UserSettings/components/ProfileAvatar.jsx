@@ -1,6 +1,6 @@
 import React from "react";
 
-const ProfileAvatar = ({ photo, initials, onError, size = "lg", className = "" }) => {
+const ProfileAvatar = ({ photo, initials, onError, size = "lg", className = "", name = "User" }) => {
   const sizeClasses = {
     sm: "h-16 w-16",
     md: "h-20 w-20",
@@ -16,7 +16,7 @@ const ProfileAvatar = ({ photo, initials, onError, size = "lg", className = "" }
       {photo ? (
         <img
           src={photo}
-          alt="Profile avatar"
+          alt={`Profile picture of ${name}`}
           className="h-full w-full object-cover"
           loading="lazy"
           draggable="false"

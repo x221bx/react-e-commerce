@@ -1,40 +1,29 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
-import { doc, serverTimestamp, setDoc } from "firebase/firestore";
-import {
-  EmailAuthProvider,
-  reauthenticateWithCredential,
-  updatePassword,
-} from "firebase/auth";
 import toast from "react-hot-toast";
 
 import { selectCurrentUser } from "../../features/auth/authSlice";
-import { auth, db } from "../../services/firebase";
 import { UseTheme } from "../../theme/ThemeProvider";
-import i18n from "../../i18n";
 
 // Import modular components
 import Navigation from "./components/Navigation";
-import OverviewCard from "./components/OverviewCard";
 import ConfirmDialog from "./components/ConfirmDialog";
 
 // Import section components
 import PersonalSection from "./components/sections/PersonalSection";
-import PreferencesSection from "./components/sections/PreferencesSection";
 import SecuritySection from "./components/sections/SecuritySection";
 import NotificationsSection from "./components/sections/NotificationsSection";
 import AccountSection from "./components/sections/AccountSection";
 
 // Import utilities and hooks
-import { emptySecurityForm, notificationDefaults, preferenceDefaults } from "./utils/constants";
-import { getNotificationState, getPreferenceState } from "./utils/helpers";
+import { emptySecurityForm } from "./utils/constants";
+import { getNotificationState } from "./utils/helpers";
 import { validateSecurityField, calculatePasswordStrength } from "./utils/validation";
-import { getErrorMessage } from "./utils/translations";
+import { getSettingsMessage } from "./utils/translations";
 import { useProfileForm } from "./hooks/useProfileForm";
 import { useSettingsNavigation } from "./hooks/useSettingsNavigation";
 import {
   saveNotifications,
-  savePreferences,
   updateUserPassword,
   updateAccountStatus
 } from "./services/userSettingsService";
@@ -47,14 +36,13 @@ export default function UserSettings({ variant = "standalone" }) {
 
   // Form states
   const [notificationForm, setNotificationForm] = useState(getNotificationState(user));
-  const [preferenceForm, setPreferenceForm] = useState(getPreferenceState(user));
   const [securityForm, setSecurityForm] = useState(emptySecurityForm);
 
   // Loading states
   const [isSavingNotifications, setIsSavingNotifications] = useState(false);
-  const [isSavingPreferences, setIsSavingPreferences] = useState(false);
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const [pendingAccountAction, setPendingAccountAction] = useState(null);
+  const [isLoadingUserData, setIsLoadingUserData] = useState(true);
 
   // UI states
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
@@ -66,7 +54,6 @@ export default function UserSettings({ variant = "standalone" }) {
 
   // Refs for sections
   const personalRef = useRef(null);
-  const preferencesRef = useRef(null);
   const securityRef = useRef(null);
   const notificationsRef = useRef(null);
   const accountRef = useRef(null);
@@ -77,16 +64,19 @@ export default function UserSettings({ variant = "standalone" }) {
 
   // Update forms when user changes
   useEffect(() => {
-    setNotificationForm(getNotificationState(user));
-    setPreferenceForm(getPreferenceState(user));
-    setSecurityForm(emptySecurityForm);
+    if (user) {
+      setNotificationForm(getNotificationState(user));
+      setSecurityForm(emptySecurityForm);
+      setIsLoadingUserData(false);
+    } else {
+      setIsLoadingUserData(true);
+    }
   }, [user]);
 
   // Intersection observer for active section tracking
   useEffect(() => {
     const sections = [
       { id: "personal", ref: personalRef },
-      { id: "preferences", ref: preferencesRef },
       { id: "security", ref: securityRef },
       { id: "notifications", ref: notificationsRef },
       { id: "account", ref: accountRef },
@@ -121,9 +111,6 @@ export default function UserSettings({ variant = "standalone" }) {
     setNotificationForm((prev) => ({ ...prev, [field]: !prev[field] }));
   };
 
-  const handlePreferenceChange = (field, value) => {
-    setPreferenceForm((prev) => ({ ...prev, [field]: value }));
-  };
 
   const handleSecurityChange = (field, value) => {
     setSecurityForm((prev) => ({ ...prev, [field]: value }));
@@ -145,47 +132,25 @@ export default function UserSettings({ variant = "standalone" }) {
     setIsSavingNotifications(true);
     try {
       await saveNotifications(user, notificationForm);
-      toast.success('Notification settings saved successfully');
+      toast.success(getSettingsMessage('saveNotificationsSuccess'));
     } catch (error) {
-      console.error(error);
-      toast.error(getErrorMessage('saveNotificationsFailed'));
+      console.error('Notification save error:', error);
+      const errorMessage = error.message || getSettingsMessage('saveNotificationsFailed');
+      toast.error(errorMessage);
     } finally {
       setIsSavingNotifications(false);
     }
   };
 
-  const handlePreferencesSubmit = async (event) => {
-    event.preventDefault();
-    if (!user?.uid) return;
-
-    setIsSavingPreferences(true);
-    try {
-      await savePreferences(user, preferenceForm);
-
-      // Apply language change if locale was changed
-      if (preferenceForm.locale && preferenceForm.locale !== i18n.language) {
-        await i18n.changeLanguage(preferenceForm.locale);
-        document.documentElement.dir = preferenceForm.locale === 'ar' ? 'rtl' : 'ltr';
-        document.documentElement.lang = preferenceForm.locale;
-      }
-
-      toast.success('Preferences saved successfully');
-    } catch (error) {
-      console.error(error);
-      toast.error(getErrorMessage('savePreferencesFailed'));
-    } finally {
-      setIsSavingPreferences(false);
-    }
-  };
 
   const handlePasswordSubmit = async (event) => {
     event.preventDefault();
     if (!securityForm.currentPassword || !securityForm.newPassword) {
-      toast.error(getErrorMessage('currentPasswordRequired'));
+      toast.error(getSettingsMessage('currentPasswordRequired'));
       return;
     }
     if (securityForm.newPassword !== securityForm.confirmPassword) {
-      toast.error(getErrorMessage('passwordsNotMatch'));
+      toast.error(getSettingsMessage('passwordsNotMatch'));
       return;
     }
 
@@ -193,18 +158,11 @@ export default function UserSettings({ variant = "standalone" }) {
     try {
       await updateUserPassword(securityForm.currentPassword, securityForm.newPassword);
       clearSensitiveData();
-      toast.success('Password updated successfully');
+      toast.success(getSettingsMessage('updatePasswordSuccess'));
     } catch (error) {
-      console.error(error);
-      if (error?.code === "auth/wrong-password") {
-        toast.error(getErrorMessage('wrongPassword'));
-      } else if (error?.code === "auth/weak-password") {
-        toast.error(getErrorMessage('weakPassword'));
-      } else if (error?.code === "auth/too-many-requests") {
-        toast.error(getErrorMessage('tooManyRequests'));
-      } else {
-        toast.error(getErrorMessage('updatePasswordFailed'));
-      }
+      console.error('Password update error:', error);
+      const errorMessage = error.message || getSettingsMessage('updatePasswordFailed');
+      toast.error(errorMessage);
     } finally {
       setIsUpdatingPassword(false);
     }
@@ -217,8 +175,9 @@ export default function UserSettings({ variant = "standalone" }) {
       const result = await updateAccountStatus(user, action);
       toast.success(result.message);
     } catch (error) {
-      console.error(error);
-      toast.error(getErrorMessage('accountActionFailed'));
+      console.error('Account action error:', error);
+      const errorMessage = error.message || getSettingsMessage('accountActionFailed');
+      toast.error(errorMessage);
     } finally {
       setPendingAccountAction(null);
     }
@@ -240,191 +199,152 @@ export default function UserSettings({ variant = "standalone" }) {
     setShowConfirmPassword(false);
   };
 
-  if (!user) {
+  if (!user || isLoadingUserData) {
     return (
-      <div className="flex h-[60vh] flex-col items-center justify-center gap-4">
-        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-emerald-500" />
-        <p className="text-sm text-slate-600 dark:text-slate-400">
-          {getErrorMessage('loading')}
-        </p>
+      <div className="min-h-screen bg-slate-50 py-10 transition-colors dark:bg-slate-950">
+        <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 sm:px-6 lg:flex-row lg:gap-10 lg:px-8">
+          {/* Sidebar skeleton */}
+          <aside className="space-y-4 lg:w-64">
+            <div className="rounded-3xl bg-white/90 backdrop-blur-sm p-6 shadow-xl ring-1 ring-white/20 dark:bg-slate-900/80 dark:ring-slate-800">
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 animate-pulse rounded-full bg-slate-200 dark:bg-slate-700" />
+                <div className="space-y-2">
+                  <div className="h-4 w-24 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
+                  <div className="h-3 w-32 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
+                </div>
+              </div>
+              <div className="mt-4 h-3 w-full animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
+            </div>
+            <div className="rounded-3xl bg-white/90 backdrop-blur-sm p-4 shadow-xl ring-1 ring-white/20 dark:bg-slate-900/80 dark:ring-slate-800">
+              <div className="space-y-3">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="h-10 w-full animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-700" />
+                ))}
+              </div>
+            </div>
+          </aside>
+
+          {/* Main content skeleton */}
+          <div className="flex-1 space-y-6">
+            <div className="rounded-3xl bg-white/80 backdrop-blur-sm p-6 shadow-xl ring-1 ring-white/20 dark:bg-slate-900/80 dark:ring-slate-800">
+              <div className="space-y-4">
+                <div className="h-6 w-48 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
+                <div className="h-4 w-96 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
+              </div>
+            </div>
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="rounded-3xl bg-white/80 backdrop-blur-sm p-6 shadow-xl ring-1 ring-white/20 dark:bg-slate-900/80 dark:ring-slate-800">
+                <div className="space-y-4">
+                  <div className="h-5 w-32 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
+                  <div className="h-4 w-full animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
+                  <div className="h-10 w-full animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
 
+  const settingsSections = (
+    <>
+      <PersonalSection
+        sectionId="personal"
+        personalRef={personalRef}
+        profile={profile}
+        handleProfileChange={profile.handleProfileChange}
+        handleAvatarUpload={profile.handleAvatarUpload}
+        handleAvatarReset={profile.handleAvatarReset}
+        handlePhotoLinkChange={profile.handlePhotoLinkChange}
+        resetProfileForm={profile.resetProfileForm}
+        handleProfileSubmit={profile.handleProfileSubmit}
+        isSavingProfile={profile.isSavingProfile}
+        hasUnsavedChanges={profile.hasUnsavedChanges}
+        errors={profile.profileErrors}
+      />
 
-  if (isEmbedded) {
-    return (
-      <>
-        <div
-          className={`space-y-6 rounded-3xl p-4 shadow-sm transition-colors ${
-            isDarkMode
-              ? "bg-slate-900/80 ring-1 ring-slate-800 text-slate-200"
-              : "bg-white/95 ring-1 ring-slate-100 text-slate-900"
-          }`}
-        >
+      <SecuritySection
+        sectionId="security"
+        securityRef={securityRef}
+        securityForm={securityForm}
+        handleSecurityChange={handleSecurityChange}
+        handlePasswordSubmit={handlePasswordSubmit}
+        isUpdatingPassword={isUpdatingPassword}
+        showCurrentPassword={showCurrentPassword}
+        showNewPassword={showNewPassword}
+        showConfirmPassword={showConfirmPassword}
+        setShowCurrentPassword={setShowCurrentPassword}
+        setShowNewPassword={setShowNewPassword}
+        setShowConfirmPassword={setShowConfirmPassword}
+        passwordStrength={passwordStrength}
+        securityErrors={securityErrors}
+        user={user}
+      />
+
+      <NotificationsSection
+        sectionId="notifications"
+        notificationsRef={notificationsRef}
+        notificationForm={notificationForm}
+        handleNotificationsChange={handleNotificationsChange}
+        handleNotificationsSubmit={handleNotificationsSubmit}
+        isSavingNotifications={isSavingNotifications}
+      />
+
+      <AccountSection
+        sectionId="account"
+        accountRef={accountRef}
+        pendingAccountAction={pendingAccountAction}
+        openConfirmDialog={openConfirmDialog}
+      />
+    </>
+  );
+
+
+  const content = isEmbedded ? (
+    <div
+      className={`settings-shell space-y-6 rounded-3xl p-4 transition-colors ${
+        isDarkMode
+          ? "bg-slate-900/80 ring-1 ring-slate-800 text-slate-200"
+          : "bg-white/80 ring-1 ring-white/20 text-slate-900"
+      }`}
+    >
+      <Navigation
+        variant="embedded"
+        activeCategory={navigation.activeCategory}
+        activeSection={navigation.activeSection}
+        filteredNavItems={navigation.filteredNavItems}
+        activeCategoryCopy={navigation.activeCategoryCopy}
+        handleCategoryChange={navigation.handleCategoryChange}
+        scrollToSection={navigation.scrollToSection}
+        user={user}
+        profileForm={profile.profileForm}
+      />
+      {settingsSections}
+    </div>
+  ) : (
+    <div className="min-h-screen bg-slate-50 py-10 transition-colors dark:bg-slate-950">
+      <div className="settings-shell mx-auto flex max-w-6xl flex-col gap-6 px-4 sm:px-6 lg:flex-row lg:gap-10 lg:px-8">
+        <aside className="space-y-4 lg:w-64">
           <Navigation
-            variant="embedded"
+            variant="standalone"
             activeCategory={navigation.activeCategory}
             activeSection={navigation.activeSection}
             filteredNavItems={navigation.filteredNavItems}
             activeCategoryCopy={navigation.activeCategoryCopy}
             handleCategoryChange={navigation.handleCategoryChange}
             scrollToSection={navigation.scrollToSection}
-            user={user}
-            profileForm={profile.profileForm}
           />
+        </aside>
 
-          <PersonalSection
-            sectionId="personal"
-            personalRef={personalRef}
-            profile={profile}
-            handleProfileChange={profile.handleProfileChange}
-            handleAvatarUpload={profile.handleAvatarUpload}
-            handleAvatarReset={profile.handleAvatarReset}
-            handlePhotoLinkChange={profile.handlePhotoLinkChange}
-            resetProfileForm={profile.resetProfileForm}
-            handleProfileSubmit={profile.handleProfileSubmit}
-            isSavingProfile={profile.isSavingProfile}
-            hasUnsavedChanges={profile.hasUnsavedChanges}
-          />
+        <div className="flex-1 space-y-6">{settingsSections}</div>
+      </div>
+    </div>
+  );
 
-          <PreferencesSection
-            sectionId="preferences"
-            preferencesRef={preferencesRef}
-            preferenceForm={preferenceForm}
-            handlePreferenceChange={handlePreferenceChange}
-            handlePreferencesSubmit={handlePreferencesSubmit}
-            isSavingPreferences={isSavingPreferences}
-          />
-
-          <SecuritySection
-            sectionId="security"
-            securityRef={securityRef}
-            securityForm={securityForm}
-            handleSecurityChange={handleSecurityChange}
-            handlePasswordSubmit={handlePasswordSubmit}
-            isUpdatingPassword={isUpdatingPassword}
-            showCurrentPassword={showCurrentPassword}
-            showNewPassword={showNewPassword}
-            showConfirmPassword={showConfirmPassword}
-            setShowCurrentPassword={setShowCurrentPassword}
-            setShowNewPassword={setShowNewPassword}
-            setShowConfirmPassword={setShowConfirmPassword}
-            passwordStrength={passwordStrength}
-            securityErrors={securityErrors}
-          />
-
-          <NotificationsSection
-            sectionId="notifications"
-            notificationsRef={notificationsRef}
-            notificationForm={notificationForm}
-            handleNotificationsChange={handleNotificationsChange}
-            handleNotificationsSubmit={handleNotificationsSubmit}
-            isSavingNotifications={isSavingNotifications}
-          />
-
-          <AccountSection
-            sectionId="account"
-            accountRef={accountRef}
-            pendingAccountAction={pendingAccountAction}
-            openConfirmDialog={openConfirmDialog}
-          />
-        </div>
-
-        <ConfirmDialog
-          open={confirmDialog.open}
-          intent={confirmDialog.intent}
-          onCancel={closeConfirmDialog}
-          onConfirm={handleConfirmedAccountAction}
-        />
-      </>
-    );
-  }
-
-  // Standalone version
   return (
     <>
-      <div className="min-h-screen bg-slate-50 py-10 transition-colors dark:bg-slate-950">
-        <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 sm:px-6 lg:flex-row lg:gap-10 lg:px-8">
-          <aside className="space-y-4 lg:w-64">
-            <Navigation
-              variant="standalone"
-              activeCategory={navigation.activeCategory}
-              activeSection={navigation.activeSection}
-              filteredNavItems={navigation.filteredNavItems}
-              activeCategoryCopy={navigation.activeCategoryCopy}
-              handleCategoryChange={navigation.handleCategoryChange}
-              scrollToSection={navigation.scrollToSection}
-            />
-          </aside>
-
-          <div className="flex-1 space-y-6">
-            <OverviewCard
-              user={user}
-              profileForm={profile.profileForm}
-              preferenceForm={preferenceForm}
-              scrollToSection={navigation.scrollToSection}
-            />
-
-            <PersonalSection
-              sectionId="personal"
-              personalRef={personalRef}
-              profile={profile}
-              handleProfileChange={profile.handleProfileChange}
-              handleAvatarUpload={profile.handleAvatarUpload}
-              handleAvatarReset={profile.handleAvatarReset}
-              handlePhotoLinkChange={profile.handlePhotoLinkChange}
-              resetProfileForm={profile.resetProfileForm}
-              handleProfileSubmit={profile.handleProfileSubmit}
-              isSavingProfile={profile.isSavingProfile}
-              hasUnsavedChanges={profile.hasUnsavedChanges}
-            />
-
-            <PreferencesSection
-              sectionId="preferences"
-              preferencesRef={preferencesRef}
-              preferenceForm={preferenceForm}
-              handlePreferenceChange={handlePreferenceChange}
-              handlePreferencesSubmit={handlePreferencesSubmit}
-              isSavingPreferences={isSavingPreferences}
-            />
-
-            <SecuritySection
-              sectionId="security"
-              securityRef={securityRef}
-              securityForm={securityForm}
-              handleSecurityChange={handleSecurityChange}
-              handlePasswordSubmit={handlePasswordSubmit}
-              isUpdatingPassword={isUpdatingPassword}
-              showCurrentPassword={showCurrentPassword}
-              showNewPassword={showNewPassword}
-              showConfirmPassword={showConfirmPassword}
-              setShowCurrentPassword={setShowCurrentPassword}
-              setShowNewPassword={setShowNewPassword}
-              setShowConfirmPassword={setShowConfirmPassword}
-              passwordStrength={passwordStrength}
-              securityErrors={securityErrors}
-            />
-
-            <NotificationsSection
-              sectionId="notifications"
-              notificationsRef={notificationsRef}
-              notificationForm={notificationForm}
-              handleNotificationsChange={handleNotificationsChange}
-              handleNotificationsSubmit={handleNotificationsSubmit}
-              isSavingNotifications={isSavingNotifications}
-            />
-
-            <AccountSection
-              sectionId="account"
-              accountRef={accountRef}
-              pendingAccountAction={pendingAccountAction}
-              openConfirmDialog={openConfirmDialog}
-            />
-          </div>
-        </div>
-      </div>
-
+      {content}
       <ConfirmDialog
         open={confirmDialog.open}
         intent={confirmDialog.intent}

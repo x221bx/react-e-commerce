@@ -1,250 +1,795 @@
-﻿{
-    "brand":  {
-                  "name":  "RIWAQ"
-              },
-    "nav":  {
-                "home":  "Home",
-                "courses":  "Courses",
-                "products":  "Products",
-                "careers":  "Careers",
-                "blog":  "Blog",
-                "about":  "About",
-                "admin":  "Admin",
-                "account":  "Account",
-                "favorites":  "Favorites",
-                "cart":  "Cart"
-            },
-    "auth":  {
-                 "login":  "Login",
-                 "register":  "Sign Up",
-                 "logout":  "Logout",
-                 "email_username":  "Email or Username",
-                 "password":  "Password",
-                 "forgot":  "Forgot?",
-                 "create_account":  "Create Account"
-             },
-    "admin":  {
-                  "dashboard":  "Dashboard",
-                  "courses":  "Courses",
-                  "new_course":  "New Course",
-                  "categories":  "Categories",
-                  "new_category":  "New Category",
-                  "status":  {
-                                 "published":  "Published",
-                                 "draft":  "Draft"
-                             }
-              },
-    "tokens":  {
-                   "adj":  {
-                               "complete":  "Complete",
-                               "ultimate":  "Ultimate",
-                               "hands_on":  "Hands-on",
-                               "practical":  "Practical",
-                               "modern":  "Modern",
-                               "advanced":  "Advanced",
-                               "beginner":  "Beginner",
-                               "zero_to_hero":  "Zero-to-Hero",
-                               "pro":  "Pro",
-                               "crash":  "Crash",
-                               "intensive":  "Intensive",
-                               "mastery":  "Mastery"
-                           },
-                   "subj":  {
-                                "react":  "React",
-                                "nextjs":  "Next.js",
-                                "typescript":  "TypeScript",
-                                "nodejs":  "Node.js",
-                                "firebase":  "Firebase",
-                                "tailwind":  "Tailwind CSS",
-                                "data_structures":  "Data Structures",
-                                "algorithms":  "Algorithms",
-                                "python":  "Python",
-                                "django":  "Django",
-                                "flutter":  "Flutter",
-                                "kotlin":  "Kotlin",
-                                "swiftui":  "SwiftUI",
-                                "sql":  "SQL",
-                                "nosql":  "NoSQL",
-                                "mongodb":  "MongoDB",
-                                "docker":  "Docker",
-                                "kubernetes":  "Kubernetes",
-                                "aws":  "AWS",
-                                "gcp":  "GCP",
-                                "azure":  "Azure",
-                                "graphql":  "GraphQL",
-                                "trpc":  "tRPC",
-                                "prisma":  "Prisma",
-                                "rust":  "Rust",
-                                "go":  "Go",
-                                "cpp":  "C++"
-                            },
-                   "vari":  {
-                                "bootcamp":  "Bootcamp",
-                                "guide":  "Guide",
-                                "course":  "Course",
-                                "workshop":  "Workshop",
-                                "series":  "Series"
-                            },
-                   "blurb":  {
-                                 "real_projects":  "Learn by building real-world projects with best practices",
-                                 "step_by_step":  "Step-by-step lessons, quizzes, and downloadable resources",
-                                 "fundamentals_to_advanced":  "Covers fundamentals to advanced topics with hands-on labs",
-                                 "beginners_and_pros":  "Perfect for beginners and professionals needing a refresher",
-                                 "exercises_cheatsheets_reviews":  "Includes exercises, cheat sheets, and code reviews"
-                             },
-                   "cat":  {
-                               "web_dev":  "Web Development",
-                               "mobile_dev":  "Mobile Development",
-                               "data_science":  "Data Science",
-                               "cloud_devops":  "Cloud \u0026 DevOps",
-                               "prog_langs":  "Programming Languages",
-                               "databases":  "Databases",
-                               "design_ui":  "Design \u0026 UI",
-                               "security":  "Security",
-                               "testing_qa":  "Testing \u0026 QA",
-                               "career":  "Career \u0026 Soft Skills",
-                               "game_dev":  "Game Development",
-                               "ai_ml":  "AI \u0026 ML",
-                               "iot_embedded":  "IoT \u0026 Embedded",
-                               "blockchain":  "Blockchain",
-                               "automation":  "Automation",
-                               "ar_vr":  "AR/VR",
-                               "big_data":  "Big Data",
-                               "biz_apps":  "Business Apps",
-                               "open_source":  "Open Source",
-                               "misc":  "Miscellaneous"
-                           }
-               },
-    "format":  {
-                   "price":  "{{value, number}} {{currency}}",
-                   "created":  "{{value, datetime}}"
-               },
-    "sort":  {
-                 "createdAt":  "Created At",
-                 "price":  "Price",
-                 "title":  "Alphabetical"
-             },
-    "filter":  {
-                   "all":  "All"
-               },
-    "empty":  {
-                  "courses_title":  "No courses found",
-                  "categories_title":  "No categories yet",
-                  "try_clear":  "Try clearing the search or changing filters.",
-                  "create_first_course":  "Start by creating your first course.",
-                  "create_first_category":  "Create your first category."
-              },
-    "errors":  {
-                   "courses_load_failed":  "Failed to load courses",
-                   "categories_load_failed":  "Failed to load categories",
-                   "404_code":  "404",
-                   "404_title":  "Page not found",
-                   "404_message":  "The page you are looking for might have been removed.",
-                   "403_code":  "403",
-                   "403_title":  "Forbidden",
-                   "403_message":  "You don\u0027t have permission to access this page."
-               },
-    "common":  {
-                   "go_home":  "Go to Home",
-                   "signing_in":  "Signing inâ€¦",
-                   "creating":  "Creatingâ€¦",
-                   "sending":  "Sendingâ€¦",
-                   "delete":  "Delete",
-                   "cancel":  "Cancel",
-                   "working":  "Workingâ€¦",
-                   "light_mode":  "Light Mode",
-                   "dark_mode":  "Dark Mode"
-               },
-    "settings":  {
-                     "language_display":  "Language \u0026 Display",
-                     "personalize_info":  "Personalize how information appears",
-                     "units_language_notes":  "Units, interface language, and delivery notes.",
-                     "interface_language":  "Interface Language",
-                     "measurements":  "Measurements",
-                     "metric_units":  "Metric (kg, km)",
-                     "imperial_units":  "Imperial (lb, mi)",
-                     "delivery_notes":  "Delivery notes",
-                     "reset_defaults":  "Reset to defaults",
-                     "save_display_settings":  "Save display settings",
-                     "personal_info":  "Personal Information",
-                     "keep_contact_accurate":  "Keep your contact details accurate",
-                     "info_on_invoices":  "This information appears on invoices and delivery slips.",
-                     "upload_profile_photo":  "Upload a new profile photo",
-                     "photo_formats":  "Supported formats: PNG, JPG, WebP (max 2MB). Optimized automatically for all themes.",
-                     "choose_file":  "Choose file",
-                     "image_link_optional":  "Image link (optional)",
-                     "first_name":  "First Name",
-                     "last_name":  "Last Name",
-                     "gender":  "Gender",
-                     "select":  "Select",
-                     "male":  "Male",
-                     "female":  "Female",
-                     "birth_date":  "Birth date",
-                     "profession_role":  "Profession / role",
-                     "profession_placeholder":  "Livestock nutritionist",
-                     "phone_number":  "Phone Number",
-                     "farm_city":  "Farm / City",
-                     "location_placeholder":  "Green Valley, CA",
-                     "unsaved_changes":  "Unsaved changes",
-                     "all_changes_saved":  "All changes saved",
-                     "save_profile":  "Save profile"
-                 },
-    "account":  {
-                    "profile_preferences":  "Profile \u0026 Preferences",
-                    "profile_description":  "Name, language, and security",
-                    "payment_methods":  "Payment Methods",
-                    "payment_description":  "Cards, wallets, billing",
-                    "order_history":  "Order History",
-                    "order_description":  "Invoices and receipts",
-                    "order_tracking":  "Order Tracking",
-                    "tracking_description":  "Live delivery status",
-                    "saved_products":  "Saved Products",
-                    "saved_description":  "Lists and restocks",
-                    "favorite_articles":  "Favorite Articles",
-                    "articles_description":  "Guides and resources",
-                    "ai_conversations":  "AI Conversations",
-                    "ai_description":  "Chat history",
-                    "feedback_support":  "Feedback \u0026 Support",
-                    "support_description":  "Tickets and help",
-                    "logout":  "Log out",
-                    "helper_text": "One central hub for all your account needs: profile settings, payments, orders, and support. Consistent design across all pages for a seamless experience."
+{
+    "brand": {
+        "name": "Farm Vet Shop",
+        "store": "Farm Vet Shop"
+    },
+    "payments": {
+        "eyebrow": "Billing & wallets",
+        "title": "Payment Methods",
+        "subtitle": "Manage cards and wallets used for faster checkout.",
+        "fastCheckout": "Fast checkout",
+        "defaultLabel": "Default payment",
+        "noDefault": "No default selected",
+        "defaultCaption": "Used automatically for subscriptions and express checkout.",
+        "cardsHeader": "Saved cards",
+        "noCards": "No cards saved yet.",
+        "walletsHeader": "Connected wallets",
+        "noWallets": "No connected wallets yet.",
+        "status": {
+            "defaultBadge": "Default"
+        },
+        "actions": {
+            "makeDefault": "Make default",
+            "delete": "Delete"
+        },
+        "form": {
+            "cardTitle": "Add new card",
+            "cardHolder": "Card holder name",
+            "cardNumber": "Card number",
+            "expiry": "Expiry (MM/YY)",
+            "cvv": "CVV",
+            "nickname": "Nickname (optional)",
+            "nicknamePlaceholder": "Farm purchases",
+            "saving": "Saving...",
+            "saveCard": "Save card",
+            "reset": "Reset",
+            "walletTitle": "Link wallet",
+            "walletProvider": "Provider",
+            "walletEmail": "Account email",
+            "linking": "Linking...",
+            "linkWallet": "Link wallet"
+        },
+        "errors": {
+            "holder": "Please enter the card holder name.",
+            "number": "Enter a valid card number.",
+            "expiry": "Expiry must be MM/YY and in the future.",
+            "cvv": "Enter the 3 or 4 digit CVV.",
+            "email": "Enter a valid email address."
+        }
+    },
+    "languages": {
+        "en": "English",
+        "ar": "Arabic"
+    },
+    "navbar": {
+        "logout_success": "Logged out successfully 👋",
+        "language_changed": "Language changed to {{language}}",
+        "language_error": "Failed to change language",
+        "search_placeholder": "Search products...",
+        "language_toggle": "Toggle language",
+        "menu_toggle": "Toggle menu",
+        "notifications": "Notifications"
+    },
+    "nav": {
+        "home": "Home",
+        "courses": "Courses",
+        "products": "Products",
+        "articles": "Articles",
+        "careers": "Careers",
+        "blog": "Blog",
+        "about": "About",
+        "admin": "Admin",
+        "account": "Account",
+        "account_settings": "Account & Settings",
+        "favorites": "Favorites",
+        "cart": "Cart"
+    },
+    "auth": {
+        "login": "Login",
+        "register": "Sign Up",
+        "logout": "Logout",
+        "email_username": "Email or Username",
+        "password": "Password",
+        "forgot": "Forgot?",
+        "create_account": "Create Account"
+    },
+    "admin": {
+        "dashboard": "Dashboard",
+        "courses": "Courses",
+        "new_course": "New Course",
+        "categories": "Categories",
+        "new_category": "New Category",
+        "status": {
+            "published": "Published",
+            "draft": "Draft"
+        }
+    },
+    "tokens": {
+        "adj": {
+            "complete": "Complete",
+            "ultimate": "Ultimate",
+            "hands_on": "Hands-on",
+            "practical": "Practical",
+            "modern": "Modern",
+            "advanced": "Advanced",
+            "beginner": "Beginner",
+            "zero_to_hero": "Zero-to-Hero",
+            "pro": "Pro",
+            "crash": "Crash",
+            "intensive": "Intensive",
+            "mastery": "Mastery"
+        },
+        "subj": {
+            "react": "React",
+            "nextjs": "Next.js",
+            "typescript": "TypeScript",
+            "nodejs": "Node.js",
+            "firebase": "Firebase",
+            "tailwind": "Tailwind CSS",
+            "data_structures": "Data Structures",
+            "algorithms": "Algorithms",
+            "python": "Python",
+            "django": "Django",
+            "flutter": "Flutter",
+            "kotlin": "Kotlin",
+            "swiftui": "SwiftUI",
+            "sql": "SQL",
+            "nosql": "NoSQL",
+            "mongodb": "MongoDB",
+            "docker": "Docker",
+            "kubernetes": "Kubernetes",
+            "aws": "AWS",
+            "gcp": "GCP",
+            "azure": "Azure",
+            "graphql": "GraphQL",
+            "trpc": "tRPC",
+            "prisma": "Prisma",
+            "rust": "Rust",
+            "go": "Go",
+            "cpp": "C++"
+        },
+        "vari": {
+            "bootcamp": "Bootcamp",
+            "guide": "Guide",
+            "course": "Course",
+            "workshop": "Workshop",
+            "series": "Series"
+        },
+        "blurb": {
+            "real_projects": "Learn by building real-world projects with best practices",
+            "step_by_step": "Step-by-step lessons, quizzes, and downloadable resources",
+            "fundamentals_to_advanced": "Covers fundamentals to advanced topics with hands-on labs",
+            "beginners_and_pros": "Perfect for beginners and professionals needing a refresher",
+            "exercises_cheatsheets_reviews": "Includes exercises, cheat sheets, and code reviews"
+        },
+        "cat": {
+            "web_dev": "Web Development",
+            "mobile_dev": "Mobile Development",
+            "data_science": "Data Science",
+            "cloud_devops": "Cloud & DevOps",
+            "prog_langs": "Programming Languages",
+            "databases": "Databases",
+            "design_ui": "Design & UI",
+            "security": "Security",
+            "testing_qa": "Testing & QA",
+            "career": "Career & Soft Skills",
+            "game_dev": "Game Development",
+            "ai_ml": "AI & ML",
+            "iot_embedded": "IoT & Embedded",
+            "blockchain": "Blockchain",
+            "automation": "Automation",
+            "ar_vr": "AR/VR",
+            "big_data": "Big Data",
+            "biz_apps": "Business Apps",
+            "open_source": "Open Source",
+            "misc": "Miscellaneous"
+        }
+    },
+    "format": {
+        "price": "{{value, number}} {{currency}}",
+        "created": "{{value, datetime}}"
+    },
+    "sort": {
+        "createdAt": "Created At",
+        "price": "Price",
+        "title": "Alphabetical"
+    },
+    "filter": {
+        "all": "All"
+    },
+    "empty": {
+        "courses_title": "No courses found",
+        "categories_title": "No categories yet",
+        "try_clear": "Try clearing the search or changing filters.",
+        "create_first_course": "Start by creating your first course.",
+        "create_first_category": "Create your first category."
+    },
+    "errors": {
+        "courses_load_failed": "Failed to load courses",
+        "categories_load_failed": "Failed to load categories",
+        "404_code": "404",
+        "404_title": "Page not found",
+        "404_message": "The page you are looking for might have been removed.",
+        "403_code": "403",
+        "403_title": "Forbidden",
+        "403_message": "You don't have permission to access this page."
+    },
+    "common": {
+        "go_home": "Go to Home",
+        "signing_in": "Signing inâ€¦",
+        "creating": "Creatingâ€¦",
+        "sending": "Sendingâ€¦",
+        "delete": "Delete",
+        "cancel": "Cancel",
+        "working": "Workingâ€¦",
+        "light_mode": "Light Mode",
+        "dark_mode": "Dark Mode"
+    },
+    "settings": {
+        "language_display": "Language & Display",
+        "personalize_info": "Customize your experience",
+        "units_language_notes": "Choose your preferred language, units, and add delivery instructions.",
+        "interface_language": "Language",
+        "measurements": "Units",
+        "metric_units": "Metric (kg, km)",
+        "imperial_units": "Imperial (lb, mi)",
+        "delivery_notes": "Delivery Instructions",
+        "reset_defaults": "Reset to defaults",
+        "save_display_settings": "Save preferences",
+        "personal_info": "Personal Information",
+        "keep_contact_accurate": "Update your contact details",
+        "info_on_invoices": "This information will appear on your invoices and delivery documents.",
+        "upload_profile_photo": "Add profile photo",
+        "photo_formats": "PNG, JPG, WebP • Max 2MB • Optimized for all devices",
+        "choose_file": "Choose file",
+        "image_link_optional": "Or enter image URL",
+        "photo_link_placeholder": "https://images.example.com/profile.jpg",
+        "first_name": "First Name",
+        "first_name_placeholder": "John",
+        "last_name": "Last Name",
+        "last_name_placeholder": "Appleseed",
+        "gender": "Gender",
+        "select": "Select",
+        "male": "Male",
+        "female": "Female",
+        "birth_date": "Date of Birth",
+        "profession_role": "Profession",
+        "profession_placeholder": "e.g., Livestock nutritionist",
+        "phone_number": "Phone Number",
+        "phone_placeholder": "+20 123 456 7890",
+        "farm_city": "Farm Location",
+        "location_placeholder": "e.g., Green Valley Farm, CA",
+        "unsaved_changes": "You have unsaved changes",
+        "auto_saving": "Auto-saving in 3 seconds...",
+        "all_changes_saved": "All changes saved",
+        "save_profile": "Save profile",
+        "profile_helper_text": "Keep your profile updated for personalized recommendations.",
+        "navigation": {
+            "focus_area": "Focus area",
+            "aria_label": "Profile settings sections",
+            "categories": {
+                "profile": {
+                    "label": "Profile",
+                    "description": "Personal info and security",
+                    "helper": "Keep your personal and security details accurate."
                 },
-    "userSettings":  {
-                         "messages":  {
-                                          "firstNameRequired":  "First name is required",
-                                          "firstNameTooShort":  "First name must be at least 2 characters",
-                                          "firstNameTooLong":  "First name must be less than 50 characters",
-                                          "lastNameRequired":  "Last name is required",
-                                          "lastNameTooShort":  "Last name must be at least 2 characters",
-                                          "lastNameTooLong":  "Last name must be less than 50 characters",
-                                          "invalidEmail":  "Please enter a valid email address",
-                                          "invalidPhone":  "Please enter a valid phone number (10-15 digits, may include country code with +)",
-                                          "invalidImageUrl":  "Please enter a valid image URL (jpg, png, gif, webp)",
-                                          "invalidDate":  "Please enter a valid date",
-                                          "invalidGender":  "Please choose a valid option",
-                                          "professionTooLong":  "Profession must be under 80 characters",
-                                          "currentPasswordRequired":  "Current password is required",
-                                          "newPasswordRequired":  "New password is required",
-                                          "passwordTooShort":  "Password must be at least 8 characters",
-                                          "passwordWeak":  "Password must contain uppercase, lowercase, and number",
-                                          "passwordsNotMatch":  "Passwords do not match",
-                                          "saveProfileFailed":  "Unable to update profile. Please try again.",
-                                          "savePreferencesFailed":  "Unable to save preferences. Please try again.",
-                                          "saveNotificationsFailed":  "Unable to save notification settings. Please try again.",
-                                          "updatePasswordFailed":  "Unable to update password. Please try again.",
-                                          "accountActionFailed":  "Unable to update account status. Please try again.",
-                                          "wrongPassword":  "Your current password is incorrect",
-                                          "weakPassword":  "Choose a stronger password",
-                                          "tooManyRequests":  "Too many attempts. Please try again later",
-                                          "invalidImageFile":  "Please upload an image file (PNG, JPG, or WebP)",
-                                          "imageTooLarge":  "Image is too large. Please upload a file under 2MB",
-                                          "fileReadError":  "Unable to read the selected file",
-                                          "accountDeactivated":  "Account marked as inactive. You can reactivate anytime.",
-                                          "accountDeletionRequested":  "Delete request recorded. Our support team will follow up shortly.",
-                                          "saving":  "Saving...",
-                                          "updating":  "Updating...",
-                                          "processing":  "Processing...",
-                                          "loading":  "Loading..."
+                "preferences": {
+                    "label": "Farm Settings",
+                    "description": "Customize your farming experience",
+                    "helper": "Tune the interface language and site preferences."
+                },
+                "account": {
+                    "label": "Farm Account",
+                    "description": "Manage your agricultural account",
+                    "helper": "Take action on your profile status and data requests."
+                }
+            },
+            "items":  {
+                          "personal":  {
+                                          "label":  "Personal info",
+                                          "description":  "Update your farming profile"
+                                      },
+                          "security":  {
+                                          "label":  "Security",
+                                          "description":  "Secure your farm account"
+                                      },
+                          "notifications":  {
+                                                "label":  "Notifications",
+                                                "description":  "Farm alerts and updates"
+                                            },
+                          "preferences":  {
+                                              "label":  "Preferences",
+                                              "description":  "Customize your experience"
+                                          },
+                          "account":  {
+                                          "label":  "Account",
+                                          "description":  "Farm account management"
+                                      },
+                          "support":  {
+                                          "label":  "Support",
+                                          "description":  "Get help and support"
                                       }
-                     }
+                      }
+        },
+        "notificationOptions": {
+            "productUpdates": {
+                "label": "Product Updates",
+                "description": "Weekly highlights about new agri-vet products and bundles."
+            },
+            "orderUpdates": {
+                "label": "Order Updates",
+                "description": "Delivery tracking and billing reminders for every purchase."
+            },
+            "securityAlerts": {
+                "label": "Security Alerts",
+                "description": "Sign-in alerts and unusual activity notifications."
+            },
+            "marketingEmails": {
+                "label": "Marketing Emails",
+                "description": "Seasonal promotions and educational content."
+            }
+        },
+        "dangerZone": {
+            "eyebrow": "Danger zone",
+            "title": "Manage your account status",
+            "description": "Deactivate temporarily or request full deletion.",
+            "readBefore": "Read before you continue",
+            "readBeforeDescription": "Deactivation hides your storefront activity but lets you return later. Deletion is permanent and requires our support team to confirm ownership.",
+            "deactivate": "Deactivate account",
+            "delete": "Request delete",
+            "processing": "Processing...",
+            "requesting": "Requesting...",
+            "needHelp": "Need help first?",
+            "contactSupport": "Contact support"
+        },
+        "confirmDialog": {
+          "title": "Confirmation required",
+          "deleteTitle": "Request permanent deletion",
+          "deactivateTitle": "Confirm deactivation",
+          "deleteBody": "This removes your data after a manual review by our team. You'll lose access to order history and saved preferences.",
+          "deactivateBody": "We'll pause your activity and hide your storefront until you sign back in.",
+          "keepAccount": "Keep my account",
+          "deleteAction": "Request deletion",
+          "deactivateAction": "Yes, deactivate"
+        },
+        "support": {
+          "section": "Support",
+          "title": "Need help or have feedback?",
+          "description": "Get in touch with our support team or browse our help resources.",
+          "feedback": "Send Feedback",
+          "feedbackDesc": "Share your thoughts about our products and services",
+          "help": "Get Help",
+          "helpDesc": "Find answers to common questions",
+          "helpComing": "Help center coming soon!",
+          "call": "Call Support",
+          "callDesc": "Speak with our support team",
+          "email": "Email Support",
+          "emailDesc": "Send us an email for detailed assistance"
+        }
+    },
+    "account": {
+        "profile_preferences": "Profile & Preferences",
+        "profile_description": "Name, language, and security",
+        "payment_methods": "Payment Methods",
+        "payment_description": "Cards, wallets, billing",
+        "order_history": "Order History",
+        "order_description": "Invoices and receipts",
+        "order_tracking": "Order Tracking",
+        "tracking_description": "Live delivery status",
+        "saved_products": "Saved Products",
+        "saved_description": "Lists and restocks",
+        "favorite_articles": "Favorite Articles",
+        "articles_description": "Guides and resources",
+        "ai_conversations": "AI Conversations",
+        "ai_description": "Chat history",
+        "aiConversations": {
+            "eyebrow": "Coaching assistant",
+            "title": "AI Conversations",
+            "subtitleWithEntries": "Revisit strategic chats with the agronomy copilot and resume from where you left off.",
+            "subtitleWithoutEntries": "You have not started any copilot chats yet. Launch the assistant to begin a new conversation.",
+            "emptyTitle": "No saved transcripts yet",
+            "emptySubtitle": "Every prompt you send to the floating AI assistant will appear here for quick reference.",
+            "startChat": "Start a new chat",
+            "exportTranscript": "Export transcript",
+            "reopenChat": "Reopen chat",
+            "untitledPrompt": "Untitled prompt",
+            "waitingResponse": "Waiting for assistant response...",
+            "justNow": "Just now"
+        },
+        "feedback_support": "Feedback & Support",
+        "support_description": "Tickets and help",
+        "complaints_topic_fallback": "General support",
+        "complaints_topics": {
+            "orders": "Orders & logistics",
+            "billing": "Billing & payments",
+            "product": "Product feedback",
+            "ai": "AI assistant",
+            "technical": "Technical issue",
+            "other": "Other"
+        },
+        "complaints_status": {
+            "pending": "Pending",
+            "in-progress": "In progress",
+            "resolved": "Resolved",
+            "closed": "Closed"
+        },
+        "logout": "Log out",
+        "complaints": "My Complaints",
+        "complaints_description": "Submit and track your complaints",
+        "complaints_title": "My Complaints",
+        "complaints_subtitle": "Track your submitted complaints and their resolution status.",
+        "submit_new_complaint": "Submit New Complaint",
+        "no_complaints_title": "No complaints yet",
+        "no_complaints_subtitle": "You haven't submitted any complaints yet. Click the button above to submit your first complaint.",
+        "login_required_title": "Please log in to view your complaints",
+        "login_required_subtitle": "You need to be logged in to access your complaint history.",
+        "complaints_topic_fallback": "General support",
+        "complaints_topics": {
+            "orders": "Orders & logistics",
+            "billing": "Billing & payments",
+            "product": "Product feedback",
+            "ai": "AI assistant",
+            "technical": "Technical issue",
+            "other": "Other"
+        },
+        "complaints_status": {
+            "pending": "Pending",
+            "in-progress": "In progress",
+            "resolved": "Resolved",
+            "closed": "Closed"
+        },
+        "helper_text": "One central hub for all your account needs: profile settings, payments, orders, and support. Consistent design across all pages for a seamless experience.",
+        "savedProducts": {
+            "eyebrow": "Favorites",
+            "title": "Saved Products",
+            "subtitle": "These items stay in sync with the real inventory managed from the admin area.",
+            "emptyTitle": "No saved products yet",
+            "emptySubtitle": "Explore the catalog curated by your admins and tap the heart icon to keep favourites handy.",
+            "browse": "Browse products",
+            "view": "View",
+            "addToCart": "Add to cart",
+            "remove": "Remove",
+            "inStock": "In stock",
+            "unavailable": "Currently unavailable",
+            "priceUnknown": "Price unavailable",
+            "noImage": "No image"
+        },
+        "favoriteArticles": {
+            "loading": "Loading your reading list...",
+            "emptyTitle": "No saved articles yet",
+            "emptySubtitle": "Save knowledge base entries from the catalog and they will appear here automatically.",
+            "browse": "Browse articles",
+            "eyebrow": "Research stream",
+            "title": "Favorite Articles",
+            "subtitle": "Personalized reading list for your farm crew. Saved items override our curated picks.",
+            "readMore": "Continue reading →"
+        }
+    },
+    "checkout": {
+        "errors": {
+            "fullName": "Please enter a full name.",
+            "email": "Provide a valid email address.",
+            "phone": "Provide a valid phone number.",
+            "address": "Address is required.",
+            "city": "City is required.",
+            "postalCode": "Postal code is required.",
+            "country": "Country is required."
+        },
+        "messages": {
+            "loginRequired": "Please sign in to continue.",
+            "emptyCart": "Your cart is empty.",
+            "success": "Order placed successfully!",
+            "failure": "Unable to place the order. Please try again."
+        },
+        "empty": {
+            "title": "Cart is empty",
+            "subtitle": "Add some farm supplies to continue.",
+            "cta": "Browse products"
+        },
+        "authRequired": {
+            "title": "Sign in required",
+            "subtitle": "Log in to finalize your purchase.",
+            "cta": "Go to login"
+        },
+        "header": {
+            "eyebrow": "Secure checkout",
+            "title": "Review and confirm",
+            "subtitle": "Enter your contact and shipping details, then choose a payment method."
+        },
+        "sections": {
+            "contact": "Contact information",
+            "shipping": "Shipping address",
+            "payment": "Payment method"
+        },
+        "fields": {
+            "fullName": "Full name",
+            "email": "Email",
+            "phone": "Phone",
+            "addressLine1": "Address line 1",
+            "addressLine2": "Address line 2",
+            "optional": "Optional",
+            "city": "City",
+            "state": "State / Province",
+            "postalCode": "Postal code",
+            "country": "Country"
+        },
+        "payment": {
+            "cod": {
+                "title": "Cash on delivery",
+                "subtitle": "Pay when your order arrives."
+            },
+            "card": {
+                "title": "Card payment",
+                "subtitle": "Pay securely online."
+            }
+        },
+        "actions": {
+            "backToCart": "Back to cart",
+            "processing": "Processing...",
+            "completeOrder": "Place order"
+        },
+        "summary": {
+            "title": "Order summary",
+            "subtitle": "Products in your cart",
+            "quantity": "{{count}} item",
+            "quantity_plural": "{{count}} items",
+            "subtotal": "Subtotal",
+            "shipping": "Shipping",
+            "total": "Total",
+            "note": "You will receive an email confirmation with tracking information."
+        }
+    },
+    "orders": {
+        "loading": "Loading your orders...",
+        "empty": {
+            "title": "No orders yet",
+            "subtitle": "Once you purchase items you'll see them here.",
+            "cta": "Shop products"
+        },
+        "overview": {
+            "eyebrow": "Overview",
+            "title": "Order History",
+            "subtitle": "Track invoices, statuses, and totals for every transaction."
+        },
+        "table": {
+            "order": "Order",
+            "date": "Date",
+            "items": "Items",
+            "itemsCount": "{{count}} item",
+            "itemsCount_plural": "{{count}} items",
+            "total": "Total",
+            "status": "Status",
+            "actions": "Actions",
+            "view": "View details",
+            "pending": "Processing"
+        },
+        "status": {
+            "processing": "Processing",
+            "shipped": "Shipped",
+            "delivered": "Delivered"
+        }
+    },
+    "tracking": {
+        "eyebrow": "Track your recent purchases",
+        "title": "Order Tracking",
+        "subtitle": "We refresh your order timeline in real time.",
+        "viewAllOrders": "View all orders",
+        "order": "Order",
+        "total": "Total",
+        "placedOn": "Placed on",
+        "awaitingUpdate": "Awaiting update",
+        "selectOrder": "Select an order to display live updates.",
+        "noOrders": {
+            "title": "No tracked orders yet",
+            "subtitle": "Once you place an order, we'll show real-time tracking here.",
+            "cta": "Shop now"
+        },
+        "trackingStatus": "Tracking Status",
+        "shippingInfo": "Shipping Information",
+        "shippingTo": "Shipping To",
+        "carrier": "Carrier",
+        "trackingNumber": "Tracking Number",
+        "trackOnCarrierSite": "Track on carrier site",
+        "trackCarrier": "Track on carrier site",
+        "steps": {
+            "orderPlaced": "Order Placed",
+            "processing": "Processing",
+            "shipped": "Shipped",
+            "outForDelivery": "Out for Delivery",
+            "delivered": "Delivered"
+        }
+    },
+    "confirmation": {
+        "messages": {
+            "noOrder": "No order information available.",
+            "notFound": "We couldn't find this order.",
+            "loading": "Fetching order details..."
+        },
+        "actions": {
+            "goShopping": "Go shopping",
+            "viewOrders": "View orders",
+            "continueShopping": "Continue shopping"
+        },
+        "header": {
+            "eyebrow": "Thank you",
+            "title": "Order confirmed",
+            "subtitle": "We've emailed your receipt and will keep you posted about shipment status."
+        },
+        "meta": {
+            "reference": "Order reference",
+            "date": "Placed on",
+            "status": "Status",
+            "shippingTo": "Shipping to",
+            "contact": "Contact",
+            "pending": "Pending"
+        },
+        "items": {
+            "title": "Items in this order",
+            "quantity": "{{count}} pc",
+            "quantity_plural": "{{count}} pcs"
+        },
+        "summary": {
+            "subtotal": "Subtotal",
+            "shipping": "Shipping",
+            "total": "Total"
+        }
+    },
+    "support": {
+        "title": "Feedback & Support",
+        "subtitle": "We're here to help! Share your feedback, report issues, or get assistance from our team of experts.",
+        "topic": "Topic",
+        "topics": {
+            "orders": "Orders & Logistics",
+            "billing": "Billing & Payments",
+            "product": "Product Feedback",
+            "ai": "AI Assistant",
+            "technical": "Technical Issues",
+            "other": "Other"
+        },
+        "phoneNumber": "Phone Number",
+        "phonePlaceholder": "Enter your phone number for contact purposes",
+        "phoneRequired": "Required for us to contact you regarding your support request",
+        "phoneInvalid": "Please enter a valid phone number (10-15 digits, may start with +)",
+        "message": "Message",
+        "placeholder": "Please describe your issue, feedback, or question in detail...",
+        "messageRequired": "Please enter a message",
+        "sending": "Sending...",
+        "sendMessage": "Send Message",
+        "messageSent": "Your message has been sent successfully!",
+        "messageError": "Failed to send message. Please try again.",
+        "messageInappropriate": "Please remove offensive language before sending your message.",
+        "moderationFailed": "We couldn't verify your message. Please try again."
+    },
+    "articles": {
+        "list": {
+            "eyebrow": "Knowledge base",
+            "title": "Articles & field notes",
+            "subtitle": "Fresh agronomy tips, veterinary schedules, and AI-powered insights for your farm.",
+            "search": "Search articles...",
+            "allTags": "All topics",
+            "manage": "Manage articles",
+            "loading": "Loading articles...",
+            "readMore": "Continue reading →",
+            "emptyTitle": "No articles match this filter",
+            "emptySubtitle": "Try a different search term or browse all topics.",
+            "fallbackNotice": "Our editorial team is still publishing live articles. Showing trusted field guides until they arrive.",
+            "comingSoonTitle": "Articles are coming soon",
+            "comingSoonSubtitle": "We are preparing bilingual resources for this space. Check back shortly."
+        },
+        "detail": {
+            "loading": "Loading article...",
+            "notFound": "Article not found",
+            "back": "Back to articles",
+            "authNeeded": "Sign in to save articles",
+            "saved": "Saved",
+            "savedButton": "Saved",
+            "saveButton": "Save for later",
+            "removed": "Removed from favorites",
+            "error": "Unable to update favorites",
+            "byline": "Written by {{author}}",
+            "emptyContent": "Content coming soon."
+        },
+        "admin": {
+            "eyebrow": "Knowledge center",
+            "title": "Manage Articles",
+            "subtitle": "Publish updates for the community or auto-fill content with the AI draft helper.",
+            "generate": "Generate with AI",
+            "featureHome": "Feature on home page",
+            "featureAccount": "Recommend inside account hub",
+            "cancel": "Cancel",
+            "saving": "Saving...",
+            "update": "Update",
+            "publish": "Publish",
+            "catalog": "Published articles",
+            "edit": "Edit",
+            "delete": "Delete",
+            "empty": "No articles published yet.",
+            "seedButton": "Load starter articles",
+            "seedLoading": "Publishing starter pack...",
+            "seedSuccess": "Starter articles published",
+            "seedError": "Unable to import starter articles.",
+            "arabicBlock": "Arabic translation (optional)",
+            "titleAr": "Arabic title",
+            "summaryAr": "Arabic summary",
+            "contentAr": "Arabic body content"
+        }
+    },
+    "userSettings": {
+        "messages": {
+            "firstNameRequired": "Please enter your first name",
+            "firstNameTooShort": "First name must be at least 2 characters",
+            "firstNameTooLong": "First name must be less than 50 characters",
+            "lastNameRequired": "Please enter your last name",
+            "lastNameTooShort": "Last name must be at least 2 characters",
+            "lastNameTooLong": "Last name must be less than 50 characters",
+            "invalidEmail": "Please enter a valid email address",
+            "invalidPhone": "Please enter a valid phone number with country code",
+            "invalidImageUrl": "Please enter a valid image URL (jpg, png, gif, webp)",
+            "usernameRequired": "Please enter a username",
+            "usernameTooShort": "Username must be at least 3 characters",
+            "usernameTooLong": "Username must be less than 30 characters",
+            "usernameInvalid": "Username can only include letters, numbers, and underscores",
+            "usernameTaken": "This username is already taken",
+            "invalidDate": "Please enter a valid date",
+            "invalidGender": "Please select your gender",
+            "professionTooLong": "Profession description is too long (max 80 characters)",
+            "currentPasswordRequired": "Please enter your current password",
+            "newPasswordRequired": "Please enter a new password",
+            "passwordTooShort": "Password must be at least 8 characters long",
+            "passwordWeak": "Password must include uppercase, lowercase, and numbers",
+            "passwordsNotMatch": "New passwords don't match",
+            "saveProfileFailed": "We couldn't save your profile. Please check your connection and try again.",
+            "noChangesToSave": "No changes to save",
+            "securitySection": "Security",
+            "securityTitle": "Protect your account",
+            "securityDescription": "Keep your account secure with a strong password.",
+            "currentPassword": "Current Password",
+            "newPassword": "New Password",
+            "confirmNewPassword": "Confirm New Password",
+            "passwordTip": "Tip: Use at least 12 characters with numbers and symbols. Don't reuse passwords from other sites.",
+            "updatingPassword": "Updating password...",
+            "updatePassword": "Update password",
+            "forgotPassword": "Forgot password?",
+            "forgotPasswordSuccess": "Password reset email sent! Check your inbox.",
+            "forgotPasswordError": "Failed to send reset email. Please try again.",
+            "forgotPasswordNoEmail": "No email address found for your account.",
+            "sendingReset": "Sending...",
+            "notificationsSection": "Notifications",
+            "notificationsTitle": "Choose what you want to hear about",
+            "notificationsDescription": "Select the updates that matter to you.",
+            "notificationDescription": "Stay informed with timely updates.",
+            "savingNotifications": "Saving preferences...",
+            "savePreferences": "Save preferences",
+            "saveProfileSuccess": "Your profile has been updated successfully.",
+            "savePreferencesFailed": "We couldn't save your preferences. Please try again.",
+            "savePreferencesSuccess": "Your preferences have been saved.",
+            "saveNotificationsFailed": "We couldn't save your notification settings. Please try again.",
+            "saveNotificationsSuccess": "Your notification preferences have been saved.",
+            "updatePasswordFailed": "We couldn't update your password. Please check your current password and try again.",
+            "updatePasswordSuccess": "Your password has been changed successfully.",
+            "accountActionFailed": "We couldn't process your request. Please try again or contact support.",
+            "wrongPassword": "The current password you entered is incorrect",
+            "weakPassword": "Please choose a stronger password",
+            "tooManyRequests": "Too many attempts. Please wait a few minutes before trying again.",
+            "invalidImageFile": "Please select a valid image file (PNG, JPG, or WebP)",
+            "imageTooLarge": "Image is too large. Please choose a file under 2MB",
+            "fileReadError": "We couldn't read the selected file. Please try again.",
+            "accountDeactivated": "Your account has been deactivated. You can reactivate it anytime by signing in.",
+            "accountDeletionRequested": "Your deletion request has been recorded. Our support team will contact you within 24 hours.",
+            "passwordResetEmailSent": "Password reset email sent. Please check your inbox and follow the instructions.",
+            "saving": "Saving...",
+            "updating": "Updating...",
+            "processing": "Processing...",
+            "loading": "Loading...",
+            "fix_errors": "Please fix the following errors before saving:"
+        }
+    },
+    "products": {
+        "title": "Products",
+        "search": "Search products...",
+        "sortLabel": "Sort",
+        "sort": {
+            "createdAt": "Newest",
+            "price": "Price",
+            "title": "Alphabetical"
+        },
+        "asc": "Ascending",
+        "desc": "Descending",
+        "perPage": "/ page",
+        "error": "Failed to load products.",
+        "fallback": "Live products are still syncing. Showing our core farm catalog until your database is ready.",
+        "noResults": "No products found.",
+        "noImage": "No image",
+        "addToCart": "Add to Cart"
+    }
 }
