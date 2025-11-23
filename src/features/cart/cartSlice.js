@@ -63,8 +63,7 @@ const cartSlice = createSlice({
     },
 
     decreaseQuantity: (state, action) => {
-      const id = action.payload;
-      const item = state.items.find((i) => i.id === id);
+      const item = state.items.find((i) => i.id === action.payload);
       if (item && item.quantity > 1) {
         item.quantity -= 1;
         item.maxReached = false;
@@ -115,7 +114,8 @@ export const {
   decreaseQuantity,
   removeFromCart,
   clearCart,
-  syncStock,
+  finalizeOrderLocal,
+  updateCartStock,
 } = cartSlice.actions;
 
 export default cartSlice.reducer;

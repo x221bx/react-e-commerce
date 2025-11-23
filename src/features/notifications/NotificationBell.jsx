@@ -2,9 +2,9 @@
 import React, { useEffect, useRef } from "react";
 import { FiBell } from "react-icons/fi";
 import { useSelector, useDispatch } from "react-redux";
-import { setOpen } from "../features/notifications/notificationsSlice";
+import { setOpen } from "../notifications/notificationsSlice";
 import NotificationsList from "./NotificationsList";
-import { useNotifications } from "../hooks/useNotifications";
+import { useNotifications } from "../../hooks/useNotifications";
 
 export default function NotificationBell({ recipient = "admin" }) {
   const dispatch = useDispatch();
