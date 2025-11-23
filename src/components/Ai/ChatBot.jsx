@@ -17,9 +17,22 @@ import { db } from "../../services/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { UseTheme } from "../../theme/ThemeProvider";
 
+// 🟢 تشغيل صوت بأمان بدون Errors
+const safePlay = (audio) => {
+  if (!audio) return;
+  const playPromise = audio.play();
+  if (playPromise !== undefined) playPromise.catch(() => {});
+};
+
 // 🟢 أصوات إرسال واستقبال
 const sendSound = new Audio("/send.mp3");
 const receiveSound = new Audio("/receive.mp3");
+// أصوات إضافية
+const openSound = new Audio("/Open.mp3");
+const closeSound = new Audio("/close.mp3");
+// const notifySound = new Audio("/notify.mp3");
+const typingSound = new Audio("/typing.mp3");
+
 
 // 🟢 اقتراحات سريعة
 const QUICK_REPLIES = [
@@ -30,30 +43,22 @@ const QUICK_REPLIES = [
 ];
 
 export default function ChatBot() {
-  const { messages, sendMessage } = useAIChat();
+  const { messages, sendMessage, setMessages } = useAIChat(); // ⭐ مهم جداً
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
 
-  // 🟢 NEW: ميوت / صوت
   const [soundEnabled, setSoundEnabled] = useState(true);
-
-  // 🟢 NEW: عداد رسائل غير مقروءة لما الشات يكون مقفول
   const [unread, setUnread] = useState(0);
-
-  // 🟢 NEW: Meta لكل رسالة (وقت الإرسال)
   const [messageMeta, setMessageMeta] = useState([]);
-
-  // 🟢 NEW: منيو 3 نقط
   const [menuOpen, setMenuOpen] = useState(false);
 
+  
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { theme } = UseTheme();
-
   const messagesEndRef = useRef(null);
 
-  // 🟢 Helper: فورمات الوقت
   const formatTime = (date) => {
     if (!date) return "";
     const d = typeof date === "string" ? new Date(date) : date;
@@ -63,13 +68,13 @@ export default function ChatBot() {
     });
   };
 
-  // 🟢 History
+  // 🟢 History — FIXED (كان سبب 429)
   useEffect(() => {
     const saved = localStorage.getItem("chatHistory");
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        parsed.forEach((m) => messages.push(m));
+        setMessages(parsed); // ❗ بدل push (كان عامل loop)
         // eslint-disable-next-line
       } catch {}
     }
@@ -84,67 +89,61 @@ export default function ChatBot() {
     localStorage.setItem("chatHistory", JSON.stringify(messages));
   }, [messages]);
 
-  // 🟢 Auto scroll
+  // 🟢 Scroll
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, open]);
 
-  // 🟢 Meta للرسائل (وقت الإنشاء) لما يزيد عدد الرسائل
+  // 🟢 Meta للرسائل
   useEffect(() => {
     setMessageMeta((prev) => {
       if (messages.length > prev.length) {
         const diff = messages.length - prev.length;
         const now = new Date();
         const extra = Array.from({ length: diff }, () => ({
-          createdAt: new Date(now),
+          createdAt: now,
         }));
         return [...prev, ...extra];
-      } else if (messages.length < prev.length) {
-        return prev.slice(0, messages.length);
       }
-      return prev;
+      return prev.slice(0, messages.length);
     });
   }, [messages.length]);
 
-  // 🟢 صوت رد البوت + unread لما الشات مقفول
+  // 🟢 صوت رد البوت + unread
   useEffect(() => {
     if (messages.length === 0) return;
     const last = messages[messages.length - 1];
 
-    if (last.role === "assistant") {
-      if (soundEnabled) {
-        try {
-          receiveSound.play();
-          // eslint-disable-next-line
-        } catch {}
-      }
-      setTyping(false);
+   if (last.role === "assistant") {
 
-      if (!open) {
-        setUnread((u) => u + 1);
-      }
-    }
+  // صوت استقبال الرسالة (شغال أصلاً)
+  if (soundEnabled) safePlay(receiveSound);
+
+  // صوت الكتابة
+  if (soundEnabled) safePlay(typingSound);
+
+  // لو الشات مقفول → صوت إشعار notify
+//   if (!open && soundEnabled) safePlay(notifySound);
+
+//   setTyping(false);
+
+  if (!open) setUnread((u) => u + 1);
+}
   }, [messages, soundEnabled, open]);
 
   const handleSend = async (overrideText) => {
     const textToSend = (overrideText ?? input).trim();
     if (!textToSend) return;
 
-    if (soundEnabled) {
-      try {
-        sendSound.play();
-        // eslint-disable-next-line
-      } catch {}
-    }
+    if (soundEnabled) safePlay(sendSound);
 
     setTyping(true);
     await sendMessage(textToSend);
     if (!overrideText) setInput("");
   };
 
-  // 🟢 تغيير حالة الصوت + حفظها
   const toggleSound = () => {
     setSoundEnabled((prev) => {
       const next = !prev;
@@ -153,18 +152,15 @@ export default function ChatBot() {
     });
   };
 
-  // 🟢 NEW: مسح المحادثة بالكامل
   const handleClearChat = () => {
-    // نمسح الهستوري من localStorage
     localStorage.removeItem("chatHistory");
     setMenuOpen(false);
-    // أسهل طريقة نضمن بيها إن الستايت بتاع الهوك يتصفّر
     window.location.reload();
   };
 
-  // =====================================================
+  // ===========================================================
   // 🧠 Mini Product Card
-  // =====================================================
+  // ===========================================================
   const ProductCardMini = ({ id }) => {
     const [product, setProduct] = useState(null);
 
@@ -190,11 +186,11 @@ export default function ChatBot() {
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.35, ease: "easeOut" }}
         className={`rounded-xl p-2 mb-2 flex gap-3 cursor-pointer transition shadow-lg 
-          ${
-            isDark
-              ? "bg-[#0f1d1d]/60 text-[#B8E4E6] border border-white/10 backdrop-blur-lg hover:shadow-xl"
-              : "bg-white/80 text-gray-800 border backdrop-blur-lg hover:shadow-lg"
-          }`}
+        ${
+          isDark
+            ? "bg-[#0f1d1d]/60 text-[#B8E4E6] border border-white/10 backdrop-blur-lg hover:shadow-xl"
+            : "bg-white/80 text-gray-800 border backdrop-blur-lg hover:shadow-lg"
+        }`}
         onClick={() => navigate(`/products/${product.id}`)}
       >
         <img
@@ -202,12 +198,10 @@ export default function ChatBot() {
           alt="product"
           className="w-16 h-16 rounded-lg object-cover shadow-sm"
         />
-
         <div className="flex flex-col justify-between flex-1">
           <p className="font-semibold text-sm">
             {product.name || product.title}
           </p>
-
           <p
             className={`font-bold text-sm ${
               isDark ? "text-[#8ee3e4]" : "text-[#2F7E80]"
@@ -221,12 +215,12 @@ export default function ChatBot() {
               e.stopPropagation();
               dispatch(addToCart(product));
             }}
-            className={`text-xs px-2 py-1 rounded-md mt-1 w-fit 
-              ${
-                isDark
-                  ? "bg-[#1e3d3d] text-[#B8E4E6] hover:bg-[#295050]"
-                  : "bg-teal-600 text-white hover:bg-teal-700"
-              }`}
+            className={`text-xs px-2 py-1 rounded-md w-fit 
+            ${
+              isDark
+                ? "bg-[#1e3d3d] text-[#B8E4E6] hover:bg-[#295050]"
+                : "bg-teal-600 text-white hover:bg-teal-700"
+            }`}
           >
             Add To Cart
           </button>
@@ -235,9 +229,9 @@ export default function ChatBot() {
     );
   };
 
-  // =====================================================
-  // 🧠 Parser <productCard>
-  // =====================================================
+  // ===========================================================
+  // 🧠 Parser المنتج داخل الرسالة
+  // ===========================================================
   const renderMessage = (text) => {
     if (typeof text !== "string") return text;
 
@@ -275,15 +269,22 @@ export default function ChatBot() {
 
   const isDark = theme === "dark";
 
-  // 🟢 إغلاق الشات يمسح الـ unread
   const toggleOpen = () => {
-    setOpen((prev) => {
-      const next = !prev;
-      if (next) setUnread(0);
-      return next;
-    });
-    setMenuOpen(false);
-  };
+  setOpen((prev) => {
+    const next = !prev;
+
+    if (soundEnabled) {
+      if (next) safePlay(openSound);
+      else safePlay(closeSound);
+    }
+
+    if (next) setUnread(0);
+    return next;
+  });
+
+  setMenuOpen(false);
+};
+
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -292,126 +293,91 @@ export default function ChatBot() {
     }
   };
 
+  // ===========================================================
+  // 🖥️ JSX UI — نفس الشكل بدون أي تغيير
+  // ===========================================================
+
   return (
     <>
-      {/* Floating Icon — Responsive + Bounce + Safe-Area */}
-<Motion.button
-  initial={{ scale: 0.7, opacity: 0, y: 15 }}
-  animate={{ scale: 1, opacity: 1, y: 0 }}
-  whileHover={{ scale: 1.15, y: -4 }}
-  whileTap={{ scale: 0.92 }}
-  onClick={toggleOpen}
-  className="
-    fixed
-    bottom-[calc(1.5rem+env(safe-area-inset-bottom))]
-    right-4 md:right-6 
-    bg-teal-600 
-    p-4 
-    rounded-full 
-    text-white 
-    transition 
-    z-50 
-    flex items-center justify-center
-    shadow-xl 
-    hover:bg-teal-700
-    backdrop-blur-xl
-  "
-  style={{
-    boxShadow: `
-      0 4px 12px rgba(0,0,0,0.15),
-      0 0 12px rgba(45,200,180,0.35)
-    `,
-  }}
->
-  <FiMessageCircle size={28} />
+      {/* Floating Icon */}
+      <Motion.button
+        initial={{ scale: 0.7, opacity: 0, y: 15 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        whileHover={{ scale: 1.15, y: -4 }}
+        whileTap={{ scale: 0.92 }}
+        onClick={toggleOpen}
+        className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] right-4 md:right-6 
+        bg-teal-600 p-4 rounded-full text-white shadow-xl z-50 hover:bg-teal-700"
+      >
+        <FiMessageCircle size={28} />
+        {unread > 0 && (
+          <span className="absolute -top-1 -right-1 bg-red-500 text-[10px] leading-none text-white rounded-full px-1.5 py-0.5 border shadow-lg">
+            {unread}
+          </span>
+        )}
+      </Motion.button>
 
-  {/* Unread Badge */}
-  {unread > 0 && (
-    <span
-      className="
-        absolute -top-1 -right-1 
-        bg-red-500 
-        text-[10px] 
-        leading-none 
-        text-white 
-        rounded-full 
-        px-1.5 py-0.5 
-        border border-white 
-        shadow-lg
-      "
-    >
-      {unread}
-    </span>
-  )}
-</Motion.button>
-
-
-      {/* Chat Window — Draggable style via framer-motion drag */}
+      {/* Chat Window */}
       <AnimatePresence>
         {open && (
           <Motion.div
             drag
             dragMomentum={false}
             dragElastic={0.15}
-            className={`fixed bottom-24 right-6 w-80 shadow-2xl rounded-2xl overflow-hidden flex flex-col
-              backdrop-blur-2xl border z-50
-              ${
-                isDark
-                  ? "bg-[#071010]/70 border-white/10"
-                  : "bg-white/70 border-gray-200"
-              }`}
+            className={`fixed bottom-24 right-6 w-80 shadow-2xl rounded-2xl overflow-hidden flex flex-col 
+            backdrop-blur-2xl border z-50 ${
+              isDark
+                ? "bg-[#071010]/70 border-white/10"
+                : "bg-white/70 border-gray-200"
+            }`}
             initial={{ opacity: 0, scale: 0.8, y: 50 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.75, y: 30 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0.3 }}
           >
             {/* Header */}
             <div className="flex items-center justify-between bg-teal-600/90 text-white px-4 py-3 shadow-lg cursor-move">
+
+              {/* AI Title */}
               <div className="flex items-center gap-2">
                 <div className="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center text-xs font-bold">
                   AI
                 </div>
-                <div className="flex flex-col">
+
+                <div>
                   <span className="font-semibold text-sm">AI Assistant</span>
-                  <span className="text-[10px] text-emerald-100 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                  <span className="block text-[10px] text-emerald-100">
                     متصل الآن لمساعدتك في الأسمدة و المحاصيل
                   </span>
                 </div>
               </div>
 
+              {/* Controls */}
               <div className="flex items-center gap-1 relative">
-                {/* زر الصوت */}
+                {/* صوت */}
                 <button
                   onClick={toggleSound}
-                  className="p-1 rounded-full hover:bg-white/10 transition"
-                  title={soundEnabled ? "كتم الصوت" : "تشغيل الصوت"}
+                  className="p-1 rounded-full hover:bg-white/10"
                 >
-                  {soundEnabled ? (
-                    <FiVolume2 size={16} />
-                  ) : (
-                    <FiVolumeX size={16} />
-                  )}
+                  {soundEnabled ? <FiVolume2 size={16} /> : <FiVolumeX size={16} />}
                 </button>
 
-                {/* منيو الثلاث نقاط */}
+                {/* منيو */}
                 <div className="relative">
                   <button
                     onClick={() => setMenuOpen((p) => !p)}
-                    className="p-1 rounded-full hover:bg-white/10 transition"
-                    title="إعدادات الشات"
+                    className="p-1 rounded-full hover:bg-white/10"
                   >
                     <FiMoreVertical size={16} />
                   </button>
 
                   {menuOpen && (
                     <div
-                      className={`absolute right-0 mt-1 rounded-lg shadow-lg text-xs z-50 min-w-[130px]
-                        ${
-                          isDark
-                            ? "bg-[#061011]/95 border border-white/10 text-[#E5F7F7]"
-                            : "bg-white border border-gray-200 text-gray-800"
-                        }`}
+                      className={`absolute right-0 mt-1 rounded-lg shadow-lg text-xs z-50 min-w-[130px] ${
+                        isDark
+                          ? "bg-[#061011]/95 border border-white/10 text-[#E5F7F7]"
+                          : "bg-white border border-gray-200 text-gray-800"
+                      }`}
                     >
                       <button
                         onClick={handleClearChat}
@@ -424,9 +390,10 @@ export default function ChatBot() {
                   )}
                 </div>
 
+                {/* إغلاق */}
                 <FiX
                   size={20}
-                  className="cursor-pointer hover:scale-110 transition"
+                  className="cursor-pointer hover:scale-110"
                   onClick={() => {
                     setOpen(false);
                     setMenuOpen(false);
@@ -437,11 +404,9 @@ export default function ChatBot() {
 
             {/* Messages */}
             <div
-              className={`h-80 overflow-y-auto p-3 space-y-3 
-                custom-scroll transition 
-                ${
-                  isDark ? "bg-[#0b1b1b]/40" : "bg-gray-50/60"
-                }`}
+              className={`h-80 overflow-y-auto p-3 space-y-3 custom-scroll ${
+                isDark ? "bg-[#0b1b1b]/40" : "bg-gray-50/60"
+              }`}
             >
               {messages.map((m, i) => (
                 <Motion.div
@@ -453,52 +418,47 @@ export default function ChatBot() {
                     m.role === "user" ? "ml-auto" : "mr-auto"
                   }`}
                 >
-                  {/* Avatar + meta */}
+                  {/* meta */}
                   <div
                     className={`flex items-center gap-2 mb-1 ${
                       m.role === "user" ? "justify-end" : "justify-start"
                     }`}
                   >
                     {m.role === "assistant" && (
-                      <div className="w-6 h-6 rounded-full bg-teal-600 text-white flex items-center justify-center text-[10px] shadow">
+                      <div className="w-6 h-6 rounded-full bg-teal-600 text-white flex items-center justify-center text-[10px]">
                         AI
                       </div>
                     )}
                     {m.role === "user" && (
-                      <div className="w-6 h-6 rounded-full bg-gray-300 text-gray-800 flex items-center justify-center text-[10px] shadow-inner">
+                      <div className="w-6 h-6 rounded-full bg-gray-300 text-gray-800 flex items-center justify-center text-[10px]">
                         أنت
                       </div>
                     )}
+
                     <span className="text-[10px] text-gray-400">
                       {formatTime(messageMeta[i]?.createdAt)}
                     </span>
                   </div>
 
-                  {/* Bubble */}
+                  {/* bubble */}
                   <div
-                    className={`p-2 rounded-2xl whitespace-pre-wrap backdrop-blur-xl shadow 
-                      ${
-                        m.role === "user"
-                          ? "bg-teal-500 text-white rounded-br-sm"
-                          : isDark
-                          ? "bg-[#102626]/70 text-[#B8E4E6] border border-white/10 rounded-bl-sm"
-                          : "bg-white/80 border text-gray-800 rounded-bl-sm"
-                      }`}
+                    className={`p-2 rounded-2xl shadow whitespace-pre-wrap ${
+                      m.role === "user"
+                        ? "bg-teal-500 text-white rounded-br-sm"
+                        : isDark
+                        ? "bg-[#102626]/70 text-[#B8E4E6] border border-white/10 rounded-bl-sm"
+                        : "bg-white/80 border text-gray-800 rounded-bl-sm"
+                    }`}
                   >
                     {renderMessage(m.content)}
                   </div>
                 </Motion.div>
               ))}
 
-              {/* Typing */}
+              {/* bot typing */}
               {typing && (
-                <div className="mr-auto px-3 py-1 text-xs rounded-lg text-gray-200 bg-gray-600/60 animate-pulse w-fit flex items-center gap-2">
+                <div className="mr-auto px-3 py-1 text-xs rounded-lg text-gray-200 bg-gray-600/60 animate-pulse w-fit flex gap-2">
                   <span>المساعد يكتب…</span>
-                  <span className="flex gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-white/70 animate-bounce" />
-                    <span className="w-1.5 h-1.5 rounded-full bg-white/60 animate-bounce delay-150" />
-                    <span className="w-1.5 h-1.5 rounded-full bg-white/50 animate-bounce delay-300" />
-                  </span>
                 </div>
               )}
 
@@ -507,12 +467,9 @@ export default function ChatBot() {
 
             {/* Quick Replies */}
             <div
-              className={`px-3 pt-2 pb-1 flex flex-wrap gap-2 border-t 
-                ${
-                  isDark
-                    ? "bg-[#051213]/80 border-white/10"
-                    : "bg-white/70 border-gray-200/60"
-                }`}
+              className={`px-3 pt-2 pb-1 flex flex-wrap gap-2 border-t ${
+                isDark ? "bg-[#051213]/80 border-white/10" : "bg-white/70"
+              }`}
             >
               {QUICK_REPLIES.map((q, idx) => (
                 <Motion.button
@@ -520,12 +477,11 @@ export default function ChatBot() {
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.96 }}
                   onClick={() => handleSend(q)}
-                  className={`text-[10px] px-2 py-1 rounded-full border max-w-full truncate
-                    ${
-                      isDark
-                        ? "bg-[#0f2020] border-white/15 text-[#C9F2F2]"
-                        : "bg-white border-teal-200 text-teal-700"
-                    }`}
+                  className={`text-[10px] px-2 py-1 rounded-full border max-w-full truncate ${
+                    isDark
+                      ? "bg-[#0f2020] border-white/15 text-[#C9F2F2]"
+                      : "bg-white border-teal-200 text-teal-700"
+                  }`}
                 >
                   {q}
                 </Motion.button>
@@ -534,12 +490,9 @@ export default function ChatBot() {
 
             {/* Input */}
             <div
-              className={`flex p-3 gap-2 border-t 
-                ${
-                  isDark
-                    ? "bg-[#0d1a1a]/70 border-white/10"
-                    : "bg-white/70"
-                }`}
+              className={`flex p-3 gap-2 border-t ${
+                isDark ? "bg-[#0d1a1a]/70 border-white/10" : "bg-white/70"
+              }`}
             >
               <textarea
                 value={input}
@@ -547,12 +500,11 @@ export default function ChatBot() {
                 onKeyDown={handleKeyDown}
                 placeholder="اكتب رسالتك..."
                 rows={1}
-                className={`flex-1 rounded-xl px-3 py-2 outline-none shadow-sm text-sm resize-none
-                  ${
-                    isDark
-                      ? "bg-[#071414] text-white border border-white/10 placeholder:text-gray-400"
-                      : "bg-white border placeholder:text-gray-400"
-                  }`}
+                className={`flex-1 rounded-xl px-3 py-2 outline-none shadow-sm text-sm resize-none ${
+                  isDark
+                    ? "bg-[#071414] text-white border border-white/10"
+                    : "bg-white border"
+                }`}
               />
 
               <Motion.button
@@ -560,12 +512,11 @@ export default function ChatBot() {
                 whileTap={{ scale: 0.92 }}
                 onClick={() => handleSend()}
                 disabled={!input.trim()}
-                className={`px-3 rounded-xl shadow-md flex items-center justify-center
-                  ${
-                    input.trim()
-                      ? "bg-teal-600 text-white hover:bg-teal-700"
-                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  }`}
+                className={`px-3 rounded-xl shadow-md flex items-center justify-center ${
+                  input.trim()
+                    ? "bg-teal-600 text-white hover:bg-teal-700"
+                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                }`}
               >
                 <FiSend size={18} />
               </Motion.button>

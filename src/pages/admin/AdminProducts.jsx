@@ -1,3 +1,4 @@
+// src/pages/AdminProducts.jsx
 import { useEffect, useMemo, useState } from "react";
 import { NavLink, useNavigate, useSearchParams } from "react-router-dom";
 import {
@@ -58,12 +59,11 @@ export default function AdminProducts() {
   });
 
   const { data: categories = [] } = useCategoriesSorted({ dir: "asc" });
-  const { t: tCat } = useTranslation();
   const catMap = useMemo(() => {
     const m = {};
-    for (const c of categories) m[c.id] = localizeCategory(c, tCat);
+    for (const c of categories) m[c.id] = localizeCategory(c, t);
     return m;
-  }, [categories, tCat]);
+  }, [categories, t]);
 
   const {
     paginatedData,
@@ -116,6 +116,7 @@ export default function AdminProducts() {
         icon={<FiPackage />}
       />
 
+      {/* Filters */}
       <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="flex min-w-0 flex-1 flex-col gap-2 md:flex-row md:items-center">
           <ResponsiveStatusFilter value={status} onChange={setStatus} />
@@ -168,12 +169,13 @@ export default function AdminProducts() {
         </div>
       </div>
 
+      {/* Loading / Error / Empty */}
       {isLoading && <SkeletonTable rows={6} />}
       {isError && (
         <div className="rounded-lg border border-rose-200 bg-rose-50 p-4 text-rose-700">
           {t("errors.products_load_failed", {
             defaultValue: "Failed to load products",
-          })}
+          })}{" "}
           : {String(error?.message || "Unknown error")}
         </div>
       )}
@@ -190,6 +192,7 @@ export default function AdminProducts() {
         />
       )}
 
+      {/* Mobile Cards */}
       {!isLoading && !isError && all.length > 0 && (
         <div className="space-y-3 md:hidden">
           {paginatedData.map((p) => (
@@ -209,22 +212,21 @@ export default function AdminProducts() {
                     N/A
                   </div>
                 )}
-
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-semibold text-gray-900">
                     {localizeProduct(p, t).title}
+                  </div>
+                  <div className="mt-1 text-xs text-gray-500">
+                    Stock: {p.stock ?? 0}
                   </div>
                   <div className="mt-2 flex flex-wrap items-center gap-1.5">
                     <span className="rounded-md bg-gray-100 px-2 py-0.5 text-[11px] text-gray-700 ring-1 ring-gray-200">
                       {catMap[p.categoryId] || "—"}
                     </span>
                     <StatusBadge available={!!p.isAvailable} small />
-                    <span className="text-[11px] text-gray-500">
-                      {formatDate(p.createdAt)}
-                    </span>
                   </div>
                   <div className="mt-1 text-xs text-gray-500">
-                    Quantity: {p.quantity ?? 0}
+                    {formatDate(p.createdAt)}
                   </div>
                 </div>
               </div>
@@ -234,7 +236,6 @@ export default function AdminProducts() {
                   {Number(p.price || 0).toLocaleString()}{" "}
                   <span className="text-gray-500">{p.currency || "USD"}</span>
                 </span>
-
                 <div className="inline-flex items-center gap-2">
                   <button
                     onClick={() => navigate(`/admin/products/${p.id}/edit`)}
@@ -258,6 +259,7 @@ export default function AdminProducts() {
         </div>
       )}
 
+      {/* Desktop Table */}
       {!isLoading && !isError && all.length > 0 && (
         <div className="hidden md:block">
           <div className="overflow-x-auto">
@@ -266,7 +268,7 @@ export default function AdminProducts() {
                 <tr className="bg-gray-50 text-left text-sm text-gray-600">
                   <Th>{t("admin.products", { defaultValue: "Products" })}</Th>
                   <Th>{t("sort.price", { defaultValue: "Price" })}</Th>
-                  <Th>Quantity</Th>
+                  <Th>Stock</Th>
                   <Th>
                     {t("admin.categories", { defaultValue: "Categories" })}
                   </Th>
@@ -295,27 +297,17 @@ export default function AdminProducts() {
                             N/A
                           </div>
                         )}
-                        <div>
-                          <div className="font-medium text-gray-900">
-                            {localizeProduct(p, t).title}
-                          </div>
+                        <div className="font-medium text-gray-900">
+                          {localizeProduct(p, t).title}
                         </div>
                       </div>
                     </Td>
                     <Td>
-                      <span className="font-semibold text-gray-900">
-                        {Number(p.price || 0).toLocaleString()}{" "}
-                        <span className="text-gray-500">
-                          {p.currency || "USD"}
-                        </span>
-                      </span>
+                      {Number(p.price || 0).toLocaleString()}{" "}
+                      {p.currency || "USD"}
                     </Td>
-                    <Td>{p.quantity ?? 0}</Td>
-                    <Td>
-                      <span className="rounded-md bg-gray-100 px-2 py-0.5 text-xs text-gray-700 ring-1 ring-gray-200">
-                        {catMap[p.categoryId] || "—"}
-                      </span>
-                    </Td>
+                    <Td>{p.stock ?? 0}</Td>
+                    <Td>{catMap[p.categoryId] || "—"}</Td>
                     <Td>
                       <StatusBadge available={!!p.isAvailable} />
                     </Td>
@@ -327,7 +319,6 @@ export default function AdminProducts() {
                             navigate(`/admin/products/${p.id}/edit`)
                           }
                           className="rounded-md border border-gray-200 bg-white p-2 text-gray-700 shadow-sm transition hover:bg-gray-50"
-                          title="Edit"
                         >
                           <FiEdit2 />
                         </button>
@@ -337,7 +328,6 @@ export default function AdminProducts() {
                             setToDelete({ id: p.id, name: p.name })
                           }
                           className="rounded-md border border-gray-200 bg-white p-2 text-rose-600 shadow-sm transition hover:bg-rose-50 disabled:opacity-50"
-                          title="Delete"
                         >
                           <FiTrash2 />
                         </button>
@@ -348,7 +338,6 @@ export default function AdminProducts() {
               </tbody>
             </table>
           </div>
-
           <Pager
             currentPage={currentPage}
             totalPages={totalPages}
@@ -362,6 +351,7 @@ export default function AdminProducts() {
         </div>
       )}
 
+      {/* Delete Confirmation */}
       <ConfirmDialog
         open={!!toDelete}
         title={t("confirm.delete_product_title", {
@@ -404,7 +394,6 @@ function ResponsiveStatusFilter({ value, onChange }) {
       label: t("admin.status.unavailable", { defaultValue: "Out of stock" }),
     },
   ];
-
   return (
     <>
       <label className="md:hidden">
@@ -421,7 +410,6 @@ function ResponsiveStatusFilter({ value, onChange }) {
           ))}
         </select>
       </label>
-
       <div className="hidden md:block">
         <div className="max-w-full overflow-x-auto">
           <div className="inline-flex min-w-max overflow-hidden rounded-lg border border-gray-200 bg-white p-0.5 shadow-sm">
@@ -431,12 +419,11 @@ function ResponsiveStatusFilter({ value, onChange }) {
                 <button
                   key={it.value}
                   onClick={() => onChange(it.value)}
-                  className={[
-                    "whitespace-nowrap px-3 py-1.5 text-sm font-medium transition",
+                  className={`whitespace-nowrap px-3 py-1.5 text-sm font-medium transition ${
                     active
                       ? "bg-[#2B7A0B]/10 text-[#203232] ring-1 ring-[#2B7A0B]/30"
-                      : "text-gray-700 hover:bg-[#2B7A0B]/5",
-                  ].join(" ")}
+                      : "text-gray-700 hover:bg-[#2B7A0B]/5"
+                  }`}
                 >
                   {it.label}
                 </button>

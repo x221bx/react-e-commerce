@@ -101,7 +101,7 @@ export default function OrderHistory() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-5 min-h-screen bg-green-50">
       <header>
         <p className={`text-sm font-semibold uppercase tracking-wide ${accent}`}>
           {t("orders.overview.eyebrow")}
@@ -126,7 +126,7 @@ export default function OrderHistory() {
               <th className="px-6 py-3 text-right">{t("orders.table.actions")}</th>
             </tr>
           </thead>
-          <tbody className={`divide-y ${tableDivider}`}>
+          <tbody className="divide-y divide-slate-100">
             {orders.map((order) => (
               <tr key={order.id} className={rowText}>
                 <td className={`px-6 py-4 font-semibold ${rowPrimary}`}>

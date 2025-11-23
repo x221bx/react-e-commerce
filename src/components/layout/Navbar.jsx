@@ -11,7 +11,6 @@ import { useTranslation } from "react-i18next";
 
 import SearchBar from "../search/SearchBar";
 import Button from "../../components/ui/Button";
-import { useNotifications } from "../../hooks/useNotifications";
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -26,16 +25,16 @@ export default function Navbar() {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useTranslation();
   const { unreadCount, connectionError } = useNotifications({
     uid: user?.uid,
     role: user?.role,
   });
 
-  const handleLogout = () => {
-    dispatch(signOut());
-    toast.success("Logged out successfully 👋");
-  };
+  // Hide navbar on login/register screens
+  const hideNavbar =
+    location.pathname === "/login" || location.pathname === "/register";
 
   const toggleLanguage = async () => {
     const newLang = currentLang === "en" ? "ar" : "en";
@@ -138,7 +137,7 @@ export default function Navbar() {
             {theme === "dark" ? "🌙" : "☀️"}
           </button>
 
-          {/* ❤️ Favorites */}
+          {/* Favorites */}
           <button
             onClick={(e) => {
               e.preventDefault();
@@ -154,7 +153,7 @@ export default function Navbar() {
             )}
           </button>
 
-          {/* 🛒 Cart */}
+          {/* Cart */}
           <button
             onClick={(e) => {
               e.preventDefault();
@@ -245,7 +244,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* 📱 Mobile Menu */}
+      {/* Mobile Menu */}
       <AnimatePresence>
         {mobileOpen && (
           <Motion.div

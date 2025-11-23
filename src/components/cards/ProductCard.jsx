@@ -10,11 +10,15 @@ export default function ProductCard({ product, index = 0 }) {
   const dispatch = useDispatch();
   const { theme } = UseTheme();
 
-  // 🧼 Helper لتنضيف المنتج قبل دخوله Redux
+  // صورة fallback لو المنتج مالوش صورة
+  const imageUrl =
+    product?.img ||
+    product?.thumbnailUrl ||
+    "/placeholder.png"; // ← ضيف الصورة دي في public
+
   const safeProduct = (p) => {
     const clean = { ...p };
 
-    // إزالة أو تحويل أي Firestore Timestamp
     if (clean.createdAt?.seconds) {
       clean.createdAt = clean.createdAt.seconds * 1000;
     }
@@ -48,7 +52,7 @@ export default function ProductCard({ product, index = 0 }) {
   return (
     <Motion.div
       initial="hidden"
-      whileInView="show"
+      animate="show"
       viewport={{ once: true, amount: 0.3 }}
       variants={fadeUp}
       custom={index * 0.1}
@@ -61,7 +65,6 @@ export default function ProductCard({ product, index = 0 }) {
             : "bg-white text-[#1a1a1a] shadow-[0_3px_15px_rgba(0,0,0,0.1)] hover:shadow-[0_5px_20px_rgba(0,0,0,0.15)]"
         }`}
     >
-      {/* ❤️ Favourite toggle */}
       <Motion.button
         whileTap={{ scale: 0.9 }}
         onClick={() => dispatch(toggleFavourite(safeProduct(product)))}
@@ -71,17 +74,15 @@ export default function ProductCard({ product, index = 0 }) {
         <Heart size={20} className={isFav ? "text-red-600" : "text-gray-400"} />
       </Motion.button>
 
-      {/* 🖼️ Image */}
       <Motion.div
         whileHover={{ scale: 1.05 }}
         transition={{ duration: 0.4 }}
         className="relative z-10 w-full aspect-square bg-center bg-cover rounded-lg shadow-inner"
         style={{
-          backgroundImage: `url('${product.img || product.thumbnailUrl}')`,
+          backgroundImage: `url('${imageUrl}')`,
         }}
       />
 
-      {/* 📄 Info */}
       <div className="flex flex-col gap-2 text-center relative z-10">
         <Motion.p variants={fadeUp} custom={0.2} className="text-base font-semibold">
           {product.name || product.title}
@@ -91,7 +92,6 @@ export default function ProductCard({ product, index = 0 }) {
           {Number(product.price).toLocaleString()} EGP
         </Motion.p>
 
-        {/* 🛒 ADD TO CART */}
         <Motion.div variants={fadeUp} custom={0.4}>
           <Button
             text={inCart ? "In Cart" : "Add to Cart"}
