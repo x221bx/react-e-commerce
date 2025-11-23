@@ -9,6 +9,7 @@ import Register from "./pages/Register";
 import Reset from "./pages/Reset";
 
 // public pages
+
 import Home from "./pages/Home";
 import Products from "./pages/Products";
 import Favorites from "./pages/Favorites";
@@ -17,7 +18,12 @@ import ProductDetails from "./pages/ProductDetails";
 import About from "./pages/About";
 import ContactUs from "./pages/contactus";
 import Checkout from "./pages/Checkout";
-import Notifications from "./pages/Notifications";
+// import Notifications from "./pages/Notifications";
+import OrderDetails from "./pages/OrderDetails";
+
+// user/admin order pages
+// import UserOrders from "./features/orders/UserOrders";
+import AdminOrders from "./pages/admin/AdminOrders";
 
 // account/settings
 import UserSettings from "./pages/UserSettings";
@@ -39,35 +45,40 @@ import AdminCategories from "./pages/admin/AdminCategories";
 
 export default function App() {
   return (
-    <div className="min-h-screen transition-colors duration-300">
-      {/* Navbar */}
+    <div className="min-h-screen transition-colors duration-300 bg-slate-50">
       <Navbar />
-
-      {/* Toast Notifications */}
       <Toaster position="top-right" reverseOrder={false} />
 
-      {/* Routes */}
       <Routes>
-        {/* Public Routes */}
+        {/* Public */}
         <Route path="/" element={<Home />} />
         <Route path="/products" element={<Products />} />
-        <Route path="/favorites" element={<Favorites />} />
         <Route path="/products/:id" element={<ProductDetails />} />
+        <Route path="/favorites" element={<Favorites />} />
         <Route path="/cart" element={<Cart />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/notifications" element={<Notifications />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/reset" element={<Reset />} />
         <Route path="/about" element={<About />} />
         <Route path="/contactus" element={<ContactUs />} />
-        <Route path="/checkout" element={<Checkout />} />
+        {/* <Route path="/notifications" element={<Notifications />} /> */}
 
-        {/* Authenticated User Routes */}
+        {/* Auth pages */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/reset" element={<Reset />} />
+
+        {/* User Orders (protected) */}
         <Route element={<ProtectedRoute />}>
-          <Route path="/settings" element={<UserSettings />} />
+          {/* <Route path="/UserOrders" element={<UserOrders />} /> */}
+          <Route path="/UserOrders/:id" element={<OrderDetails />} />
+          <Route path="/adminorders/:id" element={<OrderDetails />} />
+          <Route path="/checkout" element={<Checkout />} />
+
+          {/* Account nested */}
           <Route path="/account" element={<AccountLayout />}>
             <Route index element={<Navigate to="tracking" replace />} />
-            <Route path="settings" element={<UserSettings variant="embedded" />} />
+            <Route
+              path="settings"
+              element={<UserSettings variant="embedded" />}
+            />
             <Route path="payments" element={<PaymentMethods />} />
             <Route path="orders" element={<OrderHistory />} />
             <Route path="tracking" element={<OrderTracking />} />
@@ -78,29 +89,22 @@ export default function App() {
           </Route>
         </Route>
 
-        {/* Admin Routes */}
+        {/* Admin protected */}
         <Route element={<ProtectedRoute requireAdmin={true} />}>
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="products" element={<AdminProducts />} />
+            {/* <Route path="notifications" element={<Notifications />} /> */}
             <Route path="products/new" element={<AdminProductForm />} />
             <Route path="products/:id/edit" element={<AdminProductForm />} />
             <Route path="categories" element={<AdminCategories />} />
+            <Route path="adminorders" element={<AdminOrders />} />
+            <Route path="/adminorders/:id" element={<OrderDetails />} />
           </Route>
         </Route>
 
-        {/* Forbidden */}
-        <Route
-          path="/403"
-          element={
-            <div className="flex h-screen items-center justify-center flex-col">
-              <h1 className="text-4xl font-bold text-red-600">403 Forbidden</h1>
-              <p className="text-gray-600 mt-2 dark:text-gray-300">
-                You do not have permission to access this page.
-              </p>
-            </div>
-          }
-        />
+        {/* fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>
   );

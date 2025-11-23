@@ -1,5 +1,6 @@
+// src/hooks/useProduct.js
 import { useQuery } from "@tanstack/react-query";
-import { db } from "../services/firebase.js";
+import { db } from "../services/firebase";
 import { doc, getDoc } from "firebase/firestore";
 
 export function useProduct(id) {
@@ -8,8 +9,16 @@ export function useProduct(id) {
     enabled: !!id,
     queryFn: async () => {
       const snap = await getDoc(doc(db, "products", id));
-      return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+      if (!snap.exists()) return null;
+
+      const data = snap.data();
+
+      // حل مشكلة Timestamp
+      if (data.createdAt?.toMillis) data.createdAt = data.createdAt.toDate();
+      if (data.updatedAt?.toMillis) data.updatedAt = data.updatedAt.toDate();
+
+      return { id: snap.id, ...data };
     },
-    staleTime: 15_000,
+    staleTime: 15000,
   });
 }

@@ -1,95 +1,70 @@
-// src/hooks/useNotifications.js
-import { useEffect, useState, useCallback } from "react";
-import {
-  collection,
-  query,
-  where,
-  orderBy,
-  onSnapshot,
-  updateDoc,
-  doc,
-  limit,
-} from "firebase/firestore";
-import { db } from "../services/firebase";
+// import { useEffect, useState } from "react";
+// import {
+//   collection,
+//   query,
+//   orderBy,
+//   onSnapshot,
+//   addDoc,
+//   updateDoc,
+//   doc,
+//   Timestamp,
+// } from "firebase/firestore";
+// import { db } from "../services/firebase";
 
-export function useNotifications({ uid, role } = {}) {
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
+// export default function useNotifications(isAdmin = false) {
+//   const [notifications, setNotifications] = useState([]);
+//   const [unreadCount, setUnreadCount] = useState(0);
 
-  useEffect(() => {
-    if (!db) return;
-    // Create query: notifications for this user OR admin notifications
-    let q;
-    if (uid && role === "admin") {
-      q = query(
-        collection(db, "notifications"),
-        where("recipientRole", "==", "admin"),
-        orderBy("createdAt", "desc"),
-        limit(100)
-      );
-    } else if (uid) {
-      // user: notifications that are for them OR role=admin? (we usually show only their own)
-      q = query(
-        collection(db, "notifications"),
-        where("recipientId", "==", uid),
-        orderBy("createdAt", "desc"),
-        limit(200)
-      );
-    } else {
-      // fallback: subscribe to admin notifications only
-      q = query(
-        collection(db, "notifications"),
-        where("recipientRole", "==", "admin"),
-        orderBy("createdAt", "desc"),
-        limit(100)
-      );
-    }
+//   useEffect(() => {
+//     if (!isAdmin) return;
 
-    setLoading(true);
-    const unsub = onSnapshot(
-      q,
-      (snap) => {
-        const arr = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-        setNotifications(arr);
-        setLoading(false);
-      },
-      (err) => {
-        console.error("notifications onSnapshot error", err);
-        setLoading(false);
-      }
-    );
+//     const q = query(
+//       collection(db, "notifications"),
+//       orderBy("createdAt", "desc")
+//     );
 
-    return () => unsub();
-  }, [uid, role]);
+//     const unsub = onSnapshot(q, (snap) => {
+//       const data = snap.docs.map((d) => ({
+//         id: d.id,
+//         ...d.data(),
+//       }));
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+//       setNotifications(data);
 
-  const markRead = useCallback(async (id) => {
-    try {
-      await updateDoc(doc(db, "notifications", id), {
-        read: true,
-        readAt: new Date(),
-      });
-    } catch (err) {
-      console.error("markRead error", err);
-    }
-  }, []);
+//       const unread = data.filter((n) => !n.read).length;
+//       setUnreadCount(unread);
+//     });
 
-  const markAllRead = useCallback(async () => {
-    try {
-      const batchPromises = notifications
-        .filter((n) => !n.read)
-        .map((n) =>
-          updateDoc(doc(db, "notifications", n.id), {
-            read: true,
-            readAt: new Date(),
-          })
-        );
-      await Promise.all(batchPromises);
-    } catch (err) {
-      console.error("markAllRead error", err);
-    }
-  }, [notifications]);
+//     return () => unsub();
+//   }, [isAdmin]);
 
-  return { notifications, loading, unreadCount, markRead, markAllRead };
-}
+//   const pushNotification = async ({
+//     orderId,
+//     message,
+//     type = "new",
+//     userName,
+//   }) => {
+//     await addDoc(collection(db, "notifications"), {
+//       orderId,
+//       message,
+//       type,
+//       read: false,
+//       userName,
+//       createdAt: Timestamp.now(),
+//     });
+//   };
+
+//   const markAsRead = async (id) => {
+//     await updateDoc(doc(db, "notifications", id), {
+//       read: true,
+//       readAt: new Date(),
+//     });
+//   };
+
+//   return {
+//     notifications,
+//     unreadCount,
+//     pushNotification,
+//     markAsRead,
+//   };
+// }
