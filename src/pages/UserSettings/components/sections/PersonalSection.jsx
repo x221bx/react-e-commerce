@@ -1,7 +1,6 @@
 import React from "react";
 import SectionCard from "../SectionCard";
 import ProfileAvatar from "../ProfileAvatar";
-import { SelectInput } from "../FormComponents";
 import Input from "../../../../components/ui/Input";
 import { UploadCloud, AlertCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -13,194 +12,193 @@ const PersonalSection = ({
   handleProfileChange,
   handleAvatarUpload,
   handleAvatarReset,
-  handlePhotoLinkChange,
   resetProfileForm,
   handleProfileSubmit,
   isSavingProfile,
   hasUnsavedChanges,
-  errors = {}
+  errors = {},
 }) => {
-  const { t, i18n } = useTranslation();
-  const isArabic = i18n.language.startsWith('ar');
-
-  const getGenderLabel = (value) => {
-    return t(`settings.${value}`, value);
-  };
-
-  const validateEmail = (email) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  };
-
-  const validatePhone = (phone) => {
-    return /^[\d\s\-\+\(\)]+$/.test(phone) && phone.replace(/\D/g, '').length >= 7;
-  };
+  const { t } = useTranslation();
+  const errorEntries = Object.entries(errors || {});
+  const hasErrors = errorEntries.length > 0;
+  const fullName = `${profile.profileForm.firstName || ""} ${
+    profile.profileForm.lastName || ""
+  }`
+    .trim()
+    .replace(/\s+/g, " ");
 
   return (
     <SectionCard
       sectionId={sectionId}
       innerRef={personalRef}
-      eyebrow={t('settings.personal_info', 'Personal Information')}
-      title={t('settings.keep_contact_accurate', 'Keep your contact details accurate')}
-      description={t('settings.info_on_invoices', 'This information appears on invoices and delivery slips.')}
+      eyebrow={t("settings.personal_info", "Personal Information")}
+      title={t(
+        "settings.keep_contact_accurate",
+        "Keep your contact details accurate"
+      )}
+      description={t(
+        "settings.info_on_invoices",
+        "This information appears on invoices and delivery slips."
+      )}
     >
-      <form onSubmit={handleProfileSubmit} className="space-y-5">
-        {/* Error Alert */}
-        {Object.keys(errors).length > 0 && (
-          <div className="flex gap-3 rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-900/20">
-            <AlertCircle className="h-5 w-5 flex-shrink-0 text-red-600 dark:text-red-400" />
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-red-600 dark:text-red-400">
-                {t('common.error', 'Error')}
-              </p>
-              <ul className="mt-1 space-y-1 text-xs text-red-500 dark:text-red-300">
-                {Object.entries(errors).map(([field, message]) => (
-                  <li key={field}>• {message}</li>
-                ))}
-              </ul>
+      <form onSubmit={handleProfileSubmit} className="space-y-5 text-slate-900 dark:text-slate-100">
+        {hasErrors && (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-900/20">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="h-4 w-4 flex-shrink-0 text-red-600 dark:text-red-400 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                  {t("settings.fix_errors", "Please fix the following errors:")}
+                </p>
+                <ul className="mt-1 space-y-1 text-xs text-red-700 dark:text-red-300">
+                  {errorEntries.map(([field, message]) => (
+                    <li key={field}>• {message}</li>
+                  ))}
+                </ul>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Avatar and basic info */}
-        <div className="grid gap-6 lg:grid-cols-[1fr,auto]">
-          <div className="rounded-2xl border border-slate-100 bg-white/70 p-6 dark:border-slate-800 dark:bg-slate-900/40">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+        <div className="grid gap-6 lg:grid-cols-[auto,1fr]">
+          <div className="flex flex-col items-center gap-4 text-slate-900 dark:text-slate-100">
+            <div className="relative group">
               <ProfileAvatar
                 photo={!profile.avatarError ? profile.profileForm.photoURL : ""}
                 initials={profile.initials}
                 onError={() => profile.setAvatarError(true)}
-                size="lg"
+                size="xl"
+                name={fullName || t("settings.personal_info", "Personal Information")}
               />
-              <div className="flex-1 space-y-3 sm:ml-4">
-                <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                  {t('settings.upload_profile_photo', 'Upload a new profile photo')}
-                </p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {t('settings.photo_formats', 'PNG, JPG, or WebP · Max 2MB. We\'ll optimize it automatically for light and dark mode.')}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <label className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-sm transition bg-emerald-600 hover:bg-emerald-500 cursor-pointer touch-manipulation disabled:opacity-50" style={{ pointerEvents: isSavingProfile ? 'none' : 'auto' }}>
-                    <UploadCloud className="h-4 w-4" />
-                    {isSavingProfile ? t('common.uploading', 'Uploading...') : t('settings.choose_file', 'Choose file')}
-                    <input
-                      type="file"
-                      accept="image/png,image/jpeg,image/webp"
-                      onChange={handleAvatarUpload}
-                      className="sr-only"
-                      disabled={isSavingProfile}
-                    />
-                  </label>
-                  {profile.profileForm.photoURL && (
-                    <button
-                      type="button"
-                      onClick={handleAvatarReset}
-                      disabled={isSavingProfile}
-                      className="inline-flex items-center rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 touch-manipulation disabled:opacity-50"
-                    >
-                      {t('common.remove', 'Remove')}
-                    </button>
-                  )}
+              {profile.profileForm.photoURL && (
+                <div className="absolute -bottom-2 -right-2 flex gap-1">
+                  <button
+                    type="button"
+                    onClick={handleAvatarReset}
+                    disabled={isSavingProfile}
+                    className="p-1.5 rounded-full bg-red-500   shadow-lg hover:bg-red-600 transition disabled:opacity-50"
+                    title={t("common.remove", "Remove photo")}
+                  >
+                    <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 </div>
-              </div>
+              )}
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-semibold mb-1">
+                {fullName || t("settings.personal_info", "Your Profile")}
+              </p>
+              <p className="text-xs text-slate-600 dark:text-slate-300 font-medium">
+                {t("settings.photo_formats", "PNG, JPG, WebP • Max 2MB")}
+              </p>
             </div>
           </div>
-          <div className="min-w-0 lg:max-w-xs">
-            <Input
-              label={t('settings.image_link_optional', 'Image link (optional)')}
-              name="photoURL"
-              value={profile.photoLinkValue}
-              onChange={(e) => handlePhotoLinkChange(e.target.value)}
-              placeholder="https://images.example.com/profile.jpg"
-              error={errors.photoURL}
-            />
+
+          <div className="space-y-4">
+            <div className="rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 p-6 text-center transition hover:border-emerald-400 dark:hover:border-emerald-500">
+              <UploadCloud className="mx-auto h-8 w-8 text-slate-500 dark:text-slate-200 mb-2" />
+              <p className="text-sm font-semibold mb-1">
+                {t("settings.upload_profile_photo", "Upload profile photo")}
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-300 mb-4">
+                {t("settings.photo_formats_desc", "Drag and drop or click to browse")}
+              </p>
+              <label className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 cursor-pointer disabled:opacity-50">
+                <UploadCloud className="h-4 w-4" />
+                {isSavingProfile
+                  ? t("common.uploading", "Uploading...")
+                  : t("settings.choose_file", "Choose file")}
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={handleAvatarUpload}
+                  className="sr-only"
+                  disabled={isSavingProfile}
+                />
+              </label>
+            </div>
           </div>
         </div>
 
-        {/* Form fields */}
+        <div className="grid gap-4 md:grid-cols-2 text-slate-900 dark:text-slate-100">
+          <Input
+            label={t("settings.username", "Username")}
+            name="username"
+            value={profile.profileForm.username}
+            onChange={(e) => handleProfileChange("username", e.target.value)}
+            placeholder={t("settings.username_placeholder", "your.username")}
+            required
+            error={errors.username}
+          />
+          <Input
+            label={t("settings.email", "Email")}
+            name="email"
+            type="email"
+            value={profile.profileForm.email}
+            placeholder={t("settings.email_placeholder", "john@example.com")}
+            disabled
+            readOnly
+          />
+        </div>
+
         <div className="grid gap-4 md:grid-cols-2">
           <Input
-            label={t('settings.first_name', 'First Name')}
+            label={t("settings.first_name", "First Name")}
             name="firstName"
             value={profile.profileForm.firstName}
             onChange={(e) => handleProfileChange("firstName", e.target.value)}
-            placeholder={isArabic ? "أحمد" : "John"}
+            placeholder={t("settings.first_name_placeholder", "John")}
             required
             error={errors.firstName}
           />
           <Input
-            label={t('settings.last_name', 'Last Name')}
+            label={t("settings.last_name", "Last Name")}
             name="lastName"
             value={profile.profileForm.lastName}
             onChange={(e) => handleProfileChange("lastName", e.target.value)}
-            placeholder={isArabic ? "السعيد" : "Appleseed"}
+            placeholder={t("settings.last_name_placeholder", "Appleseed")}
             required
             error={errors.lastName}
           />
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
-          <SelectInput
-            label={t('settings.gender', 'Gender')}
-            value={profile.profileForm.gender || ""}
-            onChange={(e) => handleProfileChange("gender", e.target.value)}
-            error={errors.gender}
-          >
-            <option value="">{t('settings.select', 'Select')}</option>
-            <option value="male">{getGenderLabel('male')}</option>
-            <option value="female">{getGenderLabel('female')}</option>
-          </SelectInput>
+        <div className="grid gap-4">
           <Input
-            label={t('settings.birth_date', 'Birth date')}
-            type="date"
-            name="birthDate"
-            value={profile.profileForm.birthDate || ""}
-            onChange={(e) => handleProfileChange("birthDate", e.target.value)}
-            error={errors.birthDate}
-          />
-          <Input
-            label={t('settings.profession_role', 'Profession / role')}
-            name="profession"
-            value={profile.profileForm.profession}
-            onChange={(e) => handleProfileChange("profession", e.target.value)}
-            placeholder={isArabic ? "خبير التغذية الحيوانية" : "Livestock nutritionist"}
-            error={errors.profession}
-          />
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <Input
-            label={t('settings.phone_number', 'Phone Number')}
+            label={t("settings.phone_number", "Phone Number")}
             name="phone"
             type="tel"
             value={profile.profileForm.phone}
             onChange={(e) => handleProfileChange("phone", e.target.value)}
-            placeholder="+1 555 0100"
+            placeholder={t("settings.phone_placeholder", "+20 123 456 7890")}
             error={errors.phone}
-          />
-          <Input
-            label={t('settings.farm_city', 'Farm / City')}
-            name="location"
-            value={profile.profileForm.location}
-            onChange={(e) => handleProfileChange("location", e.target.value)}
-            placeholder={isArabic ? "الوادي الأخضر" : "Green Valley, CA"}
-            error={errors.location}
           />
         </div>
 
-        {/* Status and Actions */}
+        <Input
+          label={t("settings.location", "Location")}
+          name="location"
+          value={profile.profileForm.location}
+          onChange={(e) => handleProfileChange("location", e.target.value)}
+          placeholder={t("settings.location_placeholder", "City, district, or delivery landmark")}
+          error={errors.location}
+        />
+
         <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-          <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-            {hasUnsavedChanges && !isSavingProfile && (
-              <>
-                <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-400" />
-                {t('settings.unsaved_changes', 'Unsaved changes')}
-              </>
-            )}
-            {isSavingProfile && <span>{t('common.saving', 'Saving...')}</span>}
-            {!hasUnsavedChanges && !isSavingProfile && !Object.keys(errors).length && (
-              <span className="text-emerald-600 dark:text-emerald-300">{t('settings.all_changes_saved', 'All changes saved')}</span>
-            )}
-          </div>
+           <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+             {isSavingProfile && (
+               <>
+                 <div className="h-1.5 w-1.5 animate-spin rounded-full border border-slate-400 border-t-transparent" />
+                 {t("common.saving", "Saving...")}
+               </>
+             )}
+             {!hasUnsavedChanges && !isSavingProfile && !hasErrors && (
+               <span className="text-emerald-600 dark:text-emerald-300">
+                 {t("settings.all_changes_saved", "All changes saved")}
+               </span>
+             )}
+           </div>
           <div className="flex flex-wrap gap-3">
             <button
               type="button"
@@ -208,14 +206,16 @@ const PersonalSection = ({
               disabled={isSavingProfile}
               className="inline-flex items-center rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 disabled:opacity-50"
             >
-              {t('common.reset', 'Reset')}
+              {t("common.reset", "Reset")}
             </button>
             <button
               type="submit"
-              disabled={isSavingProfile || Object.keys(errors).length > 0}
+              disabled={isSavingProfile || hasErrors}
               className="inline-flex items-center rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600 disabled:opacity-70"
             >
-              {isSavingProfile ? t('common.saving', 'Saving...') : t('settings.save_profile', 'Save profile')}
+              {isSavingProfile
+                ? t("common.saving", "Saving...")
+                : t("settings.save_profile", "Save profile")}
             </button>
           </div>
         </div>

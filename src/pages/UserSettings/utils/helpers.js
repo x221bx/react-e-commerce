@@ -17,32 +17,24 @@ export const getProfileState = (profile) => {
     return {
       firstName: "",
       lastName: "",
+      email: "",
+      username: "",
       phone: "",
       location: "",
       photoURL: "",
-      birthDate: "",
-      gender: "",
-      profession: "",
     };
   }
 
   const fallback = splitName(profile.name || "");
 
-  // Clean up gender values - only allow male/female
-  let gender = profile.gender ?? "";
-  if (gender && !["male", "female"].includes(gender)) {
-    gender = ""; // Reset invalid gender values
-  }
-
   return {
     firstName: profile.firstName ?? fallback.first,
     lastName: profile.lastName ?? fallback.last,
+    email: profile.email ?? "",
+    username: profile.username ?? "",
     phone: profile.contact?.phone ?? "",
     location: profile.contact?.location ?? "",
     photoURL: profile.photoURL ?? profile.photoUrl ?? profile.avatarUrl ?? "",
-    birthDate: profile.birthDate ?? "",
-    gender: gender,
-    profession: profile.profession ?? "",
   };
 };
 

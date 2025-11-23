@@ -1,51 +1,50 @@
 import { useEffect, useState } from "react";
-import {
-  collection,
-  query,
-  where,
-  orderBy,
-  onSnapshot,
-} from "firebase/firestore";
-import { db } from "../services/firebase";
+import { onSnapshot } from "firebase/firestore";
+import { getUserOrdersQuery } from "../services/ordersService";
 
-export default function useUserOrders(uid) {
+export const useUserOrders = (userId) => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!uid) {
+    if (!userId) {
       setOrders([]);
       setLoading(false);
-      return;
+      return undefined;
     }
 
-    const q = query(
-      collection(db, "orders"),
-      where("uid", "==", uid),
-      orderBy("createdAt", "desc")
-    );
+    const query = getUserOrdersQuery(userId);
+    if (!query) {
+      setOrders([]);
+      setLoading(false);
+      return undefined;
+    }
 
     const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const data = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-          createdAt:
-            doc.data().createdAt?.toDate?.().toISOString() ||
-            new Date().toISOString(),
-        }));
-        setOrders(data);
+      query,
+      (snap) => {
+        const next = snap.docs.map((doc) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            createdAt: data.createdAt?.toDate?.() || null,
+            updatedAt: data.updatedAt?.toDate?.() || null,
+          };
+        });
+        setOrders(next);
         setLoading(false);
       },
-      (err) => {
-        console.error("useUserOrders snapshot error:", err);
+      () => {
+        setOrders([]);
         setLoading(false);
       }
     );
 
     return () => unsubscribe();
-  }, [uid]);
+  }, [userId]);
 
   return { orders, loading };
-}
+};
+
+export default useUserOrders;

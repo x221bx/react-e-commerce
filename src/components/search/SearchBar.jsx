@@ -3,10 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { UseTheme } from "../../theme/ThemeProvider";
 
 export default function SearchBar({
-                                      products = [], // 🧩 تمررها من صفحة shop أو من Redux
-                                      placeholder = "Search products...",
-                                      onSearch, // ✅ callback (للموبايل علشان يقفل المنيو)
-                                  }) {
+                          products = [], // 🧩 تمررها من صفحة shop أو من Redux
+                        placeholder = "Search products...",
+                        onSearch, // ✅ callback (للموبايل علشان يقفل المنيو)
+                        }) {
     const [query, setQuery] = useState("");
     const [focused, setFocused] = useState(false);
     const [results, setResults] = useState([]);
