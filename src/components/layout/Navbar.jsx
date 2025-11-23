@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { selectCurrentUser, signOut } from "../../features/auth/authSlice";
@@ -15,8 +15,6 @@ import { useNotifications } from "../../hooks/useNotifications";
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  // eslint-disable-next-line no-unused-vars
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [currentLang, setCurrentLang] = useState(i18n.language || "en");
 
@@ -24,14 +22,12 @@ export default function Navbar() {
 
   const user = useSelector(selectCurrentUser);
   const cart = useSelector((state) => state.cart.items);
-  const favorites = useSelector((state) => state.favorites);
+  const favorites = useSelector((state) => state.favorites.items);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const dropdownRef = useRef(null);
-// eslint-disable-next-line no-unused-vars
-  const { notifications, unreadCount, markRead } = useNotifications({
+  const { unreadCount, connectionError } = useNotifications({
     uid: user?.uid,
     role: user?.role,
   });
@@ -54,16 +50,14 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+
   useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setNotificationsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () =>
-      document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    if (connectionError) {
+      toast.error("Real-time notifications are blocked. Please disable ad blockers for this site.", {
+        duration: 6000,
+      });
+    }
+  }, [connectionError]);
 
   const isDark = theme === "dark";
 
@@ -89,10 +83,7 @@ export default function Navbar() {
   const navLinkActive = "text-white";
   const navLinkIdle = "text-[#B8E4E6]/80 hover:text-white";
 
-  const cartCount = cart.reduce((s, i) => s + (i.quantity || 1), 0);
-// eslint-disable-next-line no-unused-vars
-  const formatTimestamp = (v) =>
-    v?.toDate?.() ? v.toDate().toLocaleString() : "";
+  const cartCount = Array.isArray(cart) ? cart.reduce((s, i) => s + (i.quantity || 1), 0) : 0;
 
   return (
     <header
@@ -181,19 +172,20 @@ export default function Navbar() {
 
           {/* 🔔 Notifications */}
           {user && (
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setNotificationsOpen((p) => !p)}
-                className={`relative h-9 w-9 rounded-lg flex items-center justify-center ${subtleControlBg}`}
-              >
-                <FiBell size={17} />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-rose-500 text-xs rounded-full px-1 text-white">
-                    {unreadCount}
-                  </span>
-                )}
-              </button>
-            </div>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                navigate("/notifications");
+              }}
+              className={`relative h-9 w-9 rounded-lg flex items-center justify-center ${subtleControlBg}`}
+            >
+              <FiBell size={17} />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-rose-500 text-xs rounded-full px-1 text-white">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
           )}
 
           {/* 👤 Account Icon */}

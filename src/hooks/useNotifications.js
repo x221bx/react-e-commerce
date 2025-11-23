@@ -15,6 +15,7 @@ import { db } from "../services/firebase";
 export function useNotifications({ uid, role } = {}) {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [connectionError, setConnectionError] = useState(false);
 
   useEffect(() => {
     if (!db) return;
@@ -46,16 +47,22 @@ export function useNotifications({ uid, role } = {}) {
     }
 
     setLoading(true);
+    setConnectionError(false);
     const unsub = onSnapshot(
       q,
       (snap) => {
         const arr = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
         setNotifications(arr);
         setLoading(false);
+        setConnectionError(false); // Reset error on success
       },
       (err) => {
         console.error("notifications onSnapshot error", err);
         setLoading(false);
+        // Check if it's a blocked connection error
+        if (err.message?.includes('blocked') || err.code === 'unavailable') {
+          setConnectionError(true);
+        }
       }
     );
 
@@ -91,5 +98,5 @@ export function useNotifications({ uid, role } = {}) {
     }
   }, [notifications]);
 
-  return { notifications, loading, unreadCount, markRead, markAllRead };
+  return { notifications, loading, unreadCount, markRead, markAllRead, connectionError };
 }

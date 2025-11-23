@@ -1,28 +1,27 @@
 import { useEffect, useState } from "react";
-import { onSnapshot } from "firebase/firestore";
-import { getUserOrdersQuery } from "../services/ordersService";
+import { getDocs, query, collection, where } from "firebase/firestore";
+import { db } from "../services/firebase";
 
 export const useUserOrders = (userId) => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [connectionError, setConnectionError] = useState(false);
 
   useEffect(() => {
     if (!userId) {
       setOrders([]);
       setLoading(false);
-      return undefined;
+      return;
     }
 
-    const query = getUserOrdersQuery(userId);
-    if (!query) {
-      setOrders([]);
-      setLoading(false);
-      return undefined;
-    }
+    // Use getDocs with a simple query to avoid index requirements
+    const fetchOrders = async () => {
+      try {
+        setConnectionError(false);
+        const ordersCollection = collection(db, "orders");
+        const q = query(ordersCollection, where("userId", "==", userId));
+        const snap = await getDocs(q);
 
-    const unsubscribe = onSnapshot(
-      query,
-      (snap) => {
         const next = snap.docs.map((doc) => {
           const data = doc.data();
           return {
@@ -32,19 +31,31 @@ export const useUserOrders = (userId) => {
             updatedAt: data.updatedAt?.toDate?.() || null,
           };
         });
+
+        // Sort client-side by createdAt desc
+        next.sort((a, b) => {
+          const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return bTime - aTime;
+        });
+
         setOrders(next);
         setLoading(false);
-      },
-      () => {
+      } catch (err) {
+        console.error("useUserOrders getDocs error", err);
         setOrders([]);
         setLoading(false);
+        // Check if it's a blocked connection error
+        if (err.message?.includes('blocked') || err.code === 'unavailable') {
+          setConnectionError(true);
+        }
       }
-    );
+    };
 
-    return () => unsubscribe();
+    fetchOrders();
   }, [userId]);
 
-  return { orders, loading };
+  return { orders, loading, connectionError };
 };
 
 export default useUserOrders;
