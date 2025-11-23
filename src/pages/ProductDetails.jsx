@@ -11,7 +11,11 @@ export default function ProductDetails() {
   const { id } = useParams();
   const dispatch = useDispatch();
 
-  const favorites = useSelector((state) => state.favorites);
+  const favorites = useSelector((state) => {
+    const favs = state.favorites?.items ?? state.favorites ?? [];
+    // Ensure it's always an array
+    return Array.isArray(favs) ? favs : [];
+  });
   const cart = useSelector((state) => state.cart.items);
 
   // ☑️ product.id ممكن يكون رقم — و id من params string
@@ -20,8 +24,8 @@ export default function ProductDetails() {
   // جلب بيانات المنتج
   const { data: product, isLoading, isError, error } = useProduct(id);
 
-  const isFavorite = favorites.some((f) => f.id === numericId);
-  const inCart = cart.some((c) => c.id === numericId);
+  const isFavorite = Array.isArray(favorites) && favorites.some((f) => f.id === numericId);
+  const inCart = Array.isArray(cart) && cart.some((c) => c.id === numericId);
 
   const handleToggleFavorite = () => {
     if (!product) return;
