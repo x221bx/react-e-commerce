@@ -1,7 +1,7 @@
 // src/services/firebase.js
 import { initializeApp } from "firebase/app";
 import { getAuth, updateProfile } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 // ✅ إعدادات Firebase الخاصة بمشروعك
@@ -17,9 +17,23 @@ const firebaseConfig = {
 // ✅ تهيئة Firebase
 const app = initializeApp(firebaseConfig);
 
+// ✅ تهيئة Firestore مع التخزين المؤقت
+let db;
+try {
+  db = initializeFirestore(app, {
+    localCache: persistentLocalCache({
+      tabManager: persistentMultipleTabManager()
+    })
+  });
+} catch (err) {
+  // Fallback to getFirestore if initializeFirestore fails
+  console.warn('Failed to initialize Firestore with persistence:', err);
+  db = getFirestore(app);
+}
+
 // ✅ تصدير الخدمات الأساسية
 export const auth = getAuth(app); // المصادقة (تسجيل الدخول / إنشاء حساب)
-export const db = getFirestore(app); // قاعدة بيانات Firestore
+export { db }; // قاعدة بيانات Firestore
 export const storage = getStorage(app); // تخزين الملفات والصور
 export { updateProfile }; // تحديث ملف المستخدم
 

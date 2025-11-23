@@ -1,6 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { saveUserCart, getUserCart, subscribeToUserCart } from "../../services/userDataService";
+import { saveUserCart } from "../../services/userDataService";
 import { doc, updateDoc } from "firebase/firestore";
+import { db } from "../../services/firebase";
 
 const cartSlice = createSlice({
   name: "cart",
@@ -63,7 +64,8 @@ const cartSlice = createSlice({
     },
 
     decreaseQuantity: (state, action) => {
-      const item = state.items.find((i) => i.id === action.payload);
+      const id = action.payload;
+      const item = state.items.find((i) => i.id === id);
       if (item && item.quantity > 1) {
         item.quantity -= 1;
         item.maxReached = false;
@@ -114,8 +116,7 @@ export const {
   decreaseQuantity,
   removeFromCart,
   clearCart,
-  finalizeOrderLocal,
-  updateCartStock,
+  syncStock,
 } = cartSlice.actions;
 
 export default cartSlice.reducer;
