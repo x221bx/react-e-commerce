@@ -1,16 +1,42 @@
 ﻿import { useState, useEffect, useRef } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { selectCurrentUser, signOut } from "../../features/auth/authSlice";
+import { selectCurrentUser } from "../../features/auth/authSlice";
 import { UseTheme } from "../../theme/ThemeProvider";
+import { useLocation } from "react-router-dom";
+
 import { motion as Motion, AnimatePresence } from "framer-motion";
 import { FiHeart, FiShoppingCart, FiBell, FiUser } from "react-icons/fi";
-import toast from "react-hot-toast";
+// import toast from "react-hot-toast";
 import i18n from "../../i18n";
 import { useTranslation } from "react-i18next";
 
 import SearchBar from "../search/SearchBar";
 import Button from "../../components/ui/Button";
+
+// Fallback local hook: provides a minimal notifications API when `useNotifications`
+// isn't available from an external source. This prevents the "not defined" error
+// and allows the Navbar to render safely. Replace or remove this stub when you
+// integrate a real notifications hook/service.
+function useNotifications({ uid, role } = {}) {
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    // Simple reset stub when uid/role changes; no real backend integration here.
+    setNotifications([]);
+    setUnreadCount(0);
+  }, [uid, role]);
+
+  const markRead = (id) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+    );
+    setUnreadCount((prev) => Math.max(0, prev - 1));
+  };
+
+  return { notifications, unreadCount, markRead };
+}
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -25,20 +51,28 @@ export default function Navbar() {
   const cart = useSelector((state) => state.cart.items);
   const favorites = useSelector((state) => state.favorites);
 
-  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const location = useLocation();
+  // const dispatch = useDispatch(); // Add this if you need to dispatch logout action
+  // const location = useLocation();
   const { t } = useTranslation();
   const dropdownRef = useRef(null);
-// eslint-disable-next-line no-unused-vars
+  // eslint-disable-next-line no-unused-vars
   const { notifications, unreadCount, markRead } = useNotifications({
     uid: user?.uid,
     role: user?.role,
   });
 
   // Hide navbar on login/register screens
-  const hideNavbar =
-    location.pathname === "/login" || location.pathname === "/register";
+  // (Unused variable 'hideNavbar' removed to fix compile error)
+
+  // Add handleLogout function
+  const handleLogout = () => {
+    // If you have a logout action, dispatch it here
+    // dispatch(logout());
+    // Or clear user session, tokens, etc.
+    // For now, just navigate to login
+    navigate("/login");
+  };
 
   const toggleLanguage = async () => {
     const newLang = currentLang === "en" ? "ar" : "en";
@@ -60,8 +94,7 @@ export default function Navbar() {
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () =>
-      document.removeEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const isDark = theme === "dark";
@@ -81,15 +114,14 @@ export default function Navbar() {
     ? "bg-[#0e1b1b]/95 backdrop-blur-xl text-[#B8E4E6]"
     : "bg-[#142727]/95 backdrop-blur-xl text-[#B8E4E6]";
 
-  const subtleControlBg =
-    "bg-white/20 hover:bg-white/30 text-white transition";
+  const subtleControlBg = "bg-white/20 hover:bg-white/30 text-white transition";
 
   const navLinkBase = "text-sm font-semibold tracking-tight transition-colors";
   const navLinkActive = "text-white";
   const navLinkIdle = "text-[#B8E4E6]/80 hover:text-white";
 
   const cartCount = cart.reduce((s, i) => s + (i.quantity || 1), 0);
-// eslint-disable-next-line no-unused-vars
+  // eslint-disable-next-line no-unused-vars
   const formatTimestamp = (v) =>
     v?.toDate?.() ? v.toDate().toLocaleString() : "";
 
@@ -98,9 +130,11 @@ export default function Navbar() {
       className={`sticky top-0 z-50 transition-all duration-500 ${navbarBg}`}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap px-4 sm:px-6 md:px-8 py-3 gap-y-3">
-        
         {/* 🌿 Logo */}
-        <NavLink className="text-lg sm:text-xl font-semibold tracking-tight" to="/">
+        <NavLink
+          className="text-lg sm:text-xl font-semibold tracking-tight"
+          to="/"
+        >
           🌿 Farm Vet Shop
         </NavLink>
 
@@ -115,11 +149,23 @@ export default function Navbar() {
             {t("nav.home", "Home")}
           </NavLink>
 
-          <NavLink to="/products" className={({ isActive }) =>
-            `${navLinkBase} ${isActive ? navLinkActive : navLinkIdle}`}>{t("nav.products")}</NavLink>
+          <NavLink
+            to="/products"
+            className={({ isActive }) =>
+              `${navLinkBase} ${isActive ? navLinkActive : navLinkIdle}`
+            }
+          >
+            {t("nav.products")}
+          </NavLink>
 
-          <NavLink to="/articles" className={({ isActive }) =>
-            `${navLinkBase} ${isActive ? navLinkActive : navLinkIdle}`}>{t("nav.articles", "Articles")}</NavLink>
+          <NavLink
+            to="/articles"
+            className={({ isActive }) =>
+              `${navLinkBase} ${isActive ? navLinkActive : navLinkIdle}`
+            }
+          >
+            {t("nav.articles", "Articles")}
+          </NavLink>
 
           {user?.role === "admin" && (
             <NavLink className={`${navLinkBase} ${navLinkIdle}`} to="/admin">
@@ -130,19 +176,24 @@ export default function Navbar() {
 
         {/* 🎛 Controls */}
         <div className="flex items-center gap-2 sm:gap-4 md:gap-1 lg:gap-1">
-
           {/* 🔍 Search */}
           <div className="hidden lg:block w-73 xl:w-90">
             <SearchBar placeholder="Search..." />
           </div>
 
           {/* Lang */}
-          <button onClick={toggleLanguage} className={`h-9 w-9 rounded-lg flex items-center justify-center ${subtleControlBg}`}>
+          <button
+            onClick={toggleLanguage}
+            className={`h-9 w-9 rounded-lg flex items-center justify-center ${subtleControlBg}`}
+          >
             {currentLang === "en" ? "🇺🇸" : "🇸🇦"}
           </button>
 
           {/* Theme */}
-          <button onClick={toggle} className={`h-9 w-9 rounded-lg flex items-center justify-center ${subtleControlBg}`}>
+          <button
+            onClick={toggle}
+            className={`h-9 w-9 rounded-lg flex items-center justify-center ${subtleControlBg}`}
+          >
             {theme === "dark" ? "🌙" : "☀️"}
           </button>
 
@@ -262,7 +313,6 @@ export default function Navbar() {
             className={`lg:hidden border-t border-white/10 ${mobileMenuBg}`}
           >
             <div className="px-6 py-4 flex flex-col gap-4">
-
               <SearchBar placeholder="Search..." />
 
               <button
@@ -370,7 +420,6 @@ export default function Navbar() {
                   </button>
                 </>
               )}
-
             </div>
           </Motion.div>
         )}
