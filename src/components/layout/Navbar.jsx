@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next";
 
 import SearchBar from "../search/SearchBar";
 import Button from "../../components/ui/Button";
+import { useNotifications } from "../../hooks/useNotifications";
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -25,22 +26,23 @@ export default function Navbar() {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const location = useLocation();
   const { t } = useTranslation();
   const { unreadCount, connectionError } = useNotifications({
     uid: user?.uid,
     role: user?.role,
   });
 
-  // Hide navbar on login/register screens
-  const hideNavbar =
-    location.pathname === "/login" || location.pathname === "/register";
 
   const toggleLanguage = async () => {
     const newLang = currentLang === "en" ? "ar" : "en";
     await i18n.changeLanguage(newLang);
     setCurrentLang(newLang);
     document.documentElement.dir = newLang === "ar" ? "rtl" : "ltr";
+  };
+
+  const handleLogout = () => {
+    dispatch(signOut());
+    toast.success("Logged out successfully 👋");
   };
 
   useEffect(() => {

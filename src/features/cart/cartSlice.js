@@ -105,6 +105,21 @@ const cartSlice = createSlice({
         item.stock = Math.max(0, newStock);
       }
     },
+
+    updateCartStock: (state, action) => {
+      const products = action.payload;
+      // Update stock information for cart items based on latest product data
+      state.items = state.items.map((item) => {
+        const product = products.find((p) => p.id === item.id);
+        if (product) {
+          return {
+            ...item,
+            stock: product.stock || product.quantity || 0,
+          };
+        }
+        return item;
+      });
+    },
   },
 });
 
@@ -117,6 +132,7 @@ export const {
   removeFromCart,
   clearCart,
   syncStock,
+  updateCartStock,
 } = cartSlice.actions;
 
 export default cartSlice.reducer;
