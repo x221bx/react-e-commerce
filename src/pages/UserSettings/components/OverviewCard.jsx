@@ -1,5 +1,6 @@
 import React from "react";
 import { Clock } from "lucide-react";
+import { Link } from "react-router-dom";
 import ProfileAvatar from "./ProfileAvatar";
 import { formatLastUpdated, formatLocaleLabel, formatMeasurementLabel, formatStatusLabel } from "../utils/helpers";
 
@@ -154,6 +155,12 @@ const OverviewCard = ({ user, profileForm, preferenceForm, scrollToSection }) =>
             >
               Review security
             </button>
+            <Link
+              to="/articles"
+              className="inline-flex items-center rounded-xl border border-emerald-200 bg-white px-4 py-2 text-sm font-semibold text-emerald-600 transition hover:bg-emerald-50 dark:border-emerald-800 dark:bg-slate-900 dark:text-emerald-200"
+            >
+              Browse articles
+            </Link>
           </div>
         </div>
       </div>

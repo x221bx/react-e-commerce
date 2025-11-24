@@ -1,4 +1,3 @@
-import Navbar from "../components/layout/Navbar";
 import Hero from "./homeCom/hero";
 import CategoriesSection from "./homeCom/CategoriesSection";
 import Articles from "./homeCom/Articles";
@@ -6,32 +5,36 @@ import AiAssistant from "./homeCom/AiAssistant";
 import EcoBanner from "./homeCom/EcoBanner";
 import Footer from "../components/layout/footer";
 import FeaturedProducts from "./homeCom/FeaturedProducts";
-
-// 👇 أهم تعديل هنا
 import { useCategoriesSorted } from "../hooks/useCategoriesSorted";
-import { homeArticles } from "../data/articles";
+import { getFallbackArticles, localizeArticleRecord } from "../data/articles";
+import useArticles from "../hooks/useArticles";
+import { useTranslation } from "react-i18next";
 
 export default function Home() {
-
-  // ⭐ Load real categories from Firestore
+  const { i18n } = useTranslation();
   const { data: catData = [] } = useCategoriesSorted({ dir: "desc" });
+  const { articles: featuredArticles } = useArticles({ featureHome: true });
 
-  // ⭐ Normalize categories for CategoryCard
-  const categories = catData.map((c) => ({
-  id: c.id,
-  title: c.name || "Category",
-  note: c.note || "Browse products",
-  img: c.img || "https://dummyimage.com/300x300/eeeeee/000000&text=No+Image",
-}));
-  const articles = homeArticles.map((article) => ({
+  const locale = i18n.language || "en";
+  const fallbackArticles = getFallbackArticles({ locale, featureHome: true });
+  const localizedFeatured = featuredArticles.map((article) => localizeArticleRecord(article, locale));
+  const featuredSource = localizedFeatured.length ? localizedFeatured : fallbackArticles;
+
+  const categories = catData.map((category) => ({
+    id: category.id,
+    title: category.name || "Category",
+    note: category.note || "Browse products",
+    img: category.img || "https://dummyimage.com/300x300/eeeeee/000000&text=No+Image",
+  }));
+
+  const articles = featuredSource.map((article) => ({
     title: article.title,
     excerpt: article.summary,
     img: article.heroImage || "https://dummyimage.com/400x300/0f172a/ffffff&text=Article",
   }));
+
   return (
     <main className="flex flex-col gap-12 md:gap-16 lg:gap-20">
-
-      {/* Hero */}
       <div className="animate-fade-in">
         <Hero
           title="Smarter Farming Starts Here"
@@ -40,34 +43,29 @@ export default function Home() {
         />
       </div>
 
-      {/* Categories */}
-      <div className="bg-gradient-to-b from-transparent to-gray-50/50 dark:to-slate-800/30 py-12">
+      <div className="bg-gradient-to-b from-transparent to-gray-50/50 py-12 dark:to-slate-800/30">
         <div className="container mx-auto">
           <CategoriesSection header="Shop by Category" items={categories} />
         </div>
       </div>
 
-      {/* Featured Products (dynamic) */}
       <section className="container mx-auto px-4">
         <FeaturedProducts />
       </section>
 
-      {/* Articles + AI Assistant */}
       <div className="container mx-auto px-4">
-        <div className="flex flex-col lg:flex-row gap-8 items-stretch">
+        <div className="flex flex-col items-stretch gap-8 lg:flex-row">
           <Articles header="Top Articles" items={articles} />
           <AiAssistant />
         </div>
       </div>
 
-      {/* Eco Banner */}
       <EcoBanner
         title="Spring Planting Sale"
         text="Get up to 20% off all seeds and fertilizers. Stock up now for a bountiful harvest!"
         bg="https://lh3.googleusercontent.com/aida-public/AB6AXuD8A3yXLwfO6ky-87JjNALS51VJCW0bPghXtMja2AcS-Hc5lGk9yLi6rqptiT0ZWriq8XbZh7113-7bon8bjXa9ILgc17YfLL2d1pSjfLQWnkMUGmbE5U_M2ne3bK9lEKk_r03TOZC0NK903XXGf2Z4zeVqPwLxMzNl_7-FISV41iS2eLPChiJ5dz4g38q1cBEMCKS3rxf5El1xu2QTkcCSszzfd7sr9SCxUZ0DH5qtTwKY-JRLBfWSUOoqAOmnmDhvQvUg-dKKxRk"
       />
 
-      {/* Footer */}
       <Footer />
     </main>
   );

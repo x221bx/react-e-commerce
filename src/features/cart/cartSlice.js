@@ -1,83 +1,137 @@
 import { createSlice } from "@reduxjs/toolkit";
-
-const savedCart = JSON.parse(localStorage.getItem("cartItems") || "[]");
+import { saveUserCart } from "../../services/userDataService";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "../../services/firebase";
 
 const cartSlice = createSlice({
   name: "cart",
   initialState: {
-    items: savedCart,
+    items: [],
+    userId: null,
+    loading: false,
   },
 
   reducers: {
+    setUser: (state, action) => {
+      state.userId = action.payload?.uid || null;
+      state.loading = true;
+    },
+
+    setCartItems: (state, action) => {
+      state.items = action.payload;
+      state.loading = false;
+    },
+
+    clearUserData: (state) => {
+      state.items = [];
+      state.userId = null;
+      state.loading = false;
+    },
+
     addToCart: (state, action) => {
       const product = action.payload;
 
-      const exists = state.items.find((i) => i.id === product.id);
+      // 🧼 تنظيف المنتج قبل دخوله Redux
+      const safeProduct = { ...product };
+      if (safeProduct.createdAt?.seconds) {
+        safeProduct.createdAt = safeProduct.createdAt.seconds * 1000;
+      }
+      if (safeProduct.updatedAt?.seconds) {
+        safeProduct.updatedAt = safeProduct.updatedAt.seconds * 1000;
+      }
+
+      const exists = state.items.find((i) => i.id === safeProduct.id);
 
       if (exists) {
-        if (exists.quantity < (exists.stock || Infinity)) {
-          exists.quantity += 1;
+        if ((exists.quantity || 1) < (safeProduct.stock || Infinity)) {
+          exists.quantity = (exists.quantity || 1) + 1;
           exists.maxReached = false;
         } else {
           exists.maxReached = true;
         }
       } else {
         state.items.push({
-          ...product,
+          ...safeProduct,
           quantity: 1,
           maxReached: false,
         });
       }
 
-      localStorage.setItem("cartItems", JSON.stringify(state.items));
+      // Save to Firebase
+      if (state.userId) {
+        saveUserCart(state.userId, state.items).catch(console.error);
+      }
     },
 
     decreaseQuantity: (state, action) => {
-      const item = state.items.find((i) => i.id === action.payload);
+      const id = action.payload;
+      const item = state.items.find((i) => i.id === id);
       if (item && item.quantity > 1) {
         item.quantity -= 1;
         item.maxReached = false;
       }
-      localStorage.setItem("cartItems", JSON.stringify(state.items));
+
+      // Save to Firebase
+      if (state.userId) {
+        saveUserCart(state.userId, state.items).catch(console.error);
+      }
     },
 
     removeFromCart: (state, action) => {
       state.items = state.items.filter((i) => i.id !== action.payload);
-      localStorage.setItem("cartItems", JSON.stringify(state.items));
+
+      // Save to Firebase
+      if (state.userId) {
+        saveUserCart(state.userId, state.items).catch(console.error);
+      }
     },
 
     clearCart: (state) => {
       state.items = [];
-      localStorage.setItem("cartItems", "[]");
+
+      // Save to Firebase
+      if (state.userId) {
+        saveUserCart(state.userId, []).catch(console.error);
+      }
     },
 
-    finalizeOrderLocal: (state) => {
-      state.items = [];
-      localStorage.setItem("cartItems", "[]");
+    syncStock: (state, action) => {
+      const { id, change } = action.payload;
+      const item = state.items.find((i) => i.id === id);
+      if (item) {
+        const ref = doc(db, "products", item.id);
+        const newStock = (item.stock || 0) - change;
+        updateDoc(ref, { quantity: Math.max(0, newStock) }).catch(console.error);
+        item.stock = Math.max(0, newStock);
+      }
     },
 
     updateCartStock: (state, action) => {
       const products = action.payload;
-
+      // Update stock information for cart items based on latest product data
       state.items = state.items.map((item) => {
-        const prod = products.find((p) => p.id === item.id);
-        if (!prod) return item;
-
-        return {
-          ...item,
-          stock: prod.stock ?? prod.quantity ?? 0,
-        };
+        const product = products.find((p) => p.id === item.id);
+        if (product) {
+          return {
+            ...item,
+            stock: product.stock || product.quantity || 0,
+          };
+        }
+        return item;
       });
     },
   },
 });
 
 export const {
+  setUser,
+  setCartItems,
+  clearUserData,
   addToCart,
   decreaseQuantity,
   removeFromCart,
   clearCart,
-  finalizeOrderLocal,
+  syncStock,
   updateCartStock,
 } = cartSlice.actions;
 

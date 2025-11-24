@@ -1,52 +1,115 @@
 @import "tailwindcss";
 
+/* =========================
+   Color Variables System
+   ========================= */
+:root {
+    /* Light Mode */
+    --bg-main: #ffffff;
+    --bg-card: #f5f7f8;
+    --bg-input: #ffffff;
+
+    --text-main: #1a1a1a;
+    --text-muted: #687280; /* fix */
+
+    --border-color: #e3e3e3;
+
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+}
+
+.dark {
+    /* Dark Mode */
+    --bg-main: #0b1217;
+    --bg-card: #111a20;
+    --bg-input: #0d1b1b;
+
+    --text-main: #e7f3eb;
+    --text-muted: #b6c7c2;
+
+    --border-color: #1f2a33;
+
+    --success: #34d399;
+    --danger: #f87171;
+    --warning: #fbbf24;
+}
+
+/* Global Transition */
 html {
-  transition: background-color 0.3s ease, color 0.3s ease;
+    transition: background 0.3s ease, color 0.3s ease;
 }
 
 body {
-  @theme {
-    --color-bg-light: #ffffff;
-    --color-text-light: #1a1a1a;
-    --color-bg-dark: #0d1b1b;
-    --color-text-dark: #e7f3eb;
-  }
-
-  background-color: var(--color-bg-light);
-  color: var(--color-text-light);
+    background: var(--bg-main);
+    color: var(--text-main);
 }
 
-.dark body {
-  background-color: #0a1616; /* أغمق قليلاً من الأصلي */
-  color: #f0f9f7; /* أفتح قليلاً لتحسين التباين */
+/* =========================
+   Settings Page Overrides
+   ========================= */
+
+.settings-shell {
+    color: var(--text-main);
 }
 
-.dark header {
-  background-color: #0c1a1a !important;
-  color: #f0f9f7 !important;
+.settings-shell p,
+.settings-shell span,
+.settings-shell li,
+.settings-shell label {
+    color: var(--text-muted);
 }
 
-/* RTL Support */
+
+select {
+    background: var(--bg-input);
+    color: var(--text-main);
+    border-color: var(--border-color);
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: var(--text-muted);
+}
+
+/* Cards / Panels */
+.settings-shell .card,
+.settings-shell .panel,
+.settings-shell .section-box {
+    background: var(--bg-card);
+    border-color: var(--border-color);
+}
+
+/* Buttons */
+.settings-shell .btn-primary {
+    background: var(--success);
+    color: white;
+}
+
+.settings-shell .btn-danger {
+    background: var(--danger);
+    color: white;
+}
+
+.settings-shell .btn-outline {
+    border-color: var(--border-color);
+    color: var(--text-main);
+}
+
+/* Alerts */
+.settings-shell .alert-danger {
+    background: rgba(239, 68, 68, 0.15);
+    border-left: 4px solid var(--danger);
+    color: var(--danger);
+}
+
+/* =========================
+   RTL Support
+   ========================= */
 [dir="rtl"] {
-  text-align: right;
-}
-
-[dir="rtl"] .navbar {
-  flex-direction: row-reverse;
-}
-
-[dir="rtl"] .nav-item {
-  text-align: right;
+    text-align: right;
 }
 
 [dir="rtl"] .form-input {
-  text-align: right;
-}
-
-[dir="rtl"] .btn-group {
-  flex-direction: row-reverse;
-}
-
-[dir="rtl"] .card-content {
-  text-align: right;
+    text-align: right;
 }

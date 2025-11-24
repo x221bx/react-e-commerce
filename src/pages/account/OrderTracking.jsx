@@ -1,43 +1,107 @@
+import { useEffect, useMemo, useState } from "react";
+import { doc, onSnapshot } from "firebase/firestore";
 import { UseTheme } from "../../theme/ThemeProvider";
+import { useTranslation } from "react-i18next";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { selectCurrentUser } from "../../features/auth/authSlice";
+import { db } from "../../services/firebase";
+import { useUserOrders } from "../../hooks/useUserOrders";
+import toast from "react-hot-toast";
 
-const steps = [
-  {
-    title: "Order Placed",
-    time: "July 26, 2024, 10:30 AM",
-    state: "done",
-  },
-  {
-    title: "Processing",
-    time: "July 26, 2024, 11:00 AM",
-    state: "done",
-  },
-  {
-    title: "Shipped",
-    time: "July 27, 2024, 09:15 AM",
-    state: "current",
-  },
-  {
-    title: "Out for Delivery",
-    time: "Awaiting update",
-    state: "pending",
-  },
-  {
-    title: "Delivered",
-    time: "Estimated: July 29, 2024",
-    state: "pending",
-  },
-];
-
-const shippingInfo = {
-  recipient: "Main Farmhouse",
-  address: "123 Green Valley Rd, Harvestown, HT 54321",
-  carrier: "Agri-Logistics Express",
-  trackingNumber: "ALE123456789",
-};
+const buildTrackingUrl = (trackingNumber) =>
+  `https://www.17track.net/en#nums=${encodeURIComponent(trackingNumber)}`;
 
 export default function OrderTracking() {
   const { theme } = UseTheme();
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const query = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const orderIdQuery = query.get("orderId");
   const isDark = theme === "dark";
+  const user = useSelector(selectCurrentUser);
+  const { orders, loading, connectionError: ordersConnectionError } = useUserOrders(user?.uid);
+  const [order, setOrder] = useState(null);
+  const [orderConnectionError, setOrderConnectionError] = useState(false);
+
+  const targetOrderId = useMemo(
+    () => orderIdQuery || orders?.[0]?.id || null,
+    [orderIdQuery, orders]
+  );
+
+  useEffect(() => {
+    if (!targetOrderId) {
+      setOrder(null);
+      return undefined;
+    }
+
+    setOrderConnectionError(false);
+    const orderRef = doc(db, "orders", targetOrderId);
+    const unsubscribe = onSnapshot(orderRef, (snap) => {
+      if (!snap.exists()) {
+        setOrder(null);
+        return;
+      }
+      const data = snap.data();
+      setOrder({
+        id: snap.id,
+        ...data,
+        createdAt: data.createdAt?.toDate?.() || null,
+        updatedAt: data.updatedAt?.toDate?.() || null,
+      });
+      setOrderConnectionError(false); // Reset error on success
+    }, (err) => {
+      console.error("OrderTracking onSnapshot error", err);
+      setOrder(null);
+      // Check if it's a blocked connection error
+      if (err.message?.includes('blocked') || err.code === 'unavailable') {
+        setOrderConnectionError(true);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [targetOrderId]);
+
+  useEffect(() => {
+    if (ordersConnectionError || orderConnectionError) {
+      toast.error("Real-time order tracking is blocked. Please disable ad blockers for this site.", {
+        duration: 6000,
+      });
+    }
+  }, [ordersConnectionError, orderConnectionError]);
+
+  const handleSelectOrder = (id) => {
+    navigate(`/account/tracking?orderId=${id}`);
+  };
+
+  const baseSteps = [
+    { key: "processing", label: t("tracking.steps.processing", "Processing") },
+    { key: "shipped", label: t("tracking.steps.shipped", "Shipped") },
+    { key: "out_for_delivery", label: t("tracking.steps.outForDelivery", "Out for Delivery") },
+    { key: "delivered", label: t("tracking.steps.delivered", "Delivered") },
+  ];
+
+  const statusOrder = baseSteps.map((step) => step.key);
+  const currentStatusIndex = order
+    ? statusOrder.indexOf(order.status || "processing")
+    : 0;
+  const timelineSteps = baseSteps.map((step, index) => {
+    let state = "pending";
+    if (index < currentStatusIndex) state = "done";
+    if (index === currentStatusIndex) state = "current";
+    return {
+      ...step,
+      state,
+      updatedAt:
+        order?.status === step.key
+          ? order.updatedAt
+          : step.key === "processing"
+          ? order?.createdAt
+          : order?.updatedAt,
+    };
+  });
+
   const accent = isDark ? "text-emerald-300" : "text-emerald-600";
   const headingColor = isDark ? "text-white" : "text-slate-900";
   const subtleButton = isDark
@@ -54,6 +118,9 @@ export default function OrderTracking() {
     : "border-slate-100 bg-slate-50 text-slate-600";
   const infoHeading = isDark ? "text-white" : "text-slate-900";
   const connectorColor = isDark ? "bg-slate-800" : "bg-slate-200";
+  const formatDateTime = (value, fallback) =>
+    value ? new Date(value).toLocaleString() : fallback;
+
   const timelineIndicator = (state) => {
     if (state === "done") {
       return "border-emerald-500 bg-emerald-500 text-white";
@@ -68,87 +135,274 @@ export default function OrderTracking() {
       : "border-slate-200 bg-white text-slate-400";
   };
 
+  const shippingInfo = order?.shipping || {
+    recipient: "Farmhouse HQ",
+    address: "123 Green Valley Rd",
+    carrier: order?.shippingCarrier || "Agri-Logistics Express",
+    trackingNumber: order?.shipping?.trackingNumber || order?.trackingNumber || "",
+  };
+
+  const trackingUrl = shippingInfo.trackingNumber
+    ? buildTrackingUrl(shippingInfo.trackingNumber)
+    : null;
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="h-8 w-48 rounded bg-slate-200 dark:bg-slate-700 animate-pulse" />
+        <div className="h-6 w-80 rounded bg-slate-200 dark:bg-slate-700 animate-pulse" />
+      </div>
+    );
+  }
+
+  if (ordersConnectionError || orderConnectionError) {
+    return (
+      <div className="space-y-4 text-center">
+        <p className={`text-sm font-semibold uppercase tracking-wide ${accent}`}>
+          Connection Blocked
+        </p>
+        <h1 className={`text-3xl font-semibold ${headingColor}`}>
+          Unable to Load Order Data
+        </h1>
+        <p className={`text-sm ${headerMuted}`}>
+          Real-time connections are blocked by your browser. Please disable ad blockers for this site to view order tracking information.
+        </p>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="rounded-2xl bg-emerald-500 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-600"
+        >
+          Refresh Page
+        </button>
+      </div>
+    );
+  }
+
+  if (!orders || !orders.length) {
+    return (
+      <div className="space-y-4 text-center">
+        <p className={`text-sm font-semibold uppercase tracking-wide ${accent}`}>
+          {t("tracking.eyebrow", "Track your recent purchases")}
+        </p>
+        <h1 className={`text-3xl font-semibold ${headingColor}`}>
+          {t("tracking.noOrders.title", "No tracked orders yet")}
+        </h1>
+        <p className={`text-sm ${headerMuted}`}>
+          {t(
+            "tracking.noOrders.subtitle",
+            "Place an order and we'll display live tracking updates here."
+          )}
+        </p>
+        <button
+          type="button"
+          onClick={() => navigate("/products")}
+          className="rounded-2xl bg-emerald-500 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-600"
+        >
+          {t("tracking.noOrders.cta", "Shop now")}
+        </button>
+      </div>
+    );
+  }
+
+  if (!order) {
+    return (
+      <div className="space-y-4">
+        <div className="flex flex-wrap gap-2">
+          {orders.map((o) => (
+            <button
+              key={o.id}
+              type="button"
+              onClick={() => handleSelectOrder(o.id)}
+              className="rounded-full border px-3 py-1 text-sm font-semibold border-slate-300 text-slate-600"
+            >
+              {o.reference}
+            </button>
+          ))}
+        </div>
+        <p className={`text-sm ${headerMuted}`}>
+          {t("tracking.selectOrder", "Select an order to display live updates.")}
+        </p>
+      </div>
+    );
+  }
+
+  const headerSummary = (
+    <>
+      <div>
+        <p className={`text-sm font-semibold uppercase tracking-wide ${accent}`}>
+          {t("tracking.eyebrow", "Track your recent purchases")}
+        </p>
+        <h1 className={`text-3xl font-semibold ${headingColor}`}>
+          {t("tracking.title", "Order Tracking")}
+        </h1>
+        <p className={`text-sm ${headerMuted}`}>
+          {t(
+            "tracking.subtitle",
+            "We watch your order for updates and refresh the timeline live."
+          )}
+        </p>
+      </div>
+      <button
+        onClick={() => navigate("/account/orders")}
+        className={`rounded-xl border px-4 py-2 text-sm font-semibold transition ${subtleButton}`}
+      >
+        {t("tracking.viewAllOrders", "View all orders")}
+      </button>
+    </>
+  );
+
   return (
     <div className="space-y-8">
-      <header className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <p className={`text-sm font-semibold uppercase tracking-wide ${accent}`}>
-            Track your recent purchases
-          </p>
-          <h1 className={`text-3xl font-semibold ${headingColor}`}>Order Tracking</h1>
+      <header className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          {headerSummary}
         </div>
-        <button className={`rounded-xl border px-4 py-2 text-sm font-semibold transition ${subtleButton}`}>
-          View all orders
-        </button>
+        <div className="flex flex-wrap gap-2">
+          {orders.map((o) => (
+            <button
+              key={o.id}
+              type="button"
+              onClick={() => handleSelectOrder(o.id)}
+              className={`rounded-full border px-3 py-1 text-sm font-semibold ${
+                o.id === order?.id
+                  ? "border-emerald-500 bg-emerald-500/10 text-emerald-600"
+                  : "border-slate-300 text-slate-600"
+              }`}
+            >
+              {o.reference}
+            </button>
+          ))}
+        </div>
       </header>
 
       <div className={`rounded-3xl border shadow-sm ${shellSurface}`}>
-        <div className={`flex flex-wrap items-center justify-between gap-4 border-b px-6 py-4 text-sm ${headerMuted} ${isDark ? "border-slate-800" : "border-slate-100"}`}>
+        <div
+          className={`flex flex-wrap items-center justify-between gap-4 border-b px-6 py-4 text-sm ${headerMuted} ${
+            isDark ? "border-slate-800" : "border-slate-100"
+          }`}
+        >
           <div>
-            <p className="text-xs uppercase tracking-wide text-slate-400">Order</p>
-            <p className={`text-base font-semibold ${headingColor}`}>#AGRI-2024-00128</p>
-            <p>Placed on July 26, 2024</p>
+            <p className="text-xs uppercase tracking-wide text-slate-400">
+              {t("tracking.order", "Order")}
+            </p>
+            <p className={`text-base font-semibold ${headingColor}`}>{order.reference}</p>
+            <p className={`text-xs ${muted}`}>
+              {order.createdAt
+                ? formatDateTime(order.createdAt, t("tracking.awaitingUpdate", "Awaiting update"))
+                : t("tracking.awaitingUpdate", "Awaiting update")}
+            </p>
           </div>
           <div className="text-right">
-            <p className="text-xs uppercase tracking-wide text-slate-400">Total</p>
-            <p className={`text-2xl font-semibold ${headingColor}`}>$245.50</p>
+            <p className="text-xs uppercase tracking-wide text-slate-400">
+              {t("tracking.total", "Total")}
+            </p>
+            <p className={`text-2xl font-semibold ${headingColor}`}>
+              {order.totals?.total
+                ? `${Number(order.totals.total).toLocaleString()} EGP`
+                : "-"}
+            </p>
           </div>
         </div>
         <div className="grid gap-6 p-6 lg:grid-cols-[2fr,1fr]">
           <section>
             <h2 className={`text-sm font-semibold uppercase tracking-wide ${muted}`}>
-              Tracking Status
+              {t("tracking.trackingStatus", "Tracking Status")}
             </h2>
             <ol className="mt-4 space-y-4">
-              {steps.map((step, index) => (
-                <li key={step.title} className="flex gap-4">
+              {timelineSteps.map((step, index) => (
+                <li key={step.key} className="flex gap-4">
                   <div className="flex flex-col items-center">
                     <span
-                      className={`flex h-8 w-8 items-center justify-center rounded-full border-2 ${timelineIndicator(step.state)}`}
+                      className={`flex h-8 w-8 items-center justify-center rounded-full border-2 ${timelineIndicator(
+                        step.state
+                      )}`}
                     >
                       {index + 1}
                     </span>
-                    {index !== steps.length - 1 && (
+                    {index !== timelineSteps.length - 1 && (
                       <div className={`mt-1 h-12 w-px ${connectorColor}`} />
                     )}
                   </div>
                   <div>
-                    <p className={`font-semibold ${strongText}`}>{step.title}</p>
-                    <p className={`text-sm ${muted}`}>{step.time}</p>
+                    <p className={`font-semibold ${strongText}`}>{step.label}</p>
+                    <p className={`text-sm ${muted}`}>
+                      {formatDateTime(step.updatedAt, t("tracking.awaitingUpdate", "Awaiting update"))}
+                    </p>
                   </div>
                 </li>
               ))}
             </ol>
+
+            {/* Order Items */}
+            {order?.items && order.items.length > 0 && (
+              <div className="mt-8">
+                <h3 className={`text-sm font-semibold uppercase tracking-wide ${muted}`}>
+                  Order Items
+                </h3>
+                <div className="mt-4 space-y-3">
+                  {order.items.map((item, index) => (
+                    <div key={index} className={`flex items-center gap-4 p-3 rounded-lg ${infoSurface}`}>
+                      {item.image && (
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="w-12 h-12 object-cover rounded"
+                        />
+                      )}
+                      <div className="flex-1">
+                        <p className={`font-medium ${strongText}`}>{item.name}</p>
+                        <p className={`text-sm ${muted}`}>
+                          Quantity: {item.quantity} × {item.price ? `${item.price} EGP` : ''}
+                        </p>
+                      </div>
+                      {item.total && (
+                        <p className={`font-semibold ${strongText}`}>
+                          {item.total} EGP
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </section>
 
           <section className={`rounded-2xl border p-4 text-sm ${infoSurface}`}>
             <h2 className={`text-base font-semibold ${infoHeading}`}>
-              Shipping Information
+              {t("tracking.shippingInfo", "Shipping Information")}
             </h2>
             <dl className="mt-4 space-y-3">
               <div>
                 <dt className={`text-xs uppercase tracking-wide ${muted}`}>
-                  Shipping To
+                  {t("tracking.shippingTo", "Shipping To")}
                 </dt>
                 <dd className={`font-medium ${strongText}`}>{shippingInfo.recipient}</dd>
                 <dd>{shippingInfo.address}</dd>
               </div>
               <div>
                 <dt className={`text-xs uppercase tracking-wide ${muted}`}>
-                  Carrier
+                  {t("tracking.carrier", "Carrier")}
                 </dt>
                 <dd className={`font-medium ${strongText}`}>{shippingInfo.carrier}</dd>
               </div>
               <div>
                 <dt className={`text-xs uppercase tracking-wide ${muted}`}>
-                  Tracking Number
+                  {t("tracking.trackingNumber", "Tracking Number")}
                 </dt>
-                <dd className={`font-medium ${strongText}`}>{shippingInfo.trackingNumber}</dd>
-                <dd>
-                  <button className={`text-sm font-semibold hover:underline ${linkColor(isDark)}`}>
-                    Track on carrier site
-                  </button>
+                <dd className={`font-medium ${strongText}`}>
+                  {shippingInfo.trackingNumber || t("tracking.awaitingUpdate", "Awaiting update")}
                 </dd>
+                {trackingUrl && (
+                  <dd>
+                    <a
+                      href={trackingUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`text-sm font-semibold hover:underline ${linkColor(isDark)}`}
+                    >
+                      {t("tracking.trackCarrier", "Track on carrier site")}
+                    </a>
+                  </dd>
+                )}
               </div>
             </dl>
           </section>

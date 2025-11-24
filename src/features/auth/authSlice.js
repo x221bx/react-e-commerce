@@ -7,12 +7,19 @@ import {
   updateProfile,
   signOut as _signOut,
 } from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  setDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+} from "firebase/firestore";
 
-// Utils
 const resolveEmail = async (identifier) => {
   if (identifier.includes("@")) return identifier;
-  const snap = await getDoc(doc(db, "usernames", identifier));
+  const snap = await getDoc(doc(db, "usernames", identifier.toLowerCase()));
   if (!snap.exists()) throw { code: "auth/user-not-found" };
   return snap.data().email;
 };
@@ -52,9 +59,6 @@ const mapAuthError = (e, ctx = "generic") => {
   }
 };
 
-// --- Thunks ---
-
-// ✅ تسجيل الدخول والتحقق من نوع المستخدم
 export const signInWithIdentifier = createAsyncThunk(
   "auth/signInWithIdentifier",
   async ({ identifier, password }, { rejectWithValue }) => {
@@ -62,7 +66,6 @@ export const signInWithIdentifier = createAsyncThunk(
       const email = await resolveEmail(identifier);
       const cred = await signInWithEmailAndPassword(auth, email, password);
 
-      // جلب بيانات المستخدم من Firestore
       const userRef = doc(db, "users", cred.user.uid);
       const userSnap = await getDoc(userRef);
 
@@ -71,12 +74,25 @@ export const signInWithIdentifier = createAsyncThunk(
       }
 
       const userData = userSnap.data();
+      let username = userData.username || "";
+      if (!username) {
+        const usernameQuery = query(
+          collection(db, "usernames"),
+          where("uid", "==", cred.user.uid)
+        );
+        const usernameDocs = await getDocs(usernameQuery);
+        if (!usernameDocs.empty) {
+          username = usernameDocs.docs[0].id;
+        }
+      }
+
       return {
         uid: cred.user.uid,
         email: cred.user.email,
         name: userData.name || cred.user.displayName,
-          isAdmin: userData.isAdmin || false,
-          role: userData.isAdmin ? "admin" : "user", // ✨ تمت الإضافة هنا
+        username,
+        isAdmin: userData.isAdmin || false,
+        role: userData.isAdmin ? "admin" : "user",
       };
     } catch (e) {
       return rejectWithValue(mapAuthError(e, "login"));
@@ -84,12 +100,12 @@ export const signInWithIdentifier = createAsyncThunk(
   }
 );
 
-// ✅ تسجيل مستخدم جديد
 export const signUp = createAsyncThunk(
   "auth/signUp",
   async ({ name, email, username, password }, { rejectWithValue }) => {
     try {
-      const u = await getDoc(doc(db, "usernames", username));
+      const normalizedUsername = username.toLowerCase();
+      const u = await getDoc(doc(db, "usernames", normalizedUsername));
       if (u.exists()) throw { code: "auth/username-taken" };
 
       const cred = await createUserWithEmailAndPassword(auth, email, password);
@@ -97,10 +113,11 @@ export const signUp = createAsyncThunk(
       await setDoc(doc(db, "users", cred.user.uid), {
         email,
         name,
+        username: normalizedUsername,
         isAdmin: false,
       });
 
-      await setDoc(doc(db, "usernames", username), {
+      await setDoc(doc(db, "usernames", normalizedUsername), {
         email,
         uid: cred.user.uid,
       });
@@ -126,10 +143,21 @@ export const resetPassword = createAsyncThunk(
 );
 
 export const signOut = createAsyncThunk("auth/signOut", async () => {
+  // Clear user-specific data from localStorage before signing out
+  try {
+    const authUser = JSON.parse(localStorage.getItem("authUser") || "null");
+    if (authUser?.uid) {
+      localStorage.removeItem(`cartItems_${authUser.uid}`);
+      localStorage.removeItem(`favorites_${authUser.uid}`);
+    }
+    localStorage.removeItem("authUser");
+  } catch (error) {
+    console.warn("Error clearing user data on logout:", error);
+  }
+
   await _signOut(auth);
 });
 
-// --- Slice ---
 const slice = createSlice({
   name: "auth",
   initialState: {
@@ -153,6 +181,8 @@ const slice = createSlice({
       s.user = a.payload;
       s.isInitialized = true;
       s.error = null;
+      // Store user data for cart/favorites initialization
+      localStorage.setItem("authUser", JSON.stringify(a.payload));
     });
     b.addCase(signInWithIdentifier.rejected, (s, a) => {
       s.error = a.payload;
@@ -175,6 +205,5 @@ export const { setCurrentUser, setAuthInitialized, clearAuthError } =
   slice.actions;
 export default slice.reducer;
 
-// --- Selectors ---
 export const selectCurrentUser = (s) => s.auth.user;
 export const selectIsAuthInitialized = (s) => s.auth.isInitialized;

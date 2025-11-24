@@ -14,13 +14,7 @@ export default function Checkout() {
   const { reduceStock } = useOrders();
   const user = auth.currentUser;
 
-  const [form, setForm] = useState({
-    fullName: "",
-    phone: "",
-    address: "",
-    city: "",
-    notes: "",
-  });
+  const [form, setForm] = useState(() => buildInitialForm(user));
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("cod"); // COD by default
@@ -36,12 +30,21 @@ export default function Checkout() {
     return Object.keys(err).length === 0;
   };
 
-  const handleConfirm = async () => {
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (!user) {
+      toast.error(t("checkout.messages.loginRequired"));
+      return;
+    }
+    if (!items.length) {
+      toast.error(t("checkout.messages.emptyCart"));
+      return;
+    }
     if (!validate()) return;
     if (!user) return toast.error("User not logged in");
     if (!items.length) return toast.error("Cart is empty");
 
-    setLoading(true);
+    setIsSubmitting(true);
     try {
       // Reduce stock first
       await reduceStock(
@@ -87,7 +90,7 @@ export default function Checkout() {
       console.error("Checkout error:", err);
       toast.error("Failed to place order. Please try again.");
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -367,4 +370,6 @@ export default function Checkout() {
       </div>
     </div>
   );
-}
+};
+
+export default Checkout;

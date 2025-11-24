@@ -1,51 +1,61 @@
 import { useEffect, useState } from "react";
-import {
-  collection,
-  query,
-  where,
-  orderBy,
-  onSnapshot,
-} from "firebase/firestore";
+import { getDocs, query, collection, where } from "firebase/firestore";
 import { db } from "../services/firebase";
 
-export default function useUserOrders(uid) {
+export const useUserOrders = (userId) => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [connectionError, setConnectionError] = useState(false);
 
   useEffect(() => {
-    if (!uid) {
+    if (!userId) {
       setOrders([]);
       setLoading(false);
       return;
     }
 
-    const q = query(
-      collection(db, "orders"),
-      where("uid", "==", uid),
-      orderBy("createdAt", "desc")
-    );
+    // Use getDocs with a simple query to avoid index requirements
+    const fetchOrders = async () => {
+      try {
+        setConnectionError(false);
+        const ordersCollection = collection(db, "orders");
+        const q = query(ordersCollection, where("userId", "==", userId));
+        const snap = await getDocs(q);
 
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const data = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-          createdAt:
-            doc.data().createdAt?.toDate?.().toISOString() ||
-            new Date().toISOString(),
-        }));
-        setOrders(data);
+        const next = snap.docs.map((doc) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            createdAt: data.createdAt?.toDate?.() || null,
+            updatedAt: data.updatedAt?.toDate?.() || null,
+          };
+        });
+
+        // Sort client-side by createdAt desc
+        next.sort((a, b) => {
+          const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return bTime - aTime;
+        });
+
+        setOrders(next);
         setLoading(false);
-      },
-      (err) => {
-        console.error("useUserOrders snapshot error:", err);
+      } catch (err) {
+        console.error("useUserOrders getDocs error", err);
+        setOrders([]);
         setLoading(false);
+        // Check if it's a blocked connection error
+        if (err.message?.includes('blocked') || err.code === 'unavailable') {
+          setConnectionError(true);
+        }
       }
-    );
+    };
 
-    return () => unsubscribe();
-  }, [uid]);
+    fetchOrders();
+  }, [userId]);
 
-  return { orders, loading };
-}
+  return { orders, loading, connectionError };
+};
+
+export default useUserOrders;
