@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   addToCart,
@@ -24,7 +24,7 @@ export default function Cart() {
   };
 
   // Fetch latest stock from Firestore
-  const fetchLatestStock = async () => {
+  const fetchLatestStock = useCallback(async () => {
     try {
       const snapshot = await getDocs(collection(db, "products"));
       const products = snapshot.docs.map((d) => {
@@ -46,11 +46,11 @@ export default function Cart() {
     } catch (err) {
       console.error("fetchLatestStock failed:", err);
     }
-  };
+  }, [dispatch]);
 
   useEffect(() => {
     fetchLatestStock();
-  }, []);
+  }, [fetchLatestStock]);
 
   const handleAdd = (item) => {
     const qty = Number(item.quantity || 0);

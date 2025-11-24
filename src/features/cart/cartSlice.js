@@ -1,6 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { saveUserCart, getUserCart, subscribeToUserCart } from "../../services/userDataService";
+import { saveUserCart } from "../../services/userDataService";
 import { doc, updateDoc } from "firebase/firestore";
+import { db } from "../../services/firebase";
 
 const cartSlice = createSlice({
   name: "cart",
@@ -63,7 +64,8 @@ const cartSlice = createSlice({
     },
 
     decreaseQuantity: (state, action) => {
-      const item = state.items.find((i) => i.id === action.payload);
+      const id = action.payload;
+      const item = state.items.find((i) => i.id === id);
       if (item && item.quantity > 1) {
         item.quantity -= 1;
         item.maxReached = false;
@@ -103,6 +105,21 @@ const cartSlice = createSlice({
         item.stock = Math.max(0, newStock);
       }
     },
+
+    updateCartStock: (state, action) => {
+      const products = action.payload;
+      // Update stock information for cart items based on latest product data
+      state.items = state.items.map((item) => {
+        const product = products.find((p) => p.id === item.id);
+        if (product) {
+          return {
+            ...item,
+            stock: product.stock || product.quantity || 0,
+          };
+        }
+        return item;
+      });
+    },
   },
 });
 
@@ -114,7 +131,7 @@ export const {
   decreaseQuantity,
   removeFromCart,
   clearCart,
-  finalizeOrderLocal,
+  syncStock,
   updateCartStock,
 } = cartSlice.actions;
 

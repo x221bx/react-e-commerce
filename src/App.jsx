@@ -33,6 +33,7 @@ const PaymentMethods = lazy(() => import("./pages/account/PaymentMethods"));
 const AdminLayout = lazy(() => import("./admin/AdminLayout"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminProducts = lazy(() => import("./pages/admin/AdminProducts"));
+const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
 const AdminProductForm = lazy(() => import("./pages/admin/AdminProductForm"));
 const AdminCategories = lazy(() => import("./pages/admin/AdminCategories"));
 const AdminArticles = lazy(() => import("./pages/admin/AdminArticles"));
@@ -46,78 +47,87 @@ const LoadingSpinner = () => (
 );
 
 export default function App() {
-    return (
-        <div className="min-h-screen transition-colors duration-300">
-            {/* Navbar */}
-            <Navbar />
+  return (
+    <div className="min-h-screen transition-colors duration-300">
+      {/* Navbar */}
+      <Navbar />
 
-            {/* Toast Notifications */}
-            <Toaster position="top-right" reverseOrder={false} />
+      {/* Toast Notifications */}
+      <Toaster position="top-right" reverseOrder={false} />
 
-            {/* Routes */}
-            <Suspense fallback={<LoadingSpinner />}>
-                <Routes>
-                    {/* Public Routes */}
-                    <Route path="/" element={<Home />} />
-                    <Route path="/products" element={<Products />} />
-                    <Route path="/favorites" element={<Favorites />} />
-                    <Route path="/products/:id" element={<ProductDetails />} />
-                    <Route path="/cart" element={<Cart />} />
-                    <Route path="/articles" element={<ArticlesList />} />
-                    <Route path="/articles/:articleId" element={<ArticleDetails />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/notifications" element={<Notifications />} />
-                    <Route path="/register" element={<Register />} />
-                    <Route path="/reset" element={<Reset />} />
-                    <Route path="/about" element={<About />} />
-                    <Route path="/contactus" element={<ContactUs />} />
-                    <Route path="/checkout" element={<Checkout />} />
+      {/* Routes */}
+      <Suspense fallback={<LoadingSpinner />}>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<Home />} />
+          <Route path="/products" element={<Products />} />
+          <Route path="/favorites" element={<Favorites />} />
+          <Route path="/products/:id" element={<ProductDetails />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/articles" element={<ArticlesList />} />
+          <Route path="/articles/:articleId" element={<ArticleDetails />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/notifications" element={<Notifications />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/reset" element={<Reset />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contactus" element={<ContactUs />} />
+          <Route path="/checkout" element={<Checkout />} />
 
-                    {/* Authenticated User Routes */}
-                    <Route element={<ProtectedRoute />}>
-                        <Route path="/checkout/confirmation" element={<OrderConfirmation />} />
-                        <Route path="/settings" element={<UserSettings />} />
-                        <Route path="/account" element={<AccountLayout />}>
-                            <Route index element={<Navigate to="tracking" replace />} />
-                            <Route path="settings" element={<UserSettings variant="embedded" />} />
-                            <Route path="payments" element={<PaymentMethods />} />
-                            <Route path="orders" element={<OrderHistory />} />
-                            <Route path="tracking" element={<OrderTracking />} />
-                            <Route path="saved" element={<SavedProducts />} />
-                            <Route path="articles" element={<FavoriteArticles />} />
-                            <Route path="ai" element={<AiConversations />} />
-                            <Route path="support" element={<SupportCenter />} />
-                            <Route path="complaints" element={<Complaints />} />
-                        </Route>
-                    </Route>
+          {/* Authenticated User Routes */}
+          <Route element={<ProtectedRoute />}>
+            <Route
+              path="/checkout/confirmation"
+              element={<OrderConfirmation />}
+            />
+            <Route path="/settings" element={<UserSettings />} />
+            <Route path="/account" element={<AccountLayout />}>
+              <Route index element={<Navigate to="tracking" replace />} />
+              <Route
+                path="settings"
+                element={<UserSettings variant="embedded" />}
+              />
+              <Route path="payments" element={<PaymentMethods />} />
+              <Route path="orders" element={<OrderHistory />} />
+              <Route path="tracking" element={<OrderTracking />} />
+              <Route path="saved" element={<SavedProducts />} />
+              <Route path="articles" element={<FavoriteArticles />} />
+              <Route path="ai" element={<AiConversations />} />
+              <Route path="support" element={<SupportCenter />} />
+              <Route path="complaints" element={<Complaints />} />
+            </Route>
+          </Route>
 
-                    {/* Admin Routes */}
-                    <Route element={<ProtectedRoute requireAdmin={true} />}>
-                        <Route path="/admin" element={<AdminLayout />}>
-                            <Route index element={<AdminDashboard />} />
-                            <Route path="products" element={<AdminProducts />} />
-                            <Route path="products/new" element={<AdminProductForm />} />
-                            <Route path="products/:id/edit" element={<AdminProductForm />} />
-                            <Route path="categories" element={<AdminCategories />} />
-                            <Route path="articles" element={<AdminArticles />} />
-                        </Route>
-                    </Route>
+          {/* Admin Routes */}
+          <Route element={<ProtectedRoute requireAdmin={true} />}>
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="products" element={<AdminProducts />} />
+              <Route path="Adminorders" element={<AdminOrders />} />
+              <Route path="products/new" element={<AdminProductForm />} />
+              <Route path="products/:id/edit" element={<AdminProductForm />} />
+              <Route path="categories" element={<AdminCategories />} />
+              <Route path="articles" element={<AdminArticles />} />
+            </Route>
+          </Route>
 
-                    {/* Forbidden */}
-                    <Route
-                        path="/403"
-                        element={
-                            <div className="flex h-screen items-center justify-center flex-col">
-                                <h1 className="text-4xl font-bold text-red-600">403 Forbidden</h1>
-                                <p className="text-gray-600 mt-2 dark:text-gray-300">
-                                    You do not have permission to access this page.
-                                </p>
-                            </div>
-                        }
-                    />
-                </Routes>
-            </Suspense>
-            <ChatBot />
-        </div>
-    );
+          {/* Forbidden */}
+          <Route
+            path="/403"
+            element={
+              <div className="flex h-screen items-center justify-center flex-col">
+                <h1 className="text-4xl font-bold text-red-600">
+                  403 Forbidden
+                </h1>
+                <p className="text-gray-600 mt-2 dark:text-gray-300">
+                  You do not have permission to access this page.
+                </p>
+              </div>
+            }
+          />
+        </Routes>
+      </Suspense>
+      <ChatBot />
+    </div>
+  );
 }

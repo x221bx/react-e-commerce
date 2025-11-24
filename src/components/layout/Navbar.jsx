@@ -1,78 +1,36 @@
-﻿import { useState, useEffect, useRef } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+﻿import { useState, useEffect } from "react";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { selectCurrentUser } from "../../features/auth/authSlice";
+import { selectCurrentUser, signOut } from "../../features/auth/authSlice";
 import { UseTheme } from "../../theme/ThemeProvider";
-import { useLocation } from "react-router-dom";
-
 import { motion as Motion, AnimatePresence } from "framer-motion";
-import { FiHeart, FiShoppingCart, FiBell, FiUser } from "react-icons/fi";
-// import toast from "react-hot-toast";
+import { FiHeart, FiShoppingCart } from "react-icons/fi";
 import i18n from "../../i18n";
 import { useTranslation } from "react-i18next";
 
 import SearchBar from "../search/SearchBar";
 import Button from "../../components/ui/Button";
 
-// Fallback local hook: provides a minimal notifications API when `useNotifications`
-// isn't available from an external source. This prevents the "not defined" error
-// and allows the Navbar to render safely. Replace or remove this stub when you
-// integrate a real notifications hook/service.
-function useNotifications({ uid, role } = {}) {
-  const [notifications, setNotifications] = useState([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  useEffect(() => {
-    // Simple reset stub when uid/role changes; no real backend integration here.
-    setNotifications([]);
-    setUnreadCount(0);
-  }, [uid, role]);
-
-  const markRead = (id) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-    );
-    setUnreadCount((prev) => Math.max(0, prev - 1));
-  };
-
-  return { notifications, unreadCount, markRead };
-}
-
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  // eslint-disable-next-line no-unused-vars
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [currentLang, setCurrentLang] = useState(i18n.language || "en");
 
   const { theme, toggle } = UseTheme();
-
   const user = useSelector(selectCurrentUser);
   const cart = useSelector((state) => state.cart.items);
   const favorites = useSelector((state) => state.favorites);
-
+  const dispatch = useDispatch();
   const navigate = useNavigate();
-  // const dispatch = useDispatch(); // Add this if you need to dispatch logout action
-  // const location = useLocation();
+  const location = useLocation();
   const { t } = useTranslation();
-  const dropdownRef = useRef(null);
-  // eslint-disable-next-line no-unused-vars
-  const { notifications, unreadCount, markRead } = useNotifications({
-    uid: user?.uid,
-    role: user?.role,
-  });
+
+  const isAdmin = user?.role === "admin";
+  const isDark = theme === "dark";
 
   // Hide navbar on login/register screens
-  // (Unused variable 'hideNavbar' removed to fix compile error)
-
-  // Add handleLogout function
-  const handleLogout = () => {
-    // If you have a logout action, dispatch it here
-    // dispatch(logout());
-    // Or clear user session, tokens, etc.
-    // For now, just navigate to login
-    navigate("/login");
-  };
+  const hideNavbar =
+    location.pathname === "/login" || location.pathname === "/register";
 
   const toggleLanguage = async () => {
     const newLang = currentLang === "en" ? "ar" : "en";
@@ -87,66 +45,50 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setNotificationsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  const navbarBg = isDark
+    ? scrolled
+      ? "bg-[#0b1616]/80 text-[#B8E4E6] backdrop-blur-md shadow"
+      : "bg-[#0e1b1b]/85 text-[#B8E4E6]"
+    : scrolled
+    ? "bg-white/95 text-slate-900 backdrop-blur-md shadow"
+    : "bg-[#f4fbf5]/95 text-slate-800";
 
-  const isDark = theme === "dark";
-
-  const navbarColorDark =
-    "bg-[#0c1717]/45 backdrop-blur-2xl text-[#B8E4E6] shadow-[0_2px_5px_rgba(0,0,0,0.45)] border-b border-white/10";
-
-  const navbarColorLight =
-    "bg-[#123033]/55 backdrop-blur-2xl text-[#B8E4E6] shadow-[0_6px_20px_rgba(0,0,0,0.28)] border-b border-white/12";
-
-  const navbarBg = `
-    ${isDark ? navbarColorDark : navbarColorLight}
-    ${scrolled ? "shadow-xl border-b border-white/20" : ""}
-  `;
-
-  const mobileMenuBg = isDark
-    ? "bg-[#0e1b1b]/95 backdrop-blur-xl text-[#B8E4E6]"
-    : "bg-[#142727]/95 backdrop-blur-xl text-[#B8E4E6]";
-
-  const subtleControlBg = "bg-white/20 hover:bg-white/30 text-white transition";
+  const subtleControlBg = isDark
+    ? "bg-white/20 hover:bg-white/30 text-white"
+    : "bg-emerald-50 text-slate-700 hover:bg-emerald-100";
 
   const navLinkBase = "text-sm font-semibold tracking-tight transition-colors";
-  const navLinkActive = "text-white";
-  const navLinkIdle = "text-[#B8E4E6]/80 hover:text-white";
+  const navLinkActive = isDark ? "text-white" : "text-emerald-700";
+  const navLinkIdle = isDark
+    ? "text-[#B8E4E6]/85 hover:text-white"
+    : "text-slate-600 hover:text-emerald-600";
 
-  const cartCount = cart.reduce((s, i) => s + (i.quantity || 1), 0);
-  // eslint-disable-next-line no-unused-vars
-  const formatTimestamp = (v) =>
-    v?.toDate?.() ? v.toDate().toLocaleString() : "";
+  const cartCount = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+
+  if (hideNavbar) return null;
 
   return (
     <header
-      className={`sticky top-0 z-50 transition-all duration-500 ${navbarBg}`}
+      className={`sticky top-0 z-50 border-b transition-all duration-500 ${navbarBg}`}
     >
-      <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap px-4 sm:px-6 md:px-8 py-3 gap-y-3">
-        {/* 🌿 Logo */}
+      <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between px-4 sm:px-6 py-3">
+        {/* Logo */}
         <NavLink
-          className="text-lg sm:text-xl font-semibold tracking-tight"
           to="/"
+          className={`text-lg sm:text-xl font-semibold hover:opacity-80 transition`}
         >
           🌿 Farm Vet Shop
         </NavLink>
 
-        {/* 🧭 Desktop Nav */}
-        <nav className="hidden lg:flex items-center gap-x-6 lg:gap-x-6">
+        {/* Desktop Navigation */}
+        <nav className="hidden md:flex items-center gap-6">
           <NavLink
             to="/"
             className={({ isActive }) =>
               `${navLinkBase} ${isActive ? navLinkActive : navLinkIdle}`
             }
           >
-            {t("nav.home", "Home")}
+            Home
           </NavLink>
 
           <NavLink
@@ -159,32 +101,37 @@ export default function Navbar() {
           </NavLink>
 
           <NavLink
-            to="/articles"
+            to="/about"
             className={({ isActive }) =>
               `${navLinkBase} ${isActive ? navLinkActive : navLinkIdle}`
             }
           >
-            {t("nav.articles", "Articles")}
+            About Us
           </NavLink>
 
-          {user?.role === "admin" && (
-            <NavLink className={`${navLinkBase} ${navLinkIdle}`} to="/admin">
+          {isAdmin && (
+            <NavLink
+              to="/admin"
+              className={({ isActive }) =>
+                `${navLinkBase} ${isActive ? navLinkActive : navLinkIdle}`
+              }
+            >
               Admin Dashboard
             </NavLink>
           )}
         </nav>
 
-        {/* 🎛 Controls */}
-        <div className="flex items-center gap-2 sm:gap-4 md:gap-1 lg:gap-1">
-          {/* 🔍 Search */}
-          <div className="hidden lg:block w-73 xl:w-90">
+        {/* Controls */}
+        <div className="flex items-center gap-3">
+          {/* Search */}
+          <div className="hidden sm:block w-40 md:w-56">
             <SearchBar placeholder="Search..." />
           </div>
 
-          {/* Lang */}
+          {/* Language */}
           <button
             onClick={toggleLanguage}
-            className={`h-9 w-9 rounded-lg flex items-center justify-center ${subtleControlBg}`}
+            className={`h-10 w-10 rounded-lg flex items-center justify-center ${subtleControlBg}`}
           >
             {currentLang === "en" ? "🇺🇸" : "🇸🇦"}
           </button>
@@ -192,20 +139,17 @@ export default function Navbar() {
           {/* Theme */}
           <button
             onClick={toggle}
-            className={`h-9 w-9 rounded-lg flex items-center justify-center ${subtleControlBg}`}
+            className={`h-10 w-10 rounded-lg flex items-center justify-center ${subtleControlBg}`}
           >
             {theme === "dark" ? "🌙" : "☀️"}
           </button>
 
           {/* Favorites */}
           <button
-            onClick={(e) => {
-              e.preventDefault();
-              navigate("/favorites");
-            }}
-            className={`relative h-9 w-9 rounded-lg flex items-center justify-center ${subtleControlBg}`}
+            onClick={() => navigate("/favorites")}
+            className={`relative h-10 w-10 rounded-lg flex items-center justify-center ${subtleControlBg}`}
           >
-            <FiHeart size={18} />
+            <FiHeart size={20} />
             {favorites.length > 0 && (
               <span className="absolute -top-1 -right-1 bg-pink-500 text-xs rounded-full px-1">
                 {favorites.length}
@@ -215,13 +159,10 @@ export default function Navbar() {
 
           {/* Cart */}
           <button
-            onClick={(e) => {
-              e.preventDefault();
-              navigate("/cart");
-            }}
-            className={`relative h-9 w-9 rounded-lg flex items-center justify-center ${subtleControlBg}`}
+            onClick={() => navigate("/cart")}
+            className={`relative h-10 w-10 rounded-lg flex items-center justify-center ${subtleControlBg}`}
           >
-            <FiShoppingCart size={18} />
+            <FiShoppingCart size={20} />
             {cartCount > 0 && (
               <span className="absolute -top-1 -right-1 bg-cyan-600 text-xs rounded-full px-1">
                 {cartCount}
@@ -229,74 +170,41 @@ export default function Navbar() {
             )}
           </button>
 
-          {/* 🔔 Notifications */}
-          {user && (
-            <div className="relative" ref={dropdownRef}>
+          {/* Auth */}
+          {user ? (
+            <>
               <button
-                onClick={() => setNotificationsOpen((p) => !p)}
-                className={`relative h-9 w-9 rounded-lg flex items-center justify-center ${subtleControlBg}`}
+                onClick={() => navigate("/account/settings")}
+                className="px-3 py-1 text-sm rounded-md bg-slate-900 text-white"
               >
-                <FiBell size={17} />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-rose-500 text-xs rounded-full px-1 text-white">
-                    {unreadCount}
-                  </span>
-                )}
+                Account
               </button>
-            </div>
-          )}
-
-          {/* 👤 Account Icon */}
-          {user && (
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                navigate("/account/settings");
-              }}
-              className="flex h-9 w-9 rounded-full items-center justify-center bg-white/20 hover:bg-white/30 text-white"
-            >
-              <FiUser size={18} />
-            </button>
-          )}
-
-          {/* 🔐 LOGIN / REGISTER (Desktop) */}
-          {!user && (
+              <Button
+                text="Logout"
+                onClick={() => dispatch(signOut())}
+                className="px-3 py-1 text-sm rounded-md bg-red-700 text-white"
+              />
+            </>
+          ) : (
             <>
               <Button
                 text="Login"
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigate("/login");
-                }}
-                className="hidden md:block px-3 py-1 text-sm bg-[#2F7E80] text-white hover:bg-[#236a6c]"
+                onClick={() => navigate("/login")}
+                className="px-3 py-1 text-sm rounded-md bg-emerald-700 text-white"
               />
-
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigate("/register");
-                }}
-                className="hidden md:block text-sm underline opacity-80 hover:opacity-100"
+              <NavLink
+                to="/register"
+                className="text-sm hover:text-emerald-600"
               >
                 Register
-              </button>
+              </NavLink>
             </>
           )}
 
-          {/* 🚪 LOGOUT (Desktop) */}
-          {user && (
-            <button
-              onClick={handleLogout}
-              className="hidden md:block px-3 py-1 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700"
-            >
-              Logout
-            </button>
-          )}
-
-          {/* 📱 Mobile Menu Button */}
+          {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileOpen((o) => !o)}
-            className={`lg:hidden h-10 w-10 rounded-lg ${subtleControlBg}`}
+            className={`md:hidden h-10 w-10 rounded-lg ${subtleControlBg}`}
           >
             ☰
           </button>
@@ -307,119 +215,46 @@ export default function Navbar() {
       <AnimatePresence>
         {mobileOpen && (
           <Motion.div
-            initial={{ opacity: 0, y: -8 }}
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            className={`lg:hidden border-t border-white/10 ${mobileMenuBg}`}
+            exit={{ opacity: 0, y: -10 }}
+            className={`md:hidden px-6 py-4 ${
+              isDark ? "bg-[#0e1b1b]" : "bg-white"
+            }`}
           >
-            <div className="px-6 py-4 flex flex-col gap-4">
-              <SearchBar placeholder="Search..." />
+            <SearchBar placeholder="Search..." />
 
-              <button
-                onClick={() => {
-                  toggleLanguage();
-                  setMobileOpen(false);
-                }}
-                className="flex items-center gap-3 py-2"
-              >
-                🌐 {currentLang === "en" ? "العربية" : "English"}
-              </button>
+            <div className="flex flex-col gap-4 mt-3">
+              <NavLink to="/" onClick={() => setMobileOpen(false)}>
+                Home
+              </NavLink>
 
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  setMobileOpen(false);
-                  navigate("/favorites");
-                }}
-                className="py-2 text-left w-full"
-              >
-                ❤️ Favorites
-              </button>
+              <NavLink to="/products" onClick={() => setMobileOpen(false)}>
+                Products
+              </NavLink>
 
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  setMobileOpen(false);
-                  navigate("/cart");
-                }}
-                className="py-2 text-left w-full"
-              >
-                🛒 Cart
-              </button>
+              <NavLink to="/about" onClick={() => setMobileOpen(false)}>
+                About Us
+              </NavLink>
 
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  setMobileOpen(false);
-                  navigate("/articles");
-                }}
-                className="py-2 text-left w-full"
-              >
-                📰 {t("nav.articles", "Articles")}
-              </button>
-
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  setMobileOpen(false);
-                  navigate("/notifications");
-                }}
-                className="py-2 text-left w-full"
-              >
-                🔔 Notifications
-              </button>
-
-              {user && (
-                <>
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setMobileOpen(false);
-                      navigate("/account/settings");
-                    }}
-                    className="py-2 text-left w-full"
-                  >
-                    👤 Account
-                  </button>
-
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleLogout();
-                      setMobileOpen(false);
-                    }}
-                    className="text-red-400 py-2 text-left w-full"
-                  >
-                    🚪 Logout
-                  </button>
-                </>
+              {isAdmin && (
+                <NavLink to="/admin" onClick={() => setMobileOpen(false)}>
+                  Admin Dashboard
+                </NavLink>
               )}
 
-              {!user && (
-                <>
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setMobileOpen(false);
-                      navigate("/login");
-                    }}
-                    className="py-2 text-left w-full"
-                  >
-                    🔐 Login
-                  </button>
-
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setMobileOpen(false);
-                      navigate("/register");
-                    }}
-                    className="py-2 text-left w-full"
-                  >
-                    📝 Register
-                  </button>
-                </>
+              {user && !isAdmin && (
+                <NavLink to="/userorders" onClick={() => setMobileOpen(false)}>
+                  My Orders
+                </NavLink>
               )}
+
+              <NavLink to="/favorites" onClick={() => setMobileOpen(false)}>
+                Favorites ❤️
+              </NavLink>
+              <NavLink to="/cart" onClick={() => setMobileOpen(false)}>
+                Cart 🛒
+              </NavLink>
             </div>
           </Motion.div>
         )}
