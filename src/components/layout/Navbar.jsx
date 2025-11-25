@@ -42,7 +42,7 @@ export default function Navbar() {
 
   const handleLogout = () => {
     dispatch(signOut());
-    toast.success("Logged out successfully 👋");
+    toast.success(t("navbar.logout_success"));
   };
 
   useEffect(() => {
@@ -54,7 +54,7 @@ export default function Navbar() {
 
   useEffect(() => {
     if (connectionError) {
-      toast.error("Real-time notifications are blocked. Please disable ad blockers for this site.", {
+      toast.error(t("navbar.notification_error"), {
         duration: 6000,
       });
     }
@@ -94,7 +94,7 @@ export default function Navbar() {
         
         {/* 🌿 Logo */}
         <NavLink className="text-lg sm:text-xl font-semibold tracking-tight" to="/">
-          🌿 Farm Vet Shop
+          🌿 {t("brand.name")}
         </NavLink>
 
         {/* 🧭 Desktop Nav */}
@@ -116,7 +116,7 @@ export default function Navbar() {
 
           {user?.role === "admin" && (
             <NavLink className={`${navLinkBase} ${navLinkIdle}`} to="/admin">
-              Admin Dashboard
+              {t("admin.dashboard")}
             </NavLink>
           )}
         </nav>
@@ -126,7 +126,7 @@ export default function Navbar() {
 
           {/* 🔍 Search */}
           <div className="hidden lg:block w-73 xl:w-90">
-            <SearchBar placeholder="Search..." />
+            <SearchBar placeholder={t("navbar.search_placeholder")} />
           </div>
 
           {/* Lang */}
@@ -171,23 +171,6 @@ export default function Navbar() {
             )}
           </button>
 
-          {/* 🔔 Notifications */}
-          {user && (
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                navigate("/notifications");
-              }}
-              className={`relative h-9 w-9 rounded-lg flex items-center justify-center ${subtleControlBg}`}
-            >
-              <FiBell size={17} />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-rose-500 text-xs rounded-full px-1 text-white">
-                  {unreadCount}
-                </span>
-              )}
-            </button>
-          )}
 
           {/* 👤 Account Icon */}
           {user && (
@@ -206,7 +189,7 @@ export default function Navbar() {
           {!user && (
             <>
               <Button
-                text="Login"
+                text={t("auth.login")}
                 onClick={(e) => {
                   e.preventDefault();
                   navigate("/login");
@@ -221,7 +204,7 @@ export default function Navbar() {
                 }}
                 className="hidden md:block text-sm underline opacity-80 hover:opacity-100"
               >
-                Register
+                {t("auth.register")}
               </button>
             </>
           )}
@@ -232,7 +215,7 @@ export default function Navbar() {
               onClick={handleLogout}
               className="hidden md:block px-3 py-1 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700"
             >
-              Logout
+              {t("auth.logout")}
             </button>
           )}
 
@@ -257,7 +240,7 @@ export default function Navbar() {
           >
             <div className="px-6 py-4 flex flex-col gap-4">
 
-              <SearchBar placeholder="Search..." />
+              <SearchBar placeholder={t("navbar.search_placeholder")} />
 
               <button
                 onClick={() => {
@@ -266,7 +249,7 @@ export default function Navbar() {
                 }}
                 className="flex items-center gap-3 py-2"
               >
-                🌐 {currentLang === "en" ? "العربية" : "English"}
+                🌐 {currentLang === "en" ? t("languages.switch_to_ar") : t("languages.switch_to_en")}
               </button>
 
               <button
@@ -277,7 +260,7 @@ export default function Navbar() {
                 }}
                 className="py-2 text-left w-full"
               >
-                ❤️ Favorites
+                ❤️ {t("navbar.favorites")}
               </button>
 
               <button
@@ -288,7 +271,7 @@ export default function Navbar() {
                 }}
                 className="py-2 text-left w-full"
               >
-                🛒 Cart
+                🛒 {t("navbar.cart")}
               </button>
 
               <button
@@ -310,7 +293,7 @@ export default function Navbar() {
                 }}
                 className="py-2 text-left w-full"
               >
-                🔔 Notifications
+                🔔 {t("navbar.notifications")}
               </button>
 
               {user && (
@@ -323,7 +306,7 @@ export default function Navbar() {
                     }}
                     className="py-2 text-left w-full"
                   >
-                    👤 Account
+                    👤 {t("navbar.account")}
                   </button>
 
                   <button
@@ -334,7 +317,7 @@ export default function Navbar() {
                     }}
                     className="text-red-400 py-2 text-left w-full"
                   >
-                    🚪 Logout
+                    🚪 {t("navbar.logout")}
                   </button>
                 </>
               )}
@@ -349,7 +332,7 @@ export default function Navbar() {
                     }}
                     className="py-2 text-left w-full"
                   >
-                    🔐 Login
+                    🔐 {t("navbar.login")}
                   </button>
 
                   <button
@@ -360,7 +343,7 @@ export default function Navbar() {
                     }}
                     className="py-2 text-left w-full"
                   >
-                    📝 Register
+                    📝 {t("navbar.register")}
                   </button>
                 </>
               )}

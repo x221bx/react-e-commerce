@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { useNavigate, Link } from "react-router-dom";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db, auth } from "../services/firebase";
-import { finalizeOrderLocal } from "../features/cart/cartSlice";
+import { clearCart } from "../features/cart/cartSlice";
 import useOrders from "../hooks/useOrders";
 import toast from "react-hot-toast";
 
@@ -13,6 +13,15 @@ export default function Checkout() {
   const { items } = useSelector((state) => state.cart);
   const { reduceStock } = useOrders();
   const user = auth.currentUser;
+
+  // Build initial form data
+  const buildInitialForm = (user) => ({
+    fullName: user?.displayName || "",
+    phone: "",
+    address: "",
+    city: "",
+    notes: "",
+  });
 
   const [form, setForm] = useState(() => buildInitialForm(user));
   const [errors, setErrors] = useState({});
@@ -44,7 +53,7 @@ export default function Checkout() {
     if (!user) return toast.error("User not logged in");
     if (!items.length) return toast.error("Cart is empty");
 
-    setIsSubmitting(true);
+    setLoading(true);
     try {
       // Reduce stock first
       await reduceStock(
@@ -83,14 +92,14 @@ export default function Checkout() {
       // Add order to Firebase
       await addDoc(collection(db, "orders"), orderData);
 
-      dispatch(finalizeOrderLocal());
+      dispatch(clearCart());
       toast.success("Order placed successfully!");
       navigate("/success");
     } catch (err) {
       console.error("Checkout error:", err);
       toast.error("Failed to place order. Please try again.");
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
@@ -281,8 +290,7 @@ export default function Checkout() {
               Back to Cart
             </Link>
             <button
-              type="button"
-              onClick={handleConfirm}
+              type="submit"
               disabled={loading}
               className="inline-flex items-center rounded-2xl bg-emerald-500 px-6 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-600 disabled:opacity-70"
             >
@@ -371,5 +379,3 @@ export default function Checkout() {
     </div>
   );
 };
-
-export default Checkout;

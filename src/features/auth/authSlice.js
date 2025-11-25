@@ -86,13 +86,15 @@ export const signInWithIdentifier = createAsyncThunk(
         }
       }
 
+      const isAdmin = userData.isAdmin || userData.role === "admin";
+
       return {
         uid: cred.user.uid,
         email: cred.user.email,
         name: userData.name || cred.user.displayName,
         username,
-        isAdmin: userData.isAdmin || false,
-        role: userData.isAdmin ? "admin" : "user",
+        isAdmin,
+        role: isAdmin ? "admin" : "user",
       };
     } catch (e) {
       return rejectWithValue(mapAuthError(e, "login"));
@@ -175,6 +177,13 @@ const slice = createSlice({
     clearAuthError(state) {
       state.error = null;
     },
+    updateCurrentUser(state, { payload }) {
+      if (state.user) {
+        state.user = { ...state.user, ...payload };
+        // Update localStorage as well
+        localStorage.setItem("authUser", JSON.stringify(state.user));
+      }
+    },
   },
   extraReducers: (b) => {
     b.addCase(signInWithIdentifier.fulfilled, (s, a) => {
@@ -201,7 +210,7 @@ const slice = createSlice({
   },
 });
 
-export const { setCurrentUser, setAuthInitialized, clearAuthError } =
+export const { setCurrentUser, setAuthInitialized, clearAuthError, updateCurrentUser } =
   slice.actions;
 export default slice.reducer;
 

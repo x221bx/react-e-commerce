@@ -1,8 +1,8 @@
-import { useOrders } from "../hooks/useOrders";
+import useOrders from "../hooks/useOrders";
 import OrderTimeline from "./OrderTimeline";
 
 export default function OrdersList() {
-  const { data: orders = [] } = useOrders();
+  const { orders = [] } = useOrders(null, true); // null uid for admin, true for isAdmin
 
   return (
     <div className="space-y-6">

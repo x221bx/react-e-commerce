@@ -1,6 +1,5 @@
 import {
   AlertTriangle,
-  BellRing,
   Globe,
   ShieldCheck,
   User,
@@ -32,15 +31,6 @@ export const navItems = [
     category: "profile",
   },
   {
-    id: "notifications",
-    label: "Notifications",
-    labelKey: "settings.navigation.items.notifications.label",
-    description: "Alerts and updates",
-    descriptionKey: "settings.navigation.items.notifications.description",
-    icon: BellRing,
-    category: "profile",
-  },
-  {
     id: "account",
     label: "Account",
     labelKey: "settings.navigation.items.account.label",
@@ -57,7 +47,7 @@ export const navCategories = [
     label: "Profile",
     labelKey: "settings.navigation.categories.profile.label",
     icon: Stethoscope,
-    description: "Your identity, security, and notifications",
+    description: "Your identity and security",
     descriptionKey: "settings.navigation.categories.profile.description",
     helper: "Keep your personal and security details accurate.",
     helperKey: "settings.navigation.categories.profile.helper",

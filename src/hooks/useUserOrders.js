@@ -19,7 +19,7 @@ export const useUserOrders = (userId) => {
       try {
         setConnectionError(false);
         const ordersCollection = collection(db, "orders");
-        const q = query(ordersCollection, where("userId", "==", userId));
+        const q = query(ordersCollection, where("uid", "==", userId));
         const snap = await getDocs(q);
 
         const next = snap.docs.map((doc) => {

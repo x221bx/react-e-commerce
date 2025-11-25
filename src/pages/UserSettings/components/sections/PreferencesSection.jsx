@@ -59,7 +59,7 @@ const PreferencesSection = ({
         <button
           type="button"
           onClick={() => handlePreferenceChange("reset", null)}
-          className="inline-flex items-center rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200"
+          className="inline-flex items-center rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-white dark:border-slate-700 dark:text-slate-200"
         >
           {t('settings.reset_defaults')}
         </button>
@@ -77,3 +77,4 @@ const PreferencesSection = ({
 };
 
 export default PreferencesSection;
+
