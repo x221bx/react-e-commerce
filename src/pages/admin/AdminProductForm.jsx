@@ -2,6 +2,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
+import { useTranslation } from "react-i18next";
 import PageHeader from "../../admin/PageHeader";
 import { useProduct } from "../../hooks/useProduct";
 import {
@@ -11,33 +12,34 @@ import {
 import { useCategoriesSorted } from "../../hooks/useCategoriesSorted";
 
 /*
-  Validation schema - professional & user friendly messages
+   Validation schema - professional & user friendly messages
 */
-const Schema = Yup.object({
+const createSchema = (t) => Yup.object({
   title: Yup.string()
-    .min(3, "Product name is too short")
-    .required("Product name is required"),
+    .min(3, t("admin.productForm.validation.titleMin"))
+    .required(t("admin.productForm.validation.titleRequired")),
   description: Yup.string()
-    .min(10, "Description is too short")
-    .required("Description is required"),
+    .min(10, t("admin.productForm.validation.descriptionMin"))
+    .required(t("admin.productForm.validation.descriptionRequired")),
   thumbnailUrl: Yup.string()
-    .url("Please enter a valid image URL")
-    .required("Image URL is required"),
+    .url(t("admin.productForm.validation.thumbnailUrl"))
+    .required(t("admin.productForm.validation.thumbnailUrlRequired")),
   price: Yup.number()
-    .typeError("Price must be a number")
-    .positive("Price must be > 0")
-    .required("Price is required"),
+    .typeError(t("admin.productForm.validation.priceNumber"))
+    .positive(t("admin.productForm.validation.pricePositive"))
+    .required(t("admin.productForm.validation.priceRequired")),
   stock: Yup.number()
-    .typeError("Stock must be a number")
-    .integer("Stock must be a whole number")
-    .min(0, "Stock cannot be negative")
-    .required("Stock is required"),
-  currency: Yup.string().oneOf(["USD", "EGP"]).required("Currency is required"),
-  categoryId: Yup.string().required("Category is required"),
+    .typeError(t("admin.productForm.validation.stockNumber"))
+    .integer(t("admin.productForm.validation.stockInteger"))
+    .min(0, t("admin.productForm.validation.stockMin"))
+    .required(t("admin.productForm.validation.stockRequired")),
+  currency: Yup.string().oneOf(["USD", "EGP"]).required(t("admin.productForm.validation.currencyRequired")),
+  categoryId: Yup.string().required(t("admin.productForm.validation.categoryRequired")),
   isAvailable: Yup.boolean(),
 });
 
 export default function AdminProductForm() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const isEdit = !!id;
   const navigate = useNavigate();
@@ -84,7 +86,7 @@ export default function AdminProductForm() {
         form="productForm"
         className="rounded-lg bg-[#49BBBD] px-3 py-2 text-sm font-semibold text-white hover:bg-[#2F7E80]"
       >
-        {isEdit ? "Save Changes" : "Add Product"}
+        {isEdit ? t("admin.productForm.saveChanges") : t("admin.productForm.addProduct")}
       </button>
 
       <button
@@ -92,7 +94,7 @@ export default function AdminProductForm() {
         type="button"
         className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
       >
-        Cancel
+        {t("admin.productForm.cancel")}
       </button>
     </div>
   );
@@ -100,18 +102,18 @@ export default function AdminProductForm() {
   return (
     <>
       <PageHeader
-        title={isEdit ? "Edit Product" : "New Product"}
+        title={isEdit ? t("admin.productForm.editTitle") : t("admin.productForm.newTitle")}
         actions={actions}
       />
 
       {isEdit && isLoading ? (
-        <div className="text-sm text-gray-600">Loading…</div>
+        <div className="text-sm text-gray-600">{t("admin.productForm.loading")}</div>
       ) : (
         <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
           <Formik
             initialValues={initial}
             enableReinitialize
-            validationSchema={Schema}
+            validationSchema={createSchema(t)}
             onSubmit={async (values, { setSubmitting }) => {
               try {
                 // Normalize values so mutations don't get strings
@@ -150,7 +152,7 @@ export default function AdminProductForm() {
               <Form id="productForm" className="grid gap-4">
                 <div>
                   <label className="block text-sm font-medium">
-                    Product Name
+                    {t("admin.productForm.productName")}
                   </label>
                   <Field
                     name="title"
@@ -165,7 +167,7 @@ export default function AdminProductForm() {
 
                 <div>
                   <label className="block text-sm font-medium">
-                    Description
+                    {t("admin.productForm.description")}
                   </label>
                   <Field
                     as="textarea"
@@ -183,7 +185,7 @@ export default function AdminProductForm() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <label className="block text-sm font-medium">
-                      Image URL
+                      {t("admin.productForm.imageUrl")}
                     </label>
                     <Field
                       name="thumbnailUrl"
@@ -197,7 +199,7 @@ export default function AdminProductForm() {
                     {values.thumbnailUrl && (
                       <img
                         src={values.thumbnailUrl}
-                        alt="Preview"
+                        alt={t("admin.productForm.preview")}
                         className="mt-2 h-24 w-full rounded-lg border object-cover"
                         onError={(e) =>
                           (e.currentTarget.style.display = "none")
@@ -208,14 +210,14 @@ export default function AdminProductForm() {
 
                   <div>
                     <label className="block text-sm font-medium">
-                      Category
+                      {t("admin.productForm.category")}
                     </label>
                     <Field
                       as="select"
                       name="categoryId"
                       className="w-full rounded-lg border border-gray-300 px-3 py-2"
                     >
-                      <option value="">Select category…</option>
+                      <option value="">{t("admin.productForm.selectCategory")}</option>
                       {categories.map((c) => (
                         <option key={c.id} value={c.id}>
                           {c.name}
@@ -232,7 +234,7 @@ export default function AdminProductForm() {
 
                 <div className="grid gap-4 sm:grid-cols-3">
                   <div>
-                    <label className="block text-sm font-medium">Price</label>
+                    <label className="block text-sm font-medium">{t("admin.productForm.price")}</label>
                     <Field
                       name="price"
                       type="number"
@@ -247,7 +249,7 @@ export default function AdminProductForm() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium">Stock</label>
+                    <label className="block text-sm font-medium">{t("admin.productForm.stock")}</label>
                     <Field
                       name="stock"
                       type="number"
@@ -260,13 +262,13 @@ export default function AdminProductForm() {
                       className="text-xs text-red-600 mt-1"
                     />
                     <div className="text-xs text-gray-500 mt-1">
-                      Set product inventory (units available).
+                      {t("admin.productForm.stockHelp")}
                     </div>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium">
-                      Currency
+                      {t("admin.productForm.currency")}
                     </label>
                     <Field
                       as="select"
@@ -290,7 +292,7 @@ export default function AdminProductForm() {
                     type="checkbox"
                     className="h-4 w-4"
                   />
-                  <span className="text-sm font-medium">Available</span>
+                  <span className="text-sm font-medium">{t("admin.productForm.available")}</span>
                 </label>
               </Form>
             )}

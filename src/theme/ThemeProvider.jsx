@@ -20,8 +20,12 @@ export default function ThemeProvider({ children }) {
     }
 
     const unsubscribe = subscribeToUserPreferences(user.uid, (preferences) => {
-      const userTheme = preferences?.theme || "light";
-      setTheme(userTheme);
+      setTheme((prev) => {
+        if (preferences && typeof preferences.theme === "string") {
+          return preferences.theme;
+        }
+        return prev || "light";
+      });
     });
 
     return unsubscribe;

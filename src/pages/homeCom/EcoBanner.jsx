@@ -1,10 +1,12 @@
 import { motion as Motion } from "framer-motion";
 import { UseTheme } from "../../theme/ThemeProvider";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export default function HelpBanner() {
   const { theme } = UseTheme();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const fadeUp = {
     hidden: { opacity: 0, y: 30 },
@@ -15,7 +17,7 @@ export default function HelpBanner() {
     }),
   };
 
-  const goTocontsctus = () => navigate("/contactus");
+  const goToComplaints = () => navigate("/account/complaints");
 
   return (
     <section className="my-14">
@@ -45,7 +47,7 @@ export default function HelpBanner() {
               custom={0.1}
               className="text-3xl md:text-4xl font-extrabold leading-tight drop-shadow-md"
             >
-              Need Help With Your Livestock? 🐄
+              {t("home.vetHelpTitle")}
             </Motion.h2>
 
             <Motion.p
@@ -55,9 +57,7 @@ export default function HelpBanner() {
                 theme === "dark" ? "text-[#B8E4E6]/90" : "text-white/90"
               }`}
             >
-              Our veterinary experts are ready to assist you — from nutrition
-              guidance to choosing the right treatments and products to keep
-              your animals strong and healthy.
+              {t("home.vetHelpText")}
             </Motion.p>
           </div>
 
@@ -66,14 +66,14 @@ export default function HelpBanner() {
             custom={0.6}
             whileHover={{ scale: 1.06 }}
             whileTap={{ scale: 0.95 }}
-            onClick={goTocontsctus}
+            onClick={goToComplaints}
             className={`h-12 px-6 min-w-[180px] rounded-lg font-bold shadow-md transition-colors duration-300 ${
               theme === "dark"
                 ? "bg-[#B8E4E6] text-[#0e1b1b] hover:bg-[#a7d8da]"
                 : "bg-white text-[#2F7E80] hover:bg-[#B8E4E6] hover:text-[#0e1b1b]"
             }`}
           >
-            Contact Our Vet
+            {t("home.contactVet")}
           </Motion.button>
         </Motion.div>
       </div>

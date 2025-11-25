@@ -89,7 +89,7 @@ const Navigation = ({
     : "bg-emerald-50 text-emerald-700 border border-emerald-200";
   const sectionIdleClasses = isDarkMode
     ? "text-slate-300 hover:bg-slate-800/70 hover:text-white"
-    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900";
+    : "text-slate-600 hover:bg-white hover:text-slate-900";
 
   if (variant === "embedded") {
     return (
@@ -249,7 +249,7 @@ const Navigation = ({
                       className={`flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition ${
                         isActive
                           ? "bg-gradient-to-r from-green-100 to-green-50 text-green-800 dark:bg-green-900/30 dark:text-green-200"
-                          : "text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800/70"
+                          : "text-slate-700 hover:bg-white dark:text-slate-200 dark:hover:bg-slate-800/70"
                       }`}
                       aria-current={isActive ? "true" : undefined}
                     >

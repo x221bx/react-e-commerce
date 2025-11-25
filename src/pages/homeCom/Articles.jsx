@@ -1,6 +1,8 @@
 import { motion as Motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 export default function Articles({ header, items = [] }) {
+  const { t } = useTranslation();
   // ✨ Animation setup
   const fadeUp = {
     hidden: { opacity: 0, y: 40 },
@@ -64,7 +66,7 @@ export default function Articles({ header, items = [] }) {
                 className="text-primary font-bold text-sm mt-2 hover:underline"
                 onClick={() => {}}
               >
-                Read More
+                {t("home.readMore")}
               </Motion.button>
             </div>
           </Motion.div>

@@ -12,20 +12,17 @@ import ConfirmDialog from "./components/ConfirmDialog";
 // Import section components
 import PersonalSection from "./components/sections/PersonalSection";
 import SecuritySection from "./components/sections/SecuritySection";
-import NotificationsSection from "./components/sections/NotificationsSection";
 import AccountSection from "./components/sections/AccountSection";
 
 // Import utilities and hooks
 import { emptySecurityForm } from "./utils/constants";
-import { getNotificationState } from "./utils/helpers";
 import { validateSecurityField, calculatePasswordStrength } from "./utils/validation";
 import { getSettingsMessage } from "./utils/translations";
 import { useProfileForm } from "./hooks/useProfileForm";
 import { useSettingsNavigation } from "./hooks/useSettingsNavigation";
 import {
-  saveNotifications,
   updateUserPassword,
-  updateAccountStatus
+  deleteUserAccount
 } from "./services/userSettingsService";
 
 export default function UserSettings({ variant = "standalone" }) {
@@ -35,11 +32,9 @@ export default function UserSettings({ variant = "standalone" }) {
   const isDarkMode = theme === "dark";
 
   // Form states
-  const [notificationForm, setNotificationForm] = useState(getNotificationState(user));
   const [securityForm, setSecurityForm] = useState(emptySecurityForm);
 
   // Loading states
-  const [isSavingNotifications, setIsSavingNotifications] = useState(false);
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const [pendingAccountAction, setPendingAccountAction] = useState(null);
   const [isLoadingUserData, setIsLoadingUserData] = useState(true);
@@ -55,7 +50,6 @@ export default function UserSettings({ variant = "standalone" }) {
   // Refs for sections
   const personalRef = useRef(null);
   const securityRef = useRef(null);
-  const notificationsRef = useRef(null);
   const accountRef = useRef(null);
 
   // Custom hooks
@@ -65,7 +59,6 @@ export default function UserSettings({ variant = "standalone" }) {
   // Update forms when user changes
   useEffect(() => {
     if (user) {
-      setNotificationForm(getNotificationState(user));
       setSecurityForm(emptySecurityForm);
       setIsLoadingUserData(false);
     } else {
@@ -78,7 +71,6 @@ export default function UserSettings({ variant = "standalone" }) {
     const sections = [
       { id: "personal", ref: personalRef },
       { id: "security", ref: securityRef },
-      { id: "notifications", ref: notificationsRef },
       { id: "account", ref: accountRef },
     ];
 
@@ -107,11 +99,6 @@ export default function UserSettings({ variant = "standalone" }) {
   }, [navigation]);
 
   // Event handlers
-  const handleNotificationsChange = (field) => {
-    setNotificationForm((prev) => ({ ...prev, [field]: !prev[field] }));
-  };
-
-
   const handleSecurityChange = (field, value) => {
     setSecurityForm((prev) => ({ ...prev, [field]: value }));
 
@@ -125,24 +112,6 @@ export default function UserSettings({ variant = "standalone" }) {
   };
 
   // Form submission handlers
-  const handleNotificationsSubmit = async (event) => {
-    event.preventDefault();
-    if (!user?.uid) return;
-
-    setIsSavingNotifications(true);
-    try {
-      await saveNotifications(user, notificationForm);
-      toast.success(getSettingsMessage('saveNotificationsSuccess'));
-    } catch (error) {
-      console.error('Notification save error:', error);
-      const errorMessage = error.message || getSettingsMessage('saveNotificationsFailed');
-      toast.error(errorMessage);
-    } finally {
-      setIsSavingNotifications(false);
-    }
-  };
-
-
   const handlePasswordSubmit = async (event) => {
     event.preventDefault();
     if (!securityForm.currentPassword || !securityForm.newPassword) {
@@ -168,11 +137,11 @@ export default function UserSettings({ variant = "standalone" }) {
     }
   };
 
-  const handleAccountAction = async (action) => {
+  const handleAccountDelete = async () => {
     if (!user?.uid) return;
-    setPendingAccountAction(action);
+    setPendingAccountAction("delete");
     try {
-      const result = await updateAccountStatus(user, action);
+      const result = await deleteUserAccount(user);
       toast.success(result.message);
     } catch (error) {
       console.error('Account action error:', error);
@@ -183,11 +152,10 @@ export default function UserSettings({ variant = "standalone" }) {
     }
   };
 
-  const openConfirmDialog = (intent) => setConfirmDialog({ open: true, intent });
+  const openConfirmDialog = (intent = "delete") => setConfirmDialog({ open: true, intent });
   const closeConfirmDialog = () => setConfirmDialog({ open: false, intent: null });
   const handleConfirmedAccountAction = () => {
-    if (!confirmDialog.intent) return;
-    handleAccountAction(confirmDialog.intent);
+    handleAccountDelete();
     closeConfirmDialog();
   };
 
@@ -201,7 +169,7 @@ export default function UserSettings({ variant = "standalone" }) {
 
   if (!user || isLoadingUserData) {
     return (
-      <div className="min-h-screen bg-slate-50 py-10 transition-colors dark:bg-slate-950">
+      <div className="min-h-screen bg-white py-10 transition-colors dark:bg-slate-950">
         <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 sm:px-6 lg:flex-row lg:gap-10 lg:px-8">
           {/* Sidebar skeleton */}
           <aside className="space-y-4 lg:w-64">
@@ -282,15 +250,6 @@ export default function UserSettings({ variant = "standalone" }) {
         user={user}
       />
 
-      <NotificationsSection
-        sectionId="notifications"
-        notificationsRef={notificationsRef}
-        notificationForm={notificationForm}
-        handleNotificationsChange={handleNotificationsChange}
-        handleNotificationsSubmit={handleNotificationsSubmit}
-        isSavingNotifications={isSavingNotifications}
-      />
-
       <AccountSection
         sectionId="account"
         accountRef={accountRef}
@@ -323,7 +282,7 @@ export default function UserSettings({ variant = "standalone" }) {
       {settingsSections}
     </div>
   ) : (
-    <div className="min-h-screen bg-slate-50 py-10 transition-colors dark:bg-slate-950">
+    <div className="min-h-screen bg-white py-10 transition-colors dark:bg-slate-950">
       <div className="settings-shell mx-auto flex max-w-6xl flex-col gap-6 px-4 sm:px-6 lg:flex-row lg:gap-10 lg:px-8">
         <aside className="space-y-4 lg:w-64">
           <Navigation

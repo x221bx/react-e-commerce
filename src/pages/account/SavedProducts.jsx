@@ -1,8 +1,8 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { FiHeart, FiShoppingCart, FiExternalLink } from "react-icons/fi";
+import { FiHeart, FiShoppingCart, FiExternalLink, FiImage } from "react-icons/fi";
 
 import { toggleFavourite } from "../../features/favorites/favoritesSlice";
 import { addToCart } from "../../features/cart/cartSlice";
@@ -12,6 +12,50 @@ const currency = new Intl.NumberFormat("ar-EG", {
   style: "currency",
   currency: "EGP",
 });
+
+// Optimized Image Component
+const OptimizedImage = ({ src, alt, className, onError }) => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+
+  const handleLoad = () => {
+    setIsLoading(false);
+  };
+
+  const handleError = () => {
+    setIsLoading(false);
+    setHasError(true);
+    onError?.();
+  };
+
+  if (hasError || !src) {
+    return (
+      <div className={`flex h-full w-full items-center justify-center ${className}`}>
+        <FiImage className="h-6 w-6 text-slate-400" />
+      </div>
+    );
+  }
+
+  return (
+    <div className={`relative ${className}`}>
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-lg">
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent"></div>
+        </div>
+      )}
+      <img
+        src={src}
+        alt={alt}
+        className={`h-full w-full object-cover transition-opacity duration-300 ${
+          isLoading ? 'opacity-0' : 'opacity-100'
+        }`}
+        loading="lazy"
+        onLoad={handleLoad}
+        onError={handleError}
+      />
+    </div>
+  );
+};
 
 export default function SavedProducts() {
   const favourites = useSelector((state) => state.favorites?.items || []);
@@ -126,18 +170,11 @@ export default function SavedProducts() {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
               {/* Product Image */}
               <div className={`h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl ${previewSurface} sm:h-24 sm:w-24`}>
-                {item.thumbnail ? (
-                  <img
-                    src={item.thumbnail}
-                    alt={item.title}
-                    className="h-full w-full object-cover"
-                    loading="lazy"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-sm">
-                    {t("account.savedProducts.noImage", "No image")}
-                  </div>
-                )}
+                <OptimizedImage
+                  src={item.thumbnail}
+                  alt={item.title}
+                  className="h-full w-full"
+                />
               </div>
 
               {/* Product Info */}

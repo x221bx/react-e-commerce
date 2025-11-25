@@ -29,19 +29,15 @@ export const validateProfileField = (field, value) => {
       if (!/^[a-zA-Z0-9_]+$/.test(value.trim())) return getSettingsMessage('usernameInvalid');
       break;
     case "phone":
-       if (value) {
-         // Remove all non-digit characters except +
-         const cleanNumber = value.replace(/[^\d+]/g, "");
-         // Check for valid international format: +country_code + local_number
-         // Total digits should be between 10-15, must start with + or digit
-         const digitCount = cleanNumber.replace(/\D/g, '').length;
-         const phoneRegex = /^(\+\d{1,4})?\d{6,14}$/;
-
-         if (!phoneRegex.test(cleanNumber) || digitCount < 7 || digitCount > 15) {
-           return getSettingsMessage('invalidPhone');
-         }
-       }
-       break;
+      {
+        const digitsOnly = (value || "").replace(/\D/g, "");
+        if (!digitsOnly) return getSettingsMessage('phoneRequiredGeneric');
+        const isValidEgyptianMobile = digitsOnly.startsWith("01") && digitsOnly.length === 11;
+        if (!isValidEgyptianMobile) {
+          return getSettingsMessage('invalidEgyptPhone');
+        }
+        break;
+      }
     default:
       return "";
   }
