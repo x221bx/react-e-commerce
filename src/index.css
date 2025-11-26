@@ -4,36 +4,92 @@
    Color Variables System
    ========================= */
 :root {
-    /* Light Mode */
-    --bg-main: #ffffff;
-    --bg-card: #f5f7f8;
-    --bg-input: #ffffff;
+     /* Light Mode */
+     --bg-main: #ffffff;
+     --bg-card: #f5f7f8;
+     --bg-input: #ffffff;
+     --bg-panel: #f9fafb;
 
-    --text-main: #1a1a1a;
-    --text-muted: #687280; /* fix */
+     --text-main: #1a1a1a;
+     --text-muted: #687280; /* fix */
 
-    --border-color: #e3e3e3;
+     --border-color: #e3e3e3;
 
-    --success: #10b981;
-    --danger: #ef4444;
-    --warning: #f59e0b;
+     --success: #10b981;
+     --danger: #ef4444;
+     --warning: #f59e0b;
+
+    /* Icon Colors - Light Mode */
+     --icon-primary: #1a1a1a;
+     --icon-secondary: #687280;
+     --icon-muted: #9ca3af;
+     --icon-accent: #3b82f6;
+     --icon-success: #10b981;
+     --icon-warning: #f59e0b;
+     --icon-danger: #ef4444;
 }
 
 .dark {
-    /* Dark Mode */
-    --bg-main: #0b1217;
-    --bg-card: #111a20;
-    --bg-input: #0d1b1b;
+     /* Dark Mode */
+     --bg-main: #0b1217;
+     --bg-card: #111a20;
+     --bg-input: #0d1b1b;
+     --bg-panel: #0f1820;
 
-    --text-main: #e7f3eb;
-    --text-muted: #b6c7c2;
+     --text-main: #e7f3eb;
+     --text-muted: #b6c7c2;
 
-    --border-color: #1f2a33;
+     --border-color: #1f2a33;
 
-    --success: #34d399;
-    --danger: #f87171;
-    --warning: #fbbf24;
+     --success: #34d399;
+     --danger: #f87171;
+     --warning: #fbbf24;
+
+     /* Icon Colors - Dark Mode */
+     --icon-primary: #e7f3eb;
+     --icon-secondary: #b6c7c2;
+     --icon-muted: #94a3b8;
+     --icon-accent: #60a5fa;
+     --icon-success: #34d399;
+     --icon-warning: #fbbf24;
+     --icon-danger: #f87171;
 }
+
+/* Additional brand tokens for unified identity */
+:root {
+  --brand-primary: #0f766e; /* teal-600 */
+  --brand-accent: #0ea5e9; /* sky-500 */
+  --brand-secondary: #065f46; /* teal-800 */
+  --surface-header: #ffffff;
+  --surface-input: #ffffff;
+}
+
+.dark {
+  --brand-primary: #34d399; /* bright green */
+  --brand-accent: #60a5fa;
+  --brand-secondary: #0b5f4a;
+  --surface-header: rgba(17,44,37,0.7);
+  --surface-input: #0d1b1b;
+}
+
+/* Header / shell surface (use across Home / Products / Articles / Account pages) */
+.header-surface {
+  background: var(--surface-header);
+  border: 1px solid var(--border-color);
+}
+
+/* Form input surface */
+.input-surface {
+  background: var(--surface-input);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+}
+
+/* Brand helpers */
+.brand-primary { color: var(--brand-primary); }
+.brand-accent { color: var(--brand-accent); }
+.brand-bg { background: var(--brand-primary); color: white; }
+
 
 /* Global Transition */
 html {
@@ -44,6 +100,82 @@ body {
     background: var(--bg-main);
     color: var(--text-main);
 }
+
+/* Shared surface helpers */
+.bg-surface {
+    background: var(--bg-main);
+    color: var(--text-main);
+}
+
+.bg-panel {
+    background: var(--bg-panel);
+    color: var(--text-main);
+}
+
+.card-surface {
+    background: var(--bg-card);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+}
+
+.border-muted {
+  border-color: var(--border-color);
+}
+
+/* Icon Color Helpers */
+.icon-primary {
+  color: var(--icon-primary);
+}
+
+.icon-secondary {
+  color: var(--icon-secondary);
+}
+
+.icon-muted {
+  color: var(--icon-muted);
+}
+
+.icon-accent {
+  color: var(--icon-accent);
+}
+
+.icon-success {
+  color: var(--icon-success);
+}
+
+.icon-warning {
+  color: var(--icon-warning);
+}
+
+.icon-danger {
+  color: var(--icon-danger);
+}
+
+/* Grid Pattern for Hero Backgrounds */
+.bg-grid-pattern {
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(0,0,0,0.15) 1px, transparent 0);
+  background-size: 20px 20px;
+}
+
+.dark .bg-grid-pattern {
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(255,255,255,0.1) 1px, transparent 0);
+}
+
+/* Ensure icon visibility with minimum stroke width */
+svg {
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Override for very thin icons if needed */
+svg.icon-thin {
+  stroke-width: 1.5;
+}
+
+
 
 /* =========================
    Settings Page Overrides

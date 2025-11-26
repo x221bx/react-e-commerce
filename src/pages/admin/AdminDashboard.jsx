@@ -64,14 +64,7 @@ export default function AdminDashboard() {
   const PRODUCT_COLORS = ["#1ABC9C", "#E74C3C"];
 
   return (
-    <div
-      className={`
-        min-h-screen w-full
-        transition-all duration-300 
-        pt-28 pb-10 px-4 md:px-6
-        ${dark ? "bg-[#0d1a1a] text-[#cfecec]" : "bg-[#f9f9f9] text-gray-900"}
-      `}
-    >
+    <div>
       <PageHeader title="Dashboard Overview" />
 
       {/* 🔢 كروت الإحصائيات */}

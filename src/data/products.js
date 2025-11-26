@@ -14,6 +14,12 @@ export const fallbackProducts = [
       "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=900&q=80",
     description: "Plug-and-play solar pump with inline filtration and 120m drip line for mixed beds.",
     keywords: ["solar", "irrigation", "kit", "pump"],
+    translations: {
+      ar: {
+        title: "طقم الري بالتنقيط الشمسي",
+        description: "مضخة شمسية جاهزة للاستخدام مع فلترة داخلية وخط تنقيط 120 متر للأسرة المختلطة.",
+      }
+    }
   },
   {
     id: "smart-greenhouse-node",

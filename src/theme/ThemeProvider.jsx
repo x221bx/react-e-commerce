@@ -1,71 +1,71 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { selectCurrentUser } from "../features/auth/authSlice";
-import {
-  saveUserPreferences,
-  subscribeToUserPreferences,
-} from "../services/userDataService";
+import { saveUserPreferences, subscribeToUserPreferences } from "../services/userDataService";
 
 const ThemeCtx = createContext({ theme: "light", toggle: () => {} });
 export const UseTheme = () => useContext(ThemeCtx);
 
+const getInitialTheme = () => {
+  try {
+    const stored = localStorage.getItem("theme");
+    if (stored === "dark" || stored === "light") return stored;
+  } catch {
+    /* ignore storage errors */
+  }
+  return "light"; // default start: light mode
+};
+
 export default function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState("light");
+  const [theme, setTheme] = useState(getInitialTheme);
   const user = useSelector(selectCurrentUser);
 
-  //️⃣ 1 — تحميل الثيم عند الدخول
+  // Sync from user preferences when authenticated
   useEffect(() => {
     if (!user?.uid) {
-      // مستخدم غير مسجل → استخدم localStorage
-      const saved = localStorage.getItem("theme") || "light";
-      setTheme(saved);
+      setTheme(getInitialTheme());
       return;
     }
 
-    // مستخدم مسجل → احصل على الثيم من Firebase
     const unsubscribe = subscribeToUserPreferences(user.uid, (preferences) => {
       if (preferences && typeof preferences.theme === "string") {
-        setTheme((prev) => {
-          // لو Firebase رجّع نفس القيمة → لا تغيّر شيء
-          if (preferences.theme === prev) return prev;
-          return preferences.theme;
-        });
+        setTheme((prev) => (preferences.theme === prev ? prev : preferences.theme));
       }
     });
 
     return unsubscribe;
   }, [user?.uid]);
 
-  //️⃣ 2 — تطبيق الثيم على صفحة HTML
+  // Apply theme class to <html> and persist for guests
   useEffect(() => {
     const html = document.documentElement;
     html.classList.remove("light", "dark");
     html.classList.add(theme);
 
-    // (⚠️ مهم) لا تحفظ هنا! حتى لا يحدث Loop
-    // سيتم الحفظ فقط عند toggle
+    try {
+      localStorage.setItem("theme", theme);
+    } catch {
+      /* ignore */
+    }
   }, [theme]);
 
-  //️⃣ 3 — تبديل الثيم + حفظ الاختيار
   const toggle = () => {
     setTheme((prev) => {
-      const newTheme = prev === "dark" ? "light" : "dark";
+      const next = prev === "dark" ? "light" : "dark";
 
-      // حفظ للمستخدم المسجل
       if (user?.uid) {
-        saveUserPreferences(user.uid, { theme: newTheme }).catch(console.error);
+        saveUserPreferences(user.uid, { theme: next }).catch(console.error);
       } else {
-        // حفظ في localStorage لغير المسجلين
-        localStorage.setItem("theme", newTheme);
+        try {
+          localStorage.setItem("theme", next);
+        } catch {
+          /* ignore */
+        }
       }
 
-      return newTheme;
+      return next;
     });
   };
 
-  return (
-    <ThemeCtx.Provider value={{ theme, toggle }}>
-      {children}
-    </ThemeCtx.Provider>
-  );
+  return <ThemeCtx.Provider value={{ theme, toggle }}>{children}</ThemeCtx.Provider>;
 }

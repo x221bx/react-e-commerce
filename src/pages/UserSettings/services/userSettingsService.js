@@ -8,6 +8,7 @@ import {
   deleteUser,
 } from "firebase/auth";
 import { updateProfile, auth, db } from "../../../services/firebase";
+import { isValidEmail } from "../../../utils/validators";
 import { getErrorMessage, getSettingsMessage } from "../utils/translations";
 
 export const saveNotifications = async (user, notificationForm) => {
@@ -210,7 +211,7 @@ export const sendPasswordReset = async (email) => {
     throw new Error("Email is required");
   }
 
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  if (!isValidEmail(email)) {
     throw new Error("Please enter a valid email address");
   }
 

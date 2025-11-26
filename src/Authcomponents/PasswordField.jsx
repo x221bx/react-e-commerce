@@ -34,7 +34,7 @@ export default function PasswordField({
           onClick={toggle}
           aria-label={show ? "Hide password" : "Show password"}
           aria-pressed={show}
-          className="absolute inset-y-0 right-2 my-1 flex items-center rounded-lg px-2 text-gray-500 hover:text-gray-700 focus:ring-2 focus:ring-blue-600 focus:outline-none"
+          className="absolute inset-y-0 right-2 my-1 flex items-center rounded-lg px-2 icon-secondary hover:icon-primary focus:ring-2 focus:ring-blue-600 focus:outline-none"
         >
           {show ? (
             <FiEyeOff className="h-5 w-5" />

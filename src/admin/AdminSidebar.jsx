@@ -6,12 +6,14 @@ import {
   FiTag,
   FiAperture,
   FiMail,
+  FiFileText,
+  FiMessageSquare,
+  FiShoppingCart,
 } from "react-icons/fi";
 import { createPortal } from "react-dom";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import MessageBadge from "../../src/pages/admin/MessagesBadge"; // ⭐ مهم جداً
+import MessageBadge from "../pages/admin/MessagesBadge";
 
-/** Tooltip يظهر فوق العناصر لما الـ Sidebar تكون Collapsed */
 function PortalTooltip({ open, label, x, y, onClose }) {
   useEffect(() => {
     if (!open) return;
@@ -24,16 +26,8 @@ function PortalTooltip({ open, label, x, y, onClose }) {
   return createPortal(
     <div
       role="tooltip"
-      className={[
-        "pointer-events-none fixed z-[9999] select-none",
-        "rounded-md bg-gray-900 px-2 py-1 text-xs font-medium text-white shadow-lg",
-        "opacity-100 transition motion-reduce:transition-none",
-      ].join(" ")}
-      style={{
-        left: x,
-        top: y,
-        transform: "translate(8px, -50%)",
-      }}
+      className="pointer-events-none fixed z-[9999] select-none rounded-md bg-gray-900 px-2 py-1 text-xs font-medium text-white shadow-lg"
+      style={{ left: x, top: y, transform: "translate(8px, -50%)" }}
     >
       {label}
     </div>,
@@ -41,7 +35,6 @@ function PortalTooltip({ open, label, x, y, onClose }) {
   );
 }
 
-/* ألوان الـ Links في الـ Sidebar */
 const linkBase =
   "relative group flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#49BBBD]/40";
 const linkActive = "bg-[#49BBBD]/10 text-[#2F7E80] ring-1 ring-[#49BBBD]/30";
@@ -51,12 +44,7 @@ export default function AdminSidebar({ onNavigate, collapsed = false }) {
   const [tip, setTip] = useState({ open: false, label: "", x: 0, y: 0 });
 
   const showTip = useCallback((label, rect) => {
-    setTip({
-      open: true,
-      label,
-      x: rect.right,
-      y: rect.top + rect.height / 2,
-    });
+    setTip({ open: true, label, x: rect.right, y: rect.top + rect.height / 2 });
   }, []);
 
   const hideTip = useCallback(() => setTip((t) => ({ ...t, open: false })), []);
@@ -71,51 +59,30 @@ export default function AdminSidebar({ onNavigate, collapsed = false }) {
     () => [
       { to: "/admin", end: true, label: "Dashboard", icon: <FiHome /> },
       { to: "/admin/products", label: "Products", icon: <FiPackage /> },
-      {
-        to: "/admin/products/new",
-        label: "Add Product",
-        icon: <FiPlusCircle />,
-      },
-      {
-        to: "/admin/adminorders",
-        end: true,
-        label: "Orders",
-        icon: <FiHome />,
-      },
-
-      // 🟢 Messages (Inbox)
-      {
-        to: "/admin/messages",
-        label: "Messages",
-        icon: <FiMail />,
-        badge: true, // ⭐ علشان نحدد link اللي يحمل badge
-      },
-
+      { to: "/admin/products/new", label: "Add Product", icon: <FiPlusCircle /> },
+      { to: "/admin/orders", end: true, label: "Orders", icon: <FiShoppingCart /> },
+      { to: "/admin/messages", label: "Messages", icon: <FiMail />, badge: true },
       { to: "/admin/categories", label: "Categories", icon: <FiTag /> },
+      { to: "/admin/articles", label: "Articles", icon: <FiFileText /> },
+      { to: "/admin/complaints", label: "Complaints", icon: <FiMessageSquare /> },
     ],
     []
   );
 
   return (
     <div className="flex h-full flex-col">
-      {/* Logo / Title */}
       <div className="flex items-center gap-2 px-3 py-3">
         <div className="grid h-8 w-8 place-items-center rounded-md bg-[#42604b] font-extrabold text-white">
-          <FiAperture className="text-[#ffffff]" />
+          <FiAperture className="text-white" />
         </div>
         {!collapsed && (
           <div className="min-w-0">
-            <div className="truncate text-sm font-semibold text-gray-900">
-              Admin Dashboard
-            </div>
-            <div className="truncate text-[11px] text-gray-500">
-              AgriTech Panel
-            </div>
+            <div className="truncate text-sm font-semibold text-gray-900">Admin Dashboard</div>
+            <div className="truncate text-[11px] text-gray-500">AgriTech Panel</div>
           </div>
         )}
       </div>
 
-      {/* Links */}
       <nav className="mt-1 flex flex-col gap-1 px-2">
         {links.map((l) => (
           <SideLink
@@ -129,14 +96,13 @@ export default function AdminSidebar({ onNavigate, collapsed = false }) {
         ))}
       </nav>
 
-      {/* Footer Info */}
       <div className="mt-auto border-t border-gray-200 px-3 py-3 text-xs text-gray-500">
         {!collapsed ? (
           <div>
             Height: <code>calc(100svh - var(--nav-h))</code>
           </div>
         ) : (
-          <div className="text-center">⋯</div>
+          <div className="text-center">🙂</div>
         )}
       </div>
 
@@ -151,17 +117,7 @@ export default function AdminSidebar({ onNavigate, collapsed = false }) {
   );
 }
 
-function SideLink({
-  to,
-  end,
-  onNavigate,
-  collapsed,
-  label,
-  icon,
-  badge,
-  onShowTip,
-  onHideTip,
-}) {
+function SideLink({ to, end, onNavigate, collapsed, label, icon, badge, onShowTip, onHideTip }) {
   const ref = useRef(null);
 
   const handleEnter = () => {
@@ -200,18 +156,14 @@ function SideLink({
       }
       aria-label={collapsed ? label : undefined}
     >
-      {/* Icon + Badge */}
-          <span className="text-[18px] relative">
-      {icon}
-
-      {badge && (
-        <span className="absolute -top-1 -right-1">
-          <MessageBadge />
-        </span>
-      )}
+      <span className="relative text-[18px]">
+        {icon}
+        {badge && (
+          <span className="absolute -top-1 -right-1">
+            <MessageBadge />
+          </span>
+        )}
       </span>
-
-
       {!collapsed && <span className="truncate">{label}</span>}
     </NavLink>
   );

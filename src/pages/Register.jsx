@@ -7,6 +7,7 @@ import { Link, useNavigate } from "react-router-dom";
 import AuthLayout from "../Authcomponents/AuthLayout";
 import InputField from "../Authcomponents/InputField";
 import PasswordField from "../Authcomponents/PasswordField";
+import AuthActions from "../Authcomponents/AuthActions";
 import { signUp, clearAuthError } from "../features/auth/authSlice";
 
 const SignupSchema = Yup.object({
@@ -77,23 +78,14 @@ export default function Register() {
             <PasswordField name="password" label="Password" />
             <PasswordField name="confirm" label="Confirm password" />
 
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full rounded-xl bg-[#49BBBD] py-3 text-white font-semibold hover:bg-[#3fa8aa]"
-            >
-              {isSubmitting ? "Creating…" : "Create Account"}
-            </button>
-
-            <p className="text-center text-sm text-gray-700">
-              Already have an account?{" "}
-              <Link
-                to="/login"
-                className="text-[#2F7E80] font-semibold hover:underline"
-              >
-                Sign in
-              </Link>
-            </p>
+            <AuthActions
+              isSubmitting={isSubmitting}
+              submitLabel="Create Account"
+              altText={"Already have an account?"}
+              altLink="/login"
+              altLabel="Sign in"
+              buttonClass="w-full rounded-xl bg-[var(--brand-primary)] py-3 text-white font-semibold hover:opacity-95"
+            />
           </Form>
         )}
       </Formik>
