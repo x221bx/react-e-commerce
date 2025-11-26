@@ -1,22 +1,19 @@
-// useAIProductSearch.js
+// src/hooks/useAIProductSearch.js
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../services/firebase";
 
 /**
- * Lightweight search (client-side filter)
- * يعتمد على العنوان + الوصف + التاجز
- * ويتجنب مشاكل الـ index في Firestore.
- * + فيه Normalization عربي + fuzzy match بسيط.
+ * ========================= Helpers =========================
  */
 
-// نفس الـ helpers هنا كمان (ممكن تنقلهم لملف utils لو حبيت)
 function normalizeArabic(text = "") {
   return text
     .toLowerCase()
     .replace(/[أإآا]/g, "ا")
     .replace(/ى/g, "ي")
     .replace(/ة/g, "ه")
-    .replace(/[^\u0600-\u06FF0-9\s]/g, " ")
+    .replace(/[\u0610-\u061A\u064B-\u065F\u06D6-\u06ED]/g, "") // تشكيل
+    .replace(/[^\u0600-\u06FF0-9a-z\s]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -47,7 +44,14 @@ function fuzzyMatch(word, target) {
   return levenshtein(word, target) <= 2;
 }
 
-export async function aiSearchProducts({ keyword }) {
+/**
+ * ========================= Main Search =========================
+ *
+ * تعتمد على: العنوان + الاسم + الوصف + الكاتيجوري
+ * تضيف Scoring ذكي يخلي الترشيحات تختلف حسب السؤال
+ */
+
+export async function aiSearchProducts({ keyword, intent = {} }) {
   const snap = await getDocs(collection(db, "products"));
 
   const all = snap.docs.map((d) => ({
@@ -60,19 +64,65 @@ export async function aiSearchProducts({ keyword }) {
 
   const kwWords = kw.split(" ").filter((w) => w.length > 1);
 
-  return all.filter((p) => {
-    const title = normalizeArabic(p.title || p.name || "");
-    const desc = normalizeArabic(p.description || "");
-    const category = normalizeArabic(p.categoryName || p.categoryId || "");
-    const tags = Array.isArray(p.tags)
-      ? normalizeArabic(p.tags.join(" "))
-      : "";
+  // كلمات مستنتجة من intent
+  const extraWords = [];
+  if (intent.crop) extraWords.push(normalizeArabic(intent.crop));
+  if (intent.product_type) extraWords.push(normalizeArabic(intent.product_type));
+  if (intent.problem) extraWords.push(normalizeArabic(intent.problem));
+  if (intent.goal) extraWords.push(normalizeArabic(intent.goal));
 
-    const combined = `${title} ${desc} ${category} ${tags}`.trim();
-    if (!combined) return false;
+  const intentWords = extraWords
+    .join(" ")
+    .split(" ")
+    .filter((w) => w.length > 1);
 
-    // لازم معظم الكلمات تبان في النص (مع fuzzy)
-    return kwWords.every((w) => fuzzyMatch(w, combined));
-  });
+  const allWords = [...kwWords, ...intentWords];
+  if (!allWords.length) return [];
+
+  /**
+   * ========== Scoring الجديد ==========
+   *
+   * score =
+   *  +3 لو الكلمة في combined
+   *  +1.5 لو fuzzy
+   *  +2 لو الكلمة في title
+   *  +2 لو intent.product_type شبه اسم المنتج
+   */
+
+  const scored = all
+    .map((p) => {
+      const title = normalizeArabic(p.title || p.name_lc || p.name || "");
+      const desc = normalizeArabic(p.description || "");
+      const category = normalizeArabic(p.categoryName || p.categoryId || "");
+
+      const combined = `${title} ${desc} ${category}`.trim();
+      if (!combined) return null;
+
+      let score = 0;
+
+      for (const w of allWords) {
+        if (!w) continue;
+        if (combined.includes(w)) score += 3;
+        else if (fuzzyMatch(w, combined)) score += 1.5;
+      }
+
+      for (const w of kwWords) {
+        if (title.includes(w)) score += 2;
+      }
+
+      // بوست ذكي بناءً على نوع المنتج inferred from name only
+      if (intent?.product_type && title.includes(normalizeArabic(intent.product_type))) {
+        score += 2;
+      }
+
+      if (score <= 0) return null;
+
+      return { product: p, score };
+    })
+    .filter(Boolean);
+
+  // الترتيب تنازلي
+  scored.sort((a, b) => b.score - a.score);
+
+  return scored.map((s) => s.product);
 }
-// يمكنك استخدام الدالة aiSearchProducts في مكوناتك أو هوكس الخاصة بك للبحث عن المنتجات بناءً على الكلمة المفتاحية المقدمة.

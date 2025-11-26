@@ -10,36 +10,43 @@ import {
   useUpdateProduct,
 } from "../../hooks/useProductMutations";
 import { useCategoriesSorted } from "../../hooks/useCategoriesSorted";
+import { UseTheme } from "../../theme/ThemeProvider";
 
-/*
-   Validation schema - professional & user friendly messages
-*/
-const createSchema = (t) => Yup.object({
-  title: Yup.string()
-    .min(3, t("admin.productForm.validation.titleMin"))
-    .required(t("admin.productForm.validation.titleRequired")),
-  description: Yup.string()
-    .min(10, t("admin.productForm.validation.descriptionMin"))
-    .required(t("admin.productForm.validation.descriptionRequired")),
-  thumbnailUrl: Yup.string()
-    .url(t("admin.productForm.validation.thumbnailUrl"))
-    .required(t("admin.productForm.validation.thumbnailUrlRequired")),
-  price: Yup.number()
-    .typeError(t("admin.productForm.validation.priceNumber"))
-    .positive(t("admin.productForm.validation.pricePositive"))
-    .required(t("admin.productForm.validation.priceRequired")),
-  stock: Yup.number()
-    .typeError(t("admin.productForm.validation.stockNumber"))
-    .integer(t("admin.productForm.validation.stockInteger"))
-    .min(0, t("admin.productForm.validation.stockMin"))
-    .required(t("admin.productForm.validation.stockRequired")),
-  currency: Yup.string().oneOf(["USD", "EGP"]).required(t("admin.productForm.validation.currencyRequired")),
-  categoryId: Yup.string().required(t("admin.productForm.validation.categoryRequired")),
-  isAvailable: Yup.boolean(),
-});
+// Validation Schema
+const createSchema = (t) =>
+  Yup.object({
+    title: Yup.string()
+      .min(3, t("admin.productForm.validation.titleMin"))
+      .required(t("admin.productForm.validation.titleRequired")),
+    description: Yup.string()
+      .min(10, t("admin.productForm.validation.descriptionMin"))
+      .required(t("admin.productForm.validation.descriptionRequired")),
+    thumbnailUrl: Yup.string()
+      .url(t("admin.productForm.validation.thumbnailUrl"))
+      .required(t("admin.productForm.validation.thumbnailUrlRequired")),
+    price: Yup.number()
+      .typeError(t("admin.productForm.validation.priceNumber"))
+      .positive(t("admin.productForm.validation.pricePositive"))
+      .required(t("admin.productForm.validation.priceRequired")),
+    stock: Yup.number()
+      .typeError(t("admin.productForm.validation.stockNumber"))
+      .integer(t("admin.productForm.validation.stockInteger"))
+      .min(0, t("admin.productForm.validation.stockMin"))
+      .required(t("admin.productForm.validation.stockRequired")),
+    currency: Yup.string()
+      .oneOf(["USD", "EGP"])
+      .required(t("admin.productForm.validation.currencyRequired")),
+    categoryId: Yup.string().required(
+      t("admin.productForm.validation.categoryRequired")
+    ),
+    isAvailable: Yup.boolean(),
+  });
 
 export default function AdminProductForm() {
   const { t } = useTranslation();
+  const { theme } = UseTheme();
+  const dark = theme === "dark";
+
   const { id } = useParams();
   const isEdit = !!id;
   const navigate = useNavigate();
@@ -49,7 +56,7 @@ export default function AdminProductForm() {
   const addProduct = useAddProduct();
   const updateProduct = useUpdateProduct();
 
-  // initial values: support legacy documents that used "quantity" as string
+  // initial values
   const initial =
     isEdit && product
       ? {
@@ -59,7 +66,6 @@ export default function AdminProductForm() {
           price: product.price ?? "",
           currency: product.currency ?? "USD",
           categoryId: product.categoryId ?? "",
-          // prefer numeric stock; fallback to quantity field if present (coerce to number)
           stock:
             product.stock !== undefined
               ? Number(product.stock)
@@ -86,13 +92,22 @@ export default function AdminProductForm() {
         form="productForm"
         className="rounded-lg bg-[#49BBBD] px-3 py-2 text-sm font-semibold text-white hover:bg-[#2F7E80]"
       >
-        {isEdit ? t("admin.productForm.saveChanges") : t("admin.productForm.addProduct")}
+        {isEdit
+          ? t("admin.productForm.saveChanges")
+          : t("admin.productForm.addProduct")}
       </button>
 
       <button
         onClick={() => navigate(-1)}
         type="button"
-        className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+        className={`
+          rounded-lg border px-3 py-2 text-sm transition
+          ${
+            dark
+              ? "border-[#1e3a3a] bg-[#0f2222] text-[#cfecec] hover:bg-[#163434]"
+              : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+          }
+        `}
       >
         {t("admin.productForm.cancel")}
       </button>
@@ -100,23 +115,43 @@ export default function AdminProductForm() {
   );
 
   return (
-    <>
+    <div
+      className={`
+        min-h-screen w-full pt-28 pb-10 px-4 md:px-6
+        transition-all duration-300
+        ${dark ? "bg-[#0d1a1a] text-[#cfecec]" : "bg-gray-50 text-gray-900"}
+      `}
+    >
       <PageHeader
-        title={isEdit ? t("admin.productForm.editTitle") : t("admin.productForm.newTitle")}
+        title={
+          isEdit
+            ? t("admin.productForm.editTitle")
+            : t("admin.productForm.newTitle")
+        }
         actions={actions}
       />
 
       {isEdit && isLoading ? (
-        <div className="text-sm text-gray-600">{t("admin.productForm.loading")}</div>
+        <div className="text-sm opacity-70">
+          {t("admin.productForm.loading")}
+        </div>
       ) : (
-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
+        <div
+          className={`
+            rounded-xl border p-4 shadow-sm sm:p-6
+            ${
+              dark
+                ? "bg-[#0f2222] border-[#1e3a3a]"
+                : "bg-white border-gray-200"
+            }
+          `}
+        >
           <Formik
             initialValues={initial}
             enableReinitialize
             validationSchema={createSchema(t)}
             onSubmit={async (values, { setSubmitting }) => {
               try {
-                // Normalize values so mutations don't get strings
                 const payload = {
                   title: values.title,
                   description: values.description,
@@ -148,23 +183,32 @@ export default function AdminProductForm() {
               }
             }}
           >
-            {({ values, setFieldValue }) => (
+            {({ values }) => (
               <Form id="productForm" className="grid gap-4">
+                {/* Title */}
                 <div>
                   <label className="block text-sm font-medium">
                     {t("admin.productForm.productName")}
                   </label>
                   <Field
                     name="title"
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                    className={`
+                      w-full rounded-lg px-3 py-2 border
+                      ${
+                        dark
+                          ? "bg-[#0c1919] border-[#1e3a3a] text-[#cfecec]"
+                          : "bg-white border-gray-300 text-gray-800"
+                      }
+                    `}
                   />
                   <ErrorMessage
                     name="title"
                     component="p"
-                    className="text-xs text-red-600 mt-1"
+                    className="text-xs text-red-500 mt-1"
                   />
                 </div>
 
+                {/* Description */}
                 <div>
                   <label className="block text-sm font-medium">
                     {t("admin.productForm.description")}
@@ -173,15 +217,23 @@ export default function AdminProductForm() {
                     as="textarea"
                     name="description"
                     rows={4}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                    className={`
+                      w-full rounded-lg px-3 py-2 border
+                      ${
+                        dark
+                          ? "bg-[#0c1919] border-[#1e3a3a] text-[#cfecec]"
+                          : "bg-white border-gray-300 text-gray-800"
+                      }
+                    `}
                   />
                   <ErrorMessage
                     name="description"
                     component="p"
-                    className="text-xs text-red-600 mt-1"
+                    className="text-xs text-red-500 mt-1"
                   />
                 </div>
 
+                {/* Image + Category */}
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <label className="block text-sm font-medium">
@@ -189,18 +241,25 @@ export default function AdminProductForm() {
                     </label>
                     <Field
                       name="thumbnailUrl"
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                      className={`
+                        w-full rounded-lg px-3 py-2 border
+                        ${
+                          dark
+                            ? "bg-[#0c1919] border-[#1e3a3a] text-[#cfecec]"
+                            : "bg-white border-gray-300 text-gray-800"
+                        }
+                      `}
                     />
                     <ErrorMessage
                       name="thumbnailUrl"
                       component="p"
-                      className="text-xs text-red-600 mt-1"
+                      className="text-xs text-red-500 mt-1"
                     />
+
                     {values.thumbnailUrl && (
                       <img
                         src={values.thumbnailUrl}
-                        alt={t("admin.productForm.preview")}
-                        className="mt-2 h-24 w-full rounded-lg border object-cover"
+                        className="mt-2 h-24 w-full rounded-lg object-cover border"
                         onError={(e) =>
                           (e.currentTarget.style.display = "none")
                         }
@@ -208,6 +267,7 @@ export default function AdminProductForm() {
                     )}
                   </div>
 
+                  {/* Category */}
                   <div>
                     <label className="block text-sm font-medium">
                       {t("admin.productForm.category")}
@@ -215,9 +275,18 @@ export default function AdminProductForm() {
                     <Field
                       as="select"
                       name="categoryId"
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                      className={`
+                        w-full rounded-lg px-3 py-2 border
+                        ${
+                          dark
+                            ? "bg-[#0c1919] border-[#1e3a3a] text-[#cfecec]"
+                            : "bg-white border-gray-300 text-gray-800"
+                        }
+                      `}
                     >
-                      <option value="">{t("admin.productForm.selectCategory")}</option>
+                      <option value="">
+                        {t("admin.productForm.selectCategory")}
+                      </option>
                       {categories.map((c) => (
                         <option key={c.id} value={c.id}>
                           {c.name}
@@ -227,45 +296,64 @@ export default function AdminProductForm() {
                     <ErrorMessage
                       name="categoryId"
                       component="p"
-                      className="text-xs text-red-600 mt-1"
+                      className="text-xs text-red-500 mt-1"
                     />
                   </div>
                 </div>
 
+                {/* Price / Stock / Currency */}
                 <div className="grid gap-4 sm:grid-cols-3">
+                  {/* Price */}
                   <div>
-                    <label className="block text-sm font-medium">{t("admin.productForm.price")}</label>
+                    <label className="block text-sm font-medium">
+                      {t("admin.productForm.price")}
+                    </label>
                     <Field
                       name="price"
                       type="number"
                       min="0"
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                      className={`
+                        w-full rounded-lg px-3 py-2 border
+                        ${
+                          dark
+                            ? "bg-[#0c1919] border-[#1e3a3a] text-[#cfecec]"
+                            : "bg-white border-gray-300 text-gray-800"
+                        }
+                      `}
                     />
                     <ErrorMessage
                       name="price"
                       component="p"
-                      className="text-xs text-red-600 mt-1"
+                      className="text-xs text-red-500 mt-1"
                     />
                   </div>
 
+                  {/* Stock */}
                   <div>
-                    <label className="block text-sm font-medium">{t("admin.productForm.stock")}</label>
+                    <label className="block text-sm font-medium">
+                      {t("admin.productForm.stock")}
+                    </label>
                     <Field
                       name="stock"
                       type="number"
                       min="0"
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                      className={`
+                        w-full rounded-lg px-3 py-2 border
+                        ${
+                          dark
+                            ? "bg-[#0c1919] border-[#1e3a3a] text-[#cfecec]"
+                            : "bg-white border-gray-300 text-gray-800"
+                        }
+                      `}
                     />
                     <ErrorMessage
                       name="stock"
                       component="p"
-                      className="text-xs text-red-600 mt-1"
+                      className="text-xs text-red-500 mt-1"
                     />
-                    <div className="text-xs text-gray-500 mt-1">
-                      {t("admin.productForm.stockHelp")}
-                    </div>
                   </div>
 
+                  {/* Currency */}
                   <div>
                     <label className="block text-sm font-medium">
                       {t("admin.productForm.currency")}
@@ -273,7 +361,14 @@ export default function AdminProductForm() {
                     <Field
                       as="select"
                       name="currency"
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                      className={`
+                        w-full rounded-lg px-3 py-2 border
+                        ${
+                          dark
+                            ? "bg-[#0c1919] border-[#1e3a3a] text-[#cfecec]"
+                            : "bg-white border-gray-300 text-gray-800"
+                        }
+                      `}
                     >
                       <option value="USD">USD</option>
                       <option value="EGP">EGP</option>
@@ -281,24 +376,23 @@ export default function AdminProductForm() {
                     <ErrorMessage
                       name="currency"
                       component="p"
-                      className="text-xs text-red-600 mt-1"
+                      className="text-xs text-red-500 mt-1"
                     />
                   </div>
                 </div>
 
+                {/* Checkbox */}
                 <label className="flex items-center gap-2">
-                  <Field
-                    name="isAvailable"
-                    type="checkbox"
-                    className="h-4 w-4"
-                  />
-                  <span className="text-sm font-medium">{t("admin.productForm.available")}</span>
+                  <Field name="isAvailable" type="checkbox" />
+                  <span className="text-sm font-medium">
+                    {t("admin.productForm.available")}
+                  </span>
                 </label>
               </Form>
             )}
           </Formik>
         </div>
       )}
-    </>
+    </div>
   );
 }

@@ -46,10 +46,10 @@ export default function Footer() {
           <h3 className="font-semibold mb-4 text-lg">{t("footer.quickLinks")}</h3>
           <ul className="space-y-2 text-sm">
             {[
-              { name: t("footer.home"), path: "/" },
-              { name: t("footer.products"), path: "/products" },
-              { name: t("footer.about"), path: "/about" },
-              { name: t("footer.contact"), path: "/contact" },
+              { name: "Home", path: "/" },
+              { name: "Products", path: "/products" },
+              { name: "About", path: "/about" },
+              { name: "Contact", path: "/contactus" },
             ].map((link) => (
               <li key={link.path}>
                 <Link
