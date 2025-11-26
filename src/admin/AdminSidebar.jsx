@@ -5,9 +5,11 @@ import {
   FiPlusCircle,
   FiTag,
   FiAperture,
+  FiMail,
 } from "react-icons/fi";
 import { createPortal } from "react-dom";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import MessageBadge from "../../src/pages/admin/MessagesBadge"; // ⭐ مهم جداً
 
 /** Tooltip يظهر فوق العناصر لما الـ Sidebar تكون Collapsed */
 function PortalTooltip({ open, label, x, y, onClose }) {
@@ -80,6 +82,15 @@ export default function AdminSidebar({ onNavigate, collapsed = false }) {
         label: "Orders",
         icon: <FiHome />,
       },
+
+      // 🟢 Messages (Inbox)
+      {
+        to: "/admin/messages",
+        label: "Messages",
+        icon: <FiMail />,
+        badge: true, // ⭐ علشان نحدد link اللي يحمل badge
+      },
+
       { to: "/admin/categories", label: "Categories", icon: <FiTag /> },
     ],
     []
@@ -90,7 +101,7 @@ export default function AdminSidebar({ onNavigate, collapsed = false }) {
       {/* Logo / Title */}
       <div className="flex items-center gap-2 px-3 py-3">
         <div className="grid h-8 w-8 place-items-center rounded-md bg-[#42604b] font-extrabold text-white">
-          {<FiAperture className="text-[#ffffff]" />}
+          <FiAperture className="text-[#ffffff]" />
         </div>
         {!collapsed && (
           <div className="min-w-0">
@@ -147,6 +158,7 @@ function SideLink({
   collapsed,
   label,
   icon,
+  badge,
   onShowTip,
   onHideTip,
 }) {
@@ -188,7 +200,18 @@ function SideLink({
       }
       aria-label={collapsed ? label : undefined}
     >
-      <span className="text-[18px]">{icon}</span>
+      {/* Icon + Badge */}
+          <span className="text-[18px] relative">
+      {icon}
+
+      {badge && (
+        <span className="absolute -top-1 -right-1">
+          <MessageBadge />
+        </span>
+      )}
+      </span>
+
+
       {!collapsed && <span className="truncate">{label}</span>}
     </NavLink>
   );

@@ -1,4 +1,5 @@
-﻿import React, { useState, useMemo } from "react";
+﻿// src/pages/Products.jsx
+import React, { useState, useMemo } from "react";
 import { FiSearch, FiArrowUp, FiArrowDown, FiTag } from "react-icons/fi";
 import { useTranslation } from "react-i18next";
 import { useProductsSorted } from "../hooks/useProductsSorted";
@@ -6,7 +7,7 @@ import { usePagination } from "../hooks/usePagination";
 import Pager from "../admin/Pager";
 import { getFallbackProducts } from "../data/products";
 import ProductCard from "../components/cards/ProductCard";
-import Footer from "../components/layout/Footer";
+import Footer from "../../src/components/layout/footer";
 import { UseTheme } from "../theme/ThemeProvider";
 
 const SORT_FIELDS = [
