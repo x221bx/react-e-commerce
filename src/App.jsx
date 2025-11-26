@@ -3,6 +3,7 @@ import { Suspense, lazy } from "react";
 import ProtectedRoute from "./Authcomponents/ProtectedRoute";
 import Navbar from "./components/layout/Navbar";
 import { Toaster } from "react-hot-toast";
+import AdminMessages from "./pages/admin/AdminMessages";
 
 // Lazy load all components for better performance
 const Login = lazy(() => import("./pages/Login"));
@@ -98,6 +99,7 @@ export default function App() {
                             <Route path="products/:id/edit" element={<AdminProductForm />} />
                             <Route path="categories" element={<AdminCategories />} />
                             <Route path="articles" element={<AdminArticles />} />
+                            <Route path="messages" element={<AdminMessages/>} />
                         </Route>
                     </Route>
 

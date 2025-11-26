@@ -149,10 +149,18 @@ export default function ChatBot() {
   };
 
   const handleClearChat = () => {
-    localStorage.removeItem("chatHistory");
-    setMenuOpen(false);
-    window.location.reload();
-  };
+  // امسح الرسائل من الذاكرة
+  setMessages([]);
+
+  // امسح من التخزين المحلي
+  localStorage.removeItem("chatHistory");
+
+  // اقفل المنيو فقط
+  setMenuOpen(false);
+
+  // مفيش reload هنا ✔️
+};
+
 
   // ===========================================================
   // 🧠 Mini Product Card

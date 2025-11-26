@@ -13,6 +13,8 @@ import { useTranslation } from "react-i18next";
 import SearchBar from "../search/SearchBar";
 import Button from "../../components/ui/Button";
 import { useNotifications } from "../../hooks/useNotifications";
+import MessageBadge from "../../pages/admin/MessagesBadge";
+import { FiMail } from "react-icons/fi";
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -172,6 +174,22 @@ export default function Navbar() {
               </span>
             )}
           </button>
+
+          {/* Admin Messages Icon */}
+          {user?.role === "admin" && (
+            <button
+              onClick={() => navigate("/admin/messages")}
+              className="relative h-9 w-9 rounded-lg flex items-center justify-center bg-white/20 hover:bg-white/30 text-white"
+            >
+              <FiMail size={18} />
+
+              {/* Notification Badge */}
+              <span className="absolute -top-1 -right-1">
+                <MessageBadge />
+              </span>
+            </button>
+          )}
+
 
 
           {/* 👤 Account Icon */}
