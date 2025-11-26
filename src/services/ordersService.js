@@ -100,7 +100,7 @@ export const getUserOrdersQuery = (userId) => {
   if (!userId) return null;
   return query(
     ordersCollection,
-    where("userId", "==", userId),
+    where("uid", "==", userId),
     orderBy("createdAt", "desc")
   );
 };

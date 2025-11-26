@@ -1,3 +1,4 @@
+// src/components/Ai/ChatBot.jsx  
 import { useState, useEffect, useRef } from "react";
 import { useAIChat } from "../../hooks/useAIChat.js";
 import { motion as Motion, AnimatePresence } from "framer-motion";
@@ -33,7 +34,6 @@ const closeSound = new Audio("/close.mp3");
 // const notifySound = new Audio("/notify.mp3");
 const typingSound = new Audio("/typing.mp3");
 
-
 // 🟢 اقتراحات سريعة
 const QUICK_REPLIES = [
   "عندي قمح أوراقه صفراء، عايز سماد مناسب",
@@ -53,7 +53,6 @@ export default function ChatBot() {
   const [messageMeta, setMessageMeta] = useState([]);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { theme } = UseTheme();
@@ -83,7 +82,7 @@ export default function ChatBot() {
     if (savedSound !== null) {
       setSoundEnabled(savedSound === "true");
     }
-  }, []);
+  }, [setMessages]);
 
   useEffect(() => {
     localStorage.setItem("chatHistory", JSON.stringify(messages));
@@ -96,7 +95,7 @@ export default function ChatBot() {
     }
   }, [messages, open]);
 
-  // 🟢 Meta للرسائل
+  // 🟢 Meta للرسائل (توقيت كل رسالة)
   useEffect(() => {
     setMessageMeta((prev) => {
       if (messages.length > prev.length) {
@@ -109,29 +108,22 @@ export default function ChatBot() {
       }
       return prev.slice(0, messages.length);
     });
-  }, [messages.length]);
+  }, [messages.length, messages]);
 
-  // 🟢 صوت رد البوت + unread
+  // 🟢 صوت رد البوت + unread (يتشغل فقط لما عدد الرسائل يزيد مش مع كل توكن)
   useEffect(() => {
     if (messages.length === 0) return;
     const last = messages[messages.length - 1];
 
-   if (last.role === "assistant") {
-
-  // صوت استقبال الرسالة (شغال أصلاً)
-  if (soundEnabled) safePlay(receiveSound);
-
-  // صوت الكتابة
-  if (soundEnabled) safePlay(typingSound);
-
-  // لو الشات مقفول → صوت إشعار notify
-//   if (!open && soundEnabled) safePlay(notifySound);
-
-//   setTyping(false);
-
-  if (!open) setUnread((u) => u + 1);
-}
-  }, [messages, soundEnabled, open]);
+    if (last.role === "assistant") {
+      if (soundEnabled) {
+        safePlay(receiveSound);
+        safePlay(typingSound);
+      }
+      if (!open) setUnread((u) => u + 1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages.length, soundEnabled, open]);
 
   const handleSend = async (overrideText) => {
     const textToSend = (overrideText ?? input).trim();
@@ -140,8 +132,12 @@ export default function ChatBot() {
     if (soundEnabled) safePlay(sendSound);
 
     setTyping(true);
-    await sendMessage(textToSend);
-    if (!overrideText) setInput("");
+    try {
+      await sendMessage(textToSend);
+      if (!overrideText) setInput("");
+    } finally {
+      setTyping(false);
+    }
   };
 
   const toggleSound = () => {
@@ -270,21 +266,20 @@ export default function ChatBot() {
   const isDark = theme === "dark";
 
   const toggleOpen = () => {
-  setOpen((prev) => {
-    const next = !prev;
+    setOpen((prev) => {
+      const next = !prev;
 
-    if (soundEnabled) {
-      if (next) safePlay(openSound);
-      else safePlay(closeSound);
-    }
+      if (soundEnabled) {
+        if (next) safePlay(openSound);
+        else safePlay(closeSound);
+      }
 
-    if (next) setUnread(0);
-    return next;
-  });
+      if (next) setUnread(0);
+      return next;
+    });
 
-  setMenuOpen(false);
-};
-
+    setMenuOpen(false);
+  };
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -294,7 +289,7 @@ export default function ChatBot() {
   };
 
   // ===========================================================
-  // 🖥️ JSX UI — نفس الشكل بدون أي تغيير
+  // 🖥️ JSX UI
   // ===========================================================
 
   return (
@@ -337,7 +332,6 @@ export default function ChatBot() {
           >
             {/* Header */}
             <div className="flex items-center justify-between bg-teal-600/90 text-white px-4 py-3 shadow-lg cursor-move">
-
               {/* AI Title */}
               <div className="flex items-center gap-2">
                 <div className="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center text-xs font-bold">
@@ -359,7 +353,11 @@ export default function ChatBot() {
                   onClick={toggleSound}
                   className="p-1 rounded-full hover:bg-white/10"
                 >
-                  {soundEnabled ? <FiVolume2 size={16} /> : <FiVolumeX size={16} />}
+                  {soundEnabled ? (
+                    <FiVolume2 size={16} />
+                  ) : (
+                    <FiVolumeX size={16} />
+                  )}
                 </button>
 
                 {/* منيو */}
@@ -480,7 +478,7 @@ export default function ChatBot() {
                   className={`text-[10px] px-2 py-1 rounded-full border max-w-full truncate ${
                     isDark
                       ? "bg-[#0f2020] border-white/15 text-[#C9F2F2]"
-                      : "bg-white border-teal-200 text-teal-700"
+                      : "bg-white border-teال-200 text-teal-700"
                   }`}
                 >
                   {q}

@@ -18,21 +18,37 @@ import { subscribeToUserCart, subscribeToUserFavorites } from "../services/userD
 const serializeFirestoreData = (data) => {
   if (!data) return data;
 
-  const serialized = { ...data };
+  // Handle arrays
+  if (Array.isArray(data)) {
+    return data.map(item => serializeFirestoreData(item));
+  }
 
-  // Convert Firebase Timestamps to ISO strings
-  Object.keys(serialized).forEach(key => {
-    const value = serialized[key];
-    if (value && typeof value === 'object' && value.toDate) {
-      // It's a Firebase Timestamp
-      serialized[key] = value.toDate().toISOString();
-    } else if (value && typeof value === 'object') {
-      // Recursively serialize nested objects
-      serialized[key] = serializeFirestoreData(value);
-    }
-  });
+  // Handle Firebase Timestamps
+  if (data && typeof data === 'object' && data.toDate) {
+    return data.toDate().toISOString();
+  }
 
-  return serialized;
+  // Handle objects
+  if (typeof data === 'object') {
+    const serialized = { ...data };
+
+    // Convert Firebase Timestamps to ISO strings
+    Object.keys(serialized).forEach(key => {
+      const value = serialized[key];
+      if (value && typeof value === 'object' && value.toDate) {
+        // It's a Firebase Timestamp
+        serialized[key] = value.toDate().toISOString();
+      } else if (value && typeof value === 'object') {
+        // Recursively serialize nested objects/arrays
+        serialized[key] = serializeFirestoreData(value);
+      }
+    });
+
+    return serialized;
+  }
+
+  // Return primitives as-is
+  return data;
 };
 
 export const listenerMiddleware = createListenerMiddleware();
@@ -105,12 +121,12 @@ export const startAuthListener = (store) => {
       // Set up Firebase subscriptions for user data
       store.dispatch(setCartUser(profile));
       cartUnsub = subscribeToUserCart(profile.uid, (cartItems) => {
-        store.dispatch(setCartItems(cartItems));
+        store.dispatch(setCartItems(serializeFirestoreData(cartItems)));
       });
 
       store.dispatch(setFavoritesUser(profile));
       favoritesUnsub = subscribeToUserFavorites(profile.uid, (favorites) => {
-        store.dispatch(setFavoritesItems(favorites));
+        store.dispatch(setFavoritesItems(serializeFirestoreData(favorites)));
       });
 
       const locale = profile?.preferences?.locale || "en";

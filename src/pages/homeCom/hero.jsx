@@ -1,10 +1,12 @@
 import { motion as Motion } from "framer-motion";
 import { UseTheme } from "../../theme/ThemeProvider";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Button from "../../components/ui/Button";
 
 export default function Hero({ title, subtitle, bg }) {
   const { theme } = UseTheme();
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const handleCTA = () => navigate("/products");
@@ -64,14 +66,13 @@ export default function Hero({ title, subtitle, bg }) {
             whileTap={{ scale: 0.97 }}
           >
             <Button
-              text="Shop All Products"
+              text={t("home.shopAllProducts", "Shop All Products")}
               onClick={handleCTA}
-              className={`h-12 px-6 font-bold rounded-lg shadow-md transition-colors duration-300
-                ${
-                  theme === "dark"
-                    ? "bg-[#B8E4E6] text-[#0e1b1b] hover:bg-[#a7d8da]"
-                    : "bg-[#2F7E80] text-white hover:bg-[#256b6d]"
-                }`}
+              className={`h-12 px-6 font-bold rounded-lg shadow-md transition-colors duration-300 ${
+                theme === "dark"
+                  ? "bg-[#B8E4E6] text-[#0e1b1b] hover:bg-[#a7d8da]"
+                  : "bg-[#2F7E80] text-white hover:bg-[#256b6d]"
+              }`}
             />
           </Motion.div>
         </Motion.div>

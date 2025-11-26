@@ -74,6 +74,12 @@ export default function AdminSidebar({ onNavigate, collapsed = false }) {
         label: "Add Product",
         icon: <FiPlusCircle />,
       },
+      {
+        to: "/admin/adminorders",
+        end: true,
+        label: "Orders",
+        icon: <FiHome />,
+      },
       { to: "/admin/categories", label: "Categories", icon: <FiTag /> },
     ],
     []

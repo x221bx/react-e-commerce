@@ -2,9 +2,11 @@ import { Link } from "react-router-dom";
 import { FaFacebookF, FaInstagram, FaTwitter, FaGlobe } from "react-icons/fa";
 import { UseTheme } from "../../theme/ThemeProvider";
 import { motion as Motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 export default function Footer() {
   const { theme } = UseTheme();
+  const { t } = useTranslation();
 
   // ✨ Animation setup
   const fadeUp = {
@@ -32,16 +34,16 @@ export default function Footer() {
         {/* 🌿 Brand */}
         <div>
           <h2 className="text-2xl font-bold tracking-wide flex items-center gap-2">
-            🌿 <span>Farm Vet Shop</span>
+            🌿 <span>{t("footer.brandName")}</span>
           </h2>
           <p className="mt-3 text-sm opacity-80 leading-relaxed">
-            Trusted veterinary products with top quality & affordable prices.
+            {t("footer.brandDescription")}
           </p>
         </div>
 
         {/* 🧭 Navigation */}
         <div>
-          <h3 className="font-semibold mb-4 text-lg">Quick Links</h3>
+          <h3 className="font-semibold mb-4 text-lg">{t("footer.quickLinks")}</h3>
           <ul className="space-y-2 text-sm">
             {[
               { name: "Home", path: "/" },
@@ -67,7 +69,7 @@ export default function Footer() {
 
         {/* 🌐 Social Media */}
         <div>
-          <h3 className="font-semibold mb-4 text-lg">Follow Us</h3>
+          <h3 className="font-semibold mb-4 text-lg">{t("footer.followUs")}</h3>
           <div className="flex space-x-4 text-xl">
             {[FaGlobe, FaFacebookF, FaInstagram, FaTwitter].map(
               (Icon, idx) => (
@@ -98,8 +100,7 @@ export default function Footer() {
             : "border-white/30 text-white/80"
         }`}
       >
-        © {new Date().getFullYear()}{" "}
-        <span className="font-semibold">Farm Vet Shop</span>. All rights reserved.
+        {t("footer.copyright", { year: new Date().getFullYear() })}
       </div>
     </Motion.footer>
   );

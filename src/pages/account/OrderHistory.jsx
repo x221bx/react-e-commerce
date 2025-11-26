@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import { selectCurrentUser } from "../../features/auth/authSlice";
-import { useUserOrders } from "../../hooks/useUserOrders";
+import useUserOrders from "../../hooks/useUserOrders";
 import { UseTheme } from "../../theme/ThemeProvider";
 import { Link } from "react-router-dom";
 
@@ -21,7 +21,7 @@ export default function OrderHistory() {
     ? "border-slate-800 bg-slate-900/80"
     : "border-slate-100 bg-white";
   const tableDivider = isDark ? "divide-slate-800" : "divide-slate-100";
-  const tableHeaderBg = isDark ? "bg-slate-900" : "bg-slate-50";
+  const tableHeaderBg = isDark ? "bg-slate-900" : "bg-white";
   const tableHeaderText = isDark ? "text-slate-400" : "text-slate-500";
   const rowText = isDark ? "text-slate-200" : "text-slate-700";
   const rowPrimary = isDark ? "text-white" : "text-slate-900";
@@ -100,8 +100,10 @@ export default function OrderHistory() {
     );
   }
 
+  const containerBg = isDark ? "bg-slate-950" : "bg-white";
+
   return (
-    <div className="space-y-6">
+    <div className={`space-y-6 p-5 min-h-screen ${containerBg}`}>
       <header>
         <p className={`text-sm font-semibold uppercase tracking-wide ${accent}`}>
           {t("orders.overview.eyebrow")}
@@ -126,7 +128,7 @@ export default function OrderHistory() {
               <th className="px-6 py-3 text-right">{t("orders.table.actions")}</th>
             </tr>
           </thead>
-          <tbody className={`divide-y ${tableDivider}`}>
+          <tbody className="divide-y divide-slate-100">
             {orders.map((order) => (
               <tr key={order.id} className={rowText}>
                 <td className={`px-6 py-4 font-semibold ${rowPrimary}`}>

@@ -1,25 +1,65 @@
+// src/hooks/useProductMutations.js
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
+  collection,
   doc,
   addDoc,
   updateDoc,
   deleteDoc,
-  collection,
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "../services/firebase";
 
 const PRODUCTS_QUERY_KEY = "products";
 
+/**
+ * Helper: normalize payload before sending to Firestore
+ * - ensures numeric fields are numbers
+ * - removes undefined values
+ */
+function normalizeProductPayload(p) {
+  const payload = { ...p };
+
+  // normalize strings -> numbers for numeric fields
+  if (payload.price !== undefined) payload.price = Number(payload.price) || 0;
+  // prefer explicit stock field; fallback to quantity if provided
+  if (payload.stock !== undefined) payload.stock = Number(payload.stock) || 0;
+  else if (payload.quantity !== undefined)
+    payload.stock = Number(payload.quantity) || 0;
+
+  // ensure booleans are booleans
+  if (payload.isAvailable !== undefined)
+    payload.isAvailable = Boolean(payload.isAvailable);
+
+  // create a lower-cased name helper
+  if (payload.name || payload.title) {
+    payload.name_lc = (payload.name || payload.title || "")
+      .toString()
+      .toLowerCase();
+  }
+
+  // remove empty strings that should be null
+  if (payload.thumbnailUrl === "") delete payload.thumbnailUrl;
+
+  // remove undefined props
+  Object.keys(payload).forEach((k) => {
+    if (payload[k] === undefined) delete payload[k];
+  });
+
+  return payload;
+}
+
 export function useAddProduct() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (newProduct) => {
-      const payload = {
-        ...newProduct,
-        name_lc: (newProduct.name || "").toLowerCase(),
-        createdAt: serverTimestamp(),
-      };
+      const payload = normalizeProductPayload(newProduct);
+
+      // default fields
+      payload.createdAt = serverTimestamp();
+      // keep a canonical "stock" number
+      payload.stock = Number(payload.stock ?? 0);
+
       return addDoc(collection(db, "products"), payload);
     },
     onSuccess: (ref) => {
@@ -36,12 +76,11 @@ export function useUpdateProduct() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...updatedFields }) => {
-      const patch = {
-        ...updatedFields,
-        ...(updatedFields.name
-          ? { name_lc: updatedFields.name.toLowerCase() }
-          : {}),
-      };
+      const patch = normalizeProductPayload(updatedFields);
+
+      // update timestamps
+      patch.updatedAt = serverTimestamp();
+
       return updateDoc(doc(db, "products", id), patch);
     },
     onSuccess: (_res, { id }) => {
@@ -57,7 +96,7 @@ export function useUpdateProduct() {
 export function useDeleteProduct() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (productId) => deleteDoc(doc(db, "products", productId)),
+    mutationFn: async (productId) => deleteDoc(doc(db, "products", productId)),
     onSuccess: (_res, productId) => {
       qc.invalidateQueries({ queryKey: [PRODUCTS_QUERY_KEY] });
       qc.invalidateQueries({ queryKey: ["productsSorted"] });

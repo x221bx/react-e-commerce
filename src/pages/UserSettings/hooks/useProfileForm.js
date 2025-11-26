@@ -1,16 +1,32 @@
 import { useState, useEffect } from "react";
+import { useDispatch } from "react-redux";
 import { doc, serverTimestamp, setDoc, getDoc, deleteDoc } from "firebase/firestore";
-import { updateProfile } from "firebase/auth";
+import { updateEmail, updateProfile } from "firebase/auth";
 import toast from "react-hot-toast";
 
 import { auth, db } from "../../../services/firebase";
+import { updateCurrentUser } from "../../../features/auth/authSlice";
 import { getProfileState } from "../utils/helpers";
 import { validateProfileField } from "../utils/validation";
 import { MAX_AVATAR_SIZE } from "../utils/constants";
 import { useDebounce } from "../../../hooks/useDebounce";
 import { getSettingsMessage } from "../utils/translations";
 
+const loadUserProfile = async (userId) => {
+  if (!userId) return null;
+  try {
+    const userDoc = await getDoc(doc(db, "users", userId));
+    if (userDoc.exists()) {
+      return userDoc.data();
+    }
+  } catch (error) {
+    console.error("Error loading user profile:", error);
+  }
+  return null;
+};
+
 export const useProfileForm = (user) => {
+  const dispatch = useDispatch();
   const [profileForm, setProfileForm] = useState(getProfileState(user));
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -18,13 +34,43 @@ export const useProfileForm = (user) => {
   const [avatarError, setAvatarError] = useState(false);
   const [uploadedAvatarName, setUploadedAvatarName] = useState("");
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
 
   useEffect(() => {
-    setProfileForm(getProfileState(user));
-    setAvatarError(false);
-    setHasUnsavedChanges(false);
-    setUploadedAvatarName("");
-  }, [user]);
+    const loadProfile = async () => {
+      if (!user?.uid) {
+        setProfileForm(getProfileState(user));
+        setAvatarError(false);
+        setHasUnsavedChanges(false);
+        setUploadedAvatarName("");
+        return;
+      }
+
+      setIsLoadingProfile(true);
+      try {
+        // Load fresh data from Firebase
+        const userProfile = await loadUserProfile(user.uid);
+        if (userProfile) {
+          // Merge Firebase data with Redux user data
+          const mergedUser = { ...user, ...userProfile };
+          setProfileForm(getProfileState(mergedUser));
+        } else {
+          setProfileForm(getProfileState(user));
+        }
+      } catch (error) {
+        console.error("Error loading profile:", error);
+        setProfileForm(getProfileState(user));
+      } finally {
+        setIsLoadingProfile(false);
+      }
+
+      setAvatarError(false);
+      setHasUnsavedChanges(false);
+      setUploadedAvatarName("");
+    };
+
+    loadProfile();
+  }, [user?.uid]);
 
   useEffect(() => {
     setAvatarError(false);
@@ -76,97 +122,104 @@ export const useProfileForm = (user) => {
     }
     setIsUploadingAvatar(true);
 
-    // Compress image before converting to base64
-    const compressImage = (file) => {
-      return new Promise((resolve, reject) => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        const img = new Image();
+    try {
+      // Compress image aggressively for Firestore storage
+      const compressImage = (file) => {
+        return new Promise((resolve, reject) => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          const img = new Image();
 
-        img.onload = () => {
-          try {
-            // Calculate new dimensions (max 400px width/height to reduce file size)
-            const maxSize = 400;
-            let { width, height } = img;
+          img.onload = () => {
+            try {
+              // Calculate new dimensions (max 200px for profile images to stay under Firestore limits)
+              const maxSize = 200;
+              let { width, height } = img;
 
-            if (width > height) {
-              if (width > maxSize) {
-                height = (height * maxSize) / width;
-                width = maxSize;
+              if (width > height) {
+                if (width > maxSize) {
+                  height = (height * maxSize) / width;
+                  width = maxSize;
+                }
+              } else {
+                if (height > maxSize) {
+                  width = (width * maxSize) / height;
+                  height = maxSize;
+                }
               }
-            } else {
-              if (height > maxSize) {
-                width = (width * maxSize) / height;
-                height = maxSize;
-              }
-            }
 
-            canvas.width = width;
-            canvas.height = height;
+              canvas.width = width;
+              canvas.height = height;
 
-            ctx.drawImage(img, 0, 0, width, height);
+              ctx.drawImage(img, 0, 0, width, height);
 
-            // Preserve transparency for PNG/WebP, use JPEG for others
-            const originalType = file.type;
-            let outputType = 'image/jpeg';
-            let quality = 0.7; // Lower quality for smaller files
+              // Always use JPEG for maximum compression (no transparency needed for profile pics)
+              const outputType = 'image/jpeg';
+              const quality = 0.6; // Lower quality for smaller file size
 
-            // Check if image has transparency (for PNG/WebP)
-            const hasTransparency = originalType === 'image/png' || originalType === 'image/webp';
-
-            if (hasTransparency) {
-              // Keep original format to preserve transparency
-              outputType = originalType;
-              quality = 0.8; // Slightly higher quality for transparency
-            } else {
-              // Use JPEG for better compression on photos
-              outputType = 'image/jpeg';
-              quality = 0.75;
-            }
-
-            canvas.toBlob((blob) => {
-              // Clean up resources
+              canvas.toBlob((blob) => {
+                // Clean up resources
+                URL.revokeObjectURL(img.src);
+                canvas.width = 0;
+                canvas.height = 0;
+                resolve(blob);
+              }, outputType, quality);
+            } catch (error) {
+              // Clean up on error
               URL.revokeObjectURL(img.src);
               canvas.width = 0;
               canvas.height = 0;
-              resolve(blob);
-            }, outputType, quality);
-          } catch (error) {
-            // Clean up on error
+              reject(error);
+            }
+          };
+
+          img.onerror = () => {
             URL.revokeObjectURL(img.src);
             canvas.width = 0;
             canvas.height = 0;
-            reject(error);
-          }
-        };
+            reject(new Error('Failed to load image'));
+          };
+          img.src = URL.createObjectURL(file);
+        });
+      };
 
-        img.onerror = () => {
-          URL.revokeObjectURL(img.src);
-          canvas.width = 0;
-          canvas.height = 0;
-          reject(new Error('Failed to load image'));
-        };
-        img.src = URL.createObjectURL(file);
-      });
-    };
+      const compressedFile = await compressImage(file);
 
-    const compressedFile = await compressImage(file);
-    const reader = new FileReader();
+      // Check compressed file size (should be well under 1MB)
+      if (compressedFile.size > 500000) { // 500KB limit for safety
+        throw new Error('Compressed image is too large. Please choose a smaller image.');
+      }
 
-    reader.onloadend = () => {
-      const result = typeof reader.result === "string" ? reader.result : "";
-      setProfileForm((prev) => ({ ...prev, photoURL: result }));
-      setUploadedAvatarName(file.name);
-      setAvatarError(false);
-      setProfileErrors((prev) => ({ ...prev, photoURL: "" }));
-      setHasUnsavedChanges(true);
+      // Convert to base64 for Firestore storage
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = typeof reader.result === "string" ? reader.result : "";
+        setProfileForm((prev) => ({ ...prev, photoURL: result }));
+        setUploadedAvatarName(file.name);
+        setAvatarError(false);
+        setProfileErrors((prev) => ({ ...prev, photoURL: "" }));
+        setHasUnsavedChanges(true);
+        setIsUploadingAvatar(false);
+        toast.success('Profile image processed successfully!');
+      };
+      reader.onerror = () => {
+        setIsUploadingAvatar(false);
+        toast.error('Failed to process image. Please try again.');
+        setProfileErrors((prev) => ({
+          ...prev,
+          photoURL: 'Failed to process image',
+        }));
+      };
+      reader.readAsDataURL(compressedFile);
+    } catch (error) {
+      console.error('Avatar upload error:', error);
+      toast.error(error.message || 'Failed to process image. Please try again.');
+      setProfileErrors((prev) => ({
+        ...prev,
+        photoURL: error.message || 'Failed to process image',
+      }));
       setIsUploadingAvatar(false);
-    };
-    reader.onerror = () => {
-      toast.error(getSettingsMessage('fileReadError'));
-      setIsUploadingAvatar(false);
-    };
-    reader.readAsDataURL(file);
+    }
   };
 
   const handleAvatarReset = () => {
@@ -174,6 +227,7 @@ export const useProfileForm = (user) => {
     setUploadedAvatarName("");
     setAvatarError(false);
     setProfileErrors((prev) => ({ ...prev, photoURL: "" }));
+    setHasUnsavedChanges(true);
   };
 
   const handlePhotoLinkChange = (value) => {
@@ -222,10 +276,31 @@ const hasProfileChanges = () => {
       const displayName = `${trimmedFirst} ${trimmedLast}`.trim() || user.name;
       const sanitizedPhoto = profileForm.photoURL?.trim?.() || profileForm.photoURL || "";
       const trimmedEmail = profileForm.email?.trim?.() || user.email || "";
+      const normalizedPhone = profileForm.phone.replace(/\D/g, "");
+      const trimmedLocation = profileForm.location.trim();
       const normalizedUsername = profileForm.username?.trim?.().toLowerCase() || "";
       const originalProfile = getProfileState(user);
       const originalUsername = originalProfile.username?.trim?.().toLowerCase() || "";
       const usernameChanged = normalizedUsername && normalizedUsername !== originalUsername;
+      const currentAuthEmail = auth.currentUser?.email || user.email || "";
+      const emailChanged = trimmedEmail && trimmedEmail !== currentAuthEmail;
+
+
+      if (!trimmedEmail) {
+        const message = getSettingsMessage('invalidEmail');
+        setProfileErrors((prev) => ({ ...prev, email: message }));
+        toast.error(message);
+        setIsSavingProfile(false);
+        return;
+      }
+
+      if (!normalizedPhone || !normalizedPhone.startsWith("01") || normalizedPhone.length !== 11) {
+        const message = getSettingsMessage('invalidEgyptPhone');
+        setProfileErrors((prev) => ({ ...prev, phone: message }));
+        toast.error(message);
+        setIsSavingProfile(false);
+        return;
+      }
 
       if (!normalizedUsername) {
         const message = getSettingsMessage('usernameRequired');
@@ -268,13 +343,28 @@ const hasProfileChanges = () => {
           photoURL: sanitizedPhoto || null,
           contact: {
             ...(user?.contact || {}),
-            phone: profileForm.phone.trim(),
-            location: profileForm.location.trim(),
+            phone: normalizedPhone,
+            location: trimmedLocation,
           },
           updatedAt: serverTimestamp(),
         },
         { merge: true }
       );
+
+      if (emailChanged && auth.currentUser) {
+        try {
+          await updateEmail(auth.currentUser, trimmedEmail);
+        } catch (error) {
+          const message =
+            error.code === "auth/requires-recent-login"
+              ? getSettingsMessage("emailRequiresRecentLogin")
+              : getSettingsMessage("emailUpdateFailed");
+          setProfileErrors((prev) => ({ ...prev, email: message }));
+          toast.error(message);
+          setIsSavingProfile(false);
+          return;
+        }
+      }
 
       if (displayName && auth.currentUser) {
         await updateProfile(auth.currentUser, { displayName });
@@ -289,6 +379,13 @@ const hasProfileChanges = () => {
           await deleteDoc(doc(db, "usernames", originalUsername));
         }
       }
+
+      // Update Redux state with new user data
+      dispatch(updateCurrentUser({
+        name: displayName,
+        email: trimmedEmail,
+        username: normalizedUsername,
+      }));
 
       setHasUnsavedChanges(false);
       toast.success(getSettingsMessage('saveProfileSuccess'));
@@ -308,6 +405,7 @@ const hasProfileChanges = () => {
     avatarError,
     uploadedAvatarName,
     isUploadingAvatar,
+    isLoadingProfile,
     handleProfileChange,
     handleAvatarUpload,
     handleAvatarReset,

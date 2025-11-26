@@ -1,8 +1,10 @@
 import React from "react";
 import ProductCard from "../../components/cards/ProductCard";
 import { useProductsSorted } from "../../hooks/useProductsSorted";
+import { useTranslation } from "react-i18next";
 
 export default function FeaturedProducts() {
+  const { t } = useTranslation();
   const { data = [], isLoading, isError, error } = useProductsSorted({
     sortBy: "createdAt",
     dir: "desc",
@@ -18,7 +20,7 @@ export default function FeaturedProducts() {
     return (
       <section className="mt-16">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold">Featured Products</h2>
+          <h2 className="text-2xl font-bold">{t("home.featuredProducts")}</h2>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
           {Array.from({ length: 8 }).map((_, i) => (
@@ -33,7 +35,7 @@ export default function FeaturedProducts() {
     return (
       <section className="mt-16">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold">Featured Products</h2>
+          <h2 className="text-2xl font-bold">{t("home.featuredProducts")}</h2>
         </div>
         <div className="rounded-lg border border-rose-200 bg-rose-50 p-4 text-rose-700">
           Failed to load products: {String(error?.message || "Unknown error")}
@@ -45,10 +47,10 @@ export default function FeaturedProducts() {
   return (
     <section className="mt-16">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold">Featured Products</h2>
+        <h2 className="text-2xl font-bold">{t("home.featuredProducts")}</h2>
 
         <button className="text-primary hover:text-primary/80 font-medium transition">
-          View All
+          {t("home.viewAll")}
         </button>
       </div>
 

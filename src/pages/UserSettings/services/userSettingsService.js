@@ -1,13 +1,14 @@
 // UserSettings Business Logic Service
-import { doc, serverTimestamp, setDoc } from "firebase/firestore";
+import { collection, doc, getDocs, query, serverTimestamp, setDoc, updateDoc, where, deleteDoc } from "firebase/firestore";
 import {
   EmailAuthProvider,
   reauthenticateWithCredential,
   updatePassword,
   sendPasswordResetEmail,
+  deleteUser,
 } from "firebase/auth";
 import { updateProfile, auth, db } from "../../../services/firebase";
-import { getErrorMessage } from "../utils/translations";
+import { getErrorMessage, getSettingsMessage } from "../utils/translations";
 
 export const saveNotifications = async (user, notificationForm) => {
   if (!user?.uid) {
@@ -58,6 +59,7 @@ export const savePreferences = async (user, preferenceForm) => {
     {
       preferences: {
         ...(user?.preferences || {}),
+        theme: user?.preferences?.theme || preferenceForm?.theme || undefined,
         locale: preferenceForm.locale,
         measurement: preferenceForm.measurement,
         deliveryNotes: preferenceForm.deliveryNotes.trim(),
@@ -111,25 +113,55 @@ export const updateUserPassword = async (currentPassword, newPassword) => {
   }
 };
 
-export const updateAccountStatus = async (user, action) => {
+export const deleteUserAccount = async (user) => {
   if (!user?.uid) throw new Error("User not authenticated");
+  const currentUser = auth.currentUser;
+  if (!currentUser) throw new Error(getSettingsMessage("accountActionFailed"));
 
-  const docRef = doc(db, "users", user.uid);
-  await setDoc(
-    docRef,
-    {
-      accountStatus:
-        action === "deactivate" ? "inactive" : "pending-deletion",
-      accountStatusUpdatedAt: serverTimestamp(),
-    },
-    { merge: true }
-  );
+  const userDocRef = doc(db, "users", user.uid);
+  const usernameKey = user.username?.trim?.().toLowerCase?.();
+
+  try {
+    // Cancel open orders for this user
+    const ordersQuery = query(collection(db, "orders"), where("uid", "==", user.uid));
+    const ordersSnapshot = await getDocs(ordersQuery);
+    const cancelPromises = ordersSnapshot.docs.map((orderDoc) =>
+      updateDoc(orderDoc.ref, {
+        status: "cancelled",
+        cancellationReason: "Account deleted by user",
+        updatedAt: serverTimestamp(),
+      }).catch((error) => {
+        console.error("Failed to cancel order", orderDoc.id, error);
+      })
+    );
+    await Promise.all(cancelPromises);
+  } catch (error) {
+    console.error("Order cancellation warning", error);
+  }
+
+  try {
+    await deleteDoc(userDocRef);
+    if (usernameKey) {
+      await deleteDoc(doc(db, "usernames", usernameKey));
+    }
+  } catch (error) {
+    console.error("Failed to delete profile data", error);
+    throw new Error(getSettingsMessage("accountActionFailed"));
+  }
+
+  try {
+    await deleteUser(currentUser);
+  } catch (error) {
+    console.error("Auth delete error", error);
+    if (error.code === "auth/requires-recent-login") {
+      throw new Error(getSettingsMessage("emailRequiresRecentLogin"));
+    }
+    throw new Error(getSettingsMessage("accountActionFailed"));
+  }
 
   return {
     success: true,
-    message: action === "deactivate"
-      ? getSettingsMessage('accountDeactivated')
-      : getSettingsMessage('accountDeletionRequested')
+    message: getSettingsMessage("accountDeleted"),
   };
 };
 
@@ -222,6 +254,7 @@ export const sendSupportMessage = async (user, messageData) => {
       topic: messageData.topic || "general",
       message: messageData.message.trim(),
       phoneNumber: messageData.phoneNumber.trim(),
+      uid: user.uid,
       userId: user.uid,
       userEmail: user.email,
       userName: user.name || user.displayName,

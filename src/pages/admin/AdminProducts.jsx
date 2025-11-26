@@ -1,3 +1,4 @@
+// src/pages/admin/AdminProducts.jsx
 import { useEffect, useMemo, useState } from "react";
 import { NavLink, useNavigate, useSearchParams } from "react-router-dom";
 import {
@@ -58,12 +59,11 @@ export default function AdminProducts() {
   });
 
   const { data: categories = [] } = useCategoriesSorted({ dir: "asc" });
-  const { t: tCat } = useTranslation();
   const catMap = useMemo(() => {
     const m = {};
-    for (const c of categories) m[c.id] = localizeCategory(c, tCat);
+    for (const c of categories) m[c.id] = localizeCategory(c, t);
     return m;
-  }, [categories, tCat]);
+  }, [categories, t]);
 
   const {
     paginatedData,
@@ -104,7 +104,8 @@ export default function AdminProducts() {
       to="/admin/products/new"
       className="inline-flex items-center gap-2 rounded-lg bg-[#2B7A0B] px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#205F09]"
     >
-      <FiPlus /> {t("admin.new_product", { defaultValue: "New product" })}
+      <FiPlus />{" "}
+      {t("admin.new_product", { defaultValue: "New product" })}
     </NavLink>
   );
 
@@ -116,9 +117,11 @@ export default function AdminProducts() {
         icon={<FiPackage />}
       />
 
+      {/* Filters */}
       <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="flex min-w-0 flex-1 flex-col gap-2 md:flex-row md:items-center">
           <ResponsiveStatusFilter value={status} onChange={setStatus} />
+
           <div className="relative w-full md:max-w-md">
             <FiSearch className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
@@ -127,7 +130,7 @@ export default function AdminProducts() {
               placeholder={t("search.product_placeholder", {
                 defaultValue: "Search products…",
               })}
-              className="w-full rounded-lg border border-gray-200 bg-white py-2.5 pr-3 pl-9 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-[#2B7A0B] focus:outline-none focus:ring-2 focus:ring-[#2B7A0B]/20"
+              className="w-full rounded-lg border border-gray-200 bg-white py-2.5 pr-3 pl-9 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-[#2B7A0B] focus:outline-none focus:ring-2 focus:ring-[#2B7A0B]/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-400"
             />
           </div>
         </div>
@@ -136,7 +139,7 @@ export default function AdminProducts() {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-sm shadow-sm focus:border-[#203232] focus:outline-none focus:ring-2 focus:ring-[#2B7A0B]/20"
+            className="rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-sm shadow-sm focus:border-[#203232] focus:outline-none focus:ring-2 focus:ring-[#2B7A0B]/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
           >
             {SORT_FIELDS.map((s) => (
               <option key={s.value} value={s.value}>
@@ -148,7 +151,7 @@ export default function AdminProducts() {
           <button
             type="button"
             onClick={() => setDir((d) => (d === "asc" ? "desc" : "asc"))}
-            className="inline-flex h-9 items-center gap-1 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700 shadow-sm transition hover:bg-gray-50"
+            className="inline-flex h-9 items-center gap-1 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700 shadow-sm transition hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
             title={`Direction: ${dir.toUpperCase()}`}
           >
             {dir === "asc" ? <FiArrowUp /> : <FiArrowDown />}
@@ -157,7 +160,7 @@ export default function AdminProducts() {
           <select
             value={pageSize}
             onChange={(e) => setPageSize(Number(e.target.value))}
-            className="rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-sm shadow-sm focus:border-[#2B7A0B] focus:outline-none focus:ring-2 focus:ring-[#2B7A0B]/20"
+            className="rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-sm shadow-sm focus:border-[#2B7A0B] focus:outline-none focus:ring-2 focus:ring-[#2B7A0B]/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
           >
             {[10, 20, 50].map((n) => (
               <option key={n} value={n}>
@@ -168,18 +171,23 @@ export default function AdminProducts() {
         </div>
       </div>
 
+      {/* Loading / Error / Empty */}
       {isLoading && <SkeletonTable rows={6} />}
+
       {isError && (
-        <div className="rounded-lg border border-rose-200 bg-rose-50 p-4 text-rose-700">
+        <div className="rounded-lg border border-rose-200 bg-rose-50 p-4 text-rose-700 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-200">
           {t("errors.products_load_failed", {
             defaultValue: "Failed to load products",
-          })}
+          })}{" "}
           : {String(error?.message || "Unknown error")}
         </div>
       )}
+
       {!isLoading && !isError && all.length === 0 && (
         <EmptyState
-          title={t("empty.products_title", { defaultValue: "No products yet" })}
+          title={t("empty.products_title", {
+            defaultValue: "No products yet",
+          })}
           note={
             q
               ? t("empty.try_clear")
@@ -190,12 +198,13 @@ export default function AdminProducts() {
         />
       )}
 
+      {/* Mobile Cards */}
       {!isLoading && !isError && all.length > 0 && (
         <div className="space-y-3 md:hidden">
           {paginatedData.map((p) => (
             <div
               key={p.id}
-              className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm"
+              className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900"
             >
               <div className="flex items-center gap-3">
                 {p.thumbnailUrl ? (
@@ -205,40 +214,40 @@ export default function AdminProducts() {
                     className="h-12 w-12 flex-none rounded-lg object-cover ring-1 ring-black/5"
                   />
                 ) : (
-                  <div className="grid h-12 w-12 flex-none place-items-center rounded-lg bg-gray-100 text-xs text-gray-500">
+                  <div className="grid h-12 w-12 flex-none place-items-center rounded-lg bg-gray-100 text-xs text-gray-500 dark:bg-slate-800 dark:text-slate-300">
                     N/A
                   </div>
                 )}
-
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-semibold text-gray-900">
+                  <div className="truncate text-sm font-semibold text-gray-900 dark:text-slate-50">
                     {localizeProduct(p, t).title}
                   </div>
+                  <div className="mt-1 text-xs text-gray-500 dark:text-slate-400">
+                    Stock: {p.stock ?? 0}
+                  </div>
                   <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                    <span className="rounded-md bg-gray-100 px-2 py-0.5 text-[11px] text-gray-700 ring-1 ring-gray-200">
+                    <span className="rounded-md bg-gray-100 px-2 py-0.5 text-[11px] text-gray-700 ring-1 ring-gray-200 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-700">
                       {catMap[p.categoryId] || "—"}
                     </span>
                     <StatusBadge available={!!p.isAvailable} small />
-                    <span className="text-[11px] text-gray-500">
-                      {formatDate(p.createdAt)}
-                    </span>
                   </div>
-                  <div className="mt-1 text-xs text-gray-500">
-                    Quantity: {p.quantity ?? 0}
+                  <div className="mt-1 text-xs text-gray-500 dark:text-slate-400">
+                    {formatDate(p.createdAt)}
                   </div>
                 </div>
               </div>
 
               <div className="mt-3 flex items-center justify-between">
-                <span className="text-sm font-semibold text-gray-900">
+                <span className="text-sm font-semibold text-gray-900 dark:text-slate-50">
                   {Number(p.price || 0).toLocaleString()}{" "}
-                  <span className="text-gray-500">{p.currency || "USD"}</span>
+                  <span className="text-gray-500 dark:text-slate-300">
+                    {p.currency || "USD"}
+                  </span>
                 </span>
-
                 <div className="inline-flex items-center gap-2">
                   <button
                     onClick={() => navigate(`/admin/products/${p.id}/edit`)}
-                    className="rounded-md border border-gray-200 bg-white p-2 text-gray-700 shadow-sm transition hover:bg-gray-50"
+                    className="rounded-md border border-gray-200 bg-white p-2 text-gray-700 shadow-sm transition hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
                     title="Edit"
                   >
                     <FiEdit2 />
@@ -246,7 +255,7 @@ export default function AdminProducts() {
                   <button
                     disabled={deleting}
                     onClick={() => setToDelete({ id: p.id, name: p.name })}
-                    className="rounded-md border border-gray-200 bg-white p-2 text-rose-600 shadow-sm transition hover:bg-rose-50 disabled:opacity-50"
+                    className="rounded-md border border-gray-200 bg-white p-2 text-rose-600 shadow-sm transition hover:bg-rose-50 disabled:opacity-50 dark:border-rose-800 dark:bg-slate-900 dark:text-rose-300 dark:hover:bg-rose-950/40"
                     title="Delete"
                   >
                     <FiTrash2 />
@@ -258,32 +267,46 @@ export default function AdminProducts() {
         </div>
       )}
 
+      {/* Desktop Table */}
       {!isLoading && !isError && all.length > 0 && (
         <div className="hidden md:block">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <table className="w-full border-separate border-spacing-0">
               <thead className="sticky top-0 z-10">
-                <tr className="bg-gray-50 text-left text-sm text-gray-600">
-                  <Th>{t("admin.products", { defaultValue: "Products" })}</Th>
-                  <Th>{t("sort.price", { defaultValue: "Price" })}</Th>
-                  <Th>Quantity</Th>
+                <tr className="bg-gray-50 text-left text-sm text-gray-600 dark:bg-slate-800 dark:text-slate-200">
                   <Th>
-                    {t("admin.categories", { defaultValue: "Categories" })}
+                    {t("admin.products", { defaultValue: "Products" })}
                   </Th>
                   <Th>
-                    {t("admin.status.available", { defaultValue: "Available" })}
+                    {t("sort.price", { defaultValue: "Price" })}
+                  </Th>
+                  <Th>Stock</Th>
+                  <Th>
+                    {t("admin.categories", {
+                      defaultValue: "Categories",
+                    })}
+                  </Th>
+                  <Th>
+                    {t("admin.status.available", {
+                      defaultValue: "Available",
+                    })}
                   </Th>
                   <Th className="w-36">
-                    {t("sort.createdAt", { defaultValue: "Created At" })}
+                    {t("sort.createdAt", {
+                      defaultValue: "Created At",
+                    })}
                   </Th>
                   <Th className="w-28 text-right">Actions</Th>
                 </tr>
               </thead>
               <tbody>
                 {paginatedData.map((p) => (
-                  <tr key={p.id} className="group">
+                  <tr
+                    key={p.id}
+                    className="group hover:bg-gray-50 dark:hover:bg-slate-800/70"
+                  >
                     <Td>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-centered gap-3">
                         {p.thumbnailUrl ? (
                           <img
                             src={p.thumbnailUrl}
@@ -291,43 +314,38 @@ export default function AdminProducts() {
                             className="h-10 w-10 rounded-lg object-cover ring-1 ring-black/5"
                           />
                         ) : (
-                          <div className="grid h-10 w-10 place-items-center rounded-lg bg-gray-100 text-xs text-gray-500">
+                          <div className="grid h-10 w-10 place-items-center rounded-lg bg-gray-100 text-xs text-gray-500 dark:bg-slate-800 dark:text-slate-300">
                             N/A
                           </div>
                         )}
-                        <div>
-                          <div className="font-medium text-gray-900">
-                            {localizeProduct(p, t).title}
-                          </div>
+                        <div className="font-medium text-gray-900 dark:text-slate-50">
+                          {localizeProduct(p, t).title}
                         </div>
                       </div>
                     </Td>
-                    <Td>
-                      <span className="font-semibold text-gray-900">
-                        {Number(p.price || 0).toLocaleString()}{" "}
-                        <span className="text-gray-500">
-                          {p.currency || "USD"}
-                        </span>
-                      </span>
+                    <Td className="text-gray-900 dark:text-slate-50">
+                      {Number(p.price || 0).toLocaleString()}{" "}
+                      {p.currency || "USD"}
                     </Td>
-                    <Td>{p.quantity ?? 0}</Td>
-                    <Td>
-                      <span className="rounded-md bg-gray-100 px-2 py-0.5 text-xs text-gray-700 ring-1 ring-gray-200">
-                        {catMap[p.categoryId] || "—"}
-                      </span>
+                    <Td className="text-gray-800 dark:text-slate-100">
+                      {p.stock ?? 0}
+                    </Td>
+                    <Td className="text-gray-700 dark:text-slate-200">
+                      {catMap[p.categoryId] || "—"}
                     </Td>
                     <Td>
                       <StatusBadge available={!!p.isAvailable} />
                     </Td>
-                    <Td>{formatDate(p.createdAt)}</Td>
+                    <Td className="text-gray-600 dark:text-slate-300">
+                      {formatDate(p.createdAt)}
+                    </Td>
                     <Td className="text-right">
                       <div className="inline-flex items-center gap-2">
                         <button
                           onClick={() =>
                             navigate(`/admin/products/${p.id}/edit`)
                           }
-                          className="rounded-md border border-gray-200 bg-white p-2 text-gray-700 shadow-sm transition hover:bg-gray-50"
-                          title="Edit"
+                          className="rounded-md border border-gray-200 bg-white p-2 text-gray-700 shadow-sm transition hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
                         >
                           <FiEdit2 />
                         </button>
@@ -336,8 +354,7 @@ export default function AdminProducts() {
                           onClick={() =>
                             setToDelete({ id: p.id, name: p.name })
                           }
-                          className="rounded-md border border-gray-200 bg-white p-2 text-rose-600 shadow-sm transition hover:bg-rose-50 disabled:opacity-50"
-                          title="Delete"
+                          className="rounded-md border border-gray-200 bg-white p-2 text-rose-600 shadow-sm transition hover:bg-rose-50 disabled:opacity-50 dark:border-rose-800 dark:bg-slate-900 dark:text-rose-300 dark:hover:bg-rose-950/40"
                         >
                           <FiTrash2 />
                         </button>
@@ -362,6 +379,7 @@ export default function AdminProducts() {
         </div>
       )}
 
+      {/* Delete Confirmation */}
       <ConfirmDialog
         open={!!toDelete}
         title={t("confirm.delete_product_title", {
@@ -407,12 +425,14 @@ function ResponsiveStatusFilter({ value, onChange }) {
 
   return (
     <>
-      <label className="md:hidden">
+      {/* Mobile Dropdown */}
+      <label className="md:hidden w-full">
         <span className="sr-only">Status</span>
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-sm shadow-sm focus:border-[#203232] focus:outline-none focus:ring-2 focus:ring-[#2B7A0B]/20"
+          className="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-sm shadow-sm 
+          focus:border-[#203232] focus:outline-none focus:ring-2 focus:ring-[#2B7A0B]/20"
         >
           {items.map((it) => (
             <option key={it.value} value={it.value}>
@@ -422,27 +442,25 @@ function ResponsiveStatusFilter({ value, onChange }) {
         </select>
       </label>
 
+      {/* Desktop Filter Buttons */}
       <div className="hidden md:block">
-        <div className="max-w-full overflow-x-auto">
-          <div className="inline-flex min-w-max overflow-hidden rounded-lg border border-gray-200 bg-white p-0.5 shadow-sm">
-            {items.map((it) => {
-              const active = value === it.value;
-              return (
-                <button
-                  key={it.value}
-                  onClick={() => onChange(it.value)}
-                  className={[
-                    "whitespace-nowrap px-3 py-1.5 text-sm font-medium transition",
-                    active
-                      ? "bg-[#2B7A0B]/10 text-[#203232] ring-1 ring-[#2B7A0B]/30"
-                      : "text-gray-700 hover:bg-[#2B7A0B]/5",
-                  ].join(" ")}
-                >
-                  {it.label}
-                </button>
-              );
-            })}
-          </div>
+        <div className="inline-flex min-w-max overflow-hidden rounded-lg border border-gray-200 bg-white p-0.5 shadow-sm">
+          {items.map((it) => {
+            const active = value === it.value;
+            return (
+              <button
+                key={it.value}
+                onClick={() => onChange(it.value)}
+                className={`whitespace-nowrap px-3 py-1.5 text-sm font-medium transition ${
+                  active
+                    ? "bg-[#2B7A0B]/10 text-[#203232] ring-1 ring-[#2B7A0B]/30"
+                    : "text-gray-700 hover:bg-[#2B7A0B]/5"
+                }`}
+              >
+                {it.label}
+              </button>
+            );
+          })}
         </div>
       </div>
     </>
@@ -452,7 +470,7 @@ function ResponsiveStatusFilter({ value, onChange }) {
 function Th({ children, className = "" }) {
   return (
     <th
-      className={`sticky top-0 border-b border-gray-200 px-3 py-2 first:rounded-tl-xl last:rounded-tr-xl ${className}`}
+      className={`sticky top-0 border-b border-gray-200 px-3 py-2 first:rounded-tl-xl last:rounded-tr-xl dark:border-slate-700 ${className}`}
     >
       {children}
     </th>
@@ -461,7 +479,7 @@ function Th({ children, className = "" }) {
 function Td({ children, className = "" }) {
   return (
     <td
-      className={`border-b border-gray-100 px-3 py-3 align-middle ${className}`}
+      className={`border-b border-gray-100 px-3 py-3 align-middle dark:border-slate-800 ${className}`}
     >
       {children}
     </td>
@@ -477,7 +495,7 @@ function StatusBadge({ available, small = false }) {
       <span
         className={`${base} ${
           small ? "px-1.5 py-0 text-[11px]" : ""
-        } bg-emerald-50 text-emerald-700 ring-emerald-200`}
+        } bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-200 dark:ring-emerald-500/40`}
       >
         • {t("admin.status.available", { defaultValue: "Available" })}
       </span>
@@ -486,9 +504,10 @@ function StatusBadge({ available, small = false }) {
     <span
       className={`${base} ${
         small ? "px-1.5 py-0 text-[11px]" : ""
-      } bg-amber-50 text-amber-700 ring-amber-200`}
+      } bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-200 dark:ring-amber-500/40`}
     >
-      • {t("admin.status.unavailable", { defaultValue: "Out of stock" })}
+      •{" "}
+      {t("admin.status.unavailable", { defaultValue: "Out of stock" })}
     </span>
   );
 }
@@ -505,10 +524,13 @@ function formatDate(ts) {
 
 function SkeletonTable({ rows = 6 }) {
   return (
-    <div className="divide-y divide-gray-100">
+    <div className="divide-y divide-gray-100 dark:divide-slate-800">
       {Array.from({ length: rows }).map((_, i) => (
-        <div key={i} className="animate-pulse bg-white py-4">
-          <div className="h-4 rounded bg-gray-200" />
+        <div
+          key={i}
+          className="animate-pulse bg-white py-4 dark:bg-slate-900"
+        >
+          <div className="h-4 rounded bg-gray-200 dark:bg-slate-700" />
         </div>
       ))}
     </div>
@@ -517,9 +539,12 @@ function SkeletonTable({ rows = 6 }) {
 
 function EmptyState({ title, note }) {
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4 text-gray-500">
-      <div className="font-semibold text-gray-900">{title}</div>
+    <div className="rounded-lg border border-gray-200 bg-white p-4 text-gray-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200">
+      <div className="font-semibold text-gray-900 dark:text-slate-50">
+        {title}
+      </div>
       <div className="mt-1 text-sm">{note}</div>
     </div>
   );
 }
+

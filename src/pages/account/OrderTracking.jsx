@@ -6,7 +6,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { selectCurrentUser } from "../../features/auth/authSlice";
 import { db } from "../../services/firebase";
-import { useUserOrders } from "../../hooks/useUserOrders";
+import useUserOrders from "../../hooks/useUserOrders";
+import toast from "react-hot-toast";
 
 const buildTrackingUrl = (trackingNumber) =>
   `https://www.17track.net/en#nums=${encodeURIComponent(trackingNumber)}`;
@@ -20,8 +21,9 @@ export default function OrderTracking() {
   const orderIdQuery = query.get("orderId");
   const isDark = theme === "dark";
   const user = useSelector(selectCurrentUser);
-  const { orders, loading } = useUserOrders(user?.uid);
+  const { orders, loading, connectionError: ordersConnectionError } = useUserOrders(user?.uid);
   const [order, setOrder] = useState(null);
+  const [orderConnectionError, setOrderConnectionError] = useState(false);
 
   const targetOrderId = useMemo(
     () => orderIdQuery || orders?.[0]?.id || null,
@@ -34,6 +36,7 @@ export default function OrderTracking() {
       return undefined;
     }
 
+    setOrderConnectionError(false);
     const orderRef = doc(db, "orders", targetOrderId);
     const unsubscribe = onSnapshot(orderRef, (snap) => {
       if (!snap.exists()) {
@@ -47,10 +50,26 @@ export default function OrderTracking() {
         createdAt: data.createdAt?.toDate?.() || null,
         updatedAt: data.updatedAt?.toDate?.() || null,
       });
+      setOrderConnectionError(false); // Reset error on success
+    }, (err) => {
+      console.error("OrderTracking onSnapshot error", err);
+      setOrder(null);
+      // Check if it's a blocked connection error
+      if (err.message?.includes('blocked') || err.code === 'unavailable') {
+        setOrderConnectionError(true);
+      }
     });
 
     return () => unsubscribe();
   }, [targetOrderId]);
+
+  useEffect(() => {
+    if (ordersConnectionError || orderConnectionError) {
+      toast.error("Real-time order tracking is blocked. Please disable ad blockers for this site.", {
+        duration: 6000,
+      });
+    }
+  }, [ordersConnectionError, orderConnectionError]);
 
   const handleSelectOrder = (id) => {
     navigate(`/account/tracking?orderId=${id}`);
@@ -96,7 +115,7 @@ export default function OrderTracking() {
   const muted = isDark ? "text-slate-400" : "text-slate-500";
   const infoSurface = isDark
     ? "border-slate-800 bg-slate-900 text-slate-300"
-    : "border-slate-100 bg-slate-50 text-slate-600";
+    : "border-slate-100 bg-white text-slate-600";
   const infoHeading = isDark ? "text-white" : "text-slate-900";
   const connectorColor = isDark ? "bg-slate-800" : "bg-slate-200";
   const formatDateTime = (value, fallback) =>
@@ -131,6 +150,29 @@ export default function OrderTracking() {
       <div className="space-y-6">
         <div className="h-8 w-48 rounded bg-slate-200 dark:bg-slate-700 animate-pulse" />
         <div className="h-6 w-80 rounded bg-slate-200 dark:bg-slate-700 animate-pulse" />
+      </div>
+    );
+  }
+
+  if (ordersConnectionError || orderConnectionError) {
+    return (
+      <div className="space-y-4 text-center">
+        <p className={`text-sm font-semibold uppercase tracking-wide ${accent}`}>
+          Connection Blocked
+        </p>
+        <h1 className={`text-3xl font-semibold ${headingColor}`}>
+          Unable to Load Order Data
+        </h1>
+        <p className={`text-sm ${headerMuted}`}>
+          Real-time connections are blocked by your browser. Please disable ad blockers for this site to view order tracking information.
+        </p>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="rounded-2xl bg-emerald-500 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-600"
+        >
+          Refresh Page
+        </button>
       </div>
     );
   }
@@ -289,6 +331,39 @@ export default function OrderTracking() {
                 </li>
               ))}
             </ol>
+
+            {/* Order Items */}
+            {order?.items && order.items.length > 0 && (
+              <div className="mt-8">
+                <h3 className={`text-sm font-semibold uppercase tracking-wide ${muted}`}>
+                  Order Items
+                </h3>
+                <div className="mt-4 space-y-3">
+                  {order.items.map((item, index) => (
+                    <div key={index} className={`flex items-center gap-4 p-3 rounded-lg ${infoSurface}`}>
+                      {item.image && (
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="w-12 h-12 object-cover rounded"
+                        />
+                      )}
+                      <div className="flex-1">
+                        <p className={`font-medium ${strongText}`}>{item.name}</p>
+                        <p className={`text-sm ${muted}`}>
+                          Quantity: {item.quantity} × {item.price ? `${item.price} EGP` : ''}
+                        </p>
+                      </div>
+                      {item.total && (
+                        <p className={`font-semibold ${strongText}`}>
+                          {item.total} EGP
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </section>
 
           <section className={`rounded-2xl border p-4 text-sm ${infoSurface}`}>

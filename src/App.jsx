@@ -26,7 +26,6 @@ const OrderTracking = lazy(() => import("./pages/account/OrderTracking"));
 const OrderHistory = lazy(() => import("./pages/account/OrderHistory"));
 const SavedProducts = lazy(() => import("./pages/account/SavedProducts"));
 const FavoriteArticles = lazy(() => import("./pages/account/FavoriteArticles"));
-const AiConversations = lazy(() => import("./pages/account/AiConversations"));
 const SupportCenter = lazy(() => import("./pages/account/SupportCenter"));
 const Complaints = lazy(() => import("./pages/account/Complaints"));
 const PaymentMethods = lazy(() => import("./pages/account/PaymentMethods"));
@@ -85,7 +84,6 @@ export default function App() {
                             <Route path="tracking" element={<OrderTracking />} />
                             <Route path="saved" element={<SavedProducts />} />
                             <Route path="articles" element={<FavoriteArticles />} />
-                            <Route path="ai" element={<AiConversations />} />
                             <Route path="support" element={<SupportCenter />} />
                             <Route path="complaints" element={<Complaints />} />
                         </Route>

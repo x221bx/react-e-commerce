@@ -32,10 +32,7 @@ const PersonalSection = ({
       sectionId={sectionId}
       innerRef={personalRef}
       eyebrow={t("settings.personal_info", "Personal Information")}
-      title={t(
-        "settings.keep_contact_accurate",
-        "Keep your contact details accurate"
-      )}
+      title={t("settings.keep_contact_accurate", "Update your contact details")}
       description={t(
         "settings.info_on_invoices",
         "This information appears on invoices and delivery slips."
@@ -48,7 +45,7 @@ const PersonalSection = ({
               <AlertCircle className="h-4 w-4 flex-shrink-0 text-red-600 dark:text-red-400 mt-0.5" />
               <div className="flex-1">
                 <p className="text-sm font-medium text-red-800 dark:text-red-200">
-                  {t("settings.fix_errors", "Please fix the following errors:")}
+                  {t("settings.fix_errors_short", "Check these fields to continue:")}
                 </p>
                 <ul className="mt-1 space-y-1 text-xs text-red-700 dark:text-red-300">
                   {errorEntries.map(([field, message]) => (
@@ -138,8 +135,9 @@ const PersonalSection = ({
             type="email"
             value={profile.profileForm.email}
             placeholder={t("settings.email_placeholder", "john@example.com")}
-            disabled
-            readOnly
+            onChange={(e) => handleProfileChange("email", e.target.value)}
+            required
+            error={errors.email}
           />
         </div>
 
@@ -171,7 +169,7 @@ const PersonalSection = ({
             type="tel"
             value={profile.profileForm.phone}
             onChange={(e) => handleProfileChange("phone", e.target.value)}
-            placeholder={t("settings.phone_placeholder", "+20 123 456 7890")}
+            placeholder={t("settings.phone_placeholder", "01XXXXXXXXX")}
             error={errors.phone}
           />
         </div>
@@ -181,7 +179,7 @@ const PersonalSection = ({
           name="location"
           value={profile.profileForm.location}
           onChange={(e) => handleProfileChange("location", e.target.value)}
-          placeholder={t("settings.location_placeholder", "City, district, or delivery landmark")}
+          placeholder={t("settings.location_placeholder", "Add your city or delivery landmark")}
           error={errors.location}
         />
 

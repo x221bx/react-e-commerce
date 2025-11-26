@@ -1,5 +1,6 @@
-﻿import { useState, useEffect, useRef } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+﻿import { useState, useEffect } from "react";
+// eslint-disable-next-line
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { selectCurrentUser, signOut } from "../../features/auth/authSlice";
 import { UseTheme } from "../../theme/ThemeProvider";
@@ -15,8 +16,6 @@ import { useNotifications } from "../../hooks/useNotifications";
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  // eslint-disable-next-line no-unused-vars
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [currentLang, setCurrentLang] = useState(i18n.language || "en");
 
@@ -24,22 +23,17 @@ export default function Navbar() {
 
   const user = useSelector(selectCurrentUser);
   const cart = useSelector((state) => state.cart.items);
-  const favorites = useSelector((state) => state.favorites);
+  const favorites = useSelector((state) => state.favorites.items);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const dropdownRef = useRef(null);
-// eslint-disable-next-line no-unused-vars
-  const { notifications, unreadCount, markRead } = useNotifications({
+  // eslint-disable-next-line
+  const { unreadCount, connectionError } = useNotifications({
     uid: user?.uid,
     role: user?.role,
   });
 
-  const handleLogout = () => {
-    dispatch(signOut());
-    toast.success("Logged out successfully 👋");
-  };
 
   const toggleLanguage = async () => {
     const newLang = currentLang === "en" ? "ar" : "en";
@@ -48,22 +42,25 @@ export default function Navbar() {
     document.documentElement.dir = newLang === "ar" ? "rtl" : "ltr";
   };
 
+  const handleLogout = () => {
+    dispatch(signOut());
+    toast.success(t("navbar.logout_success"));
+  };
+
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+
   useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setNotificationsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () =>
-      document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    if (connectionError) {
+      toast.error(t("navbar.notification_error"), {
+        duration: 6000,
+      });
+    }
+  }, [connectionError]);
 
   const isDark = theme === "dark";
 
@@ -89,10 +86,7 @@ export default function Navbar() {
   const navLinkActive = "text-white";
   const navLinkIdle = "text-[#B8E4E6]/80 hover:text-white";
 
-  const cartCount = cart.reduce((s, i) => s + (i.quantity || 1), 0);
-// eslint-disable-next-line no-unused-vars
-  const formatTimestamp = (v) =>
-    v?.toDate?.() ? v.toDate().toLocaleString() : "";
+  const cartCount = Array.isArray(cart) ? cart.reduce((s, i) => s + (i.quantity || 1), 0) : 0;
 
   return (
     <header
@@ -102,7 +96,7 @@ export default function Navbar() {
         
         {/* 🌿 Logo */}
         <NavLink className="text-lg sm:text-xl font-semibold tracking-tight" to="/">
-          🌿 Farm Vet Shop
+          🌿 {t("brand.name")}
         </NavLink>
 
         {/* 🧭 Desktop Nav */}
@@ -124,7 +118,7 @@ export default function Navbar() {
 
           {user?.role === "admin" && (
             <NavLink className={`${navLinkBase} ${navLinkIdle}`} to="/admin">
-              Admin Dashboard
+              {t("admin.dashboard")}
             </NavLink>
           )}
         </nav>
@@ -134,7 +128,7 @@ export default function Navbar() {
 
           {/* 🔍 Search */}
           <div className="hidden lg:block w-73 xl:w-90">
-            <SearchBar placeholder="Search..." />
+            <SearchBar placeholder={t("navbar.search_placeholder")} />
           </div>
 
           {/* Lang */}
@@ -147,7 +141,7 @@ export default function Navbar() {
             {theme === "dark" ? "🌙" : "☀️"}
           </button>
 
-          {/* ❤️ Favorites */}
+          {/* Favorites */}
           <button
             onClick={(e) => {
               e.preventDefault();
@@ -163,7 +157,7 @@ export default function Navbar() {
             )}
           </button>
 
-          {/* 🛒 Cart */}
+          {/* Cart */}
           <button
             onClick={(e) => {
               e.preventDefault();
@@ -179,22 +173,6 @@ export default function Navbar() {
             )}
           </button>
 
-          {/* 🔔 Notifications */}
-          {user && (
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setNotificationsOpen((p) => !p)}
-                className={`relative h-9 w-9 rounded-lg flex items-center justify-center ${subtleControlBg}`}
-              >
-                <FiBell size={17} />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-rose-500 text-xs rounded-full px-1 text-white">
-                    {unreadCount}
-                  </span>
-                )}
-              </button>
-            </div>
-          )}
 
           {/* 👤 Account Icon */}
           {user && (
@@ -213,7 +191,7 @@ export default function Navbar() {
           {!user && (
             <>
               <Button
-                text="Login"
+                text={t("auth.login")}
                 onClick={(e) => {
                   e.preventDefault();
                   navigate("/login");
@@ -228,7 +206,7 @@ export default function Navbar() {
                 }}
                 className="hidden md:block text-sm underline opacity-80 hover:opacity-100"
               >
-                Register
+                {t("auth.register")}
               </button>
             </>
           )}
@@ -239,7 +217,7 @@ export default function Navbar() {
               onClick={handleLogout}
               className="hidden md:block px-3 py-1 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700"
             >
-              Logout
+              {t("auth.logout")}
             </button>
           )}
 
@@ -253,7 +231,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* 📱 Mobile Menu */}
+      {/* Mobile Menu */}
       <AnimatePresence>
         {mobileOpen && (
           <Motion.div
@@ -264,7 +242,7 @@ export default function Navbar() {
           >
             <div className="px-6 py-4 flex flex-col gap-4">
 
-              <SearchBar placeholder="Search..." />
+              <SearchBar placeholder={t("navbar.search_placeholder")} />
 
               <button
                 onClick={() => {
@@ -273,7 +251,7 @@ export default function Navbar() {
                 }}
                 className="flex items-center gap-3 py-2"
               >
-                🌐 {currentLang === "en" ? "العربية" : "English"}
+                🌐 {currentLang === "en" ? t("languages.switch_to_ar") : t("languages.switch_to_en")}
               </button>
 
               <button
@@ -284,7 +262,7 @@ export default function Navbar() {
                 }}
                 className="py-2 text-left w-full"
               >
-                ❤️ Favorites
+                ❤️ {t("navbar.favorites")}
               </button>
 
               <button
@@ -295,7 +273,7 @@ export default function Navbar() {
                 }}
                 className="py-2 text-left w-full"
               >
-                🛒 Cart
+                🛒 {t("navbar.cart")}
               </button>
 
               <button
@@ -317,7 +295,7 @@ export default function Navbar() {
                 }}
                 className="py-2 text-left w-full"
               >
-                🔔 Notifications
+                🔔 {t("navbar.notifications")}
               </button>
 
               {user && (
@@ -330,7 +308,7 @@ export default function Navbar() {
                     }}
                     className="py-2 text-left w-full"
                   >
-                    👤 Account
+                    👤 {t("navbar.account")}
                   </button>
 
                   <button
@@ -341,7 +319,7 @@ export default function Navbar() {
                     }}
                     className="text-red-400 py-2 text-left w-full"
                   >
-                    🚪 Logout
+                    🚪 {t("navbar.logout")}
                   </button>
                 </>
               )}
@@ -356,7 +334,7 @@ export default function Navbar() {
                     }}
                     className="py-2 text-left w-full"
                   >
-                    🔐 Login
+                    🔐 {t("navbar.login")}
                   </button>
 
                   <button
@@ -367,7 +345,7 @@ export default function Navbar() {
                     }}
                     className="py-2 text-left w-full"
                   >
-                    📝 Register
+                    📝 {t("navbar.register")}
                   </button>
                 </>
               )}
