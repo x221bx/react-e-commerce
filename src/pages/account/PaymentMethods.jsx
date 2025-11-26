@@ -10,6 +10,7 @@ import {
 import Input from "../../components/ui/Input";
 import { UseTheme } from "../../theme/ThemeProvider";
 import { useTranslation } from "react-i18next";
+import { isValidEmail } from "../../utils/validators";
 import { useSelector } from "react-redux";
 import { selectCurrentUser } from "../../features/auth/authSlice";
 import {
@@ -347,7 +348,7 @@ export default function PaymentMethods() {
     event.preventDefault();
     const errors = {};
     const email = walletForm.email.trim();
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!email || !isValidEmail(email)) {
       errors.email = t("payments.errors.email", "Enter a valid email address.");
     }
     if (!user?.uid) {

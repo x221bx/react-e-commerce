@@ -2,22 +2,22 @@ import Hero from "./homeCom/hero";
 import CategoriesSection from "./homeCom/CategoriesSection";
 import Articles from "./homeCom/Articles";
 import EcoBanner from "./homeCom/EcoBanner";
-import Footer from "../components/layout/footer";
+import Footer from "../components/layout/Footer";
 import FeaturedProducts from "./homeCom/FeaturedProducts";
 import { useCategoriesSorted } from "../hooks/useCategoriesSorted";
-import { getFallbackArticles, localizeArticleRecord } from "../data/articles";
+import { localizeArticleRecord } from "../data/articles";
 import useArticles from "../hooks/useArticles";
 import { useTranslation } from "react-i18next";
 
 export default function Home() {
   const { t, i18n } = useTranslation();
   const { data: catData = [] } = useCategoriesSorted({ dir: "desc" });
-  const { articles: featuredArticles } = useArticles({ featureHome: true });
+  const { articles: allFeaturedArticles } = useArticles({ featureHome: true });
+  const featuredArticles = allFeaturedArticles.filter(article => article.status === 'published');
+
 
   const locale = i18n.language || "en";
-  const fallbackArticles = getFallbackArticles({ locale, featureHome: true });
   const localizedFeatured = featuredArticles.map((article) => localizeArticleRecord(article, locale));
-  const featuredSource = localizedFeatured.length ? localizedFeatured : fallbackArticles;
 
   const categories = catData.map((category) => ({
     id: category.id,
@@ -26,7 +26,7 @@ export default function Home() {
     img: category.img || "https://dummyimage.com/300x300/eeeeee/000000&text=No+Image",
   }));
 
-  const articles = featuredSource.map((article) => ({
+  const articles = localizedFeatured.map((article) => ({
     title: article.title,
     excerpt: article.summary,
     img: article.heroImage || `https://dummyimage.com/400x300/0f172a/ffffff&text=${t("home.articleFallback")}`,
@@ -52,9 +52,11 @@ export default function Home() {
         <FeaturedProducts />
       </section>
 
-      <div className="container mx-auto px-4">
-        <Articles header={t("home.topArticles")} items={articles} />
-      </div>
+      {articles.length > 0 && (
+        <div className="container mx-auto px-4">
+          <Articles header={t("home.topArticles")} items={articles} />
+        </div>
+      )}
 
       <EcoBanner
         title={t("home.ecoBannerTitle")}

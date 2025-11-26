@@ -22,7 +22,7 @@ export default function ProtectedRoute({ requireAdmin = false }) {
   if (!user) return <Navigate to="/login" replace />;
 
   // لو الصفحة للأدمن فقط والمستخدم مش أدمن
-  if (requireAdmin && !user.isAdmin) return <Navigate to="/403" replace />;
+  if (requireAdmin && user?.isAdmin !== true) return <Navigate to="/403" replace />;
 
   // عرض الصفحة المطلوبة
   return <Outlet />;

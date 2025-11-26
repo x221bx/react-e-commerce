@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
 import {
@@ -17,6 +17,7 @@ import {
   signOut as signOutThunk,
 } from "../../features/auth/authSlice";
 import { UseTheme } from "../../theme/ThemeProvider";
+import Footer from "../../components/layout/Footer";
 
 const navItems = [
   {
@@ -73,7 +74,6 @@ export default function AccountLayout() {
   const user = useSelector(selectCurrentUser);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const location = useLocation();
   const { theme } = UseTheme();
   const isDark = theme === "dark";
   const { t } = useTranslation();
@@ -90,7 +90,6 @@ export default function AccountLayout() {
     navigate("/");
   };
 
-  const isSettingsRoute = location.pathname === "/account/settings";
   const mainBackground = isDark
     ? "bg-slate-950 text-slate-100"
     : "bg-gradient-to-b from-slate-50 via-white to-emerald-50/40 text-slate-900";
@@ -117,8 +116,9 @@ export default function AccountLayout() {
   const sectionRing = isDark ? "ring-slate-800" : "ring-slate-100";
 
   return (
-    <div className={`min-h-screen py-10 transition-colors ${mainBackground}`}>
-      <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 sm:px-6 lg:flex-row lg:gap-8 lg:px-8">
+    <div className={`min-h-screen transition-colors ${mainBackground} flex flex-col`}>
+      <div className="flex-1 pt-10 pb-6">
+        <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 sm:px-6 lg:flex-row lg:gap-8 lg:px-8">
         <aside className={`w-full shrink-0 rounded-3xl p-6 shadow-lg ring-1 lg:w-72 ${asideSurface} text-slate-900 dark:text-slate-100`}>
           <div className="flex items-center gap-4">
             <div className={`flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl text-lg font-semibold ring-1 ${avatarSurface}`}>
@@ -184,7 +184,9 @@ export default function AccountLayout() {
         >
           <Outlet />
         </section>
+        </div>
       </div>
+      <Footer />
     </div>
   );
 }

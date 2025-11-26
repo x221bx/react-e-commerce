@@ -46,10 +46,10 @@ export default function Footer() {
           <h3 className="font-semibold mb-4 text-lg">{t("footer.quickLinks")}</h3>
           <ul className="space-y-2 text-sm">
             {[
-              { name: "Home", path: "/" },
-              { name: "Products", path: "/products" },
-              { name: "About", path: "/about" },
-              { name: "Contact", path: "/contactus" },
+              { labelKey: "footer.home", path: "/" },
+              { labelKey: "footer.products", path: "/products" },
+              { labelKey: "footer.about", path: "/about" },
+              { labelKey: "footer.contact", path: "/contactus" },
             ].map((link) => (
               <li key={link.path}>
                 <Link
@@ -60,7 +60,7 @@ export default function Footer() {
                       : "hover:text-[#f5d061]"
                   }`}
                 >
-                  {link.name}
+                  {t(link.labelKey)}
                 </Link>
               </li>
             ))}

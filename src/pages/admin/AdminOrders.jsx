@@ -90,7 +90,7 @@ export default function AdminOrders() {
   };
 
   return (
-    <div className="min-h-screen bg-green-50 p-6">
+    <div>
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
           <h1 className="text-3xl font-bold text-green-800">

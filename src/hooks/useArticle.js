@@ -1,28 +1,49 @@
 import { useEffect, useState } from "react";
-import { subscribeToArticle } from "../services/articlesService";
+import { subscribeToArticle, fetchArticleBySlug } from "../services/articlesService";
 
-export const useArticle = (articleId) => {
-  const [article, setArticle] = useState(null);
-  const [loading, setLoading] = useState(true);
+export const useArticle = (slugOrId) => {
+    const [article, setArticle] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [notFound, setNotFound] = useState(false);
 
-  useEffect(() => {
-    if (!articleId) {
-      setArticle(null);
-      setLoading(false);
-      return () => {};
-    }
-    const unsubscribe = subscribeToArticle(articleId, (snapshot) => {
-      if (!snapshot.exists()) {
-        setArticle(null);
-      } else {
-        setArticle({ id: snapshot.id, ...snapshot.data() });
-      }
-      setLoading(false);
-    });
-    return () => unsubscribe();
-  }, [articleId]);
+    useEffect(() => {
+        if (!slugOrId) return;
 
-  return { article, loading };
+        let unsub = null;
+        let active = true;
+        setLoading(true);
+        setNotFound(false);
+
+        fetchArticleBySlug(slugOrId)
+            .then((doc) => {
+                if (!active) return;
+
+                if (!doc) {
+                    setNotFound(true);
+                    setLoading(false);
+                    return;
+                }
+
+                unsub = subscribeToArticle(doc.id, (snap) => {
+                    if (!snap.exists()) {
+                        setNotFound(true);
+                        setArticle(null);
+                    } else {
+                        setArticle({ id: snap.id, ...snap.data() });
+                    }
+                    setLoading(false);
+                });
+            })
+            .catch(() => {
+                setNotFound(true);
+                setLoading(false);
+            });
+
+        return () => {
+            active = false;
+            if (unsub) unsub();
+        };
+    }, [slugOrId]);
+
+    return { article, loading, notFound };
 };
-
-export default useArticle;

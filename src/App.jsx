@@ -36,6 +36,8 @@ const AdminProducts = lazy(() => import("./pages/admin/AdminProducts"));
 const AdminProductForm = lazy(() => import("./pages/admin/AdminProductForm"));
 const AdminCategories = lazy(() => import("./pages/admin/AdminCategories"));
 const AdminArticles = lazy(() => import("./pages/admin/AdminArticles"));
+const AdminComplaints = lazy(() => import("./pages/admin/AdminComplaints"));
+const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
 const ChatBot = lazy(() => import("./components/Ai/ChatBot"));
 
 // Loading component for Suspense fallback
@@ -64,7 +66,7 @@ export default function App() {
                     <Route path="/products/:id" element={<ProductDetails />} />
                     <Route path="/cart" element={<Cart />} />
                     <Route path="/articles" element={<ArticlesList />} />
-                    <Route path="/articles/:articleId" element={<ArticleDetails />} />
+                    <Route path="/articles/:articleSlug" element={<ArticleDetails />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/notifications" element={<Notifications />} />
                     <Route path="/register" element={<Register />} />
@@ -99,6 +101,8 @@ export default function App() {
                             <Route path="products/:id/edit" element={<AdminProductForm />} />
                             <Route path="categories" element={<AdminCategories />} />
                             <Route path="articles" element={<AdminArticles />} />
+                            <Route path="orders" element={<AdminOrders />} />
+                            <Route path="complaints" element={<AdminComplaints />} />
                             <Route path="messages" element={<AdminMessages/>} />
                         </Route>
                     </Route>

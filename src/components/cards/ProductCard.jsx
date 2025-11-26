@@ -73,7 +73,7 @@ export default function ProductCard({ product, index = 0 }) {
         aria-label="favorite"
         className="absolute top-3 right-3 z-20 p-2 rounded-full shadow-md border backdrop-blur-md bg-white/70 border-gray-200 hover:bg-gray-100 transition"
       >
-        <Heart size={20} className={isFav ? "text-red-600" : "text-gray-400"} />
+        <Heart size={20} className={isFav ? "text-red-600" : "icon-muted"} />
       </Motion.button>
 
       <Motion.div

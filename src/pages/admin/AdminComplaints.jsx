@@ -1,0 +1,437 @@
+import React, { useState, useMemo } from "react";
+import { FiRefreshCw, FiClock, FiMessageSquare, FiUser, FiPhone } from "react-icons/fi";
+import { collection, query, onSnapshot, doc, updateDoc, orderBy } from "firebase/firestore";
+import { db } from "../../services/firebase";
+import { UseTheme } from "../../theme/ThemeProvider";
+import toast from "react-hot-toast";
+
+export default function AdminComplaints() {
+  const { theme } = UseTheme();
+  const isDark = theme === "dark";
+  const subtleSurface = isDark ? "bg-slate-900 border-slate-800" : "bg-white border-gray-200";
+  const mutedText = isDark ? "text-slate-300" : "text-slate-600";
+
+  const [complaints, setComplaints] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState("All");
+  const [activeSourceFilter, setActiveSourceFilter] = useState("Account Support");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortDesc, setSortDesc] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [selectedComplaintId, setSelectedComplaintId] = useState(null);
+  const [adminResponse, setAdminResponse] = useState("");
+  const [respondingTo, setRespondingTo] = useState(null);
+
+  const filters = ["All", "pending", "in-progress", "resolved", "closed"];
+  const sourceFilters = ["Account Support"];
+
+  React.useEffect(() => {
+    const qSupport = query(collection(db, "support"), orderBy("createdAt", "desc"));
+    const unsubSupport = onSnapshot(qSupport, (snapshot) => {
+      const data = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        source: doc.data().source || "account_support"
+      }));
+      setComplaints(data);
+      setLoading(false);
+    }, (error) => {
+      console.error("Error fetching complaints:", error);
+      toast.error("Failed to load complaints");
+      setLoading(false);
+    });
+
+    return () => {
+      unsubSupport();
+    };
+  }, []);
+
+  const counts = useMemo(() => {
+    const c = {};
+    filters.forEach((status) => {
+      c[status] = status === "All" ? complaints.length : complaints.filter((comp) => comp.status === status).length;
+    });
+    return c;
+  }, [complaints, filters]);
+
+  const filteredComplaints = useMemo(() => {
+    let filtered = activeFilter === "All" ? complaints : complaints.filter((comp) => comp.status === activeFilter);
+
+    // Source filter
+    filtered = filtered.filter((comp) => !comp.source || comp.source === "account_support");
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (comp) =>
+          (comp.userName || "").toLowerCase().includes(q) ||
+          (comp.userEmail || "").toLowerCase().includes(q) ||
+          (comp.topic || "").toLowerCase().includes(q) ||
+          (comp.message || "").toLowerCase().includes(q) ||
+          (comp.phoneNumber || "").toLowerCase().includes(q)
+      );
+    }
+
+    return filtered.sort((a, b) => {
+      const dateA = a.createdAt?.toMillis?.() || a.createdAt || 0;
+      const dateB = b.createdAt?.toMillis?.() || b.createdAt || 0;
+      return sortDesc ? dateB - dateA : dateA - dateB;
+    });
+  }, [complaints, activeFilter, activeSourceFilter, searchQuery, sortDesc]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    // Re-fetch is handled by onSnapshot
+    setTimeout(() => setRefreshing(false), 1000);
+  };
+
+  const statusColorClass = (status) => {
+    switch (status) {
+      case "pending":
+        return isDark ? "bg-amber-900/40 text-amber-200" : "bg-amber-100 text-amber-800";
+      case "in-progress":
+        return isDark ? "bg-sky-900/40 text-sky-200" : "bg-sky-100 text-sky-700";
+      case "resolved":
+        return isDark ? "bg-emerald-900/40 text-emerald-200" : "bg-emerald-100 text-emerald-700";
+      case "closed":
+        return isDark ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-700";
+      default:
+        return isDark ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-700";
+    }
+  };
+
+  const handleStatusChange = async (complaintId, newStatus) => {
+    try {
+      await updateDoc(doc(db, "support", complaintId), {
+        status: newStatus,
+        updatedAt: new Date()
+      });
+      toast.success(`Complaint status updated to ${newStatus}`);
+    } catch (error) {
+      console.error("Error updating status:", error);
+      toast.error("Failed to update status");
+    }
+  };
+
+  const handleSendResponse = async (complaintId) => {
+    if (!adminResponse.trim()) {
+      toast.error("Please enter a response");
+      return;
+    }
+
+    try {
+      await updateDoc(doc(db, "support", complaintId), {
+        adminResponse: adminResponse.trim(),
+        status: "resolved",
+        respondedAt: new Date(),
+        updatedAt: new Date()
+      });
+      setAdminResponse("");
+      setRespondingTo(null);
+      toast.success("Response sent successfully");
+    } catch (error) {
+      console.error("Error sending response:", error);
+      toast.error("Failed to send response");
+    }
+  };
+
+  const formatDate = (timestamp) => {
+    if (!timestamp) return "-";
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    return date.toLocaleDateString() + " " + date.toLocaleTimeString();
+  };
+
+  return (
+    <div className="min-h-screen bg-surface text-[var(--text-main)] p-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+          <h1 className="text-3xl font-bold text-[var(--text-main)]">
+            Complaints Management
+          </h1>
+          <div className="flex items-center gap-3 flex-wrap">
+            <button
+              onClick={handleRefresh}
+              className={`px-3 py-2 rounded border flex items-center gap-2 transition ${
+                isDark
+                  ? "bg-slate-800 border-slate-700 text-white hover:bg-slate-700"
+                  : "bg-white border-emerald-200 text-emerald-800 hover:bg-emerald-50"
+              }`}
+            >
+              <FiRefreshCw className={refreshing ? "animate-spin" : ""} />
+              {refreshing ? "Refreshing..." : "Refresh"}
+            </button>
+            <button
+              onClick={() => setSortDesc((s) => !s)}
+              className={`px-3 py-2 rounded border flex items-center gap-2 transition ${
+                isDark
+                  ? "bg-slate-800 border-slate-700 text-white hover:bg-slate-700"
+                  : "bg-white border-emerald-200 text-emerald-800 hover:bg-emerald-50"
+              }`}
+            >
+              <FiClock /> {sortDesc ? "Newest" : "Oldest"}
+            </button>
+          </div>
+        </div>
+
+        <div className="mb-6">
+          <input
+            type="text"
+            placeholder="Search by customer name, email, topic, or message..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className={`w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
+              isDark ? "border-slate-700 bg-slate-800 text-white" : "border-emerald-200 bg-white text-slate-900 shadow-sm"
+            }`}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
+          {filters.map((status) => {
+            const isActive = activeFilter === status;
+            const bg = isActive
+              ? isDark
+                ? "bg-emerald-800 text-white"
+                : "bg-emerald-700 text-white"
+              : isDark
+              ? "bg-slate-900 text-white"
+              : "bg-white text-slate-800";
+            const border = isActive
+              ? isDark
+                ? "border-emerald-700"
+                : "border-emerald-300"
+              : isDark
+              ? "border-slate-700"
+              : "border-emerald-100";
+            return (
+              <button
+                key={status}
+                onClick={() => setActiveFilter(status)}
+                className={`flex justify-between items-center gap-2 p-3 rounded-lg border ${border} ${bg} hover:shadow-md transition`}
+              >
+                <span className="font-medium capitalize">{status}</span>
+                <span
+                  className={`px-2 py-1 rounded-lg text-sm font-semibold ${
+                    isDark ? "bg-emerald-900/50 text-emerald-200" : "bg-emerald-50 text-emerald-800"
+                  }`}
+                >
+                  {counts[status]}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Source Filter */}
+        <div className="mb-6">
+          <h3 className="text-sm font-semibold mb-3 text-slate-700 dark:text-slate-300">Filter by Source:</h3>
+          <div className="flex gap-3 flex-wrap">
+            {sourceFilters.map((source) => {
+              const isActive = activeSourceFilter === source;
+              const bg = isActive
+                ? isDark ? "bg-blue-600 text-white" : "bg-blue-500 text-white"
+                : isDark ? "bg-slate-700 text-white" : "bg-gray-200 text-gray-800";
+              return (
+                <button
+                  key={source}
+                  onClick={() => setActiveSourceFilter(source)}
+                  className={`px-4 py-2 rounded-lg font-medium transition hover:shadow-md ${bg}`}
+                >
+                  {source}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          {loading ? (
+            <div className="text-center py-10">
+              <div className="animate-spin mx-auto h-8 w-8 border-4 border-emerald-500 border-t-transparent rounded-full mb-4"></div>
+              <p>Loading complaints...</p>
+            </div>
+          ) : filteredComplaints.length === 0 ? (
+            <div className="text-center py-10 text-red-600 font-semibold">
+              No complaints found.
+            </div>
+          ) : (
+            filteredComplaints.map((complaint) => (
+              <div
+                key={complaint.id}
+                className={`rounded-2xl shadow-lg p-5 border card-surface ${subtleSurface}`}
+              >
+                <div className="flex flex-col lg:flex-row justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <h3 className="text-lg font-bold text-[var(--text-main)]">
+                            #{complaint.id.slice(-6)} - {complaint.userName || "Anonymous"}
+                          </h3>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm text-[var(--text-main)]/80">{complaint.userEmail}</p>
+                            {complaint.source === "contact_form" && (
+                              <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold ${
+                                complaint.isRegisteredUser
+                                  ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200"
+                                  : "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-200"
+                              }`}>
+                                {complaint.isRegisteredUser ? "Registered User" : "Guest"}
+                              </span>
+                            )}
+                          </div>
+                          {complaint.source === "contact_form" && (
+                            <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                              ?? Contact Form Message
+                            </p>
+                          )}
+                        </div>
+                        <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold capitalize ${statusColorClass(complaint.status)}`}>
+                          {complaint.status}
+                        </span>
+                      </div>
+
+                    <div className="space-y-2 mb-3">
+                      <div className="flex items-center gap-2 text-sm">
+                        <FiUser className={`h-4 w-4 ${isDark ? "text-emerald-200" : "text-emerald-700"}`} />
+                        <span className="font-medium">Topic:</span>
+                        <span className="capitalize">{complaint.topic || "General"}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <FiPhone className={`h-4 w-4 ${isDark ? "text-emerald-200" : "text-emerald-700"}`} />
+                        <span className={mutedText}>{complaint.phoneNumber}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <FiClock className={`h-4 w-4 ${isDark ? "text-emerald-200" : "text-emerald-700"}`} />
+                        <span className={mutedText}>{formatDate(complaint.createdAt)}</span>
+                      </div>
+                    </div>
+
+                    <div className={`p-3 rounded-lg border mb-3 ${
+                      isDark ? "bg-slate-800 border-slate-700" : "bg-emerald-50/60 border-emerald-100"
+                    }`}>
+                      <p className="text-sm font-medium mb-1">Customer Message:</p>
+                      <p className="text-sm">{complaint.message}</p>
+                    </div>
+
+                    {complaint.userFollowUp && (
+                      <div className={`p-3 rounded-lg border mb-3 ${
+                        isDark ? "bg-emerald-900/20 border-emerald-800" : "bg-emerald-50 border-emerald-200"
+                      }`}>
+                        <p className="text-sm font-medium mb-1 text-emerald-700 dark:text-emerald-200">User Follow-up:</p>
+                        <p className="text-sm">{complaint.userFollowUp}</p>
+                      </div>
+                    )}
+
+                    {complaint.adminResponse && (
+                      <div className={`p-3 rounded-lg border ${
+                        isDark ? "bg-green-900/20 border-green-800" : "bg-green-50 border-green-200"
+                      }`}>
+                        <p className="text-sm font-medium mb-1 text-green-700 dark:text-green-300">Admin Response:</p>
+                        <p className="text-sm">{complaint.adminResponse}</p>
+                        {complaint.respondedAt && (
+                          <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                            Responded: {formatDate(complaint.respondedAt)}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-2 lg:min-w-[200px]">
+                    <select
+                      value={complaint.status}
+                      onChange={(e) => handleStatusChange(complaint.id, e.target.value)}
+                      className={`p-2 border rounded-md ${
+                        isDark ? "border-slate-700 bg-slate-800 text-white" : "border-emerald-200 bg-white text-slate-900"
+                      }`}
+                    >
+                      {filters.filter(f => f !== "All").map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+
+                    {complaint.status !== "closed" && (
+                      <button
+                        onClick={() => setRespondingTo(respondingTo === complaint.id ? null : complaint.id)}
+                        className={`px-3 py-2 rounded-md flex items-center gap-2 transition ${
+                          isDark
+                            ? "bg-emerald-700 text-white hover:bg-emerald-600"
+                            : "bg-emerald-600 text-white hover:bg-emerald-700"
+                        }`}
+                      >
+                        <FiMessageSquare />
+                        {complaint.adminResponse ? "Update Response" : "Respond"}
+                      </button>
+                    )}
+
+                    <button
+                      onClick={() => setSelectedComplaintId(selectedComplaintId === complaint.id ? null : complaint.id)}
+                      className={`p-2 rounded-md border flex items-center gap-2 transition ${
+                        isDark
+                          ? "bg-slate-800 border-slate-700 text-white hover:bg-slate-700"
+                          : "bg-white border-emerald-200 text-emerald-800 hover:bg-emerald-50"
+                      }`}
+                    >
+                      <span className="flex h-4 w-4 items-center justify-center rounded-full border border-current text-[10px]">
+                        ⏱
+                      </span>
+                      History
+                    </button>
+                  </div>
+                </div>
+
+                {respondingTo === complaint.id && (
+                  <div className="mt-4 p-4 border-t border-slate-200 dark:border-slate-700 bg-emerald-50/50 dark:bg-slate-900 rounded-lg">
+                    <textarea
+                      value={adminResponse}
+                      onChange={(e) => setAdminResponse(e.target.value)}
+                      placeholder="Enter your response..."
+                      rows={4}
+                      className={`w-full p-3 border rounded-md resize-none ${
+                        isDark ? "border-slate-700 bg-slate-800 text-white" : "border-emerald-200 bg-white text-slate-900"
+                      }`}
+                    />
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        onClick={() => handleSendResponse(complaint.id)}
+                        className="px-4 py-2 bg-emerald-500 text-white rounded-md hover:bg-emerald-600"
+                      >
+                        Send Response
+                      </button>
+                      <button
+                        onClick={() => {
+                          setRespondingTo(null);
+                          setAdminResponse("");
+                        }}
+                        className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {selectedComplaintId === complaint.id && (
+                  <div className="mt-3 p-4 border-t border-slate-200 dark:border-slate-700 rounded-lg bg-emerald-50/60 dark:bg-slate-800">
+                    <h4 className="font-semibold text-slate-900 dark:text-white mb-2">Status History:</h4>
+                    <div className="text-sm text-[var(--text-main)]/80 dark:text-slate-300 space-y-1">
+                      <p>Created: {formatDate(complaint.createdAt)}</p>
+                      {complaint.respondedAt && <p>Responded: {formatDate(complaint.respondedAt)}</p>}
+                      {complaint.closedAt && <p>Closed: {formatDate(complaint.closedAt)} by {complaint.closedBy}</p>}
+                      {complaint.userFollowUp && (
+                        <p className="mt-2">
+                          <span className="font-semibold">User follow-up:</span> {complaint.userFollowUp}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+

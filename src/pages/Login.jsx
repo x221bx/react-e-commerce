@@ -11,6 +11,7 @@ import {
   selectCurrentUser,
 } from "../features/auth/authSlice";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import AuthActions from "../Authcomponents/AuthActions";
 
 const LoginSchema = Yup.object({
   identifier: Yup.string().required("Required"),
@@ -80,23 +81,13 @@ export default function Login() {
               </Link>
             </div>
 
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full rounded-xl bg-[#2F7E80] text-white py-3 font-semibold shadow-md hover:bg-[#276e70]"
-            >
-              {isSubmitting ? "Signing in…" : "Login"}
-            </button>
-
-            <p className="text-center text-sm text-gray-700">
-              Don’t have an account?{" "}
-              <Link
-                to="/register"
-                className="text-[#2F7E80] font-semibold hover:underline"
-              >
-                Create one
-              </Link>
-            </p>
+            <AuthActions
+              isSubmitting={isSubmitting}
+              submitLabel="Login"
+              altText={"Don’t have an account?"}
+              altLink="/register"
+              altLabel="Create one"
+            />
 
             {user && (
               <div className="rounded-lg bg-green-50 px-3 py-2 text-xs text-green-700 text-center">

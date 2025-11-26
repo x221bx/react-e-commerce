@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 
 import { selectCurrentUser } from "../../features/auth/authSlice";
 import { UseTheme } from "../../theme/ThemeProvider";
+import Footer from "../../components/layout/Footer";
 
 // Import modular components
 import Navigation from "./components/Navigation";
@@ -310,6 +311,7 @@ export default function UserSettings({ variant = "standalone" }) {
         onCancel={closeConfirmDialog}
         onConfirm={handleConfirmedAccountAction}
       />
+      {!isEmbedded && <Footer />}
     </>
   );
 }
