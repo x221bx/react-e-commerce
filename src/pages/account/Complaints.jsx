@@ -357,7 +357,7 @@ export default function Complaints() {
                       <MessageSquare className={`h-5 w-5 mt-0.5 ${isDark ? "text-green-400" : "text-green-600"}`} />
                       <div className="flex-1">
                         <p className={`text-sm font-medium ${isDark ? "text-green-300" : "text-green-800"}`}>
-                          {t("common.admin_response", "Admin Response")}
+                          {t("common.admin_response", "Support Response")}
                         </p>
                         <p className={`text-xs ${metaText}`}>{complaint.adminResponse}</p>
                       </div>
@@ -399,7 +399,7 @@ export default function Complaints() {
                     {/* Show message for unresolved complaints */}
                     {complaint.status !== "closed" && complaint.status !== "resolved" && (
                       <div className={`text-xs ${metaText} text-center`}>
-                        {t("account.complaints_actions.wait_for_resolution", "Please wait for admin resolution before closing")}
+                        {t("account.complaints_actions.wait_for_resolution", "Our support team is reviewing this request.")}
                       </div>
                     )}
                   </div>

@@ -89,18 +89,6 @@ const ArticleList = ({
                     📋
                   </button>
                   <button
-                    onClick={async (e) => {
-                      e.stopPropagation();
-                      // const newStatus = article.status === 'archived' ? 'draft' : 'archived';
-                      // await updateArticle(article.id, { status: newStatus });
-                      // toast.success(`Article ${newStatus}`);
-                    }}
-                    className="p-1 text-amber-600 hover:bg-amber-50 rounded"
-                    title={article.status === 'archived' ? "Unarchive" : "Archive"}
-                  >
-                    📦
-                  </button>
-                  <button
                     onClick={(e) => {
                       e.stopPropagation();
                       setDeleteConfirm({ isOpen: true, article });

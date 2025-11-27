@@ -37,4 +37,26 @@ export { db }; // قاعدة بيانات Firestore
 export const storage = getStorage(app); // تخزين الملفات والصور
 export { updateProfile }; // تحديث ملف المستخدم
 
+// ✅ دالة رفع الصور إلى Firebase Storage
+export const uploadImage = async (file, path = 'articles/') => {
+  const { ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
+
+  try {
+    // إنشاء اسم فريد للصورة
+    const fileName = `${Date.now()}-${file.name}`;
+    const storageRef = ref(storage, `${path}${fileName}`);
+
+    // رفع الصورة
+    const snapshot = await uploadBytes(storageRef, file);
+
+    // الحصول على رابط التحميل
+    const downloadURL = await getDownloadURL(snapshot.ref);
+
+    return downloadURL;
+  } catch (error) {
+    console.error('Error uploading image:', error);
+    throw new Error('Failed to upload image');
+  }
+};
+
 export default app; // 🔁 تصدير التطبيق نفسه في حال احتاجته ملفات أخرى
