@@ -214,6 +214,7 @@ const ArticlesList = () => {
                   rangeEnd={Math.min(endIndex, filteredArticles.length)}
                   onPageChange={(page) => setCurrentPage(Math.min(Math.max(1, page), totalPages))}
                   hideOnSinglePage={false}
+                  showInfo={false}
                 />
               </div>
             )}

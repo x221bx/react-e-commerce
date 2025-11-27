@@ -1,15 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';
+import { uploadImage } from '../../../services/firebase';
+import { generateAiDraft } from '../../../utils/aiHelpers';
+import toast from 'react-hot-toast';
 
 const ArticleForm = ({
   form,
   editingId,
   activeTab,
-  splitView,
-  setSplitView,
   setShowPreview,
-  generateProductSuggestions,
   handleChange,
   handleGenerateTitle,
   handleGenerateSummary,
@@ -28,9 +28,6 @@ const ArticleForm = ({
   seoSuggestions,
   handleGenerateSEO,
   generatingSEO,
-  suggestedProducts,
-  selectedProducts,
-  handleProductSelect,
   aiReview,
   handleAiReview,
   reviewing,
@@ -44,6 +41,7 @@ const ArticleForm = ({
   setSeoSuggestions
 }) => {
   const { t } = useTranslation();
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   return (
     <div className="lg:col-span-2">
@@ -70,25 +68,27 @@ const ArticleForm = ({
           <div className="flex gap-2">
             <button
               type="button"
-              onClick={() => setSplitView(!splitView)}
-              className="rounded-xl border border-green-200 px-3 py-2 text-xs font-semibold text-green-700 transition hover:bg-green-50"
-            >
-              📄 {splitView ? "Single" : "Split"} View
-            </button>
-            <button
-              type="button"
               onClick={() => setShowPreview(true)}
               className="rounded-xl border border-blue-200 px-3 py-2 text-xs font-semibold text-blue-700 transition hover:bg-blue-50"
             >
               👁️ Preview
             </button>
-            <button
-              type="button"
-              onClick={generateProductSuggestions}
-              className="rounded-xl border border-purple-200 px-3 py-2 text-xs font-semibold text-purple-700 transition hover:bg-purple-50"
-            >
-              💡 Suggest Products
-            </button>
+            {editingId && (
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingId(null);
+                  setForm(defaultForm);
+                  setAiReview(null);
+                  setSuggestedProducts([]);
+                  setSelectedProducts([]);
+                  setSeoSuggestions(null);
+                }}
+                className="rounded-xl border border-emerald-200 px-3 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50"
+              >
+                ➕ New Article
+              </button>
+            )}
           </div>
         </div>
 
@@ -99,9 +99,7 @@ const ArticleForm = ({
               { id: "content", label: "Content", icon: "📝" },
               { id: "ai", label: "AI Tools", icon: "🤖" },
               { id: "seo", label: "SEO", icon: "🔍" },
-              { id: "products", label: "Products", icon: "📦" },
-              { id: "review", label: "AI Review", icon: "⭐" },
-              { id: "analytics", label: "Analytics", icon: "📊" }
+              { id: "review", label: "AI Review", icon: "⭐" }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -136,7 +134,7 @@ const ArticleForm = ({
                     <option value="draft">📝 Draft</option>
                     <option value="scheduled">⏰ Scheduled</option>
                     <option value="published">✅ Published</option>
-                    <option value="archived">📦 Archived</option>
+                    <option value="archived">Archived</option>
                   </select>
                 </div>
                 <div>
@@ -265,26 +263,40 @@ const ArticleForm = ({
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--text-muted)]">
-                  <label className="inline-flex items-center gap-2 rounded-lg border border-muted bg-surface px-3 py-2 text-[var(--text-main)] hover:bg-panel cursor-pointer">
+                  <label className="inline-flex items-center gap-2 rounded-lg border border-muted bg-surface px-3 py-2 text-[var(--text-main)] hover:bg-panel cursor-pointer disabled:opacity-50">
                     <input
                       type="file"
                       accept="image/*"
                       className="hidden"
-                      onChange={(e) => {
+                      disabled={uploadingImage}
+                      onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (!file) return;
-                        const reader = new FileReader();
-                        reader.onloadend = () => {
-                          handleChange({ target: { name: 'heroImage', value: reader.result } });
-                        };
-                        reader.readAsDataURL(file);
+
+                        // التحقق من حجم الصورة (حد أقصى 5MB)
+                        if (file.size > 5 * 1024 * 1024) {
+                          toast.error('Image size must be less than 5MB');
+                          return;
+                        }
+
+                        setUploadingImage(true);
+                        try {
+                          const downloadURL = await uploadImage(file, 'articles/');
+                          handleChange({ target: { name: 'heroImage', value: downloadURL } });
+                          toast.success('Image uploaded successfully!');
+                        } catch (error) {
+                          console.error('Upload error:', error);
+                          toast.error('Failed to upload image');
+                        } finally {
+                          setUploadingImage(false);
+                        }
                       }}
                     />
-                    📷 Upload image
+                    {uploadingImage ? '⏳' : '📷'} {uploadingImage ? 'Uploading...' : 'Upload image'}
                   </label>
                   {form.heroImage && (
                     <span className="truncate text-[var(--text-main)]">
-                      ✅ Image attached (will upload on save)
+                      ✅ Image uploaded
                     </span>
                   )}
                 </div>
@@ -311,70 +323,32 @@ const ArticleForm = ({
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
                     <label className="block text-sm font-semibold mb-2">English Content</label>
-                    {splitView ? (
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <textarea
-                            name="content"
-                            value={form.content}
-                            onChange={handleChange}
-                            onDrop={handleImageDrop}
-                            onDragOver={(e) => e.preventDefault()}
-                            placeholder="Article content (Markdown supported)"
-                            rows={12}
-                            className="w-full rounded-lg border border-muted bg-panel px-4 py-3 text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-emerald-400 font-mono text-sm"
-                          />
-                          <div className="flex gap-2 mt-2">
-                            <button
-                              type="button"
-                              onClick={() => handleRewrite('shorter')}
-                              className="px-3 py-1 rounded bg-blue-500 text-white text-xs hover:bg-blue-600"
-                            >
-                              Shorter
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleRewrite('longer')}
-                              className="px-3 py-1 rounded bg-blue-500 text-white text-xs hover:bg-blue-600"
-                            >
-                              Longer
-                            </button>
-                          </div>
-                        </div>
-                        <div className="border border-muted rounded-lg p-4 bg-panel prose prose-sm max-w-none">
-                          <ReactMarkdown>{form.content || 'Preview will appear here...'}</ReactMarkdown>
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        <textarea
-                          name="content"
-                          value={form.content}
-                          onChange={handleChange}
-                          onDrop={handleImageDrop}
-                          onDragOver={(e) => e.preventDefault()}
-                          placeholder="Article content (Markdown supported)"
-                          rows={12}
-                          className="w-full rounded-lg border border-muted bg-panel px-4 py-3 text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-emerald-400 font-mono text-sm"
-                        />
-                        <div className="flex gap-2 mt-2">
-                          <button
-                            type="button"
-                            onClick={() => handleRewrite('shorter')}
-                            className="px-3 py-1 rounded bg-blue-500 text-white text-xs hover:bg-blue-600"
-                          >
-                            Shorter
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleRewrite('longer')}
-                            className="px-3 py-1 rounded bg-blue-500 text-white text-xs hover:bg-blue-600"
-                          >
-                            Longer
-                          </button>
-                        </div>
-                      </>
-                    )}
+                    <textarea
+                      name="content"
+                      value={form.content}
+                      onChange={handleChange}
+                      onDrop={handleImageDrop}
+                      onDragOver={(e) => e.preventDefault()}
+                      placeholder="Article content (Markdown supported)"
+                      rows={12}
+                      className="w-full rounded-lg border border-muted bg-panel px-4 py-3 text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-emerald-400 font-mono text-sm"
+                    />
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        type="button"
+                        onClick={() => handleRewrite('shorter')}
+                        className="px-3 py-1 rounded bg-blue-500 text-white text-xs hover:bg-blue-600"
+                      >
+                        Shorter
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleRewrite('longer')}
+                        className="px-3 py-1 rounded bg-blue-500 text-white text-xs hover:bg-blue-600"
+                      >
+                        Longer
+                      </button>
+                    </div>
                   </div>
                   <div>
                     <label className="block text-sm font-semibold mb-2">Arabic Content (المحتوى بالعربية)</label>
@@ -455,6 +429,28 @@ const ArticleForm = ({
                   className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600"
                 >
                   ⚡ {t("articles.admin.generate", "Generate with AI")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const translated = generateAiDraft({
+                      direction: 'en-to-ar',
+                      text: form.content || form.summary
+                    });
+                    setForm(prev => ({
+                      ...prev,
+                      contentAr: translated,
+                      summaryAr: form.summary ? generateAiDraft({
+                        direction: 'en-to-ar',
+                        text: form.summary
+                      }) : prev.summaryAr
+                    }));
+                    toast.success("Content translated to Arabic!");
+                  }}
+                  disabled={!form.content && !form.summary}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-purple-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-purple-600 disabled:opacity-50"
+                >
+                  🌐 Translate
                 </button>
               </div>
             </div>
@@ -550,47 +546,6 @@ const ArticleForm = ({
             </div>
           )}
 
-          {activeTab === "products" && (
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Related Products</h3>
-                <div className="grid gap-3 max-h-60 overflow-y-auto">
-                  {suggestedProducts.map((product) => (
-                    <div
-                      key={product.id}
-                      className={`p-3 rounded-lg border cursor-pointer transition ${
-                        selectedProducts.find(p => p.id === product.id)
-                          ? "border-emerald-500 bg-emerald-50"
-                          : "border-muted hover:border-emerald-300"
-                      }`}
-                      onClick={() => handleProductSelect(product)}
-                    >
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={product.thumbnailUrl}
-                          alt={product.title}
-                          className="w-12 h-12 rounded object-cover"
-                        />
-                        <div className="flex-1">
-                          <h4 className="font-medium">{product.title}</h4>
-                          <p className="text-sm text-[var(--text-muted)]">{product.description}</p>
-                          <p className="text-xs text-emerald-600">{product.reason}</p>
-                        </div>
-                        {selectedProducts.find(p => p.id === product.id) && (
-                          <div className="text-emerald-500">✅</div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                {suggestedProducts.length === 0 && (
-                  <p className="text-[var(--text-muted)] text-center py-8">
-                    No product suggestions available. Add content first.
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
 
           {activeTab === "review" && (
             <div className="space-y-4">
@@ -639,135 +594,27 @@ const ArticleForm = ({
             </div>
           )}
 
-          {activeTab === "analytics" && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Article Analytics</h3>
-                <button
-                  type="button"
-                  onClick={() => {
-                    // Refresh analytics data
-                    window.location.reload();
-                  }}
-                  className="inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-600"
-                >
-                  🔄 Refresh Data
-                </button>
-              </div>
-
-              {/* Likes/Dislikes Summary */}
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-800">
-                  <h4 className="font-semibold text-emerald-800 dark:text-emerald-200 mb-2">👍 Likes</h4>
-                  <div className="text-2xl font-bold text-emerald-600">
-                    {(() => {
-                      const likesData = JSON.parse(localStorage.getItem('articleLikesData') || '[]');
-                      const articleLikes = likesData.filter(like => like.articleId === editingId && like.action === 'liked');
-                      return articleLikes.length;
-                    })()}
-                  </div>
-                </div>
-                <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-                  <h4 className="font-semibold text-red-800 dark:text-red-200 mb-2">👎 Dislikes</h4>
-                  <div className="text-2xl font-bold text-red-600">
-                    {(() => {
-                      const likesData = JSON.parse(localStorage.getItem('articleLikesData') || '[]');
-                      const articleDislikes = likesData.filter(like => like.articleId === editingId && like.action === 'disliked');
-                      return articleDislikes.length;
-                    })()}
-                  </div>
-                </div>
-              </div>
-
-              {/* Recent Activity */}
-              <div>
-                <h4 className="font-semibold mb-4">Recent User Activity</h4>
-                <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {(() => {
-                    const likesData = JSON.parse(localStorage.getItem('articleLikesData') || '[]');
-                    const articleActivity = likesData
-                      .filter(like => like.articleId === editingId)
-                      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-                      .slice(0, 20);
-
-                    if (articleActivity.length === 0) {
-                      return (
-                        <div className="text-center py-8 text-[var(--text-muted)]">
-                          <p>No user activity yet for this article.</p>
-                          <p className="text-sm mt-1">Activity will appear here when users interact with the article.</p>
-                        </div>
-                      );
-                    }
-
-                    return articleActivity.map((activity, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
-                            activity.action === 'liked'
-                              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
-                              : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
-                          }`}>
-                            {activity.action === 'liked' ? '👍' : '👎'}
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium">
-                              User {activity.action === 'liked' ? 'liked' : 'disliked'} this article
-                            </p>
-                            <p className="text-xs text-[var(--text-muted)]">
-                              {new Date(activity.timestamp).toLocaleString()}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="text-xs text-[var(--text-muted)]">
-                          {activity.userId}
-                        </div>
-                      </div>
-                    ));
-                  })()}
-                </div>
-              </div>
-
-              {/* All Articles Analytics Summary */}
-              <div className="mt-8 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                <h4 className="font-semibold mb-4">All Articles Summary</h4>
-                <div className="grid gap-4 md:grid-cols-3">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-emerald-600">
-                      {(() => {
-                        const likesData = JSON.parse(localStorage.getItem('articleLikesData') || '[]');
-                        return likesData.filter(like => like.action === 'liked').length;
-                      })()}
-                    </div>
-                    <p className="text-sm text-[var(--text-muted)]">Total Likes</p>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-red-600">
-                      {(() => {
-                        const likesData = JSON.parse(localStorage.getItem('articleLikesData') || '[]');
-                        return likesData.filter(like => like.action === 'disliked').length;
-                      })()}
-                    </div>
-                    <p className="text-sm text-[var(--text-muted)]">Total Dislikes</p>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-600">
-                      {(() => {
-                        const likesData = JSON.parse(localStorage.getItem('articleLikesData') || '[]');
-                        const uniqueUsers = new Set(likesData.map(like => like.userId));
-                        return uniqueUsers.size;
-                      })()}
-                    </div>
-                    <p className="text-sm text-[var(--text-muted)]">Active Users</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* Tab-Specific Form Actions */}
           <div className="flex gap-3 pt-6 border-t border-muted">
             {activeTab === "content" && (
               <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setForm(defaultForm);
+                    setAiReview(null);
+                    setSuggestedProducts([]);
+                    setSelectedProducts([]);
+                    setSeoSuggestions(null);
+                    setEditingId(null);
+                    toast.success("Form cleared successfully");
+                  }}
+                  className="inline-flex items-center gap-2 rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-red-600"
+                >
+                  🗑️ Clear Form
+                </button>
+
                 {editingId && (
                   <button
                     type="button"
@@ -816,25 +663,6 @@ const ArticleForm = ({
               </>
             )}
 
-            {activeTab === "products" && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("content")}
-                  className="rounded-lg border border-muted px-4 py-2 text-sm font-semibold text-[var(--text-main)] hover:bg-panel"
-                >
-                  Back to Content
-                </button>
-
-                <button
-                  type="button"
-                  onClick={generateProductSuggestions}
-                  className="flex-1 inline-flex items-center justify-center rounded-lg bg-purple-500 px-5 py-2 text-sm font-semibold text-white shadow hover:bg-purple-600"
-                >
-                  Refresh Suggestions
-                </button>
-              </>
-            )}
 
             {activeTab === "review" && (
               <>
@@ -857,31 +685,6 @@ const ArticleForm = ({
               </>
             )}
 
-            {activeTab === "analytics" && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("content")}
-                  className="rounded-lg border border-muted px-4 py-2 text-sm font-semibold text-[var(--text-main)] hover:bg-panel"
-                >
-                  Back to Content
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    // Clear analytics data for this article
-                    const likesData = JSON.parse(localStorage.getItem('articleLikesData') || '[]');
-                    const filteredData = likesData.filter(like => like.articleId !== editingId);
-                    localStorage.setItem('articleLikesData', JSON.stringify(filteredData));
-                    window.location.reload();
-                  }}
-                  className="flex-1 inline-flex items-center justify-center rounded-lg bg-red-500 px-5 py-2 text-sm font-semibold text-white shadow hover:bg-red-600"
-                >
-                  🗑️ Clear Analytics
-                </button>
-              </>
-            )}
           </div>
         </div>
       </form>

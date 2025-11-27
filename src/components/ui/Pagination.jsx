@@ -10,6 +10,7 @@ const Pagination = ({
   onPageChange,
   className = '',
   hideOnSinglePage = true,
+  showInfo = true,
 }) => {
   if (hideOnSinglePage && totalPages <= 1) return null;
 
@@ -44,17 +45,19 @@ const Pagination = ({
   return (
     <div className={`flex flex-col sm:flex-row items-center justify-between gap-4 ${className}`}>
       {/* Results info */}
-      <div className="text-sm text-[var(--text-muted)] order-2 sm:order-1">
-        {totalItems > 0 ? (
-          <>
-            Showing <span className="font-medium text-[var(--text-main)]">{rangeStart}</span> to{' '}
-            <span className="font-medium text-[var(--text-main)]">{rangeEnd}</span> of{' '}
-            <span className="font-medium text-[var(--text-main)]">{totalItems}</span> results
-          </>
-        ) : (
-          'No results found'
-        )}
-      </div>
+      {showInfo && (
+        <div className="text-sm text-[var(--text-muted)] order-2 sm:order-1">
+          {totalItems > 0 ? (
+            <>
+              Showing <span className="font-medium text-[var(--text-main)]">{rangeStart}</span> to{' '}
+              <span className="font-medium text-[var(--text-main)]">{rangeEnd}</span> of{' '}
+              <span className="font-medium text-[var(--text-main)]">{totalItems}</span> results
+            </>
+          ) : (
+            'No results found'
+          )}
+        </div>
+      )}
 
       {/* Pagination controls */}
       <div className="flex items-center gap-1 order-1 sm:order-2">

@@ -1,10 +1,9 @@
-import React, { useMemo, useState, useEffect, useCallback } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import useArticles from "../../hooks/useArticles";
 import { generateSlug } from "../../data/articles";
-import { computeReadTime, suggestRelatedProducts, buildTranslationsFromForm } from "../../utils/articleUtils";
-import { getFallbackProducts } from "../../data/products";
+import { computeReadTime, buildTranslationsFromForm } from "../../utils/articleUtils";
 import {
   createArticle,
   deleteArticle,
@@ -82,13 +81,10 @@ const AdminArticles = () => {
   const [showPreview, setShowPreview] = useState(false);
   const [aiReview, setAiReview] = useState(null);
   const [reviewing, setReviewing] = useState(false);
-  const [suggestedProducts, setSuggestedProducts] = useState([]);
-  const [activeTab, setActiveTab] = useState("content"); // content, seo, products, review
-  const [selectedProducts, setSelectedProducts] = useState([]);
+  const [activeTab, setActiveTab] = useState("content"); // content, seo, review
   const [showPublishOverlay, setShowPublishOverlay] = useState(false);
   const [seoSuggestions, setSeoSuggestions] = useState(null);
   const [generatingSEO, setGeneratingSEO] = useState(false);
-  const [splitView, setSplitView] = useState(false);
 
   const handleChange = (event) => {
     const { name, value, type, checked } = event.target;
@@ -142,9 +138,6 @@ const AdminArticles = () => {
       author: prev.author || draft.author || "Product Specialist",
     }));
 
-    // Generate product suggestions based on the new content
-    const suggestions = suggestRelatedProducts(draft.content, draft.tag);
-    setSuggestedProducts(suggestions);
   };
 
   const handleGenerateTitle = async () => {
@@ -247,28 +240,6 @@ const AdminArticles = () => {
     }
   };
 
-  const handleProductSelect = (product) => {
-    setSelectedProducts(prev => {
-      const exists = prev.find(p => p.id === product.id);
-      if (exists) {
-        return prev.filter(p => p.id !== product.id);
-      } else {
-        return [...prev, product];
-      }
-    });
-  };
-
-  const generateProductSuggestions = useCallback(() => {
-    const suggestions = suggestRelatedProducts(form.content || form.summary, form.tag);
-    setSuggestedProducts(suggestions);
-  }, [form.content, form.summary, form.tag]);
-
-  // Auto-generate suggestions when content, summary, or tag changes
-  useEffect(() => {
-    if (form.content || form.summary || form.title) {
-      generateProductSuggestions();
-    }
-  }, [form.content, form.summary, form.title, form.tag, generateProductSuggestions]);
 
   // Autosave draft every 10 seconds
   useEffect(() => {
@@ -309,7 +280,6 @@ const AdminArticles = () => {
         readTime: ensuredReadTime,
         author: ensuredAuthor,
         slug,
-        relatedProducts: selectedProducts.map(p => p.id),
         ...(Object.keys(translations).length ? { translations } : {}),
       };
 
@@ -323,8 +293,6 @@ const AdminArticles = () => {
       setForm(defaultForm);
       setEditingId(null);
       setAiReview(null);
-      setSuggestedProducts([]);
-      setSelectedProducts([]);
       setShowPublishOverlay(false);
       localStorage.removeItem('articleDraft');
     } catch (error) {
@@ -366,15 +334,6 @@ const AdminArticles = () => {
       updateArticle(article.id, { slug: generateSlug(article.title) }).catch(console.error);
     }
 
-    // Load related products
-    if (article.relatedProducts) {
-      const related = getFallbackProducts().filter((p) => article.relatedProducts.includes(p.id));
-      setSelectedProducts(related);
-    }
-
-    // Generate suggestions for existing content
-    const suggestions = suggestRelatedProducts(article.content, article.tag);
-    setSuggestedProducts(suggestions);
 
     // Reset AI states
     setAiReview(null);
@@ -405,15 +364,6 @@ const AdminArticles = () => {
       publishDate: "",
     });
 
-    // Load related products
-    if (article.relatedProducts) {
-      const related = getFallbackProducts().filter((p) => article.relatedProducts.includes(p.id));
-      setSelectedProducts(related);
-    }
-
-    // Generate suggestions for existing content
-    const suggestions = suggestRelatedProducts(article.content, article.tag);
-    setSuggestedProducts(suggestions);
 
     // Reset AI states
     setAiReview(null);
@@ -429,8 +379,6 @@ const AdminArticles = () => {
         setEditingId(null);
         setForm(defaultForm);
         setAiReview(null);
-        setSuggestedProducts([]);
-        setSelectedProducts([]);
       }
     } catch (error) {
       console.error(error);
@@ -493,16 +441,14 @@ const AdminArticles = () => {
           </div>
 
           <div className="flex flex-col gap-3">
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={handleAiReview}
-                disabled={reviewing || !form.content}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-600 disabled:opacity-50"
-              >
-                {reviewing ? "🔄" : "🤖"} {t("articles.admin.review", "AI Review")}
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={handleAiReview}
+              disabled={reviewing || !form.content}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-600 disabled:opacity-50"
+            >
+              {reviewing ? "🔄" : "🤖"} {t("articles.admin.review", "AI Review")}
+            </button>
           </div>
         </header>
 
@@ -511,10 +457,7 @@ const AdminArticles = () => {
             form={form}
             editingId={editingId}
             activeTab={activeTab}
-            splitView={splitView}
-            setSplitView={setSplitView}
             setShowPreview={setShowPreview}
-            generateProductSuggestions={generateProductSuggestions}
             handleChange={handleChange}
             handleGenerateTitle={handleGenerateTitle}
             handleGenerateSummary={handleGenerateSummary}
@@ -533,9 +476,6 @@ const AdminArticles = () => {
             seoSuggestions={seoSuggestions}
             handleGenerateSEO={handleGenerateSEO}
             generatingSEO={generatingSEO}
-            suggestedProducts={suggestedProducts}
-            selectedProducts={selectedProducts}
-            handleProductSelect={handleProductSelect}
             aiReview={aiReview}
             handleAiReview={handleAiReview}
             reviewing={reviewing}
@@ -544,8 +484,6 @@ const AdminArticles = () => {
             setForm={setForm}
             defaultForm={defaultForm}
             setAiReview={setAiReview}
-            setSuggestedProducts={setSuggestedProducts}
-            setSelectedProducts={setSelectedProducts}
             setSeoSuggestions={setSeoSuggestions}
           />
 
@@ -569,7 +507,6 @@ const AdminArticles = () => {
           showPreview={showPreview}
           setShowPreview={setShowPreview}
           form={form}
-          selectedProducts={selectedProducts}
         />
       </div>
     </div>

@@ -438,9 +438,10 @@
             "add_follow_up": "Add follow-up",
             "send_follow_up": "Send follow-up",
             "follow_up_placeholder": "Add details, order reference, or photos link to clarify your issue.",
-            "follow_up_saved": "Follow-up sent"
+            "follow_up_saved": "Follow-up sent",
+            "wait_for_resolution": "Our support team is still reviewing this request."
         },
-        "admin_response": "Admin Response",
+        "admin_response": "Support Response",
         "user_follow_up": "Your Follow-up",
         "confirm_close_message": "Are you sure you want to close this inquiry? This action cannot be undone.",
         "helper_text": "One central hub for all your account needs: profile settings, payments, orders, and support. Consistent design across all pages for a seamless experience.",
