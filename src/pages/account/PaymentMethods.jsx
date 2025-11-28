@@ -50,9 +50,6 @@ const walletLabels = {
   google: "Google Wallet",
 };
 
-const isValidEmail = (value = "") =>
-  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
-
 export default function PaymentMethods() {
   const { theme } = UseTheme();
   const { t } = useTranslation();
@@ -65,14 +62,8 @@ export default function PaymentMethods() {
     cvv: "",
     nickname: "",
   });
-  const [walletForm, setWalletForm] = useState({
-    provider: "paypal",
-    email: "",
-  });
   const [isAddingCard, setIsAddingCard] = useState(false);
-  const [isAddingWallet, setIsAddingWallet] = useState(false);
   const [cardErrors, setCardErrors] = useState({});
-  const [walletErrors, setWalletErrors] = useState({});
   const [loading, setLoading] = useState(true);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [cardValid, setCardValid] = useState(false);
@@ -118,13 +109,6 @@ export default function PaymentMethods() {
   const quietButton = isDark
     ? "border-slate-700/70 text-slate-100 hover:bg-slate-800/70"
     : "border-slate-200 text-slate-700 hover:bg-slate-50";
-  const selectBase = isDark
-    ? "border-slate-700 bg-slate-900 text-slate-100"
-    : "border-slate-200 bg-white text-slate-700";
-  const selectFocus = isDark
-    ? "focus:border-emerald-500 focus:ring-emerald-500/30"
-    : "focus:border-emerald-400 focus:ring-emerald-100";
-
   const luhnCheck = (raw) => {
     let sum = 0;
     let shouldDouble = false;
@@ -208,11 +192,6 @@ export default function PaymentMethods() {
     const isValid = brand && isValidLength && luhnCheck(sanitizedNumber);
     setCardValid(isValid);
   }, [cardForm.number]);
-
-  const handleWalletFormChange = (field, value) => {
-    setWalletForm((prev) => ({ ...prev, [field]: value }));
-    setWalletErrors((prev) => ({ ...prev, [field]: undefined }));
-  };
 
   // Load payment methods from Firestore
   useEffect(() => {
@@ -346,63 +325,6 @@ export default function PaymentMethods() {
       });
   };
 
-  const handleAddWallet = (event) => {
-    event.preventDefault();
-    const errors = {};
-    const email = walletForm.email.trim();
-    if (!email || !isValidEmail(email)) {
-      errors.email = t("payments.errors.email", "Enter a valid email address.");
-    }
-    if (!user?.uid) {
-      errors.general = t("common.error", "Error");
-    }
-
-    if (Object.keys(errors).length) {
-      setWalletErrors(errors);
-      return;
-    }
-
-    setIsAddingWallet(true);
-    const id = generateId();
-    const newMethod = {
-      id,
-      type: "wallet",
-      provider: walletForm.provider,
-      email,
-      isDefault: methods.length === 0 || !methods.some((m) => m.isDefault),
-      createdAt: serverTimestamp(),
-    };
-
-    const ref = doc(db, "users", user.uid, "paymentMethods", id);
-    setDoc(ref, newMethod)
-      .then(() =>
-        ensureSingleDefault(
-          newMethod.isDefault ? id : methods.find((m) => m.isDefault)?.id || id
-        )
-      )
-      .then(() => {
-        // Refresh the list after adding
-        const colRef = collection(db, "users", user.uid, "paymentMethods");
-        return getDocs(query(colRef));
-      })
-      .then((snap) => {
-        const data = snap.docs
-          .map((d) => ({ id: d.id, ...d.data() }))
-          .sort((a, b) => {
-            const aDate = a.createdAt?.toMillis?.() || 0;
-            const bDate = b.createdAt?.toMillis?.() || 0;
-            return bDate - aDate;
-          });
-        setMethods(data);
-      })
-      .catch((err) => console.error("Failed to save wallet", err))
-      .finally(() => {
-        setWalletForm({ provider: "paypal", email: "" });
-        setWalletErrors({});
-        setIsAddingWallet(false);
-      });
-  };
-
   const handleDeleteMethod = (id) => {
     setDeleteConfirm(id);
   };
@@ -472,7 +394,7 @@ export default function PaymentMethods() {
         </p>
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className={`text-3xl font-semibold ${headingColor}`}>Payment Methods</h1>
+            <h1 className={`text-3xl font-semibold ${headingColor}`}>{t("payments.title", "Payment Methods")}</h1>
             <p className={`text-sm ${subText}`}>
               {t("payments.subtitle", "Manage cards and wallets used for faster checkout.")}
             </p>
@@ -489,9 +411,9 @@ export default function PaymentMethods() {
         <section className={`space-y-4 rounded-3xl border p-5 shadow-lg ${panelSurface}`}>
           <div className="flex items-center justify-between">
             <div>
-              <p className={`text-sm font-semibold ${headingColor}`}>Active methods</p>
+              <p className={`text-sm font-semibold ${headingColor}`}>{t("payments.activeMethods", "Active methods")}</p>
               <p className={`text-xs ${subText}`}>
-                {methods.length} saved | {activeCards.length} cards | {activeWallets.length} wallets
+                {t("payments.savedCount", "{{count}} saved | {{cards}} cards | {{wallets}} wallets", { count: methods.length, cards: activeCards.length, wallets: activeWallets.length })}
               </p>
             </div>
             <ShieldCheck className="h-5 w-5 text-emerald-500" />
@@ -651,45 +573,6 @@ export default function PaymentMethods() {
             </form>
           </div>
 
-          <div className={`rounded-3xl border p-5 shadow-lg ${panelSurface}`}>
-            <div className={`mb-4 flex items-center gap-2 ${headingColor}`}>
-              <WalletCards className="h-4 w-4" />
-              <p className="text-sm font-semibold">
-                {t("payments.form.walletTitle", "Link wallet")}
-              </p>
-            </div>
-            <form onSubmit={handleAddWallet} className="space-y-4">
-              <label className={`flex flex-col gap-2 text-sm font-medium ${labelColor}`}>
-                {t("payments.form.walletProvider", "Provider")}
-                <select
-                  value={walletForm.provider}
-                  onChange={(e) => handleWalletFormChange("provider", e.target.value)}
-                  className={`h-11 rounded-xl px-3 text-sm font-normal shadow-sm transition focus:outline-none focus:ring-2 ${selectBase} ${selectFocus}`}
-                >
-                  <option value="paypal">PayPal</option>
-                  <option value="apple">Apple Pay</option>
-                  <option value="google">Google Wallet</option>
-                </select>
-              </label>
-              <Input
-                label={t("payments.form.walletEmail", "Account email")}
-                value={walletForm.email}
-                onChange={(e) => handleWalletFormChange("email", e.target.value)}
-                placeholder="team@farmhub.dev"
-                error={walletErrors.email}
-              />
-              <button
-                type="submit"
-                disabled={isAddingWallet}
-                className={`inline-flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold transition disabled:opacity-70 ${quietButton}`}
-              >
-                <Plus className="h-4 w-4" />
-                {isAddingWallet
-                  ? t("payments.form.linking", "Linking...")
-                  : t("payments.form.linkWallet", "Link wallet")}
-              </button>
-            </form>
-          </div>
         </aside>
       </div>
 

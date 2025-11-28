@@ -34,6 +34,10 @@ export default function AdminOrderDetails() {
   if (loading) return <div className="p-6">Loading...</div>;
   if (error) return <div className="p-6 text-red-500">{error}</div>;
   if (!order) return <div className="p-6">No order data</div>;
+  const paymentSummary =
+    order.paymentSummary ||
+    order.paymentDetails?.label ||
+    order.paymentMethod;
 
   return (
     <div className="p-6">
@@ -59,7 +63,7 @@ export default function AdminOrderDetails() {
             <strong>Status:</strong> {order.status}
           </div>
           <div>
-            <strong>Payment:</strong> {order.paymentMethod}
+            <strong>Payment:</strong> {paymentSummary}
           </div>
           <div>
             <strong>Total:</strong> {order.totals?.total || order.total} EGP
