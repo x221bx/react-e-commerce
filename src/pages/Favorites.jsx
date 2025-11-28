@@ -14,11 +14,7 @@ import {
 } from "react-icons/fi";
 
 export default function Favorites() {
-  const favorites = useSelector((state) => {
-    const favs = state.favorites?.items ?? state.favorites ?? [];
-    // Ensure it's always an array
-    return Array.isArray(favs) ? favs : [];
-  });
+  const favorites = useSelector((state) => state.favorites);
   const cart = useSelector((state) => state.cart.items);
   const dispatch = useDispatch();
   const navigate = useNavigate();

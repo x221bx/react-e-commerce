@@ -30,7 +30,7 @@ const favouritesSlice = createSlice({
     },
 
     setFavoritesItems: (state, action) => {
-      state.items = Array.isArray(action.payload) ? action.payload : [];
+      state.items = action.payload;
       state.loading = false;
     },
 

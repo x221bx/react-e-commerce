@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { useNavigate, Link } from "react-router-dom";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db, auth } from "../services/firebase";
-import { clearCart } from "../features/cart/cartSlice";
+import { finalizeOrderLocal } from "../features/cart/cartSlice";
 import useOrders from "../hooks/useOrders";
 import toast from "react-hot-toast";
 
@@ -14,16 +14,13 @@ export default function Checkout() {
   const { reduceStock } = useOrders();
   const user = auth.currentUser;
 
-  // Build initial form data
-  const buildInitialForm = (user) => ({
-    fullName: user?.displayName || "",
+  const [form, setForm] = useState({
+    fullName: "",
     phone: "",
     address: "",
     city: "",
     notes: "",
   });
-
-  const [form, setForm] = useState(() => buildInitialForm(user));
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("cod"); // COD by default
@@ -39,16 +36,7 @@ export default function Checkout() {
     return Object.keys(err).length === 0;
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    if (!user) {
-      toast.error(t("checkout.messages.loginRequired"));
-      return;
-    }
-    if (!items.length) {
-      toast.error(t("checkout.messages.emptyCart"));
-      return;
-    }
+  const handleConfirm = async () => {
     if (!validate()) return;
     if (!user) return toast.error("User not logged in");
     if (!items.length) return toast.error("Cart is empty");
@@ -72,7 +60,7 @@ export default function Checkout() {
         paymentMethod,
         items: items.map((i) => ({
           productId: i.id || "unknown-id",
-          name: i.name || i.title || "Unnamed Product",
+          name: i.name || i.title,
           category: i.category || "—",
           quantity: i.quantity ?? 0,
           price: i.price ?? 0,
@@ -92,7 +80,7 @@ export default function Checkout() {
       // Add order to Firebase
       await addDoc(collection(db, "orders"), orderData);
 
-      dispatch(clearCart());
+      dispatch(finalizeOrderLocal());
       toast.success("Order placed successfully!");
       navigate("/success");
     } catch (err) {
@@ -290,7 +278,8 @@ export default function Checkout() {
               Back to Cart
             </Link>
             <button
-              type="submit"
+              type="button"
+              onClick={handleConfirm}
               disabled={loading}
               className="inline-flex items-center rounded-2xl bg-emerald-500 px-6 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-600 disabled:opacity-70"
             >
@@ -378,4 +367,4 @@ export default function Checkout() {
       </div>
     </div>
   );
-};
+}
