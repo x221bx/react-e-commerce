@@ -7,7 +7,7 @@ import { usePagination } from "../hooks/usePagination";
 import Pager from "../admin/Pager";
 import { getFallbackProducts } from "../data/products";
 import ProductCard from "../components/cards/ProductCard";
-import Footer from "../../src/components/layout/footer";
+import Footer from "../components/layout/Footer";
 import { UseTheme } from "../theme/ThemeProvider";
 
 const SORT_FIELDS = [
@@ -48,19 +48,13 @@ export default function Products() {
   const isDark = theme === "dark";
 
   return (
-    <div className={`min-h-screen flex flex-col ${isDark ? "bg-[#0b1714] text-[#d7f7d0]" : "bg-gray-100 text-gray-900"}`}>
-      
+    <div className={`min-h-screen flex flex-col bg-surface text-[var(--text-main)]`}>
+
       {/* HEADER */}
-      <header
-        className={`mb-6 p-4 md:p-6 rounded-xl border ${
-          isDark
-            ? "bg-[#112c25]/70 border-[#2d5a4f]"
-            : "bg-white border-gray-300 shadow-sm"
-        } max-w-6xl mx-auto w-full mt-6`}
-      >
+      <header className={`mb-6 p-4 md:p-6 rounded-xl header-surface max-w-6xl mx-auto w-full mt-6`}>
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-5">
-          <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
-            <FiTag className={`${isDark ? "text-green-300" : "text-green-700"}`} />
+            <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
+            <FiTag className="brand-primary" />
             {t("products.title", "Products")}
           </h1>
 
@@ -69,16 +63,12 @@ export default function Products() {
 
             {/* Search */}
             <div className="relative">
-              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder={t("products.search", "Search products...")}
-                className={`w-full rounded-lg py-2 pl-9 pr-3 text-sm ${
-                  isDark
-                    ? "bg-[#173a30]/60 border border-[#2d5a4f] placeholder:text-[#a3ccb9]"
-                    : "bg-white border border-gray-300"
-                }`}
+                className={`w-full rounded-lg py-2 pl-9 pr-3 text-sm input-surface placeholder:text-[var(--text-muted)]`}
               />
             </div>
 
@@ -86,11 +76,7 @@ export default function Products() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className={`w-full rounded-lg px-3 py-2 text-sm ${
-                isDark
-                  ? "bg-[#173a30]/60 border border-[#2d5a4f]"
-                  : "bg-white border border-gray-300"
-              }`}
+              className={`w-full rounded-lg px-3 py-2 text-sm input-surface`}
             >
               {SORT_FIELDS.map((s) => (
                 <option key={s.value} value={s.value} className="text-black">
@@ -102,11 +88,7 @@ export default function Products() {
             {/* Direction */}
             <button
               onClick={() => setDir(dir === "asc" ? "desc" : "asc")}
-              className={`w-full rounded-lg px-3 py-2 text-sm flex items-center justify-center gap-2 ${
-                isDark
-                  ? "bg-[#173a30]/60 border border-[#2d5a4f]"
-                  : "bg-white border border-gray-300"
-              }`}
+              className={`w-full rounded-lg px-3 py-2 text-sm flex items-center justify-center gap-2 input-surface`}
             >
               {dir === "asc" ? <FiArrowUp /> : <FiArrowDown />}
               {dir === "asc" ? "ASC" : "DESC"}
@@ -116,11 +98,7 @@ export default function Products() {
             <select
               value={pageSize}
               onChange={(e) => setPageSize(Number(e.target.value))}
-              className={`w-full rounded-lg px-3 py-2 text-sm ${
-                isDark
-                  ? "bg-[#173a30]/60 border border-[#2d5a4f]"
-                  : "bg-white border border-gray-300"
-              }`}
+              className={`w-full rounded-lg px-3 py-2 text-sm input-surface`}
             >
               {[4, 6, 9, 12].map((n) => (
                 <option key={n} value={n} className="text-black">

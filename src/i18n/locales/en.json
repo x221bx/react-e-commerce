@@ -109,6 +109,8 @@
         "courses": "Courses",
         "new_course": "New Course",
         "categories": "Categories",
+        "category_name": "Category name",
+        "create": "Create",
         "new_category": "New Category",
         "status": {
             "published": "Published",
@@ -150,6 +152,11 @@
                 "categoryRequired": "Category is required"
             }
         }
+        ,
+        "footer_note": "© {{year}} Vet Clinic Dashboard — Crafted with care"
+    },
+    "layout": {
+        "sidebar_height_hint": "Height: {{value}}"
     },
     "format": {
         "price": "{{value, number}} {{currency}}",
@@ -193,7 +200,8 @@
         "retry": "Retry",
         "error": "Error",
         "rateLimitExceeded": "Too many attempts. Please wait {{seconds}} seconds.",
-        "valid": "Valid"
+        "valid": "Valid",
+        "total": "Total"
     },
     "settings": {
         "language_display": "Language & Display",
@@ -426,9 +434,15 @@
             "closing": "Closing...",
             "no_response_yet": "No response yet",
             "awaiting_response": "We're reviewing your inquiry and will respond soon.",
-            "complaint_closed": "Inquiry closed successfully"
+            "complaint_closed": "Inquiry closed successfully",
+            "add_follow_up": "Add follow-up",
+            "send_follow_up": "Send follow-up",
+            "follow_up_placeholder": "Add details, order reference, or photos link to clarify your issue.",
+            "follow_up_saved": "Follow-up sent",
+            "wait_for_resolution": "Our support team is still reviewing this request."
         },
-        "admin_response": "Admin Response",
+        "admin_response": "Support Response",
+        "user_follow_up": "Your Follow-up",
         "confirm_close_message": "Are you sure you want to close this inquiry? This action cannot be undone.",
         "helper_text": "One central hub for all your account needs: profile settings, payments, orders, and support. Consistent design across all pages for a seamless experience.",
         "savedProducts": {

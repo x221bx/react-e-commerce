@@ -2,9 +2,21 @@
 
 const multiline = (segments) => segments.join("\n\n");
 
+// Generate URL-friendly slug from title
+export const generateSlug = (title) => {
+  return title
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '') // Remove special characters
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/-+/g, '-') // Replace multiple hyphens with single
+    .trim()
+    .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
+};
+
 export const articleLibrary = [
   {
     id: "soil-health",
+    slug: "rebuild-soil-health-in-5-weekend-tasks",
     tag: "Soil Care",
     readTime: "4 min",
     heroImage:
@@ -320,11 +332,34 @@ export const getFallbackArticles = ({ locale = "en", featureHome, featureAccount
   articleLibrary
     .filter((article) => (featureHome === undefined ? true : article.featureHome === featureHome))
     .filter((article) => (featureAccount === undefined ? true : article.featureAccount === featureAccount))
-    .map((article) => mergeLocalizedArticle(article, locale));
+    .map((article) => {
+      const localized = mergeLocalizedArticle(article, locale);
+      return {
+        ...localized,
+        slug: article.slug || generateSlug(article.title), // Use original title for slug generation
+        status: 'published' // Fallback articles are always published
+      };
+    });
 
-export const getFallbackArticle = (articleId, locale = "en") => {
-  const entry = articleLibrary.find((article) => article.id === articleId);
-  return entry ? mergeLocalizedArticle(entry, locale) : null;
+export const getFallbackArticle = (articleIdOrSlug, locale = "en") => {
+  // First try to find by ID
+  let entry = articleLibrary.find((article) => article.id === articleIdOrSlug);
+
+  // If not found by ID, try to find by slug field if it exists
+  if (!entry) {
+    entry = articleLibrary.find((article) => article.slug === articleIdOrSlug);
+  }
+
+  // If still not found, try to find by generated slug from title
+  if (!entry) {
+    entry = articleLibrary.find((article) => generateSlug(article.title) === articleIdOrSlug);
+  }
+
+  return entry ? {
+    ...mergeLocalizedArticle(entry, locale),
+    slug: entry.slug || generateSlug(entry.title),
+    status: 'published' // Fallback articles are always published
+  } : null;
 };
 
 export const localizeArticleRecord = (article, locale = "en") => mergeLocalizedArticle(article, locale);

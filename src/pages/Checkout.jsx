@@ -6,53 +6,63 @@ import { db, auth } from "../services/firebase";
 import { clearCart } from "../features/cart/cartSlice";
 import useOrders from "../hooks/useOrders";
 import toast from "react-hot-toast";
+import Modal from "../components/ui/Modal";
+import { useTranslation } from "react-i18next";
 
 export default function Checkout() {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const { items } = useSelector((state) => state.cart);
-  const { reduceStock } = useOrders();
-  const user = auth.currentUser;
+   const dispatch = useDispatch();
+   const navigate = useNavigate();
+   const { items } = useSelector((state) => state.cart);
+   const { reduceStock } = useOrders();
+   const user = auth.currentUser;
+   const { t } = useTranslation();
 
-  // Build initial form data
-  const buildInitialForm = (user) => ({
-    fullName: user?.displayName || "",
-    phone: "",
-    address: "",
-    city: "",
-    notes: "",
-  });
+   // Build initial form data
+   const buildInitialForm = (user) => ({
+     fullName: user?.displayName || "",
+     phone: "",
+     address: "",
+     city: "",
+     notes: "",
+   });
 
-  const [form, setForm] = useState(() => buildInitialForm(user));
-  const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("cod"); // COD by default
+   const [form, setForm] = useState(() => buildInitialForm(user));
+   const [errors, setErrors] = useState({});
+   const [formErrors, setFormErrors] = useState("");
+   const [loading, setLoading] = useState(false);
+   const [paymentMethod, setPaymentMethod] = useState("cod"); // COD by default
+   const [showCardModal, setShowCardModal] = useState(false);
+   const [cardForm, setCardForm] = useState({
+     holder: "",
+     number: "",
+     expiry: "",
+     cvv: "",
+   });
+   const [cardErrors, setCardErrors] = useState({});
 
   // Validation logic
   const validate = () => {
     const err = {};
-    if (!form.fullName.trim()) err.fullName = "Full name is required";
-    if (!/^(01)[0-9]{9}$/.test(form.phone)) err.phone = "Invalid phone number";
-    if (!form.address.trim()) err.address = "Address is required";
-    if (!form.city.trim()) err.city = "City is required";
+    if (!form.fullName.trim()) err.fullName = t("checkout.errors.fullName");
+    if (!/^(01)[0-9]{9}$/.test(form.phone)) err.phone = t("checkout.errors.phone");
+    if (!form.address.trim()) err.address = t("checkout.errors.address");
+    if (!form.city.trim()) err.city = t("checkout.errors.city");
     setErrors(err);
     return Object.keys(err).length === 0;
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    if (!user) {
-      toast.error(t("checkout.messages.loginRequired"));
-      return;
-    }
-    if (!items.length) {
-      toast.error(t("checkout.messages.emptyCart"));
-      return;
-    }
-    if (!validate()) return;
-    if (!user) return toast.error("User not logged in");
-    if (!items.length) return toast.error("Cart is empty");
+  // Card validation
+  const validateCard = () => {
+    const err = {};
+    if (!cardForm.holder.trim()) err.holder = t("payments.errors.holder");
+    if (!/^\d{16}$/.test(cardForm.number.replace(/\s/g, ''))) err.number = t("payments.errors.number");
+    if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(cardForm.expiry)) err.expiry = t("payments.errors.expiry");
+    if (!/^\d{3,4}$/.test(cardForm.cvv)) err.cvv = t("payments.errors.cvv");
+    setCardErrors(err);
+    return Object.keys(err).length === 0;
+  };
 
+  const placeOrder = async () => {
     setLoading(true);
     try {
       // Reduce stock first
@@ -61,27 +71,37 @@ export default function Checkout() {
       );
 
       // Prepare order data
+      const subtotal = items.reduce(
+        (sum, i) => sum + (i.price ?? 0) * (i.quantity ?? 0),
+        0
+      );
+      const shipping = items.length > 0 ? 50 : 0;
+      const total = subtotal + shipping;
+
       const orderData = {
         uid: user.uid,
-        email: user.email,
-        fullName: form.fullName,
-        phone: form.phone,
-        address: form.address,
-        city: form.city,
+        userEmail: user.email,
+        shipping: {
+          fullName: form.fullName,
+          addressLine1: form.address,
+          city: form.city,
+          phone: form.phone,
+        },
         notes: form.notes || "",
         paymentMethod,
         items: items.map((i) => ({
-          productId: i.id || "unknown-id",
+          id: i.id || "unknown-id",
           name: i.name || i.title || "Unnamed Product",
           category: i.category || "—",
           quantity: i.quantity ?? 0,
           price: i.price ?? 0,
-          imageUrl: i.imageUrl || i.thumbnailUrl || "",
+          image: i.imageUrl || i.thumbnailUrl || "",
         })),
-        total: items.reduce(
-          (sum, i) => sum + (i.price ?? 0) * (i.quantity ?? 0),
-          0
-        ),
+        totals: {
+          subtotal,
+          shipping,
+          total,
+        },
         status: "Pending",
         statusHistory: [
           { status: "Pending", changedAt: new Date().toISOString() },
@@ -90,17 +110,48 @@ export default function Checkout() {
       };
 
       // Add order to Firebase
-      await addDoc(collection(db, "orders"), orderData);
+      const docRef = await addDoc(collection(db, "orders"), orderData);
 
       dispatch(clearCart());
-      toast.success("Order placed successfully!");
-      navigate("/success");
+      alert(t("checkout.messages.success"));
+      navigate(`/order-confirmation?orderId=${docRef.id}`);
     } catch (err) {
       console.error("Checkout error:", err);
-      toast.error("Failed to place order. Please try again.");
+      alert(t("checkout.messages.failure"));
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setFormErrors("");
+    if (!user) {
+      alert(t("checkout.messages.loginRequired"));
+      return;
+    }
+    if (!items.length) {
+      alert(t("checkout.messages.emptyCart"));
+      return;
+    }
+    if (!validate()) {
+      setFormErrors(Object.values(errors).join(', '));
+      return;
+    }
+
+    if (paymentMethod === "card") {
+      setShowCardModal(true);
+      return;
+    }
+
+    await placeOrder();
+  };
+
+  const handleCardSubmit = async (event) => {
+    event.preventDefault();
+    if (!validateCard()) return;
+    setShowCardModal(false);
+    await placeOrder();
   };
 
   // Summary calculations
@@ -164,15 +215,20 @@ export default function Checkout() {
       <div className="mx-auto grid max-w-6xl gap-8 px-4 sm:px-6 lg:grid-cols-[2fr,1fr]">
         <form className="rounded-3xl border bg-white p-6 shadow-sm space-y-6">
           <header>
-            <h1 className="text-2xl font-semibold">Checkout</h1>
+            <h1 className="text-2xl font-semibold">{t("checkout.header.title")}</h1>
           </header>
+          {formErrors && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+              {formErrors}
+            </div>
+          )}
 
           {/* Contact Info */}
           <section className="space-y-4">
-            <h2 className="text-lg font-semibold">Contact Info</h2>
+            <h2 className="text-lg font-semibold">{t("checkout.sections.contact")}</h2>
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="text-sm font-medium">Full Name</label>
+                <label className="text-sm font-medium">{t("checkout.fields.fullName")}</label>
                 <input
                   type="text"
                   value={form.fullName}
@@ -188,11 +244,16 @@ export default function Checkout() {
                 )}
               </div>
               <div>
-                <label className="text-sm font-medium">Phone</label>
+                <label className="text-sm font-medium">{t("checkout.fields.phone")}</label>
                 <input
                   type="tel"
+                  inputMode="numeric"
+                  maxLength={11}
                   value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  onChange={(e) => {
+                    const digitsOnly = e.target.value.replace(/\D/g, "").slice(0, 11);
+                    setForm({ ...form, phone: digitsOnly });
+                  }}
                   className={`${inputClasses} ${
                     errors.phone ? "border-red-400" : "border-slate-200"
                   }`}
@@ -206,10 +267,10 @@ export default function Checkout() {
 
           {/* Shipping Info */}
           <section className="space-y-4">
-            <h2 className="text-lg font-semibold">Shipping Address</h2>
+            <h2 className="text-lg font-semibold">{t("checkout.sections.shipping")}</h2>
             <div className="grid gap-4">
               <div>
-                <label className="text-sm font-medium">Address</label>
+                <label className="text-sm font-medium">{t("checkout.fields.addressLine1")}</label>
                 <input
                   type="text"
                   value={form.address}
@@ -225,7 +286,7 @@ export default function Checkout() {
                 )}
               </div>
               <div>
-                <label className="text-sm font-medium">City</label>
+                <label className="text-sm font-medium">{t("checkout.fields.city")}</label>
                 <input
                   type="text"
                   value={form.city}
@@ -239,7 +300,7 @@ export default function Checkout() {
                 )}
               </div>
               <div>
-                <label className="text-sm font-medium">Notes (optional)</label>
+                <label className="text-sm font-medium">{t("checkout.fields.notes", "Notes (optional)")}</label>
                 <textarea
                   rows="3"
                   value={form.notes}
@@ -252,7 +313,7 @@ export default function Checkout() {
 
           {/* Payment Method */}
           <section className="space-y-4">
-            <h2 className="text-lg font-semibold">Payment Method</h2>
+            <h2 className="text-lg font-semibold">{t("checkout.sections.payment")}</h2>
             <div className="grid gap-4 sm:grid-cols-2">
               {["cod", "card"].map((method) => (
                 <label
@@ -272,7 +333,10 @@ export default function Checkout() {
                     />
                     <div>
                       <p className="font-semibold">
-                        {method === "cod" ? "Cash on Delivery" : "Card Payment"}
+                        {method === "cod" ? t("checkout.payment.cod.title") : t("checkout.payment.card.title")}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {method === "cod" ? t("checkout.payment.cod.subtitle") : t("checkout.payment.card.subtitle")}
                       </p>
                     </div>
                   </div>
@@ -375,6 +439,63 @@ export default function Checkout() {
             <span>{`${summary.total.toLocaleString()} EGP`}</span>
           </div>
         </div>
+
+        {showCardModal && (
+          <Modal isOpen={showCardModal} onClose={() => setShowCardModal(false)}>
+            <div className="p-6">
+              <h2 className="text-lg font-semibold mb-4">{t("payments.form.cardTitle")}</h2>
+              <form onSubmit={handleCardSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium">{t("payments.form.cardHolder")}</label>
+                  <input
+                    type="text"
+                    value={cardForm.holder}
+                    onChange={(e) => setCardForm({ ...cardForm, holder: e.target.value })}
+                    className={`w-full border px-3 py-2 rounded ${cardErrors.holder ? 'border-red-500' : 'border-gray-300'}`}
+                  />
+                  {cardErrors.holder && <p className="text-red-500 text-xs">{cardErrors.holder}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium">{t("payments.form.cardNumber")}</label>
+                  <input
+                    type="text"
+                    value={cardForm.number}
+                    onChange={(e) => setCardForm({ ...cardForm, number: e.target.value })}
+                    className={`w-full border px-3 py-2 rounded ${cardErrors.number ? 'border-red-500' : 'border-gray-300'}`}
+                  />
+                  {cardErrors.number && <p className="text-red-500 text-xs">{cardErrors.number}</p>}
+                </div>
+                <div className="flex gap-4">
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium">{t("payments.form.expiry")}</label>
+                    <input
+                      type="text"
+                      placeholder={t("payments.expPlaceholder")}
+                      value={cardForm.expiry}
+                      onChange={(e) => setCardForm({ ...cardForm, expiry: e.target.value })}
+                      className={`w-full border px-3 py-2 rounded ${cardErrors.expiry ? 'border-red-500' : 'border-gray-300'}`}
+                    />
+                    {cardErrors.expiry && <p className="text-red-500 text-xs">{cardErrors.expiry}</p>}
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium">{t("payments.form.cvv")}</label>
+                    <input
+                      type="text"
+                      value={cardForm.cvv}
+                      onChange={(e) => setCardForm({ ...cardForm, cvv: e.target.value })}
+                      className={`w-full border px-3 py-2 rounded ${cardErrors.cvv ? 'border-red-500' : 'border-gray-300'}`}
+                    />
+                    {cardErrors.cvv && <p className="text-red-500 text-xs">{cardErrors.cvv}</p>}
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <button type="button" onClick={() => setShowCardModal(false)} className="px-4 py-2 border rounded">{t("common.cancel")}</button>
+                  <button type="submit" className="px-4 py-2 bg-emerald-500 text-white rounded">{t("checkout.actions.completeOrder")}</button>
+                </div>
+              </form>
+            </div>
+          </Modal>
+        )}
       </div>
     </div>
   );

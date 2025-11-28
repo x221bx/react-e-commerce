@@ -50,6 +50,8 @@ export default function Complaints() {
   const navigate = useNavigate();
   const isDark = theme === "dark";
   const rateLimiter = useRateLimiter(3, 60000); // 3 attempts per minute
+  const [followUps, setFollowUps] = useState({});
+  const [sendingFollowUps, setSendingFollowUps] = useState(new Set());
 
   // Merge current snapshots from queries (uid and legacy userId)
   const mergeComplaints = (uidDocs, userIdDocs) => {
@@ -187,6 +189,33 @@ export default function Complaints() {
 
   const cancelCloseComplaint = () => {
     setConfirmClose(null);
+  };
+
+  const handleSendFollowUp = async (complaintId) => {
+    const text = (followUps[complaintId] || "").trim();
+    if (!text) {
+      toast.error(t("account.complaints_actions.follow_up_placeholder", "Please add details first"));
+      return;
+    }
+
+    try {
+      setSendingFollowUps((prev) => new Set(prev).add(complaintId));
+      const complaintRef = doc(db, "support", complaintId);
+      await updateDoc(complaintRef, {
+        userFollowUp: text,
+        updatedAt: new Date()
+      });
+      toast.success(t("account.complaints_actions.follow_up_saved", "Follow-up sent"));
+    } catch (error) {
+      console.error("Error sending follow-up:", error);
+      toast.error("Failed to send follow-up");
+    } finally {
+      setSendingFollowUps((prev) => {
+        const next = new Set(prev);
+        next.delete(complaintId);
+        return next;
+      });
+    }
   };
 
   if (!user) {
@@ -328,9 +357,20 @@ export default function Complaints() {
                       <MessageSquare className={`h-5 w-5 mt-0.5 ${isDark ? "text-green-400" : "text-green-600"}`} />
                       <div className="flex-1">
                         <p className={`text-sm font-medium ${isDark ? "text-green-300" : "text-green-800"}`}>
-                          {t("common.admin_response", "Admin Response")}
+                          {t("common.admin_response", "Support Response")}
                         </p>
                         <p className={`text-xs ${metaText}`}>{complaint.adminResponse}</p>
+                      </div>
+                    </div>
+                  )}
+                  {complaint.userFollowUp && (
+                    <div className={`flex items-start gap-3 p-3 rounded-lg border ${isDark ? "bg-emerald-900/15 border-emerald-800" : "bg-emerald-50 border-emerald-200"}`}>
+                      <MessageSquare className={`h-5 w-5 mt-0.5 ${isDark ? "text-emerald-300" : "text-emerald-600"}`} />
+                      <div className="flex-1">
+                        <p className={`text-sm font-medium ${isDark ? "text-emerald-200" : "text-emerald-800"}`}>
+                          {t("account.user_follow_up", "Your Follow-up")}
+                        </p>
+                        <p className={`text-xs ${metaText}`}>{complaint.userFollowUp}</p>
                       </div>
                     </div>
                   )}
@@ -341,8 +381,8 @@ export default function Complaints() {
                       <span className={metaText}>{complaint.phoneNumber || complaint.phone || t("account.complaints.phone_placeholder", "Not provided")}</span>
                     </div>
 
-                    {/* Close Button */}
-                    {complaint.status !== "closed" && (
+                    {/* Close Button - Only allow closing if resolved */}
+                    {complaint.status !== "closed" && complaint.status === "resolved" && (
                       <Button
                         text={closingComplaints.has(complaint.id)
                           ? t("account.complaints_actions.closing", "Closing...")
@@ -355,7 +395,40 @@ export default function Complaints() {
                         aria-label={t("account.complaints_actions.close_complaint", "Close Inquiry")}
                       />
                     )}
+
+                    {/* Show message for unresolved complaints */}
+                    {complaint.status !== "closed" && complaint.status !== "resolved" && (
+                      <div className={`text-xs ${metaText} text-center`}>
+                        {t("account.complaints_actions.wait_for_resolution", "Our support team is reviewing this request.")}
+                      </div>
+                    )}
                   </div>
+
+                  {/* Follow-up form */}
+                  {complaint.status !== "closed" && (
+                    <div className={`rounded-lg border p-3 space-y-2 ${isDark ? "border-slate-800 bg-slate-900" : "border-emerald-100 bg-emerald-50/60"}`}>
+                      <label className="text-sm font-semibold">
+                        {t("account.complaints_actions.add_follow_up", "Add follow-up")}
+                      </label>
+                      <textarea
+                        value={followUps[complaint.id] ?? complaint.userFollowUp ?? ""}
+                        onChange={(e) => setFollowUps((prev) => ({ ...prev, [complaint.id]: e.target.value }))}
+                        rows={3}
+                        className={`w-full rounded-md border px-3 py-2 text-sm ${isDark ? "bg-slate-800 border-slate-700 text-white" : "bg-white border-emerald-200 text-slate-900"}`}
+                        placeholder={t("account.complaints_actions.follow_up_placeholder", "Add details to clarify your issue")}
+                      />
+                      <div className="flex justify-end">
+                        <Button
+                          text={sendingFollowUps.has(complaint.id)
+                            ? t("common.sending", "Sending...")
+                            : t("account.complaints_actions.send_follow_up", "Send follow-up")}
+                          onClick={() => handleSendFollowUp(complaint.id)}
+                          disabled={sendingFollowUps.has(complaint.id)}
+                          className="px-4 py-2 text-sm"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </article>
               );
             })}

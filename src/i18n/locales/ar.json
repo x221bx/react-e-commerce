@@ -1,63 +1,63 @@
-﻿{
+{
   "brand": {
     "name": "متجر فارم فيت",
     "store": "متجر فارم فيت"
   },
   "payments": {
-      "eyebrow": "الفوترة والمحافظ",
-      "title": "طرق الدفع",
-      "subtitle": "إدارة البطاقات والمحافظ لعمليات دفع أسرع.",
-      "fastCheckout": "دفع سريع",
-      "defaultLabel": "الدفع الافتراضي",
-      "noDefault": "لا يوجد افتراضي محدد",
-      "defaultCaption": "يُستخدم تلقائياً للاشتراكات والدفع السريع.",
-      "cardsHeader": "البطاقات المحفوظة",
-      "noCards": "لا توجد بطاقات محفوظة بعد.",
-      "walletsHeader": "المحافظ المرتبطة",
-      "noWallets": "لا توجد محافظ مرتبطة بعد.",
-      "status": {
-          "defaultBadge": "افتراضي"
-      },
-      "actions": {
-          "makeDefault": "تعيين كافتراضي",
-          "delete": "حذف"
-      },
-      "form": {
-          "cardTitle": "إضافة بطاقة جديدة",
-          "cardPreview": "معاينة البطاقة",
-          "cardHolder": "اسم حامل البطاقة",
-          "cardNumber": "رقم البطاقة",
-          "expiry": "تاريخ الانتهاء (شهر/سنة)",
-          "cvv": "CVV",
-          "nickname": "اسم مستعار (اختياري)",
-          "nicknamePlaceholder": "مشتريات المزرعة",
-          "saving": "جارٍ الحفظ...",
-          "saveCard": "حفظ البطاقة",
-          "reset": "إعادة ضبط",
-          "walletTitle": "ربط محفظة",
-          "walletProvider": "المزوّد",
-          "walletEmail": "بريد الحساب",
-          "linking": "جارٍ الربط...",
-          "linkWallet": "ربط المحفظة"
-      },
-      "errors": {
-          "holder": "أدخل اسم حامل البطاقة.",
-          "number": "أدخل رقماً صحيحاً للبطاقة.",
-          "expiry": "يجب أن يكون التنسيق شهر/سنة وفي المستقبل.",
-          "cvv": "أدخل رمز CVV مكوّن من 3 أو 4 أرقام.",
-          "email": "أدخل بريداً إلكترونياً صالحاً."
-      },
-      "securityHint": "نحفظ آخر 4 أرقام فقط؛ الرقم الكامل ورمز CVV لا يُحفظان أبداً.",
-      "brandUnknown": "نوع البطاقة غير معروف بعد",
-      "noMethods": "لا توجد طرق دفع محفوظة بعد. استخدم النماذج على اليمين لإضافة واحدة.",
-      "cardLabel": "بطاقة",
-      "nameLabel": "الاسم",
-      "expLabel": "انتهاء",
-      "expPlaceholder": "شهر/سنة",
-      "endingIn": "تنتهي بـ",
-      "separator": "-",
-      "confirmDeleteTitle": "حذف طريقة الدفع",
-      "confirmDeleteMessage": "هل أنت متأكد من حذف طريقة الدفع هذه؟ هذا الإجراء لا يمكن التراجع عنه."
+    "eyebrow": "الفوترة والمحافظ",
+    "title": "طرق الدفع",
+    "subtitle": "إدارة البطاقات والمحافظ لعمليات دفع أسرع.",
+    "fastCheckout": "دفع سريع",
+    "defaultLabel": "الدفع الافتراضي",
+    "noDefault": "لا يوجد افتراضي محدد",
+    "defaultCaption": "يُستخدم تلقائياً للاشتراكات والدفع السريع.",
+    "cardsHeader": "البطاقات المحفوظة",
+    "noCards": "لا توجد بطاقات محفوظة بعد.",
+    "walletsHeader": "المحافظ المرتبطة",
+    "noWallets": "لا توجد محافظ مرتبطة بعد.",
+    "status": {
+      "defaultBadge": "افتراضي"
+    },
+    "actions": {
+      "makeDefault": "تعيين كافتراضي",
+      "delete": "حذف"
+    },
+    "form": {
+      "cardTitle": "إضافة بطاقة جديدة",
+      "cardPreview": "معاينة البطاقة",
+      "cardHolder": "اسم حامل البطاقة",
+      "cardNumber": "رقم البطاقة",
+      "expiry": "تاريخ الانتهاء (شهر/سنة)",
+      "cvv": "CVV",
+      "nickname": "اسم مستعار (اختياري)",
+      "nicknamePlaceholder": "مشتريات المزرعة",
+      "saving": "جارٍ الحفظ...",
+      "saveCard": "حفظ البطاقة",
+      "reset": "إعادة ضبط",
+      "walletTitle": "ربط محفظة",
+      "walletProvider": "المزوّد",
+      "walletEmail": "بريد الحساب",
+      "linking": "جارٍ الربط...",
+      "linkWallet": "ربط المحفظة"
+    },
+    "errors": {
+      "holder": "أدخل اسم حامل البطاقة.",
+      "number": "أدخل رقماً صحيحاً للبطاقة.",
+      "expiry": "يجب أن يكون التنسيق شهر/سنة وفي المستقبل.",
+      "cvv": "أدخل رمز CVV مكوّن من 3 أو 4 أرقام.",
+      "email": "أدخل بريداً إلكترونياً صالحاً."
+    },
+    "securityHint": "نحفظ آخر 4 أرقام فقط؛ الرقم الكامل ورمز CVV لا يُحفظان أبداً.",
+    "brandUnknown": "نوع البطاقة غير معروف بعد",
+    "noMethods": "لا توجد طرق دفع محفوظة بعد. استخدم النماذج على اليمين لإضافة واحدة.",
+    "cardLabel": "بطاقة",
+    "nameLabel": "الاسم",
+    "expLabel": "انتهاء",
+    "expPlaceholder": "شهر/سنة",
+    "endingIn": "تنتهي بـ",
+    "separator": "-",
+    "confirmDeleteTitle": "حذف طريقة الدفع",
+    "confirmDeleteMessage": "هل أنت متأكد من حذف طريقة الدفع هذه؟ هذا الإجراء لا يمكن التراجع عنه."
   },
   "languages": {
     "en": "الإنجليزية",
@@ -109,6 +109,8 @@
     "courses": "الدورات",
     "new_course": "دورة جديدة",
     "categories": "الفئات",
+    "category_name": "اسم الفئة",
+    "create": "إنشاء",
     "new_category": "فئة جديدة",
     "status": {
       "published": "منشور",
@@ -150,6 +152,11 @@
         "categoryRequired": "الفئة مطلوبة"
       }
     }
+  ,
+    "footer_note": "© {{year}} لوحة تحكم العيادة البيطرية — مصممة بعناية"
+  },
+  "layout": {
+    "sidebar_height_hint": "الارتفاع: {{value}}"
   },
   "format": {
     "price": "{{value, number}} {{currency}}",
@@ -193,7 +200,8 @@
     "retry": "إعادة المحاولة",
     "error": "خطأ",
     "rateLimitExceeded": "محاولات كثيرة. الرجاء الانتظار {{seconds}} ثانية.",
-    "valid": "صالح"
+    "valid": "صالح",
+    "total": "الإجمالي"
   },
   "settings": {
     "language_display": "اللغة والعرض",
@@ -411,9 +419,14 @@
       "closing": "جارٍ الإغلاق...",
       "no_response_yet": "لا يوجد رد بعد",
       "awaiting_response": "نراجع استفسارك وسنرد قريباً.",
-      "complaint_closed": "تم إغلاق الاستفسار بنجاح"
+      "complaint_closed": "تم إغلاق الاستفسار بنجاح",
+      "add_follow_up": "إضافة متابعة",
+      "send_follow_up": "إرسال المتابعة",
+      "follow_up_placeholder": "أضف تفاصيل أو رقم طلب أو رابط صور لتوضيح المشكلة.",
+      "follow_up_saved": "تم إرسال المتابعة"
     },
     "admin_response": "رد الإدارة",
+    "user_follow_up": "متابعتك",
     "confirm_close_message": "هل أنت متأكد من إغلاق هذا الاستفسار؟ لا يمكن التراجع عن هذا الإجراء.",
     "helper_text": "مركز واحد لكل احتياجات حسابك: الإعدادات الشخصية، الدفع، الطلبات، والدعم. تصميم متناسق عبر كل الصفحات لتجربة سلسة.",
     "savedProducts": {

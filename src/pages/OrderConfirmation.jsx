@@ -154,7 +154,7 @@ const OrderConfirmation = () => {
                 <div className="mt-4 space-y-4">
                   {order.items.map((item) => (
                     <div
-                      key={item.id}
+                      key={item.productId || item.id}
                       className="flex items-center gap-4 rounded-2xl border border-slate-100 p-4 dark:border-slate-800"
                     >
                       <img

@@ -36,7 +36,7 @@ const OverviewCard = ({ user, profileForm, preferenceForm, scrollToSection }) =>
       chips.push({ label: profileForm.location, tone: "outline" });
     }
     chips.push({
-      label: user?.role === "admin" ? "Administrator" : "Customer",
+      label: user?.isAdmin === true ? "Administrator" : "Customer",
       tone: "solid",
     });
     chips.push({
