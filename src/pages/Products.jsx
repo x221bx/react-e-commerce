@@ -3,6 +3,7 @@ import React, { useState, useMemo } from "react";
 import { FiSearch, FiArrowUp, FiArrowDown, FiTag } from "react-icons/fi";
 import { useTranslation } from "react-i18next";
 import { useProductsSorted } from "../hooks/useProductsSorted";
+import { useCategoriesSorted } from "../hooks/useCategoriesSorted";
 import { usePagination } from "../hooks/usePagination";
 import Pager from "../admin/Pager";
 import { getFallbackProducts } from "../data/products";
@@ -21,15 +22,18 @@ export default function Products() {
   const [sortBy, setSortBy] = useState("createdAt");
   const [dir, setDir] = useState("desc");
   const [pageSize, setPageSize] = useState(6);
+  const [category, setCategory] = useState("");
 
   const { theme } = UseTheme();
   const { t } = useTranslation();
+
+  const { data: categories = [] } = useCategoriesSorted({});
 
   const {
     data: all = [],
     isLoading,
     isError,
-  } = useProductsSorted({ sortBy, dir, qText: q });
+  } = useProductsSorted({ sortBy, dir, qText: q, category });
 
   const fallback = useMemo(() => getFallbackProducts(), []);
 
@@ -59,7 +63,7 @@ export default function Products() {
           </h1>
 
           {/* FILTERS */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 w-full">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 w-full">
 
             {/* Search */}
             <div className="relative">
@@ -71,6 +75,20 @@ export default function Products() {
                 className={`w-full rounded-lg py-2 pl-9 pr-3 text-sm input-surface placeholder:text-[var(--text-muted)]`}
               />
             </div>
+
+            {/* Category */}
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className={`w-full rounded-lg px-3 py-2 text-sm input-surface`}
+            >
+              <option value="">{t("products.allCategories", "All Categories")}</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.title || cat.name} className="text-black">
+                  {cat.title || cat.name}
+                </option>
+              ))}
+            </select>
 
             {/* Sort by */}
             <select

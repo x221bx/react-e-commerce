@@ -198,6 +198,7 @@ export default function useOrders(uid = null, isAdmin = false) {
     orders,
     loading,
     fetchOrders,
+    refreshOrders: fetchOrders,
     updateOrderStatus,
     deleteOrder,
     reduceStock,

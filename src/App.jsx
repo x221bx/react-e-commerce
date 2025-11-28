@@ -42,6 +42,7 @@ const AdminComplaints = lazy(() => import("./pages/admin/AdminComplaints"));
 const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
 const AdminOrderDetails = lazy(() => import("./pages/admin/AdminOrderDetails"));
 const ChatBot = lazy(() => import("./components/Ai/ChatBot"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Loading component for Suspense fallback
 const LoadingSpinner = () => (
@@ -77,10 +78,10 @@ export default function App() {
                     <Route path="/reset" element={<Reset />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/contactus" element={<ContactUs />} />
-                    <Route path="/checkout" element={<Checkout />} />
 
                     {/* Authenticated User Routes */}
                     <Route element={<ProtectedRoute />}>
+                        <Route path="/checkout" element={<Checkout />} />
                         <Route path="/order-confirmation" element={<OrderConfirmation />} />
                         <Route path="/settings" element={<UserSettings />} />
                         <Route path="/account" element={<AccountLayout />}>
@@ -125,6 +126,9 @@ export default function App() {
                             </div>
                         }
                     />
+
+                    {/* 404 Not Found */}
+                    <Route path="*" element={<NotFound />} />
                 </Routes>
             </Suspense>
             <ChatBot />

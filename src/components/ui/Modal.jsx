@@ -1,45 +1,66 @@
 import { createPortal } from "react-dom";
 
-export default function Modal({ isOpen, onClose, title, children }) {
+export default function Modal({
+  isOpen,
+  onClose,
+  title,
+  children,
+  footer,
+}) {
   if (!isOpen) return null;
 
+  const handleInnerClick = (event) => {
+    event.stopPropagation();
+  };
+
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* الخلفية المعتمة */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6">
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+        className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       />
 
-      {/* نافذة المودال */}
-      <div className="relative z-10 w-[90%] max-w-lg rounded-2xl bg-white dark:bg-gray-800 p-6 shadow-2xl animate-fade-in scale-100 transition-transform duration-200">
-        
-        {/* زر الإغلاق في الزاوية */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 transition text-lg font-bold"
-          aria-label="Close modal"
-        >
-          ×
-        </button>
-
-        {/* العنوان */}
-        {title && (
-          <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-gray-100">
-            {title}
-          </h2>
+      <div
+        role="dialog"
+        aria-modal="true"
+        className="relative z-10 w-full max-w-lg overflow-hidden rounded-3xl bg-white text-slate-900 shadow-2xl ring-1 ring-slate-900/10 dark:bg-slate-900 dark:text-slate-100 dark:ring-slate-700"
+        onClick={handleInnerClick}
+      >
+        {(title || onClose) && (
+          <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 dark:border-slate-800">
+            {title ? (
+              <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
+            ) : (
+              <span className="text-sm font-medium text-slate-500">
+                Modal
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-transparent text-slate-500 transition hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:border-slate-700 dark:hover:bg-slate-800 dark:hover:text-white"
+              aria-label="Close modal"
+            >
+              ×
+            </button>
+          </div>
         )}
 
-        {/* المحتوى */}
-        <div className="space-y-4">{children}</div>
+        <div className="px-6 py-5">{children}</div>
 
-        {/* زر الإغلاق الرئيسي */}
-        <button
-          onClick={onClose}
-          className="mt-6 w-full rounded-xl bg-teal-600 hover:bg-teal-700 text-white py-2.5 font-medium transition"
-        >
-          Close
-        </button>
+        {footer !== false && (
+          <div className="flex items-center justify-end gap-3 border-t border-slate-100 bg-slate-50/70 px-6 py-4 dark:border-slate-800 dark:bg-slate-900/40">
+            {footer ?? (
+              <button
+                type="button"
+                onClick={onClose}
+                className="inline-flex items-center justify-center rounded-2xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600"
+              >
+                Close
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>,
     document.body

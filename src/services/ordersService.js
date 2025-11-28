@@ -15,13 +15,27 @@ import { db } from "./firebase";
 const ordersCollection = collection(db, "orders");
 
 const sanitizeItems = (items = []) =>
-  items.map((item) => ({
-    id: item.id,
-    name: item.name || item.title || "Item",
-    price: Number(item.price) || 0,
-    quantity: item.quantity || 1,
-    image: item.thumbnailUrl || item.img || "",
-  }));
+  items.map((item) => {
+    const quantity = Number(item.quantity || 1);
+    const price = Number(item.price || 0);
+    const image =
+      item.thumbnailUrl || item.imageUrl || item.image || item.img || "";
+    const productId =
+      item.id ||
+      item.productId ||
+      `prod_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    return {
+      productId,
+      id: productId,
+      name: item.name || item.title || "Item",
+      category: item.category || item.type || "General",
+      price,
+      quantity,
+      total: Number((quantity * price).toFixed(2)),
+      image,
+      imageUrl: image,
+    };
+  });
 
 const buildReference = () => {
   const now = new Date();
@@ -32,41 +46,75 @@ const buildReference = () => {
   return `AGRI-${stamp}`;
 };
 
+const buildOrderNumber = () => {
+  const segment = Date.now().toString().slice(-6);
+  const random = Math.floor(100 + Math.random() * 900);
+  return `${segment}${random}`;
+};
+
 const updateInventoryCounts = async (items) => {
+  if (!items.length) return;
   const batch = writeBatch(db);
   items.forEach((item) => {
-    if (!item.id) return;
-    const productRef = doc(db, "products", item.id);
+    if (!item.productId && !item.id) return;
+    const productRef = doc(db, "products", item.productId || item.id);
+    const qty = Math.abs(Number(item.quantity || 0));
+    if (!qty) return;
     batch.update(productRef, {
-      quantity: increment(-(item.quantity || 1)),
+      stock: increment(-qty),
+      quantity: increment(-qty),
     });
   });
   await batch.commit();
 };
 
 export const createOrder = async ({
+  uid,
   userId,
   userEmail,
   userName,
   shipping,
   paymentMethod,
+  paymentSummary,
+  paymentDetails = null,
   totals,
   items = [],
+  notes = "",
 }) => {
-  if (!userId) throw new Error("User is required to place an order");
+  const resolvedUid = uid || userId;
+  if (!resolvedUid) throw new Error("User is required to place an order");
   if (!items.length) throw new Error("Cannot place an order without items");
 
   const normalizedItems = sanitizeItems(items);
+  const statusHistory = [
+    { status: "Pending", changedAt: new Date().toISOString() },
+  ];
+
   const payload = {
     reference: buildReference(),
-    userId,
+    orderNumber: buildOrderNumber(),
+    uid: resolvedUid,
+    userId: resolvedUid,
     userEmail,
     userName,
-    shipping,
+    fullName: shipping?.fullName || userName,
+    phone: shipping?.phone || "",
+    address: shipping?.addressLine1 || "",
+    city: shipping?.city || "",
+    notes,
+    shipping: {
+      ...shipping,
+      recipient: shipping?.fullName || userName,
+      trackingNumber: shipping?.trackingNumber || "",
+    },
     paymentMethod,
+    paymentSummary: paymentSummary || paymentMethod,
+    paymentDetails: paymentDetails || null,
     totals,
+    total: totals?.total ?? 0,
     items: normalizedItems,
-    status: "processing",
+    status: "Pending",
+    statusHistory,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   };
@@ -78,7 +126,7 @@ export const createOrder = async ({
     console.error("Inventory update failed", inventoryError);
   }
 
-  return docRef.id;
+  return { id: docRef.id, reference: payload.reference };
 };
 
 export const getOrderById = async (orderId) => {
