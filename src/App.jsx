@@ -9,11 +9,14 @@ const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
 const Reset = lazy(() => import("./pages/Reset"));
 const Home = lazy(() => import("./pages/Home"));
+
 const Products = lazy(() => import("./pages/Products"));
 const Favorites = lazy(() => import("./pages/Favorites"));
 const Cart = lazy(() => import("./pages/Cart"));
+const SuccessPage = lazy(() => import("./pages/SuccessPage"));
 const ProductDetails = lazy(() => import("./pages/ProductDetails"));
 const About = lazy(() => import("./pages/About"));
+const AnalysisDashboard = lazy(() => import("./pages/AnalysisDashboard"));
 const ContactUs = lazy(() => import("./pages/contactus"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const OrderConfirmation = lazy(() => import("./pages/OrderConfirmation"));
@@ -33,12 +36,11 @@ const PaymentMethods = lazy(() => import("./pages/account/PaymentMethods"));
 const AdminLayout = lazy(() => import("./admin/AdminLayout"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminProducts = lazy(() => import("./pages/admin/AdminProducts"));
-const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
 const AdminProductForm = lazy(() => import("./pages/admin/AdminProductForm"));
 const AdminCategories = lazy(() => import("./pages/admin/AdminCategories"));
 const AdminArticles = lazy(() => import("./pages/admin/AdminArticles"));
 const ChatBot = lazy(() => import("./components/Ai/ChatBot"));
-
+const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
 // Loading component for Suspense fallback
 const LoadingSpinner = () => (
   <div className="min-h-screen flex items-center justify-center">
@@ -64,6 +66,7 @@ export default function App() {
           <Route path="/favorites" element={<Favorites />} />
           <Route path="/products/:id" element={<ProductDetails />} />
           <Route path="/cart" element={<Cart />} />
+          <Route path="/analysis-dashboard" element={<AnalysisDashboard />} />
           <Route path="/articles" element={<ArticlesList />} />
           <Route path="/articles/:articleId" element={<ArticleDetails />} />
           <Route path="/login" element={<Login />} />
@@ -71,8 +74,10 @@ export default function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/reset" element={<Reset />} />
           <Route path="/about" element={<About />} />
+
           <Route path="/contactus" element={<ContactUs />} />
           <Route path="/checkout" element={<Checkout />} />
+          <Route path="/success" element={<SuccessPage />} />
 
           {/* Authenticated User Routes */}
           <Route element={<ProtectedRoute />}>
@@ -103,9 +108,9 @@ export default function App() {
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboard />} />
               <Route path="products" element={<AdminProducts />} />
-              <Route path="Adminorders" element={<AdminOrders />} />
               <Route path="products/new" element={<AdminProductForm />} />
               <Route path="products/:id/edit" element={<AdminProductForm />} />
+              <Route path="AdminOrders" element={<AdminOrders />} />
               <Route path="categories" element={<AdminCategories />} />
               <Route path="articles" element={<AdminArticles />} />
             </Route>

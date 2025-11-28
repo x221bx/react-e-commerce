@@ -1,15 +1,26 @@
-﻿import { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { selectCurrentUser, signOut } from "../../features/auth/authSlice";
 import { UseTheme } from "../../theme/ThemeProvider";
 import { motion as Motion, AnimatePresence } from "framer-motion";
-import { FiHeart, FiShoppingCart } from "react-icons/fi";
 import i18n from "../../i18n";
 import { useTranslation } from "react-i18next";
 
 import SearchBar from "../search/SearchBar";
 import Button from "../../components/ui/Button";
+
+// أيقونات احترافية من react-icons
+import {
+  AiOutlineHome,
+  AiOutlineAppstore,
+  AiOutlineLogout,
+  AiOutlineUser,
+  AiOutlineMenu,
+  AiOutlineClose,
+  AiOutlineShopping,
+  AiOutlineHeart,
+} from "react-icons/ai";
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -28,9 +39,19 @@ export default function Navbar() {
   const isAdmin = user?.role === "admin";
   const isDark = theme === "dark";
 
-  // Hide navbar on login/register screens
-  const hideNavbar =
-    location.pathname === "/login" || location.pathname === "/register";
+  // إخفاء Navbar في صفحات الدخول أو التسجيل
+  const hideNavbar = ["/login", "/register", "/reset"].includes(
+    location.pathname
+  );
+
+  // حساب عدد المنتجات في الكارت
+  const cartCount = cart.reduce((sum, i) => sum + (i.quantity || 1), 0);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const toggleLanguage = async () => {
     const newLang = currentLang === "en" ? "ar" : "en";
@@ -39,84 +60,80 @@ export default function Navbar() {
     document.documentElement.dir = newLang === "ar" ? "rtl" : "ltr";
   };
 
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  const handleLogout = () => {
+    dispatch(signOut());
+    navigate("/");
+  };
 
   const navbarBg = isDark
     ? scrolled
-      ? "bg-[#0b1616]/80 text-[#B8E4E6] backdrop-blur-md shadow"
-      : "bg-[#0e1b1b]/85 text-[#B8E4E6]"
+      ? "bg-gray-900/90 text-white shadow-md"
+      : "bg-gray-900/80 text-white"
     : scrolled
-    ? "bg-white/95 text-slate-900 backdrop-blur-md shadow"
-    : "bg-[#f4fbf5]/95 text-slate-800";
+    ? "bg-white/90 text-gray-900 shadow-md"
+    : "bg-white/95 text-gray-800";
 
-  const subtleControlBg = isDark
-    ? "bg-white/20 hover:bg-white/30 text-white"
-    : "bg-emerald-50 text-slate-700 hover:bg-emerald-100";
+  const btnBg = isDark
+    ? "bg-gray-700 hover:bg-gray-600 text-white"
+    : "bg-emerald-500 hover:bg-emerald-600 text-white";
 
-  const navLinkBase = "text-sm font-semibold tracking-tight transition-colors";
-  const navLinkActive = isDark ? "text-white" : "text-emerald-700";
-  const navLinkIdle = isDark
-    ? "text-[#B8E4E6]/85 hover:text-white"
-    : "text-slate-600 hover:text-emerald-600";
-
-  const cartCount = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+  const linkBase =
+    "flex items-center gap-1 px-3 py-2 rounded-md transition-colors";
+  const linkActive = isDark
+    ? "bg-gray-800 text-white"
+    : "bg-emerald-100 text-emerald-700";
+  const linkIdle = isDark
+    ? "hover:bg-gray-800 text-gray-200"
+    : "hover:bg-emerald-50 text-gray-800";
 
   if (hideNavbar) return null;
 
   return (
-    <header
-      className={`sticky top-0 z-50 border-b transition-all duration-500 ${navbarBg}`}
-    >
-      <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between px-4 sm:px-6 py-3">
+    <header className={`sticky top-0 z-50 border-b ${navbarBg}`}>
+      <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-3">
         {/* Logo */}
-        <NavLink
-          to="/"
-          className={`text-lg sm:text-xl font-semibold hover:opacity-80 transition`}
+        <div
+          className="cursor-pointer flex items-center"
+          onClick={() => {
+            navigate("/");
+            setMobileOpen(false);
+          }}
         >
-          🌿 Farm Vet Shop
-        </NavLink>
+          <AiOutlineAppstore size={28} className="mr-2" />
+          <span className="text-xl font-bold">Farm Vet Shop</span>
+        </div>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-6">
+        {/* Desktop menu */}
+        <nav className="hidden md:flex items-center space-x-4">
           <NavLink
             to="/"
             className={({ isActive }) =>
-              `${navLinkBase} ${isActive ? navLinkActive : navLinkIdle}`
+              `${linkBase} ${isActive ? linkActive : linkIdle}`
             }
           >
-            Home
+            <AiOutlineHome size={20} />
+            {t("nav.home") || "Home"}
           </NavLink>
 
           <NavLink
             to="/products"
             className={({ isActive }) =>
-              `${navLinkBase} ${isActive ? navLinkActive : navLinkIdle}`
+              `${linkBase} ${isActive ? linkActive : linkIdle}`
             }
           >
-            {t("nav.products")}
-          </NavLink>
-
-          <NavLink
-            to="/about"
-            className={({ isActive }) =>
-              `${navLinkBase} ${isActive ? navLinkActive : navLinkIdle}`
-            }
-          >
-            About Us
+            <AiOutlineAppstore size={20} />
+            {t("nav.products") || "Products"}
           </NavLink>
 
           {isAdmin && (
             <NavLink
               to="/admin"
               className={({ isActive }) =>
-                `${navLinkBase} ${isActive ? navLinkActive : navLinkIdle}`
+                `${linkBase} ${isActive ? linkActive : linkIdle}`
               }
             >
-              Admin Dashboard
+              <AiOutlineUser size={20} />
+              {t("nav.admin") || "Admin"}
             </NavLink>
           )}
         </nav>
@@ -124,34 +141,37 @@ export default function Navbar() {
         {/* Controls */}
         <div className="flex items-center gap-3">
           {/* Search */}
-          <div className="hidden sm:block w-40 md:w-56">
-            <SearchBar placeholder="Search..." />
+          <div className="hidden sm:block w-40 md:w-52">
+            <SearchBar placeholder={t("nav.search") || "Search..."} />
           </div>
 
-          {/* Language */}
+          {/* Language toggle */}
           <button
             onClick={toggleLanguage}
-            className={`h-10 w-10 rounded-lg flex items-center justify-center ${subtleControlBg}`}
+            className={`h-10 w-10 flex items-center justify-center rounded-lg ${btnBg}`}
           >
             {currentLang === "en" ? "🇺🇸" : "🇸🇦"}
           </button>
 
-          {/* Theme */}
+          {/* Theme toggle */}
           <button
             onClick={toggle}
-            className={`h-10 w-10 rounded-lg flex items-center justify-center ${subtleControlBg}`}
+            className={`h-10 w-10 flex items-center justify-center rounded-lg ${btnBg}`}
           >
-            {theme === "dark" ? "🌙" : "☀️"}
+            {isDark ? "🌙" : "☀️"}
           </button>
 
           {/* Favorites */}
           <button
-            onClick={() => navigate("/favorites")}
-            className={`relative h-10 w-10 rounded-lg flex items-center justify-center ${subtleControlBg}`}
+            onClick={() => {
+              navigate("/analysis-dashboard");
+              setMobileOpen(false);
+            }}
+            className={`relative h-10 w-10 flex items-center justify-center rounded-lg ${btnBg}`}
           >
-            <FiHeart size={20} />
+            <AiOutlineHeart size={20} />
             {favorites.length > 0 && (
-              <span className="absolute -top-1 -right-1 bg-pink-500 text-xs rounded-full px-1">
+              <span className="absolute -top-1 -right-1 bg-red-500 text-xs text-white rounded-full px-1">
                 {favorites.length}
               </span>
             )}
@@ -159,54 +179,71 @@ export default function Navbar() {
 
           {/* Cart */}
           <button
-            onClick={() => navigate("/cart")}
-            className={`relative h-10 w-10 rounded-lg flex items-center justify-center ${subtleControlBg}`}
+            onClick={() => {
+              navigate("/cart");
+              setMobileOpen(false);
+            }}
+            className={`relative h-10 w-10 flex items-center justify-center rounded-lg ${btnBg}`}
           >
-            <FiShoppingCart size={20} />
+            <AiOutlineShopping size={22} />
             {cartCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-cyan-600 text-xs rounded-full px-1">
+              <span className="absolute -top-1 -right-1 bg-cyan-600 text-xs text-white rounded-full px-1">
                 {cartCount}
               </span>
             )}
           </button>
 
-          {/* Auth */}
+          {/* Account / Auth */}
           {user ? (
             <>
               <button
-                onClick={() => navigate("/account/settings")}
-                className="px-3 py-1 text-sm rounded-md bg-slate-900 text-white"
+                onClick={() => {
+                  navigate("/account/settings");
+                  setMobileOpen(false);
+                }}
+                className={`flex items-center gap-1 px-3 py-1 rounded-md ${btnBg}`}
               >
-                Account
+                <AiOutlineUser size={18} />
+                {t("nav.account") || "Account"}
               </button>
               <Button
-                text="Logout"
-                onClick={() => dispatch(signOut())}
-                className="px-3 py-1 text-sm rounded-md bg-red-700 text-white"
+                text={t("Logout") || "Logout"}
+                onClick={handleLogout}
+                className="px-3 py-1 rounded-md bg-red-600 hover:bg-red-500 text-white"
               />
             </>
           ) : (
             <>
               <Button
-                text="Login"
-                onClick={() => navigate("/login")}
-                className="px-3 py-1 text-sm rounded-md bg-emerald-700 text-white"
+                text={t("Login") || "Login"}
+                onClick={() => {
+                  navigate("/login");
+                  setMobileOpen(false);
+                }}
+                className="px-3 py-1 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white"
               />
               <NavLink
                 to="/register"
-                className="text-sm hover:text-emerald-600"
+                onClick={() => setMobileOpen(false)}
+                className={`px-3 py-1 rounded-md ${
+                  isDark ? "text-gray-200" : "text-gray-800"
+                } hover:underline`}
               >
-                Register
+                {t("Register") || "Register"}
               </NavLink>
             </>
           )}
 
-          {/* Mobile Menu Button */}
+          {/* Mobile menu toggle */}
           <button
-            onClick={() => setMobileOpen((o) => !o)}
-            className={`md:hidden h-10 w-10 rounded-lg ${subtleControlBg}`}
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className={`md:hidden h-10 w-10 flex items-center justify-center rounded-lg ${btnBg}`}
           >
-            ☰
+            {mobileOpen ? (
+              <AiOutlineClose size={24} />
+            ) : (
+              <AiOutlineMenu size={24} />
+            )}
           </button>
         </div>
       </div>
@@ -215,46 +252,88 @@ export default function Navbar() {
       <AnimatePresence>
         {mobileOpen && (
           <Motion.div
-            initial={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
+            exit={{ opacity: 0, y: -20 }}
             className={`md:hidden px-6 py-4 ${
-              isDark ? "bg-[#0e1b1b]" : "bg-white"
+              isDark ? "bg-gray-900" : "bg-white"
             }`}
           >
-            <SearchBar placeholder="Search..." />
-
-            <div className="flex flex-col gap-4 mt-3">
-              <NavLink to="/" onClick={() => setMobileOpen(false)}>
-                Home
+            <div className="flex flex-col gap-4">
+              <NavLink
+                to="/"
+                onClick={() => setMobileOpen(false)}
+                className={linkBase}
+              >
+                <AiOutlineHome size={20} />
+                {t("nav.home") || "Home"}
               </NavLink>
 
-              <NavLink to="/products" onClick={() => setMobileOpen(false)}>
-                Products
+              <NavLink
+                to="/products"
+                onClick={() => setMobileOpen(false)}
+                className={linkBase}
+              >
+                <AiOutlineAppstore size={20} />
+                {t("nav.products") || "Products"}
               </NavLink>
 
-              <NavLink to="/about" onClick={() => setMobileOpen(false)}>
-                About Us
-              </NavLink>
-
-              {isAdmin && (
-                <NavLink to="/admin" onClick={() => setMobileOpen(false)}>
-                  Admin Dashboard
+              {isUserLoaded && isAdmin && (
+                <NavLink
+                  to="/admin"
+                  onClick={() => setMobileOpen(false)}
+                  className={linkBase}
+                >
+                  <AiOutlineUser size={20} />
+                  {t("nav.admin") || "Admin Dashboard"}
                 </NavLink>
               )}
 
               {user && !isAdmin && (
-                <NavLink to="/userorders" onClick={() => setMobileOpen(false)}>
-                  My Orders
+                <NavLink
+                  to="/account/orders"
+                  onClick={() => setMobileOpen(false)}
+                  className={linkBase}
+                >
+                  {t("nav.myOrders") || "My Orders"}
                 </NavLink>
               )}
 
-              <NavLink to="/favorites" onClick={() => setMobileOpen(false)}>
-                Favorites ❤️
+              <NavLink
+                to="/favorites"
+                onClick={() => setMobileOpen(false)}
+                className={linkBase}
+              >
+                <AiOutlineHeart size={20} />
+                {t("nav.favorites") || "Favorites"}
               </NavLink>
-              <NavLink to="/cart" onClick={() => setMobileOpen(false)}>
-                Cart 🛒
+
+              <NavLink
+                to="/cart"
+                onClick={() => setMobileOpen(false)}
+                className={linkBase}
+              >
+                <AiOutlineShopping size={20} />
+                {t("nav.cart") || "Cart"}
               </NavLink>
+
+              {user ? (
+                <button
+                  onClick={handleLogout}
+                  className={`${linkBase} text-red-500`}
+                >
+                  <AiOutlineLogout size={20} />
+                  {t("nav.logout") || "Logout"}
+                </button>
+              ) : (
+                <NavLink
+                  to="/login"
+                  onClick={() => setMobileOpen(false)}
+                  className={linkBase}
+                >
+                  {t("nav.login") || "Login"}
+                </NavLink>
+              )}
             </div>
           </Motion.div>
         )}

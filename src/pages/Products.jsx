@@ -1,16 +1,16 @@
 ﻿// src/pages/Products.jsx
 import React, { useState, useMemo } from "react";
-import {
-  FiSearch,
-  FiArrowUp,
-  FiArrowDown,
-  FiHeart,
-  FiShoppingCart,
-  FiTag,
-} from "react-icons/fi";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import {
+  BsHeart,
+  BsHeartFill,
+  BsCartPlus,
+  BsArrowUp,
+  BsArrowDown,
+  BsTag,
+} from "react-icons/bs";
 import { useProductsSorted } from "../hooks/useProductsSorted";
 import { usePagination } from "../hooks/usePagination";
 import Pager from "../admin/Pager";
@@ -34,11 +34,13 @@ export default function Products() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const favorites = useSelector((state) => state.favorites?.items ?? state.favorites ?? []);
-  const favoriteIds = useMemo(() => {
-    if (!Array.isArray(favorites)) return new Set();
-    return new Set(favorites.map((item) => item?.id).filter(Boolean));
-  }, [favorites]);
+  const favorites = useSelector(
+    (state) => state.favorites?.items ?? state.favorites ?? []
+  );
+  const favoriteIds = useMemo(
+    () => new Set(favorites.map((item) => item?.id).filter(Boolean)),
+    [favorites]
+  );
 
   const {
     data: all = [],
@@ -46,9 +48,7 @@ export default function Products() {
     isError,
     error,
   } = useProductsSorted({ sortBy, dir, qText: q });
-
   const fallbackCatalog = useMemo(() => getFallbackProducts(), []);
-
   const usingFallback = useMemo(() => {
     if (isLoading) return false;
     if (isError) return true;
@@ -58,28 +58,30 @@ export default function Products() {
   const filteredFallback = useMemo(() => {
     if (!usingFallback) return [];
     const term = q.trim().toLowerCase();
-    const filtered = fallbackCatalog.filter((product) => {
+    const filtered = fallbackCatalog.filter((p) => {
       if (!term) return true;
-      const haystack = `${product.title} ${product.category} ${product.description || ""} ${
-        product.keywords?.join(" ") || ""
+      const haystack = `${p.title} ${p.category} ${p.description || ""} ${
+        p.keywords?.join(" ") || ""
       }`.toLowerCase();
       return haystack.includes(term);
     });
-    const sorted = [...filtered].sort((a, b) => {
-      if (sortBy === "price") {
+    return [...filtered].sort((a, b) => {
+      if (sortBy === "price")
         return dir === "asc" ? a.price - b.price : b.price - a.price;
-      }
-      if (sortBy === "title") {
+      if (sortBy === "title")
         return dir === "asc"
           ? a.title.localeCompare(b.title)
           : b.title.localeCompare(a.title);
-      }
-      return dir === "asc" ? a.createdAt - b.createdAt : b.createdAt - a.createdAt;
+      return dir === "asc"
+        ? a.createdAt - b.createdAt
+        : b.createdAt - a.createdAt;
     });
-    return sorted;
   }, [dir, fallbackCatalog, q, sortBy, usingFallback]);
 
-  const list = useMemo(() => (usingFallback ? filteredFallback : all), [all, filteredFallback, usingFallback]);
+  const list = useMemo(
+    () => (usingFallback ? filteredFallback : all),
+    [all, filteredFallback, usingFallback]
+  );
 
   const {
     paginatedData,
@@ -93,40 +95,31 @@ export default function Products() {
     totalItems,
   } = usePagination(list, pageSize);
 
-  const handleToggleFavorite = (product) => {
-    dispatch(toggleFavourite(product));
-  };
-
-  const handleAddToCart = (product) => {
-    dispatch(addToCart(product));
-  };
-
-  const handleCardClick = (productId) => {
-    navigate(`/products/${productId}`);
-  };
+  const handleToggleFavorite = (product) => dispatch(toggleFavourite(product));
+  const handleAddToCart = (product) => dispatch(addToCart(product));
+  const handleCardClick = (productId) => navigate(`/products/${productId}`);
 
   return (
-    <div className="relative text-white min-h-screen font-inter">
-      <div className="absolute inset-0 bg-[#658a8a] via-[#2a4435] to-[#214939]" />
-
-      <div className="mx-auto w-full max-w-7xl px-4 py-10 relative z-10">
+    <div className="relative min-h-screen bg-gradient-to-b from-[#3a5a4f]/40 to-[#1f3327] font-inter text-white">
+      <div className="mx-auto max-w-7xl px-4 py-10">
         {/* Header */}
-        <header className="mb-8 rounded-2xl border border-white/30 bg-white/5 p-6 shadow-2xl backdrop-blur-lg">
-          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-            <h1 className="text-3xl font-bold tracking-tight text-[#d7f7d0] flex items-center gap-2">
-              <FiTag className="text-[#9af59d]" /> {t("products.title", "Products")}
+        <header className="mb-8 rounded-2xl bg-white/10 backdrop-blur-md p-6 shadow-lg border border-white/20">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-6">
+            <h1 className="text-3xl font-bold flex items-center gap-3">
+              <BsTag className="text-green-300" />{" "}
+              {t("products.title", "Products")}
             </h1>
 
             {/* Filters */}
-            <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
               <div className="relative">
-                <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
                   placeholder={t("products.search", "Search products...")}
-                  className="w-full rounded-xl border border-white/20 bg-[#203232]/50 py-2.5 pl-9 pr-3 text-sm text-white placeholder:text-gray-400"
+                  className="w-full rounded-xl border border-white/20 bg-[#203232]/50 py-2.5 pl-10 pr-3 text-sm text-white placeholder:text-gray-400 focus:ring-1 focus:ring-green-400"
                 />
+                <BsTag className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               </div>
 
               <select
@@ -136,17 +129,22 @@ export default function Products() {
               >
                 {SORT_FIELDS.map((s) => (
                   <option key={s.value} value={s.value} className="text-black">
-                    {t("products.sortLabel", "Sort")}: {t(`products.sort.${s.value}`, s.label)}
+                    {t("products.sortLabel", "Sort")}:{" "}
+                    {t(`products.sort.${s.value}`, s.label)}
                   </option>
                 ))}
               </select>
 
               <button
                 onClick={() => setDir((d) => (d === "asc" ? "desc" : "asc"))}
-                className="w-full rounded-xl border border-white/20 bg-[#203232]/50 px-3 py-2.5 text-sm text-white flex items-center justify-center gap-2"
+                className="w-full rounded-xl border border-white/20 bg-[#203232]/50 px-3 py-2.5 flex items-center justify-center gap-2 text-sm font-medium hover:bg-green-500/20 transition"
               >
-                {dir === "asc" ? <FiArrowUp /> : <FiArrowDown />}
-                <span>{dir === "asc" ? t("products.asc", "Ascending") : t("products.desc", "Descending")}</span>
+                {dir === "asc" ? <BsArrowUp /> : <BsArrowDown />}
+                <span>
+                  {dir === "asc"
+                    ? t("products.asc", "Ascending")
+                    : t("products.desc", "Descending")}
+                </span>
               </button>
 
               <select
@@ -171,7 +169,6 @@ export default function Products() {
             {t("products.error", "Failed to load products.")} {error?.message}
           </div>
         )}
-
         {usingFallback && (
           <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50/80 p-4 text-sm text-amber-900 shadow dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-100">
             {t(
@@ -180,7 +177,6 @@ export default function Products() {
             )}
           </div>
         )}
-
         {!isLoading && !usingFallback && !isError && list.length === 0 && (
           <div className="rounded-lg border border-white/20 bg-white/10 p-8 text-center text-white/70">
             {t("products.noResults", "No products found.")}
@@ -189,92 +185,100 @@ export default function Products() {
 
         {/* Product Grid */}
         {!isLoading && list.length > 0 && (
-          <>
-            <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {paginatedData.map((p) => {
-                const isFavorite = favoriteIds.has(p.id);
-
-                return (
-                  <li
-                    key={p.id}
-                    className="group cursor-pointer overflow-hidden rounded-2xl bg-[#244036]/20 border border-[#9af59d]/10 shadow-lg hover:shadow-[#9af59d]/30 transition"
-                    onClick={() => handleCardClick(p.id)}
-                  >
-                    {p.thumbnailUrl ? (
+          <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {paginatedData.map((p) => {
+              const isFavorite = favoriteIds.has(p.id);
+              return (
+                <li
+                  key={p.id}
+                  className="group relative cursor-pointer overflow-hidden rounded-2xl border border-[#9af59d]/20 bg-[#244036]/20 shadow-lg hover:shadow-[#9af59d]/50 transition-all"
+                  onClick={() => handleCardClick(p.id)}
+                >
+                  {p.thumbnailUrl ? (
+                    <div className="h-72 w-full flex items-center justify-center bg-[#203232]/30 overflow-hidden rounded-t-2xl">
                       <img
                         src={p.thumbnailUrl}
                         alt={p.title}
-                        className="h-90 w-full object-cover group-hover:scale-105 transition-transform"
+                        className="max-h-full max-w-full object-contain transition-transform group-hover:scale-105"
                       />
-                    ) : (
-                      <div className="grid h-60 w-full place-items-center bg-white/5 text-xs text-white/50">
-                        {t("products.noImage", "No image")}
-                      </div>
-                    )}
-
-                    <div className="p-5 flex flex-col justify-between min-h-[180px]">
-                      <div>
-                        <h3 className="line-clamp-1 text-lg font-semibold text-[#e6ffe2]">
-                          {p.title}
-                        </h3>
-                        <p className="mt-2 line-clamp-1 text-sm text-[#9af59d]">
-                          {p.category}
-                        </p>
-                      </div>
-
-                      <div className="mt-3 flex items-center justify-between">
-                        <span className="text-base font-medium text-[#f5fff3]">
-                          {Number(p.price || 0).toLocaleString()} <span className="text-[#9af59d]/70">EGP</span>
-                        </span>
-                      </div>
-
-                      {/* Buttons */}
-                      <div className="mt-4 flex items-center gap-3">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleToggleFavorite(p);
-                          }}
-                          className="flex h-10 w-10 items-center justify-center rounded-full border border-[#9af59d]/20 bg-white/5 text-white hover:text-red-500"
-                        >
-                          <FiHeart
-                            size={20}
-                            className={isFavorite ? "text-red-500" : ""}
-                          />
-                        </button>
-
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleAddToCart(p);
-                          }}
-                          className="flex-1 h-10 rounded-xl border border-[#9af59d]/20 bg-[#203232]/60 px-4 text-sm font-semibold text-white hover:bg-[#9af59d]/20"
-                        >
-                          <div className="flex items-center justify-center gap-2">
-                            <FiShoppingCart size={18} />
-                            {t("products.addToCart", "Add to Cart")}
-                          </div>
-                        </button>
-                      </div>
                     </div>
-                  </li>
-                );
-              })}
-            </ul>
+                  ) : (
+                    <div className="grid h-72 w-full place-items-center bg-white/5 text-xs text-white/50">
+                      {t("products.noImage", "No image")}
+                    </div>
+                  )}
 
-            <div className="mt-8">
-              <Pager
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPrev={prevPage}
-                onNext={nextPage}
-                onGo={setPage}
-                rangeStart={rangeStart}
-                rangeEnd={rangeEnd}
-                totalItems={totalItems}
-              />
-            </div>
-          </>
+                  <div className="p-5 flex flex-col justify-between min-h-[180px]">
+                    <div>
+                      <h3 className="line-clamp-1 text-lg font-semibold text-[#e6ffe2]">
+                        {p.title}
+                      </h3>
+                      <p className="mt-2 text-sm text-[#9af59d]">
+                        {p.category}
+                      </p>
+                    </div>
+
+                    <div className="mt-3 flex items-center justify-between">
+                      <span className="text-base font-medium text-[#f5fff3]">
+                        {Number(p.price || 0).toLocaleString()}{" "}
+                        <span className="text-[#9af59d]/70">EGP</span>
+                      </span>
+                      {p.stock !== undefined && (
+                        <span className="text-xs text-gray-300">
+                          {p.stock > 0 ? "In Stock" : "Out of Stock"}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="mt-4 flex items-center gap-3">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleFavorite(p);
+                        }}
+                        className="flex h-10 w-10 items-center justify-center rounded-full border border-[#9af59d]/20 bg-white/5 hover:bg-red-500/20 text-white transition"
+                      >
+                        {isFavorite ? (
+                          <BsHeartFill className="text-red-500" />
+                        ) : (
+                          <BsHeart />
+                        )}
+                      </button>
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAddToCart(p);
+                        }}
+                        disabled={p.stock === 0}
+                        className="flex-1 h-10 rounded-xl border border-[#9af59d]/20 bg-[#203232]/60 px-4 text-sm font-semibold text-white hover:bg-[#9af59d]/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <div className="flex items-center justify-center gap-2">
+                          <BsCartPlus size={18} />
+                          {t("products.addToCart", "Add to Cart")}
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+
+        {list.length > 0 && (
+          <div className="mt-8">
+            <Pager
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPrev={prevPage}
+              onNext={nextPage}
+              onGo={setPage}
+              rangeStart={rangeStart}
+              rangeEnd={rangeEnd}
+              totalItems={totalItems}
+            />
+          </div>
         )}
       </div>
     </div>
@@ -283,11 +287,11 @@ export default function Products() {
 
 function GridSkeleton({ count = 6 }) {
   return (
-    <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: count }).map((_, i) => (
         <li
           key={i}
-          className="h-72 animate-pulse rounded-xl bg-[#244036]/40 backdrop-blur"
+          className="h-72 animate-pulse rounded-2xl bg-[#244036]/40 backdrop-blur"
         />
       ))}
     </ul>

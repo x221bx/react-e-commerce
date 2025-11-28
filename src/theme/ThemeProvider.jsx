@@ -1,52 +1,33 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import { useSelector } from "react-redux";
-import { selectCurrentUser } from "../features/auth/authSlice";
-import { saveUserPreferences, subscribeToUserPreferences } from "../services/userDataService";
+// ThemeProvider.jsx
+import { createContext, useContext, useState, useEffect } from "react";
 
-const ThemeCtx = createContext({ theme: "light", toggle: () => {} });
-export const UseTheme = () => useContext(ThemeCtx);
+const ThemeContext = createContext();
 
-export default function ThemeProvider({ children }) {
+export const UseTheme = () => useContext(ThemeContext);
+
+export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState("light");
-  const user = useSelector(selectCurrentUser);
 
-  // Subscribe to user preferences from Firebase
   useEffect(() => {
-    if (!user?.uid) {
-      // Use localStorage for non-authenticated users
-      const savedTheme = localStorage.getItem("theme") || "light";
-      setTheme(savedTheme);
-      return;
-    }
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) setTheme(savedTheme);
+  }, []);
 
-    const unsubscribe = subscribeToUserPreferences(user.uid, (preferences) => {
-      const userTheme = preferences?.theme || "light";
-      setTheme(userTheme);
-    });
+  const toggle = () => {
+    const newTheme = theme === "light" ? "dark" : "light";
+    setTheme(newTheme);
+    localStorage.setItem("theme", newTheme);
+    document.documentElement.classList.toggle("dark", newTheme === "dark");
+  };
 
-    return unsubscribe;
-  }, [user?.uid]);
-
-  // Apply theme to DOM and save to Firebase/localStorage
   useEffect(() => {
-    const html = document.documentElement;
-    html.classList.remove("light", "dark");
-    html.classList.add(theme);
-
-    if (user?.uid) {
-      // Save to Firebase for authenticated users
-      saveUserPreferences(user.uid, { theme }).catch(console.error);
-    } else {
-      // Save to localStorage for non-authenticated users
-      localStorage.setItem("theme", theme);
-    }
-  }, [theme, user?.uid]);
-
-  const toggle = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
+    document.documentElement.classList.toggle("dark", theme === "dark");
+  }, [theme]);
 
   return (
-    <ThemeCtx.Provider value={{ theme, toggle }}>
+    <ThemeContext.Provider value={{ theme, toggle }}>
       {children}
-    </ThemeCtx.Provider>
+    </ThemeContext.Provider>
   );
-}
+};
+export default ThemeProvider;

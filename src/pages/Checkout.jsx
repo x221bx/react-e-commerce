@@ -1,49 +1,100 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useMemo } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { useNavigate, Link } from "react-router-dom";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { db, auth } from "../services/firebase";
+import { finalizeOrderLocal } from "../features/cart/cartSlice";
+import useOrders from "../hooks/useOrders";
 import toast from "react-hot-toast";
-import { selectCurrentUser } from "../features/auth/authSlice";
-import { clearCart } from "../features/cart/cartSlice";
-import { createOrder } from "../services/ordersService";
-import { UseTheme } from "../theme/ThemeProvider";
-import { useTranslation } from "react-i18next";
 
-const buildInitialForm = (user) => ({
-  fullName: user?.name || "",
-  email: user?.email || "",
-  phone: "",
-  addressLine1: "",
-  addressLine2: "",
-  city: "",
-  state: "",
-  postalCode: "",
-  country: "Egypt",
-});
-
-const Checkout = () => {
-  const { t } = useTranslation();
+export default function Checkout() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { theme } = UseTheme();
-  const user = useSelector(selectCurrentUser);
-  const items = useSelector((state) => state.cart.items);
+  const { items } = useSelector((state) => state.cart);
+  const { reduceStock } = useOrders();
+  const user = auth.currentUser;
 
-  useEffect(() => {
-    setForm((prev) => ({
-      ...prev,
-      fullName: user?.name || prev.fullName,
-      email: user?.email || prev.email,
-    }));
-  }, [user]);
-
-  const [form, setForm] = useState(() => buildInitialForm(user));
+  const [form, setForm] = useState({
+    fullName: "",
+    phone: "",
+    address: "",
+    city: "",
+    notes: "",
+  });
   const [errors, setErrors] = useState({});
-  const [paymentMethod, setPaymentMethod] = useState("cod");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("cod"); // COD by default
 
+  // Validation logic
+  const validate = () => {
+    const err = {};
+    if (!form.fullName.trim()) err.fullName = "Full name is required";
+    if (!/^(01)[0-9]{9}$/.test(form.phone)) err.phone = "Invalid phone number";
+    if (!form.address.trim()) err.address = "Address is required";
+    if (!form.city.trim()) err.city = "City is required";
+    setErrors(err);
+    return Object.keys(err).length === 0;
+  };
+
+  const handleConfirm = async () => {
+    if (!validate()) return;
+    if (!user) return toast.error("User not logged in");
+    if (!items.length) return toast.error("Cart is empty");
+
+    setLoading(true);
+    try {
+      // Reduce stock first
+      await reduceStock(
+        items.map((i) => ({ id: i.id, quantity: i.quantity ?? 0 }))
+      );
+
+      // Prepare order data
+      const orderData = {
+        uid: user.uid,
+        email: user.email,
+        fullName: form.fullName,
+        phone: form.phone,
+        address: form.address,
+        city: form.city,
+        notes: form.notes || "",
+        paymentMethod,
+        items: items.map((i) => ({
+          productId: i.id || "unknown-id",
+          name: i.name || i.title,
+          category: i.category || "—",
+          quantity: i.quantity ?? 0,
+          price: i.price ?? 0,
+          imageUrl: i.imageUrl || i.thumbnailUrl || "",
+        })),
+        total: items.reduce(
+          (sum, i) => sum + (i.price ?? 0) * (i.quantity ?? 0),
+          0
+        ),
+        status: "Pending",
+        statusHistory: [
+          { status: "Pending", changedAt: new Date().toISOString() },
+        ],
+        createdAt: serverTimestamp(),
+      };
+
+      // Add order to Firebase
+      await addDoc(collection(db, "orders"), orderData);
+
+      dispatch(finalizeOrderLocal());
+      toast.success("Order placed successfully!");
+      navigate("/success");
+    } catch (err) {
+      console.error("Checkout error:", err);
+      toast.error("Failed to place order. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Summary calculations
   const summary = useMemo(() => {
     const subtotal = items.reduce(
-      (sum, i) => sum + Number(i.price || 0) * (i.quantity || 1),
+      (sum, i) => sum + (i.price ?? 0) * (i.quantity ?? 0),
       0
     );
     const shipping = items.length > 0 ? 50 : 0;
@@ -51,89 +102,24 @@ const Checkout = () => {
     return { subtotal, shipping, total };
   }, [items]);
 
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-    setErrors((prev) => ({ ...prev, [name]: "" }));
-  };
-
-  const validate = () => {
-    const nextErrors = {};
-    if (!form.fullName.trim()) nextErrors.fullName = t("checkout.errors.fullName");
-    if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email)) {
-      nextErrors.email = t("checkout.errors.email");
-    }
-    if (!form.phone.trim() || form.phone.replace(/\D/g, "").length < 7) {
-      nextErrors.phone = t("checkout.errors.phone");
-    }
-    if (!form.addressLine1.trim()) nextErrors.addressLine1 = t("checkout.errors.address");
-    if (!form.city.trim()) nextErrors.city = t("checkout.errors.city");
-    if (!form.postalCode.trim()) nextErrors.postalCode = t("checkout.errors.postalCode");
-    if (!form.country.trim()) nextErrors.country = t("checkout.errors.country");
-    setErrors(nextErrors);
-    return Object.keys(nextErrors).length === 0;
-  };
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    if (!user) {
-      toast.error(t("checkout.messages.loginRequired"));
-      return;
-    }
-    if (!items.length) {
-      toast.error(t("checkout.messages.emptyCart"));
-      return;
-    }
-    if (!validate()) return;
-
-    setIsSubmitting(true);
-    try {
-      const orderId = await createOrder({
-        userId: user.uid,
-        userEmail: user.email,
-        userName: user.name,
-        shipping: form,
-        paymentMethod,
-        totals: summary,
-        items,
-      });
-      dispatch(clearCart());
-      toast.success(t("checkout.messages.success"));
-      navigate(`/checkout/confirmation?orderId=${orderId}`, {
-        state: { orderId },
-        replace: true,
-      });
-    } catch (error) {
-      console.error(error);
-      toast.error(error.message || t("checkout.messages.failure"));
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const surface =
-    theme === "dark"
-      ? "border-slate-800 bg-slate-900/70 text-slate-100"
-      : "border-slate-100 bg-white text-slate-900";
-
   const inputClasses =
     "w-full rounded-2xl border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 transition";
 
   if (!items.length) {
     return (
-      <section className="mx-auto mt-20 max-w-2xl rounded-3xl border border-dashed border-emerald-200 bg-white/80 p-10 text-center shadow-sm dark:border-emerald-900/30 dark:bg-slate-900/60">
-        <p className="text-xl font-semibold text-slate-800 dark:text-slate-100">
-          {t("checkout.empty.title")}
+      <section className="mx-auto mt-20 max-w-2xl rounded-3xl border border-dashed border-emerald-200 bg-white/80 p-10 text-center shadow-sm">
+        <p className="text-xl font-semibold text-slate-800">
+          Your cart is empty
         </p>
-        <p className="mt-2 text-sm text-slate-500 dark:text-slate-300">
-          {t("checkout.empty.subtitle")}
+        <p className="mt-2 text-sm text-slate-500">
+          Please add some products first.
         </p>
         <div className="mt-6 flex justify-center gap-3">
           <Link
             to="/products"
             className="rounded-2xl bg-emerald-500 px-5 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-600"
           >
-            {t("checkout.empty.cta")}
+            Go to Products
           </Link>
         </div>
       </section>
@@ -142,19 +128,19 @@ const Checkout = () => {
 
   if (!user) {
     return (
-      <section className="mx-auto mt-20 max-w-2xl rounded-3xl border border-amber-200 bg-amber-50/80 p-10 text-center shadow-sm dark:border-amber-900/40 dark:bg-slate-900/50">
-        <p className="text-lg font-semibold text-amber-900 dark:text-amber-200">
-          {t("checkout.authRequired.title")}
+      <section className="mx-auto mt-20 max-w-2xl rounded-3xl border border-amber-200 bg-amber-50/80 p-10 text-center shadow-sm">
+        <p className="text-lg font-semibold text-amber-900">
+          You need to login
         </p>
-        <p className="mt-2 text-sm text-amber-800 dark:text-amber-200/80">
-          {t("checkout.authRequired.subtitle")}
+        <p className="mt-2 text-sm text-amber-800">
+          Please login to complete your order.
         </p>
         <div className="mt-6 flex justify-center gap-3">
           <Link
             to="/login"
             className="rounded-2xl bg-emerald-500 px-5 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-600"
           >
-            {t("checkout.authRequired.cta")}
+            Login
           </Link>
         </div>
       </section>
@@ -162,127 +148,78 @@ const Checkout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-10 dark:bg-slate-950">
+    <div className="min-h-screen bg-slate-50 py-10">
       <div className="mx-auto grid max-w-6xl gap-8 px-4 sm:px-6 lg:grid-cols-[2fr,1fr]">
-        <form onSubmit={handleSubmit} className={`rounded-3xl border ${surface} p-6 shadow-sm space-y-6`}>
+        <form className="rounded-3xl border bg-white p-6 shadow-sm space-y-6">
           <header>
-            <p className="text-sm font-semibold uppercase tracking-wide text-emerald-500">
-              {t("checkout.header.eyebrow")}
-            </p>
-            <h1 className="text-2xl font-semibold">
-              {t("checkout.header.title")}
-            </h1>
-            <p className="text-sm text-slate-500 dark:text-slate-300">
-              {t("checkout.header.subtitle")}
-            </p>
+            <h1 className="text-2xl font-semibold">Checkout</h1>
           </header>
 
+          {/* Contact Info */}
           <section className="space-y-4">
-            <h2 className="text-lg font-semibold">
-              {t("checkout.sections.contact")}
-            </h2>
+            <h2 className="text-lg font-semibold">Contact Info</h2>
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="text-sm font-medium">
-                  {t("checkout.fields.fullName")}
-                </label>
+                <label className="text-sm font-medium">Full Name</label>
                 <input
                   type="text"
-                  name="fullName"
                   value={form.fullName}
-                  onChange={handleChange}
-                  className={`${inputClasses} ${errors.fullName ? "border-red-400" : "border-slate-200 dark:border-slate-700"}`}
+                  onChange={(e) =>
+                    setForm({ ...form, fullName: e.target.value })
+                  }
+                  className={`${inputClasses} ${
+                    errors.fullName ? "border-red-400" : "border-slate-200"
+                  }`}
                 />
                 {errors.fullName && (
                   <p className="mt-1 text-xs text-red-500">{errors.fullName}</p>
                 )}
               </div>
               <div>
-                <label className="text-sm font-medium">
-                  {t("checkout.fields.email")}
-                </label>
+                <label className="text-sm font-medium">Phone</label>
                 <input
-                  type="email"
-                  name="email"
-                  value={form.email}
-                  onChange={handleChange}
-                  className={`${inputClasses} ${errors.email ? "border-red-400" : "border-slate-200 dark:border-slate-700"}`}
-                />
-                {errors.email && (
-                  <p className="mt-1 text-xs text-red-500">{errors.email}</p>
-                )}
-              </div>
-            </div>
-            <div>
-              <label className="text-sm font-medium">
-                {t("checkout.fields.phone")}
-              </label>
-              <input
-                type="tel"
-                name="phone"
-                value={form.phone}
-                onChange={handleChange}
-                className={`${inputClasses} ${errors.phone ? "border-red-400" : "border-slate-200 dark:border-slate-700"}`}
-              />
-              {errors.phone && (
-                <p className="mt-1 text-xs text-red-500">{errors.phone}</p>
-              )}
-            </div>
-          </section>
-          <section className="space-y-4">
-            <h2 className="text-lg font-semibold">
-              {t("checkout.sections.shipping")}
-            </h2>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="text-sm font-medium">
-                  {t("checkout.fields.addressLine1")}
-                </label>
-                <input
-                  type="text"
-                  name="addressLine1"
-                  value={form.addressLine1}
-                  onChange={handleChange}
+                  type="tel"
+                  value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
                   className={`${inputClasses} ${
-                    errors.addressLine1
-                      ? "border-red-400"
-                      : "border-slate-200 dark:border-slate-700"
+                    errors.phone ? "border-red-400" : "border-slate-200"
                   }`}
                 />
-                {errors.addressLine1 && (
-                  <p className="mt-1 text-xs text-red-500">
-                    {errors.addressLine1}
-                  </p>
+                {errors.phone && (
+                  <p className="mt-1 text-xs text-red-500">{errors.phone}</p>
+                )}
+              </div>
+            </div>
+          </section>
+
+          {/* Shipping Info */}
+          <section className="space-y-4">
+            <h2 className="text-lg font-semibold">Shipping Address</h2>
+            <div className="grid gap-4">
+              <div>
+                <label className="text-sm font-medium">Address</label>
+                <input
+                  type="text"
+                  value={form.address}
+                  onChange={(e) =>
+                    setForm({ ...form, address: e.target.value })
+                  }
+                  className={`${inputClasses} ${
+                    errors.address ? "border-red-400" : "border-slate-200"
+                  }`}
+                />
+                {errors.address && (
+                  <p className="mt-1 text-xs text-red-500">{errors.address}</p>
                 )}
               </div>
               <div>
-                <label className="text-sm font-medium">
-                  {t("checkout.fields.addressLine2")}
-                </label>
+                <label className="text-sm font-medium">City</label>
                 <input
                   type="text"
-                  name="addressLine2"
-                  value={form.addressLine2}
-                  onChange={handleChange}
-                  className={`${inputClasses} border-slate-200 dark:border-slate-700`}
-                  placeholder={t("checkout.fields.optional")}
-                />
-              </div>
-            </div>
-            <div className="grid gap-4 md:grid-cols-3">
-              <div>
-                <label className="text-sm font-medium">
-                  {t("checkout.fields.city")}
-                </label>
-                <input
-                  type="text"
-                  name="city"
                   value={form.city}
-                  onChange={handleChange}
+                  onChange={(e) => setForm({ ...form, city: e.target.value })}
                   className={`${inputClasses} ${
-                    errors.city
-                      ? "border-red-400"
-                      : "border-slate-200 dark:border-slate-700"
+                    errors.city ? "border-red-400" : "border-slate-200"
                   }`}
                 />
                 {errors.city && (
@@ -290,74 +227,28 @@ const Checkout = () => {
                 )}
               </div>
               <div>
-                <label className="text-sm font-medium">
-                  {t("checkout.fields.state")}
-                </label>
-                <input
-                  type="text"
-                  name="state"
-                  value={form.state}
-                  onChange={handleChange}
-                  className={`${inputClasses} border-slate-200 dark:border-slate-700`}
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">
-                  {t("checkout.fields.postalCode")}
-                </label>
-                <input
-                  type="text"
-                  name="postalCode"
-                  value={form.postalCode}
-                  onChange={handleChange}
-                  className={`${inputClasses} ${
-                    errors.postalCode
-                      ? "border-red-400"
-                      : "border-slate-200 dark:border-slate-700"
-                  }`}
-                />
-                {errors.postalCode && (
-                  <p className="mt-1 text-xs text-red-500">
-                    {errors.postalCode}
-                  </p>
-                )}
-              </div>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="text-sm font-medium">
-                  {t("checkout.fields.country")}
-                </label>
-                <input
-                  type="text"
-                  name="country"
-                  value={form.country}
-                  onChange={handleChange}
-                  className={`${inputClasses} ${
-                    errors.country
-                      ? "border-red-400"
-                      : "border-slate-200 dark:border-slate-700"
-                  }`}
-                />
-                {errors.country && (
-                  <p className="mt-1 text-xs text-red-500">{errors.country}</p>
-                )}
+                <label className="text-sm font-medium">Notes (optional)</label>
+                <textarea
+                  rows="3"
+                  value={form.notes}
+                  onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                  className={inputClasses}
+                ></textarea>
               </div>
             </div>
           </section>
 
+          {/* Payment Method */}
           <section className="space-y-4">
-            <h2 className="text-lg font-semibold">
-              {t("checkout.sections.payment")}
-            </h2>
+            <h2 className="text-lg font-semibold">Payment Method</h2>
             <div className="grid gap-4 sm:grid-cols-2">
               {["cod", "card"].map((method) => (
                 <label
                   key={method}
                   className={`flex cursor-pointer flex-col gap-2 rounded-2xl border px-4 py-3 text-sm ${
                     paymentMethod === method
-                      ? "border-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/20"
-                      : "border-slate-200 dark:border-slate-700"
+                      ? "border-emerald-500 bg-emerald-50/50"
+                      : "border-slate-200"
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -369,14 +260,7 @@ const Checkout = () => {
                     />
                     <div>
                       <p className="font-semibold">
-                        {method === "cod"
-                          ? t("checkout.payment.cod.title")
-                          : t("checkout.payment.card.title")}
-                      </p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        {method === "cod"
-                          ? t("checkout.payment.cod.subtitle")
-                          : t("checkout.payment.card.subtitle")}
+                        {method === "cod" ? "Cash on Delivery" : "Card Payment"}
                       </p>
                     </div>
                   </div>
@@ -385,38 +269,33 @@ const Checkout = () => {
             </div>
           </section>
 
+          {/* Action Buttons */}
           <div className="flex flex-wrap gap-3 pt-2">
             <Link
               to="/cart"
-              className="rounded-2xl border border-slate-200 px-5 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200"
+              className="rounded-2xl border border-slate-200 px-5 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50"
             >
-              {t("checkout.actions.backToCart")}
+              Back to Cart
             </Link>
             <button
-              type="submit"
-              disabled={isSubmitting}
+              type="button"
+              onClick={handleConfirm}
+              disabled={loading}
               className="inline-flex items-center rounded-2xl bg-emerald-500 px-6 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-600 disabled:opacity-70"
             >
-              {isSubmitting
-                ? t("checkout.actions.processing")
-                : t("checkout.actions.completeOrder")}
+              {loading ? "Processing..." : "Confirm Order"}
             </button>
           </div>
         </form>
 
-        <aside className={`rounded-3xl border ${surface} p-6 shadow-sm`}>
-          <h2 className="text-lg font-semibold">
-            {t("checkout.summary.title")}
-          </h2>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-300">
-            {t("checkout.summary.subtitle")}
-          </p>
-
+        {/* Order Summary (Sidebar on large screens, full width on mobile) */}
+        <aside className="rounded-3xl border bg-white p-6 shadow-sm lg:block hidden">
+          <h2 className="text-lg font-semibold">Order Summary</h2>
           <div className="mt-4 space-y-4">
             {items.map((item) => (
               <div
                 key={item.id}
-                className="flex items-center gap-3 rounded-2xl border border-slate-100 p-3 dark:border-slate-800"
+                className="flex items-center gap-3 rounded-2xl border border-slate-100 p-3"
               >
                 <img
                   src={item.thumbnailUrl || item.img}
@@ -427,41 +306,65 @@ const Checkout = () => {
                   <p className="text-sm font-semibold">
                     {item.name || item.title}
                   </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {t("checkout.summary.quantity", {
-                      count: item.quantity || 1,
-                    })}
+                  <p className="text-xs text-slate-500">
+                    Qty: {item.quantity ?? 1}
                   </p>
                 </div>
-                <p className="text-sm font-semibold">
-                  {`${Number(item.price).toLocaleString()} EGP`}
-                </p>
+                <p className="text-sm font-semibold">{`${Number(
+                  item.price
+                ).toLocaleString()} EGP`}</p>
               </div>
             ))}
           </div>
 
           <div className="mt-6 space-y-2 text-sm">
             <div className="flex items-center justify-between">
-              <span>{t("checkout.summary.subtotal")}</span>
+              <span>Subtotal</span>
               <span>{`${summary.subtotal.toLocaleString()} EGP`}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span>{t("checkout.summary.shipping")}</span>
+              <span>Shipping</span>
               <span>{`${summary.shipping.toLocaleString()} EGP`}</span>
             </div>
             <div className="flex items-center justify-between text-base font-semibold">
-              <span>{t("checkout.summary.total")}</span>
+              <span>Total</span>
               <span>{`${summary.total.toLocaleString()} EGP`}</span>
             </div>
           </div>
-
-          <div className="mt-6 rounded-2xl bg-emerald-50/70 p-4 text-sm text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-200">
-            {t("checkout.summary.note")}
-          </div>
         </aside>
+
+        {/* Mobile Order Details (visible only on small screens) */}
+        <div className="lg:hidden mt-6">
+          <h2 className="text-lg font-semibold mb-2">Order Summary</h2>
+          {items.map((item) => (
+            <div
+              key={item.id}
+              className="flex items-center gap-3 rounded-2xl border border-slate-100 p-3 mb-2"
+            >
+              <img
+                src={item.thumbnailUrl || item.img}
+                alt={item.name || item.title}
+                className="h-16 w-16 rounded-xl object-cover"
+              />
+              <div className="flex-1">
+                <p className="text-sm font-semibold">
+                  {item.name || item.title}
+                </p>
+                <p className="text-xs text-slate-500">
+                  Qty: {item.quantity ?? 1}
+                </p>
+              </div>
+              <p className="text-sm font-semibold">{`${Number(
+                item.price
+              ).toLocaleString()} EGP`}</p>
+            </div>
+          ))}
+          <div className="mt-4 flex justify-between font-semibold">
+            <span>Total:</span>
+            <span>{`${summary.total.toLocaleString()} EGP`}</span>
+          </div>
+        </div>
       </div>
     </div>
   );
-};
-
-export default Checkout;
+}

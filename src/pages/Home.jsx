@@ -9,7 +9,7 @@ import { useCategoriesSorted } from "../hooks/useCategoriesSorted";
 import { getFallbackArticles, localizeArticleRecord } from "../data/articles";
 import useArticles from "../hooks/useArticles";
 import { useTranslation } from "react-i18next";
-
+import SimpleAnalyticsPanel from "./SimpleAnalyticsPanel";
 export default function Home() {
   const { i18n } = useTranslation();
   const { data: catData = [] } = useCategoriesSorted({ dir: "desc" });
@@ -17,20 +17,28 @@ export default function Home() {
 
   const locale = i18n.language || "en";
   const fallbackArticles = getFallbackArticles({ locale, featureHome: true });
-  const localizedFeatured = featuredArticles.map((article) => localizeArticleRecord(article, locale));
-  const featuredSource = localizedFeatured.length ? localizedFeatured : fallbackArticles;
+  const localizedFeatured = featuredArticles.map((article) =>
+    localizeArticleRecord(article, locale)
+  );
+  const featuredSource = localizedFeatured.length
+    ? localizedFeatured
+    : fallbackArticles;
 
   const categories = catData.map((category) => ({
     id: category.id,
     title: category.name || "Category",
     note: category.note || "Browse products",
-    img: category.img || "https://dummyimage.com/300x300/eeeeee/000000&text=No+Image",
+    img:
+      category.img ||
+      "https://dummyimage.com/300x300/eeeeee/000000&text=No+Image",
   }));
 
   const articles = featuredSource.map((article) => ({
     title: article.title,
     excerpt: article.summary,
-    img: article.heroImage || "https://dummyimage.com/400x300/0f172a/ffffff&text=Article",
+    img:
+      article.heroImage ||
+      "https://dummyimage.com/400x300/0f172a/ffffff&text=Article",
   }));
 
   return (
@@ -52,7 +60,9 @@ export default function Home() {
       <section className="container mx-auto px-4">
         <FeaturedProducts />
       </section>
-
+      <section>
+        <SimpleAnalyticsPanel />
+      </section>
       <div className="container mx-auto px-4">
         <div className="flex flex-col items-stretch gap-8 lg:flex-row">
           <Articles header="Top Articles" items={articles} />
