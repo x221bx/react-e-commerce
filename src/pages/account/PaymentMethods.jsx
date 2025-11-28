@@ -10,7 +10,6 @@ import {
 import Input from "../../components/ui/Input";
 import { UseTheme } from "../../theme/ThemeProvider";
 import { useTranslation } from "react-i18next";
-import { isValidEmail } from "../../utils/validators";
 import { useSelector } from "react-redux";
 import { selectCurrentUser } from "../../features/auth/authSlice";
 import {
@@ -50,6 +49,9 @@ const walletLabels = {
   apple: "Apple Pay",
   google: "Google Wallet",
 };
+
+const isValidEmail = (value = "") =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 
 export default function PaymentMethods() {
   const { theme } = UseTheme();
@@ -405,30 +407,43 @@ export default function PaymentMethods() {
     setDeleteConfirm(id);
   };
 
-  const confirmDeleteMethod = () => {
+  const confirmDeleteMethod = async () => {
     if (!user?.uid || !deleteConfirm) return;
     const ref = doc(db, "users", user.uid, "paymentMethods", deleteConfirm);
-    deleteDoc(ref)
-      .then(() => {
-        // Refresh the list after deletion
-        const colRef = collection(db, "users", user.uid, "paymentMethods");
-        return getDocs(query(colRef));
-      })
-      .then((snap) => {
-        const data = snap.docs
+
+    try {
+      await deleteDoc(ref);
+      const colRef = collection(db, "users", user.uid, "paymentMethods");
+      const snap = await getDocs(query(colRef));
+      const data = snap.docs
+        .map((d) => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => {
+          const aDate = a.createdAt?.toMillis?.() || 0;
+          const bDate = b.createdAt?.toMillis?.() || 0;
+          return bDate - aDate;
+        });
+
+      // ensure a default method remains
+      const hasDefault = data.some((method) => method.isDefault);
+      if (!hasDefault && data[0]) {
+        await ensureSingleDefault(data[0].id);
+        const refreshedSnap = await getDocs(query(colRef));
+        const refreshed = refreshedSnap.docs
           .map((d) => ({ id: d.id, ...d.data() }))
           .sort((a, b) => {
             const aDate = a.createdAt?.toMillis?.() || 0;
             const bDate = b.createdAt?.toMillis?.() || 0;
             return bDate - aDate;
           });
+        setMethods(refreshed);
+      } else {
         setMethods(data);
-        setDeleteConfirm(null);
-      })
-      .catch((err) => {
-        console.error("Failed to delete method", err);
-        setDeleteConfirm(null);
-      });
+      }
+    } catch (err) {
+      console.error("Failed to delete method", err);
+    } finally {
+      setDeleteConfirm(null);
+    }
   };
 
   const handleSetDefault = (id) => {

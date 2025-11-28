@@ -15,6 +15,7 @@ const Favorites = lazy(() => import("./pages/Favorites"));
 const Cart = lazy(() => import("./pages/Cart"));
 const ProductDetails = lazy(() => import("./pages/ProductDetails"));
 const About = lazy(() => import("./pages/About"));
+const AnalysisDashboard = lazy(() => import("./pages/AnalysisDashboard"));
 const ContactUs = lazy(() => import("./pages/contactus"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const OrderConfirmation = lazy(() => import("./pages/OrderConfirmation"));
@@ -27,6 +28,7 @@ const OrderTracking = lazy(() => import("./pages/account/OrderTracking"));
 const OrderHistory = lazy(() => import("./pages/account/OrderHistory"));
 const SavedProducts = lazy(() => import("./pages/account/SavedProducts"));
 const FavoriteArticles = lazy(() => import("./pages/account/FavoriteArticles"));
+const AiConversations = lazy(() => import("./pages/account/AiConversations"));
 const SupportCenter = lazy(() => import("./pages/account/SupportCenter"));
 const Complaints = lazy(() => import("./pages/account/Complaints"));
 const PaymentMethods = lazy(() => import("./pages/account/PaymentMethods"));
@@ -38,6 +40,7 @@ const AdminCategories = lazy(() => import("./pages/admin/AdminCategories"));
 const AdminArticles = lazy(() => import("./pages/admin/AdminArticles"));
 const AdminComplaints = lazy(() => import("./pages/admin/AdminComplaints"));
 const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
+const AdminOrderDetails = lazy(() => import("./pages/admin/AdminOrderDetails"));
 const ChatBot = lazy(() => import("./components/Ai/ChatBot"));
 
 // Loading component for Suspense fallback
@@ -65,6 +68,7 @@ export default function App() {
                     <Route path="/favorites" element={<Favorites />} />
                     <Route path="/products/:id" element={<ProductDetails />} />
                     <Route path="/cart" element={<Cart />} />
+                    <Route path="/analysis-dashboard" element={<AnalysisDashboard />} />
                     <Route path="/articles" element={<ArticlesList />} />
                     <Route path="/articles/:articleSlug" element={<ArticleDetails />} />
                     <Route path="/login" element={<Login />} />
@@ -77,7 +81,7 @@ export default function App() {
 
                     {/* Authenticated User Routes */}
                     <Route element={<ProtectedRoute />}>
-                        <Route path="/checkout/confirmation" element={<OrderConfirmation />} />
+                        <Route path="/order-confirmation" element={<OrderConfirmation />} />
                         <Route path="/settings" element={<UserSettings />} />
                         <Route path="/account" element={<AccountLayout />}>
                             <Route index element={<Navigate to="tracking" replace />} />
@@ -85,8 +89,9 @@ export default function App() {
                             <Route path="payments" element={<PaymentMethods />} />
                             <Route path="orders" element={<OrderHistory />} />
                             <Route path="tracking" element={<OrderTracking />} />
-                            <Route path="saved" element={<SavedProducts />} />
-                            <Route path="articles" element={<FavoriteArticles />} />
+              <Route path="saved" element={<SavedProducts />} />
+              <Route path="articles" element={<FavoriteArticles />} />
+              <Route path="ai" element={<AiConversations />} />
                             <Route path="support" element={<SupportCenter />} />
                             <Route path="complaints" element={<Complaints />} />
                         </Route>
@@ -102,6 +107,7 @@ export default function App() {
                             <Route path="categories" element={<AdminCategories />} />
                             <Route path="articles" element={<AdminArticles />} />
                             <Route path="orders" element={<AdminOrders />} />
+                            <Route path="orders/:id" element={<AdminOrderDetails />} />
                             <Route path="complaints" element={<AdminComplaints />} />
                             <Route path="messages" element={<AdminMessages/>} />
                         </Route>

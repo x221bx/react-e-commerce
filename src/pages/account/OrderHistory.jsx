@@ -148,7 +148,7 @@ export default function OrderHistory() {
                 </td>
                 <td className="px-6 py-4 text-right">
                   <Link
-                    to={`/checkout/confirmation?orderId=${order.id}`}
+                    to={`/order-confirmation?orderId=${order.id}`}
                     className={`text-sm font-semibold hover:underline ${linkColor}`}
                   >
                     {t("orders.table.view")}
@@ -200,7 +200,7 @@ export default function OrderHistory() {
               </div>
 
               <Link
-                to={`/checkout/confirmation?orderId=${order.id}`}
+                to={`/order-confirmation?orderId=${order.id}`}
                 className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold transition hover:bg-emerald-50 ${linkColor} border-current`}
               >
                 {t("orders.table.view")}

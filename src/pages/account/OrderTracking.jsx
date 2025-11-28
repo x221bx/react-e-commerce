@@ -76,6 +76,7 @@ export default function OrderTracking() {
   };
 
   const baseSteps = [
+    { key: "pending", label: t("tracking.steps.orderPlaced", "Order Placed") },
     { key: "processing", label: t("tracking.steps.processing", "Processing") },
     { key: "shipped", label: t("tracking.steps.shipped", "Shipped") },
     { key: "out_for_delivery", label: t("tracking.steps.outForDelivery", "Out for Delivery") },
@@ -84,7 +85,7 @@ export default function OrderTracking() {
 
   const statusOrder = baseSteps.map((step) => step.key);
   const currentStatusIndex = order
-    ? statusOrder.indexOf(order.status || "processing")
+    ? statusOrder.indexOf(order.status?.toLowerCase() || "pending")
     : 0;
   const timelineSteps = baseSteps.map((step, index) => {
     let state = "pending";
