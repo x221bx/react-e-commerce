@@ -189,12 +189,12 @@
     },
     "common": {
         "go_home": "Go to Home",
-        "signing_in": "Signing inâ€¦",
-        "creating": "Creatingâ€¦",
-        "sending": "Sendingâ€¦",
+        "signing_in": "Signing in…",
+        "creating": "Creating…",
+        "sending": "Sending…",
         "delete": "Delete",
         "cancel": "Cancel",
-        "working": "Workingâ€¦",
+        "working": "Working…",
         "light_mode": "Light Mode",
         "dark_mode": "Dark Mode",
         "retry": "Retry",
@@ -414,21 +414,6 @@
         "no_complaints_subtitle": "You haven't submitted any inquiries yet. Click the button above to submit your first inquiry.",
         "login_required_title": "Please log in to view your inquiries",
         "login_required_subtitle": "You need to be logged in to access your inquiry history.",
-        "complaints_topic_fallback": "General support",
-        "complaints_topics": {
-            "orders": "Orders & logistics",
-            "billing": "Billing & payments",
-            "product": "Product feedback",
-            "ai": "AI assistant",
-            "technical": "Technical issue",
-            "other": "Other"
-        },
-        "complaints_status": {
-            "pending": "Pending",
-            "in-progress": "In progress",
-            "resolved": "Resolved",
-            "closed": "Closed"
-        },
         "complaints_actions": {
             "close_complaint": "Close Inquiry",
             "closing": "Closing...",
@@ -670,7 +655,7 @@
         "list": {
             "eyebrow": "Knowledge base",
             "title": "Articles & field notes",
-            "subtitle": "Fresh agronomy tips, veterinary schedules, and AI-powered insights for your farm.",
+            "subtitle": "Fresh agronomy tips, veterinary schedules.",
             "search": "Search articles...",
             "allTags": "All topics",
             "manage": "Manage articles",

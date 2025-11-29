@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { UseTheme } from "../../theme/ThemeProvider";
 import { useProductsSorted } from "../../hooks/useProductsSorted";
@@ -10,25 +10,23 @@ export default function SearchBar({
                          }) {
     const [query, setQuery] = useState("");
     const [focused, setFocused] = useState(false);
-    const [results, setResults] = useState([]);
     const navigate = useNavigate();
     const { theme } = UseTheme();
 
     // Fetch products if not provided
     const { data: fetchedProducts = [] } = useProductsSorted({ sortBy: "createdAt", dir: "desc" });
     const products = propProducts.length > 0 ? propProducts : fetchedProducts;
+    const results = useMemo(() => {
+        if (!query.trim() || products.length === 0) return [];
+        const normalized = query.toLowerCase();
+        return products
+            .filter((item) =>
+                (item.name || item.title || "").toLowerCase().includes(normalized)
+            )
+            .slice(0, 5);
+    }, [products, query]);
 
     // 🔍 تصفية المنتجات حسب الكلمة
-    useEffect(() => {
-        if (query.trim() && products.length > 0) {
-            const filtered = products.filter((item) =>
-                (item.name || item.title || "").toLowerCase().includes(query.toLowerCase())
-            );
-            setResults(filtered.slice(0, 5)); // Limit to 5 suggestions
-        } else {
-            setResults([]);
-        }
-    }, [query, products]);
 
     // 🧭 عند الضغط على Enter أو زر البحث
     const handleSubmit = (e) => {
@@ -36,7 +34,6 @@ export default function SearchBar({
         if (query.trim()) {
             navigate(`/products?search=${encodeURIComponent(query.trim())}`);
             setFocused(false);
-            setResults([]);
             if (onSearch) onSearch(query.trim()); // ✅ للموبايل: يقفل المنيو بعد البحث
         }
     };
@@ -47,7 +44,6 @@ export default function SearchBar({
         setQuery(name);
         navigate(`/products?search=${encodeURIComponent(name)}`);
         setFocused(false);
-        setResults([]);
         if (onSearch) onSearch(name); // ✅ يقفل المنيو لو في موبايل
     };
 

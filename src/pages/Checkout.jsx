@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -11,6 +11,7 @@ import { auth, db } from "../services/firebase";
 import { collection, doc, getDoc, getDocs, query, orderBy } from "firebase/firestore";
 
 const phoneRegex = /^(01)[0-9]{9}$/;
+const NEW_CARD_OPTION = "__new_card__";
 
 const normalizePhone = (value = "") => value.replace(/\D/g, "").slice(0, 11);
 
@@ -20,7 +21,7 @@ const formatSavedMethod = (method) => {
     const brand = method.brand
       ? method.brand.charAt(0).toUpperCase() + method.brand.slice(1)
       : "Card";
-    return `${brand} •••• ${method.last4 || "----"}`;
+    return `${brand} **** ${method.last4 || "----"}`;
   }
   if (method.type === "wallet") {
     const provider = method.provider
@@ -74,7 +75,8 @@ export default function Checkout() {
   const [cardErrors, setCardErrors] = useState({});
   const [savedCards, setSavedCards] = useState([]);
   const [savedPaymentLoading, setSavedPaymentLoading] = useState(false);
-  const [selectedSavedCardId, setSelectedSavedCardId] = useState(null);
+  const [selectedSavedCardId, setSelectedSavedCardId] = useState(NEW_CARD_OPTION);
+  const savedCardsCountRef = useRef(0);
 
   useEffect(() => {
     setForm(buildInitialForm(user));
@@ -125,7 +127,8 @@ export default function Checkout() {
     const fetchSavedMethods = async () => {
       if (!user?.uid) {
         setSavedCards([]);
-        setSelectedSavedCardId(null);
+        savedCardsCountRef.current = 0;
+        setSelectedSavedCardId(NEW_CARD_OPTION);
         setSavedPaymentLoading(false);
         return;
       }
@@ -143,16 +146,31 @@ export default function Checkout() {
           return bDate - aDate;
         });
         setSavedCards(cards);
-        const defaultCard = cards.find((card) => card.isDefault) || cards[0];
-        setSelectedSavedCardId((prev) =>
-          prev && cards.some((card) => card.id === prev)
-            ? prev
-            : defaultCard?.id || null
-        );
+        const hadCardsBefore = savedCardsCountRef.current > 0;
+        savedCardsCountRef.current = cards.length;
+        if (!cards.length) {
+          setSelectedSavedCardId(NEW_CARD_OPTION);
+          return;
+        }
+        setSelectedSavedCardId((prev) => {
+          if (
+            prev &&
+            prev !== NEW_CARD_OPTION &&
+            cards.some((card) => card.id === prev)
+          ) {
+            return prev;
+          }
+          if (prev === NEW_CARD_OPTION && hadCardsBefore) {
+            return prev;
+          }
+          const defaultCard = cards.find((card) => card.isDefault) || cards[0];
+          return defaultCard?.id || cards[0].id;
+        });
       } catch (err) {
         console.error("Failed to load payment methods", err);
         setSavedCards([]);
-        setSelectedSavedCardId(null);
+        savedCardsCountRef.current = 0;
+        setSelectedSavedCardId(NEW_CARD_OPTION);
       } finally {
         setSavedPaymentLoading(false);
       }
@@ -175,49 +193,28 @@ export default function Checkout() {
     };
   }, [cartItems]);
 
-  const paymentOptions = useMemo(() => {
-    const options = [
+  const paymentOptions = useMemo(
+    () => [
       {
         value: "cod",
         type: "cod",
         title: t("checkout.payment.cod.title"),
         subtitle: t("checkout.payment.cod.subtitle"),
       },
-    ];
-    savedCards.forEach((card) => {
-      options.push({
-        value: `saved-card:${card.id}`,
-        type: "saved-card",
-        cardId: card.id,
-        title: formatSavedMethod(card),
-        subtitle:
-          card.nickname ||
-          t("checkout.payment.saved.subtitle", "Use this card instantly."),
-        badge: card.isDefault
-          ? t("checkout.payment.saved.badge", "Default")
-          : t("checkout.payment.saved.extra", "Saved"),
-      });
-    });
-    options.push({
-      value: "card",
-      type: "card",
-      title: t("checkout.payment.card.title"),
-      subtitle: t("checkout.payment.card.subtitle"),
-    });
-    return options;
-  }, [savedCards, t]);
-
-  useEffect(() => {
-    if (paymentMethod !== "saved-card") return;
-    if (!savedCards.length) {
-      setPaymentMethod("cod");
-      setSelectedSavedCardId(null);
-      return;
-    }
-    if (!selectedSavedCardId || !savedCards.some((card) => card.id === selectedSavedCardId)) {
-      setSelectedSavedCardId(savedCards[0].id);
-    }
-  }, [paymentMethod, savedCards, selectedSavedCardId]);
+      {
+        value: "card",
+        type: "card",
+        title: t("checkout.payment.card.title"),
+        subtitle: savedCards.length
+          ? t(
+              "checkout.payment.card.dropdownHint",
+              "Choose an existing card or add a new one."
+            )
+          : t("checkout.payment.card.subtitle"),
+      },
+    ],
+    [savedCards.length, t]
+  );
 
   const validate = () => {
     const nextErrors = {};
@@ -249,7 +246,11 @@ export default function Checkout() {
   };
 
   const buildPaymentDetails = () => {
-    if (paymentMethod === "saved-card") {
+    if (
+      paymentMethod === "card" &&
+      selectedSavedCardId &&
+      selectedSavedCardId !== NEW_CARD_OPTION
+    ) {
       const selectedCard = savedCards.find(
         (card) => card.id === selectedSavedCardId
       );
@@ -263,10 +264,6 @@ export default function Checkout() {
           nickname: selectedCard.nickname || "",
         };
       }
-      return {
-        type: "cod",
-        label: t("checkout.payment.cod.title"),
-      };
     }
     if (paymentMethod === "card") {
       const digits = cardForm.number.replace(/\D/g, "");
@@ -354,7 +351,10 @@ export default function Checkout() {
     }
     if (!validate()) return;
 
-    if (paymentMethod === "card") {
+    if (
+      paymentMethod === "card" &&
+      (!selectedSavedCardId || selectedSavedCardId === NEW_CARD_OPTION)
+    ) {
       setShowCardModal(true);
       return;
     }
@@ -370,14 +370,18 @@ export default function Checkout() {
   };
 
   const handlePaymentSelection = (value) => {
-    if (value.startsWith("saved-card:")) {
-      const [, cardId] = value.split(":");
-      setPaymentMethod("saved-card");
-      setSelectedSavedCardId(cardId || null);
-    } else {
-      setPaymentMethod(value);
-      setSelectedSavedCardId(null);
-    }
+    setPaymentMethod(value);
+    if (value !== "card") return;
+    setSelectedSavedCardId((prev) => {
+      if (
+        prev &&
+        (prev === NEW_CARD_OPTION ||
+          savedCards.some((card) => card.id === prev))
+      ) {
+        return prev;
+      }
+      return savedCards[0]?.id || NEW_CARD_OPTION;
+    });
   };
 
   const inputClasses =
@@ -434,7 +438,7 @@ export default function Checkout() {
         >
           <header>
             <h1 className="text-2xl font-semibold">
-              {t("checkout.header.title", "Checkout")}
+              {t("checkout.header.title", "Review and confirm")}
             </h1>
           </header>
           {formErrors && (
@@ -571,45 +575,79 @@ export default function Checkout() {
                 paymentOptions.length > 1 ? "sm:grid-cols-2" : ""
               }`}
             >
-              {paymentOptions.map((option) => (
-                <label
-                  key={option.value}
-                  className={`flex cursor-pointer flex-col gap-2 rounded-2xl border px-4 py-3 text-sm ${
-                    (option.type === "saved-card"
-                      ? paymentMethod === "saved-card" &&
-                        selectedSavedCardId === option.cardId
-                      : paymentMethod === option.value)
-                      ? "border-emerald-500 bg-emerald-50/60"
-                      : "border-slate-200"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="radio"
-                      name="payment"
-                      checked={
-                        option.type === "saved-card"
-                          ? paymentMethod === "saved-card" &&
-                            selectedSavedCardId === option.cardId
-                          : paymentMethod === option.value
-                      }
-                      onChange={() => handlePaymentSelection(option.value)}
-                    />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="font-semibold">{option.title}</p>
-                        {option.badge && (
-                          <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
-                            {option.badge}
-                          </span>
-                        )}
+              {paymentOptions.map((option) => {
+                const isActive = paymentMethod === option.value;
+                return (
+                  <label
+                    key={option.value}
+                    className={`flex cursor-pointer flex-col gap-2 rounded-2xl border px-4 py-3 text-sm ${
+                      isActive
+                        ? "border-emerald-500 bg-emerald-50/60"
+                        : "border-slate-200"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="radio"
+                        name="payment"
+                        checked={isActive}
+                        onChange={() => handlePaymentSelection(option.value)}
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold">{option.title}</p>
+                          {option.badge && (
+                            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
+                              {option.badge}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-slate-500">{option.subtitle}</p>
                       </div>
-                      <p className="text-xs text-slate-500">{option.subtitle}</p>
                     </div>
-                  </div>
-                </label>
-              ))}
+                  </label>
+                );
+              })}
             </div>
+            {paymentMethod === "card" && (
+              <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4 text-sm space-y-2">
+                <label className="font-semibold">
+                  {t(
+                    "checkout.payment.card.dropdownLabel",
+                    "Select a saved card or add a new one"
+                  )}
+                </label>
+                <select
+                  value={selectedSavedCardId}
+                  onChange={(e) => setSelectedSavedCardId(e.target.value)}
+                  className="w-full rounded-xl border border-emerald-200 bg-white px-3 py-2 text-sm focus:border-emerald-400 focus:outline-none"
+                >
+                  {savedCards.map((card) => (
+                    <option key={card.id} value={card.id}>
+                      {formatSavedMethod(card)}
+                    </option>
+                  ))}
+                  <option value={NEW_CARD_OPTION}>
+                    {t("checkout.payment.card.addNew", "Add a new card")}
+                  </option>
+                </select>
+                {selectedSavedCardId === NEW_CARD_OPTION ? (
+                  <p className="text-xs text-emerald-700">
+                    {t(
+                      "checkout.payment.card.addNewHint",
+                      "We will collect your card details securely after you confirm."
+                    )}
+                  </p>
+                ) : (
+                  <p className="text-xs text-slate-600">
+                    {t(
+                      "checkout.payment.card.savedHint",
+                      "The selected saved card will be used for this order."
+                    )}
+                  </p>
+                )}
+              </div>
+            )}
           </section>
 
           <div className="flex flex-wrap gap-3 pt-2">
