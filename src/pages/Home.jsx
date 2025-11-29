@@ -1,79 +1,90 @@
+// src/pages/Home.jsx
+import React from "react";
 import Hero from "./homeCom/hero";
 import CategoriesSection from "./homeCom/CategoriesSection";
 import Articles from "./homeCom/Articles";
+import AiAssistant from "./homeCom/AiAssistant";
 import EcoBanner from "./homeCom/EcoBanner";
-import Footer from "../components/layout/Footer";
+import Footer from "../components/layout/footer";
 import FeaturedProducts from "./homeCom/FeaturedProducts";
-import { useCategoriesSorted } from "../hooks/useCategoriesSorted";
-import { localizeArticleRecord } from "../data/articles";
-import useArticles from "../hooks/useArticles";
-import { useTranslation } from "react-i18next";
 import SimpleAnalyticsPanel from "./SimpleAnalyticsPanel";
+
+const FALLBACK_CATEGORIES = [
+  {
+    id: 1,
+    title: "Seeds & Plants",
+    note: "High quality seeds",
+    img: "https://dummyimage.com/300x300/10b981/fff&text=Seeds",
+  },
+  {
+    id: 2,
+    title: "Fertilizers",
+    note: "Boost your yield",
+    img: "https://dummyimage.com/300x300/3b82f6/fff&text=Fertilizers",
+  },
+  {
+    id: 3,
+    title: "Tools",
+    note: "Professional equipment",
+    img: "https://dummyimage.com/300x300/ef4444/fff&text=Tools",
+  },
+];
+
+const FALLBACK_ARTICLES = [
+  {
+    title: "Best Planting Techniques 2025",
+    excerpt: "Increase yield by 40%",
+    img: "https://dummyimage.com/400x300/1e293b/fff&text=Tips",
+  },
+  {
+    title: "AI in Modern Farming",
+    excerpt: "The future is now",
+    img: "https://dummyimage.com/400x300/0f172a/fff&text=AI",
+  },
+];
+
 export default function Home() {
-  const { t, i18n } = useTranslation();
-  const { data: catData = [] } = useCategoriesSorted({ dir: "desc" });
-  const { articles: allFeaturedArticles } = useArticles({ featureHome: true });
-  const featuredArticles = allFeaturedArticles.filter(article => article.status === 'published');
-
-
-  const locale = i18n.language || "en";
-  const fallbackArticles = getFallbackArticles({ locale, featureHome: true });
-  const localizedFeatured = featuredArticles.map((article) =>
-    localizeArticleRecord(article, locale)
-  );
-  const featuredSource = localizedFeatured.length
-    ? localizedFeatured
-    : fallbackArticles;
-
-  const categories = catData.map((category) => ({
-    id: category.id,
-    title: category.name || "Category",
-    note: category.note || "Browse products",
-    img:
-      category.img ||
-      "https://dummyimage.com/300x300/eeeeee/000000&text=No+Image",
-  }));
-
-  const articles = localizedFeatured.map((article) => ({
-    title: article.title,
-    excerpt: article.summary,
-    img:
-      article.heroImage ||
-      "https://dummyimage.com/400x300/0f172a/ffffff&text=Article",
-  }));
-
   return (
     <main className="flex flex-col gap-12 md:gap-16 lg:gap-20">
       <div className="animate-fade-in">
         <Hero
-          title={t("home.heroTitle")}
-          subtitle={t("home.heroSubtitle")}
+          title="Smarter Farming Starts Here"
+          subtitle="Your one-stop shop for quality products, expert resources, and AI-powered farming advice."
           bg="https://lh3.googleusercontent.com/aida-public/AB6AXuCLKxwiP-sEyN6Rrsaj0ZEikJ7tuC3i1BDZESOUybBIq9rxpKdpWBwAoodTCjWNVaMQAejA6E7MlL9jyLRyPeR6ToPxQIN0NEaK7VTyapj1liAE8OnwYii_WMHM3_uP3RbX2z_pu5eAGPqFtdI5dqUSJ0PpZeythsCjaDCt4GBFD3TOMNChq8rIrDZFZP9o0Js4D9lI2JIHBb9ZpWutDdH1xIDLxpTzpO-XReYaYDNn3sHTvGei5avHD43XCPbZ9MnexMNeNlcVztk"
         />
       </div>
 
       <div className="bg-gradient-to-b from-transparent to-gray-50/50 py-12 dark:to-slate-800/30">
-        <div className="container mx-auto">
-          <CategoriesSection header={t("home.shopByCategory")} items={categories} />
+        <div className="container mx-auto px-4">
+          <CategoriesSection
+            header="Shop by Category"
+            items={FALLBACK_CATEGORIES}
+          />
         </div>
       </div>
 
       <section className="container mx-auto px-4">
         <FeaturedProducts />
       </section>
-      <section>
+
+      <section className="container mx-auto px-4">
         <SimpleAnalyticsPanel />
       </section>
-      <div className="container mx-auto px-4">
-        <div className="flex flex-col items-stretch gap-8 lg:flex-row">
-          <Articles header="Top Articles" items={articles} />
-          <AiAssistant />
+
+      <section className="container mx-auto px-4">
+        <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
+          <div className="flex-1 min-w-0">
+            <Articles header="Top Articles" items={FALLBACK_ARTICLES} />
+          </div>
+          <div className="flex-shrink-0 w-full lg:w-96">
+            <AiAssistant />
+          </div>
         </div>
-      )}
+      </section>
 
       <EcoBanner
-        title={t("home.ecoBannerTitle")}
-        text={t("home.ecoBannerText")}
+        title="Spring Planting Sale"
+        text="Get up to 20% off all seeds and fertilizers. Stock up now for a bountiful harvest!"
         bg="https://lh3.googleusercontent.com/aida-public/AB6AXuD8A3yXLwfO6ky-87JjNALS51VJCW0bPghXtMja2AcS-Hc5lGk9yLi6rqptiT0ZWriq8XbZh7113-7bon8bjXa9ILgc17YfLL2d1pSjfLQWnkMUGmbE5U_M2ne3bK9lEKk_r03TOZC0NK903XXGf2Z4zeVqPwLxMzNl_7-FISV41iS2eLPChiJ5dz4g38q1cBEMCKS3rxf5El1xu2QTkcCSszzfd7sr9SCxUZ0DH5qtTwKY-JRLBfWSUOoqAOmnmDhvQvUg-dKKxRk"
       />
 

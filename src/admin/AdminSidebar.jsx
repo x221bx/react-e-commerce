@@ -59,12 +59,30 @@ export default function AdminSidebar({ onNavigate, collapsed = false }) {
     () => [
       { to: "/admin", end: true, label: "Dashboard", icon: <FiHome /> },
       { to: "/admin/products", label: "Products", icon: <FiPackage /> },
-      { to: "/admin/products/new", label: "Add Product", icon: <FiPlusCircle /> },
-      { to: "/admin/orders", end: true, label: "Orders", icon: <FiShoppingCart /> },
-      { to: "/admin/messages", label: "Messages", icon: <FiMail />, badge: true },
+      {
+        to: "/admin/products/new",
+        label: "Add Product",
+        icon: <FiPlusCircle />,
+      },
+      {
+        to: "/admin/AdminOrders",
+        end: true,
+        label: "Orders",
+        icon: <FiShoppingCart />,
+      },
+      {
+        to: "/admin/messages",
+        label: "Messages",
+        icon: <FiMail />,
+        badge: true,
+      },
       { to: "/admin/categories", label: "Categories", icon: <FiTag /> },
       { to: "/admin/articles", label: "Articles", icon: <FiFileText /> },
-      { to: "/admin/complaints", label: "Complaints", icon: <FiMessageSquare /> },
+      {
+        to: "/admin/complaints",
+        label: "Complaints",
+        icon: <FiMessageSquare />,
+      },
     ],
     []
   );
@@ -77,8 +95,12 @@ export default function AdminSidebar({ onNavigate, collapsed = false }) {
         </div>
         {!collapsed && (
           <div className="min-w-0">
-            <div className="truncate text-sm font-semibold text-gray-900">Admin Dashboard</div>
-            <div className="truncate text-[11px] text-gray-500">AgriTech Panel</div>
+            <div className="truncate text-sm font-semibold text-gray-900">
+              Admin Dashboard
+            </div>
+            <div className="truncate text-[11px] text-gray-500">
+              AgriTech Panel
+            </div>
           </div>
         )}
       </div>
@@ -117,7 +139,17 @@ export default function AdminSidebar({ onNavigate, collapsed = false }) {
   );
 }
 
-function SideLink({ to, end, onNavigate, collapsed, label, icon, badge, onShowTip, onHideTip }) {
+function SideLink({
+  to,
+  end,
+  onNavigate,
+  collapsed,
+  label,
+  icon,
+  badge,
+  onShowTip,
+  onHideTip,
+}) {
   const ref = useRef(null);
 
   const handleEnter = () => {

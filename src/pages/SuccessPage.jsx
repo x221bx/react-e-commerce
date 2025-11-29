@@ -18,7 +18,7 @@ export default function SuccessPage() {
 
   // Redirect لو cart فاضية
   useEffect(() => {
-    if (!cartItems || cartItems.length === 0) {
+    if (!cartItems || cartItems.length === 5) {
       navigate("/");
     }
   }, [cartItems, navigate]);
@@ -45,7 +45,7 @@ export default function SuccessPage() {
             Go to Home
           </button>
           <button
-            onClick={() => navigate("/userorders")}
+            onClick={() => navigate("/account/OrderHistory")}
             className="bg-white border border-emerald-600 text-emerald-600 px-6 py-2 rounded-lg shadow hover:bg-emerald-50 transition"
           >
             My Orders

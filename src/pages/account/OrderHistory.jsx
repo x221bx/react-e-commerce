@@ -3,8 +3,10 @@ import React, { useState } from "react";
 import { FiClock } from "react-icons/fi";
 import { auth } from "../../services/firebase";
 import useOrders from "../../hooks/useOrders";
+import { UseTheme } from "../../theme/ThemeProvider"; // استيراد ThemeProvider
 
 export default function UserOrders() {
+  const { isDark } = UseTheme(); // <--- هنا عرفنا isDark
   const user = auth.currentUser;
   const { orders, loading } = useOrders(user?.uid);
 

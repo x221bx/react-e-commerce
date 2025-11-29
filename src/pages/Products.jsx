@@ -14,10 +14,16 @@ import {
 import { useProductsSorted } from "../hooks/useProductsSorted";
 import { usePagination } from "../hooks/usePagination";
 import Pager from "../admin/Pager";
+// Fallback data util (if you use it)
 import { getFallbackProducts } from "../data/products";
-import ProductCard from "../components/cards/ProductCard";
+// Footer component
 import Footer from "../components/layout/Footer";
+// Theme hook (optional)
 import { UseTheme } from "../theme/ThemeProvider";
+
+// ACTIONS - عدّل المسار لو أفعالك في مكان ثاني
+import { toggleFavourite } from "../features/favorites/favoritesSlice";
+import { addToCart } from "../features/cart/cartSlice";
 
 const SORT_FIELDS = [
   { value: "createdAt", label: "Newest" },
@@ -26,46 +32,50 @@ const SORT_FIELDS = [
 ];
 
 export default function Products() {
+  // UI state
   const [q, setQ] = useState("");
   const [sortBy, setSortBy] = useState("createdAt");
   const [dir, setDir] = useState("desc");
-  const [pageSize, setPageSize] = useState(6);
+  const [pageSize, setPageSize] = useState(12);
 
   const { theme } = UseTheme();
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const favorites = useSelector(
-    (state) => state.favorites?.items ?? state.favorites ?? []
-  );
+  const favorites = useSelector((state) => state.favorites?.items ?? []);
   const favoriteIds = useMemo(
     () => new Set(favorites.map((item) => item?.id).filter(Boolean)),
     [favorites]
   );
 
+  // Products hook: should return `data`, `isLoading`, `isError`, optionally `error`
   const {
     data: all = [],
     isLoading,
     isError,
+    error,
   } = useProductsSorted({ sortBy, dir, qText: q });
+
+  // Fallback catalog when live DB empty / failing
   const fallbackCatalog = useMemo(() => getFallbackProducts(), []);
   const usingFallback = useMemo(() => {
     if (isLoading) return false;
     if (isError) return true;
     return all.length === 0;
-  }, [all.length, isError, isLoading]);
+  }, [isLoading, isError, all.length]);
 
   const filteredFallback = useMemo(() => {
     if (!usingFallback) return [];
     const term = q.trim().toLowerCase();
     const filtered = fallbackCatalog.filter((p) => {
       if (!term) return true;
-      const haystack = `${p.title} ${p.category} ${p.description || ""} ${
+      const hay = `${p.title} ${p.category} ${p.description || ""} ${
         p.keywords?.join(" ") || ""
       }`.toLowerCase();
-      return haystack.includes(term);
+      return hay.includes(term);
     });
+
     return [...filtered].sort((a, b) => {
       if (sortBy === "price")
         return dir === "asc" ? a.price - b.price : b.price - a.price;
@@ -73,17 +83,19 @@ export default function Products() {
         return dir === "asc"
           ? a.title.localeCompare(b.title)
           : b.title.localeCompare(a.title);
+      // createdAt expected as timestamp number in fallback
       return dir === "asc"
         ? a.createdAt - b.createdAt
         : b.createdAt - a.createdAt;
     });
-  }, [dir, fallbackCatalog, q, sortBy, usingFallback]);
+  }, [usingFallback, fallbackCatalog, q, sortBy, dir]);
 
   const list = useMemo(
     () => (usingFallback ? filteredFallback : all),
-    [all, filteredFallback, usingFallback]
+    [usingFallback, filteredFallback, all]
   );
 
+  // pagination - expecting hook returns these fields; adapt if your hook differs
   const {
     paginatedData,
     currentPage,
@@ -91,216 +103,280 @@ export default function Products() {
     setPage,
     nextPage,
     prevPage,
+    rangeStart,
+    rangeEnd,
+    totalItems,
   } = usePagination(list, pageSize);
 
+  // dispatch helpers
   const handleToggleFavorite = (product) => dispatch(toggleFavourite(product));
   const handleAddToCart = (product) => dispatch(addToCart(product));
   const handleCardClick = (productId) => navigate(`/products/${productId}`);
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-b from-[#3a5a4f]/40 to-[#1f3327] font-inter text-white">
-      <div className="mx-auto max-w-7xl px-4 py-10">
-        {/* Header */}
-        <header className="mb-8 rounded-2xl bg-white/10 backdrop-blur-md p-6 shadow-lg border border-white/20">
-          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-6">
-            <h1 className="text-3xl font-bold flex items-center gap-3">
-              <BsTag className="text-green-300" />{" "}
-              {t("products.title", "Products")}
-            </h1>
+    <div className="min-h-screen bg-neutral-50 text-slate-900 font-sans">
+      {/* Premium header area */}
+      <div className="mx-auto max-w-7xl px-6 py-12">
+        <div className="rounded-2xl bg-white shadow-xl border border-gray-100 overflow-hidden">
+          {/* Top strip */}
+          <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="rounded-full bg-gradient-to-br from-green-500 to-teal-400 p-3 text-white shadow-md">
+                <BsTag size={20} />
+              </div>
+              <div>
+                <h1 className="text-2xl font-semibold">
+                  {" "}
+                  {t("products.title", "Products")}
+                </h1>
+                <p className="text-sm text-slate-500 mt-1">
+                  {t(
+                    "products.subtitle",
+                    "Browse our catalog — premium selection"
+                  )}
+                </p>
+              </div>
+            </div>
 
-            {/* Filters */}
-            <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
-              <div className="relative">
+            {/* actions area */}
+            <div className="flex items-center gap-3">
+              <div className="text-sm text-slate-500">
+                {totalItems ? `${rangeStart}-${rangeEnd} of ${totalItems}` : ""}
+              </div>
+            </div>
+          </div>
+
+          {/* Filters row */}
+          <div className="px-6 py-6 bg-white">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+              <div className="relative md:col-span-2">
                 <input
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
                   placeholder={t("products.search", "Search products...")}
-                  className="w-full rounded-xl border border-white/20 bg-[#203232]/50 py-2.5 pl-10 pr-3 text-sm text-white placeholder:text-gray-400 focus:ring-1 focus:ring-green-400"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-green-300"
                 />
-                <BsTag className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               </div>
 
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="w-full rounded-xl border border-white/20 bg-[#203232]/50 px-3 py-2.5 text-sm text-white"
+                className="rounded-lg border border-gray-200 bg-white px-3 py-3 text-sm"
               >
                 {SORT_FIELDS.map((s) => (
-                  <option key={s.value} value={s.value} className="text-black">
+                  <option key={s.value} value={s.value}>
                     {t("products.sortLabel", "Sort")}:{" "}
                     {t(`products.sort.${s.value}`, s.label)}
                   </option>
                 ))}
               </select>
 
-              <button
-                onClick={() => setDir((d) => (d === "asc" ? "desc" : "asc"))}
-                className="w-full rounded-xl border border-white/20 bg-[#203232]/50 px-3 py-2.5 flex items-center justify-center gap-2 text-sm font-medium hover:bg-green-500/20 transition"
-              >
-                {dir === "asc" ? <BsArrowUp /> : <BsArrowDown />}
-                <span>
-                  {dir === "asc"
-                    ? t("products.asc", "Ascending")
-                    : t("products.desc", "Descending")}
-                </span>
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setDir((d) => (d === "asc" ? "desc" : "asc"))}
+                  className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-3 text-sm shadow-sm"
+                  title={dir === "asc" ? "Ascending" : "Descending"}
+                >
+                  {dir === "asc" ? <BsArrowUp /> : <BsArrowDown />}
+                  <span className="text-sm">
+                    {dir === "asc"
+                      ? t("products.asc", "Asc")
+                      : t("products.desc", "Desc")}
+                  </span>
+                </button>
 
-              <select
-                value={pageSize}
-                onChange={(e) => setPageSize(Number(e.target.value))}
-                className="w-full rounded-xl border border-white/20 bg-[#203232]/50 px-3 py-2.5 text-sm text-white"
-              >
-                {[4, 8, 12, 24].map((n) => (
-                  <option key={n} value={n} className="text-black">
-                    {n} {t("products.perPage", "/ page")}
-                  </option>
-                ))}
-              </select>
+                <select
+                  value={pageSize}
+                  onChange={(e) => setPageSize(Number(e.target.value))}
+                  className="rounded-lg border border-gray-200 bg-white px-3 py-3 text-sm"
+                >
+                  {[8, 12, 24, 48].map((n) => (
+                    <option key={n} value={n}>
+                      {n} / {t("products.perPage", "page")}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-
-        {/* States */}
-        {isLoading && <GridSkeleton count={pageSize} />}
-        {isError && !usingFallback && (
-          <div className="rounded-lg border border-red-500 bg-red-900/50 p-4 text-red-300">
-            {t("products.error", "Failed to load products.")} {error?.message}
           </div>
-        )}
-        {usingFallback && (
-          <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50/80 p-4 text-sm text-amber-900 shadow dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-100">
-            {t(
-              "products.fallback",
-              "Live products are still syncing. Showing our core farm catalog until your database is ready."
+
+          {/* status / messages */}
+          <div className="px-6 py-4">
+            {isLoading && <GridSkeleton count={pageSize} premium />}
+            {isError && !usingFallback && (
+              <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-700 text-sm">
+                {t("products.error", "Failed to load products.")}{" "}
+                {error?.message}
+              </div>
+            )}
+            {usingFallback && (
+              <div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-amber-800 text-sm">
+                {t(
+                  "products.fallback",
+                  "Live products are still syncing. Showing a fallback catalog."
+                )}
+              </div>
+            )}
+            {!isLoading && !usingFallback && !isError && list.length === 0 && (
+              <div className="rounded-md border border-gray-100 bg-gray-50 p-6 text-center text-sm text-slate-600">
+                {t("products.noResults", "No products found.")}
+              </div>
             )}
           </div>
-        )}
-        {!isLoading && !usingFallback && !isError && list.length === 0 && (
-          <div className="rounded-lg border border-white/20 bg-white/10 p-8 text-center text-white/70">
-            {t("products.noResults", "No products found.")}
-          </div>
         </div>
-      </header>
 
-      {/* PRODUCT GRID */}
-      <main className="flex-grow max-w-6xl w-full mx-auto pb-10">
-        {!isLoading && list.length > 0 && (
-          <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {paginatedData.map((p) => {
-              const isFavorite = favoriteIds.has(p.id);
-              return (
-                <li
-                  key={p.id}
-                  className="group relative cursor-pointer overflow-hidden rounded-2xl border border-[#9af59d]/20 bg-[#244036]/20 shadow-lg hover:shadow-[#9af59d]/50 transition-all"
-                  onClick={() => handleCardClick(p.id)}
-                >
-                  {p.thumbnailUrl ? (
-                    <div className="h-72 w-full flex items-center justify-center bg-[#203232]/30 overflow-hidden rounded-t-2xl">
-                      <img
-                        src={p.thumbnailUrl}
-                        alt={p.title}
-                        className="max-h-full max-w-full object-contain transition-transform group-hover:scale-105"
-                      />
-                    </div>
-                  ) : (
-                    <div className="grid h-72 w-full place-items-center bg-white/5 text-xs text-white/50">
-                      {t("products.noImage", "No image")}
-                    </div>
-                  )}
-
-                  <div className="p-5 flex flex-col justify-between min-h-[180px]">
-                    <div>
-                      <h3 className="line-clamp-1 text-lg font-semibold text-[#e6ffe2]">
-                        {p.title}
-                      </h3>
-                      <p className="mt-2 text-sm text-[#9af59d]">
-                        {p.category}
-                      </p>
-                    </div>
-
-                    <div className="mt-3 flex items-center justify-between">
-                      <span className="text-base font-medium text-[#f5fff3]">
-                        {Number(p.price || 0).toLocaleString()}{" "}
-                        <span className="text-[#9af59d]/70">EGP</span>
-                      </span>
-                      {p.stock !== undefined && (
-                        <span className="text-xs text-gray-300">
-                          {p.stock > 0 ? "In Stock" : "Out of Stock"}
-                        </span>
+        {/* Product grid */}
+        <main className="mt-8">
+          {!isLoading && list.length > 0 && (
+            <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {paginatedData.map((p) => {
+                const isFavorite = favoriteIds.has(p.id);
+                return (
+                  <li
+                    key={p.id}
+                    className="group bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden cursor-pointer hover:shadow-lg transition"
+                  >
+                    <div
+                      className="relative h-64 w-full bg-gray-50 flex items-center justify-center"
+                      onClick={() => handleCardClick(p.id)}
+                    >
+                      {p.thumbnailUrl ? (
+                        <img
+                          src={p.thumbnailUrl}
+                          alt={p.title}
+                          className="object-contain h-full w-full transition-transform duration-300 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="text-sm text-slate-400">
+                          {t("products.noImage", "No image")}
+                        </div>
                       )}
-                    </div>
 
-                    <div className="mt-4 flex items-center gap-3">
+                      {/* price badge */}
+                      <div className="absolute left-4 top-4 rounded-md bg-white/90 px-3 py-1 text-sm font-semibold text-slate-800 shadow-sm">
+                        {Number(p.price || 0).toLocaleString()} EGP
+                      </div>
+
+                      {/* favorite heart */}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleToggleFavorite(p);
                         }}
-                        className="flex h-10 w-10 items-center justify-center rounded-full border border-[#9af59d]/20 bg-white/5 hover:bg-red-500/20 text-white transition"
+                        className="absolute right-4 top-4 rounded-full bg-white/90 p-2 shadow-sm"
+                        title={isFavorite ? "Remove favorite" : "Add favorite"}
                       >
                         {isFavorite ? (
                           <BsHeartFill className="text-red-500" />
                         ) : (
-                          <BsHeart />
+                          <BsHeart className="text-slate-600" />
                         )}
                       </button>
-
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleAddToCart(p);
-                        }}
-                        disabled={p.stock === 0}
-                        className="flex-1 h-10 rounded-xl border border-[#9af59d]/20 bg-[#203232]/60 px-4 text-sm font-semibold text-white hover:bg-[#9af59d]/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <div className="flex items-center justify-center gap-2">
-                          <BsCartPlus size={18} />
-                          {t("products.addToCart", "Add to Cart")}
-                        </div>
-                      </button>
                     </div>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
 
-        {list.length > 0 && (
-          <div className="mt-8">
-            <Pager
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPrev={prevPage}
-              onNext={nextPage}
-              onGo={setPage}
-              rangeStart={rangeStart}
-              rangeEnd={rangeEnd}
-              totalItems={totalItems}
-            />
-          </div>
-        )}
+                    <div className="p-5">
+                      <h3
+                        onClick={() => handleCardClick(p.id)}
+                        className="text-lg font-semibold text-slate-900 line-clamp-2 cursor-pointer"
+                      >
+                        {p.title}
+                      </h3>
+                      <p className="text-sm text-slate-500 mt-2">
+                        {p.category}
+                      </p>
 
-        {list.length === 0 && (
-          <div className="text-center mt-10 opacity-60 text-sm">
-            {t("products.noResults", "No products found.")}
-          </div>
-        )}
-      </main>
+                      <div className="mt-4 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`text-sm font-medium ${
+                              p.stock > 0 ? "text-emerald-600" : "text-rose-500"
+                            }`}
+                          >
+                            {p.stock > 0
+                              ? t("products.inStock", "In stock")
+                              : t("products.outStock", "Out of stock")}
+                          </div>
+                          <div className="text-sm text-slate-400">•</div>
+                          <div className="text-sm text-slate-400">
+                            {p.sku || ""}
+                          </div>
+                        </div>
 
-      {/* FOOTER */}
-      <Footer />
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAddToCart(p);
+                          }}
+                          disabled={p.stock === 0}
+                          className="inline-flex items-center gap-2 rounded-lg bg-green-600 text-white px-3 py-2 text-sm font-semibold shadow hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <BsCartPlus />
+                          <span>{t("products.addToCart", "Add to cart")}</span>
+                        </button>
+                      </div>
+
+                      <div className="mt-3 text-xs text-slate-400">
+                        {p.shortDescription || ""}
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+
+          {/* pager */}
+          {list.length > 0 && (
+            <div className="mt-8">
+              <Pager
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPrev={prevPage}
+                onNext={nextPage}
+                onGo={setPage}
+                rangeStart={rangeStart}
+                rangeEnd={rangeEnd}
+                totalItems={totalItems}
+              />
+            </div>
+          )}
+
+          {/* empty fallback */}
+          {!isLoading && list.length === 0 && (
+            <div className="mt-10 text-center text-sm text-slate-500">
+              {t("products.noResults", "No products found.")}
+            </div>
+          )}
+        </main>
+
+        <div className="mt-14">
+          <Footer />
+        </div>
+      </div>
     </div>
   );
 }
 
-function GridSkeleton({ count = 6 }) {
+/**
+ * GridSkeleton - premium skeleton placeholders
+ */
+function GridSkeleton({ count = 6, premium = false }) {
   return (
-    <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {Array.from({ length: count }).map((_, i) => (
-        <li
+        <div
           key={i}
-          className="h-72 animate-pulse rounded-2xl bg-[#244036]/40 backdrop-blur"
-        />
+          className={`rounded-2xl overflow-hidden ${
+            premium ? "shadow-md" : ""
+          }`}
+        >
+          <div className="h-64 bg-gray-100 animate-pulse" />
+          <div className="p-4 bg-white">
+            <div className="h-4 bg-gray-100 rounded w-3/4 animate-pulse mb-2" />
+            <div className="h-3 bg-gray-100 rounded w-1/2 animate-pulse" />
+          </div>
+        </div>
       ))}
-    </ul>
+    </div>
   );
 }

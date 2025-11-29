@@ -164,7 +164,7 @@ export default function Navbar() {
           {/* Favorites */}
           <button
             onClick={() => {
-              navigate("/analysis-dashboard");
+              navigate("/favorites");
               setMobileOpen(false);
             }}
             className={`relative h-10 w-10 flex items-center justify-center rounded-lg ${btnBg}`}

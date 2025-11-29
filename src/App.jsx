@@ -3,7 +3,7 @@ import { Suspense, lazy } from "react";
 import ProtectedRoute from "./Authcomponents/ProtectedRoute";
 import Navbar from "./components/layout/Navbar";
 import { Toaster } from "react-hot-toast";
-import AdminMessages from "./pages/admin/AdminMessages";
+// import AdminMessages from "./pages/admin/AdminMessages";
 
 // Lazy load all components for better performance
 const Login = lazy(() => import("./pages/Login"));
@@ -17,11 +17,10 @@ const Cart = lazy(() => import("./pages/Cart"));
 const SuccessPage = lazy(() => import("./pages/SuccessPage"));
 const ProductDetails = lazy(() => import("./pages/ProductDetails"));
 const About = lazy(() => import("./pages/About"));
-const AnalysisDashboard = lazy(() => import("./pages/AnalysisDashboard"));
 const ContactUs = lazy(() => import("./pages/contactus"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const OrderConfirmation = lazy(() => import("./pages/OrderConfirmation"));
-const Notifications = lazy(() => import("./pages/Notifications"));
+
 const ArticlesList = lazy(() => import("./pages/articles/ArticlesList"));
 const ArticleDetails = lazy(() => import("./pages/articles/ArticleDetails"));
 const UserSettings = lazy(() => import("./pages/UserSettings"));
@@ -42,7 +41,8 @@ const AdminArticles = lazy(() => import("./pages/admin/AdminArticles"));
 const AdminComplaints = lazy(() => import("./pages/admin/AdminComplaints"));
 const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
 const ChatBot = lazy(() => import("./components/Ai/ChatBot"));
-const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
+const AiConversations = lazy(() => import("./pages/account/AiConversations"));
+
 // Loading component for Suspense fallback
 const LoadingSpinner = () => (
   <div className="min-h-screen flex items-center justify-center">
@@ -68,11 +68,11 @@ export default function App() {
           <Route path="/favorites" element={<Favorites />} />
           <Route path="/products/:id" element={<ProductDetails />} />
           <Route path="/cart" element={<Cart />} />
-          <Route path="/analysis-dashboard" element={<AnalysisDashboard />} />
+
           <Route path="/articles" element={<ArticlesList />} />
           <Route path="/articles/:articleId" element={<ArticleDetails />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/notifications" element={<Notifications />} />
+
           <Route path="/register" element={<Register />} />
           <Route path="/reset" element={<Reset />} />
           <Route path="/about" element={<About />} />
@@ -95,7 +95,7 @@ export default function App() {
                 element={<UserSettings variant="embedded" />}
               />
               <Route path="payments" element={<PaymentMethods />} />
-              <Route path="orders" element={<OrderHistory />} />
+              <Route path="OrderHistory" element={<OrderHistory />} />
               <Route path="tracking" element={<OrderTracking />} />
               <Route path="saved" element={<SavedProducts />} />
               <Route path="articles" element={<FavoriteArticles />} />
