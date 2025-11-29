@@ -27,6 +27,29 @@ const deriveReadTime = (text = "", fallback = "5 min") => {
   return `${minutes} min`;
 };
 
+const normalizePublishDate = (value) => {
+  if (!value) return "";
+  try {
+    if (typeof value === "string") {
+      const parsed = new Date(value);
+      if (Number.isNaN(parsed.getTime())) return value;
+      return parsed.toISOString();
+    }
+    if (value?.seconds) {
+      return new Date(value.seconds * 1000).toISOString();
+    }
+    if (typeof value.toDate === "function") {
+      return value.toDate().toISOString();
+    }
+    if (value instanceof Date) {
+      return Number.isNaN(value.getTime()) ? "" : value.toISOString();
+    }
+  } catch (error) {
+    console.error("normalizePublishDate error:", error);
+  }
+  return "";
+};
+
 const withTimestamps = (data) => ({
   ...data,
   updatedAt: serverTimestamp(),
@@ -153,6 +176,7 @@ export const createArticle = async (article) => {
   const { translations: rawTranslations, ...rest } = article;
   const translations = cleanTranslations(rawTranslations);
   const computedReadTime = deriveReadTime(rest.content || rest.summary, rest.readTime);
+  const publishDate = normalizePublishDate(rest.publishDate);
   const payload = withTimestamps({
     title: rest.title,
     summary: rest.summary,
@@ -163,6 +187,13 @@ export const createArticle = async (article) => {
     featureHome: !!rest.featureHome,
     featureAccount: rest.featureAccount !== false,
     author: (rest.author || "Vet Clinic Admin").trim(),
+    status: rest.status || "draft",
+    articleType: rest.articleType || "blog",
+    difficulty: rest.difficulty || "beginner",
+    seoDescription: rest.seoDescription || "",
+    keywords: rest.keywords || "",
+    relatedProducts: Array.isArray(rest.relatedProducts) ? rest.relatedProducts : [],
+    publishDate,
     ...(Object.keys(translations).length ? { translations } : {}),
   });
 
@@ -177,6 +208,13 @@ export const updateArticle = async (articleId, updates = {}) => {
   const payload = {
     ...rest,
     readTime: deriveReadTime(rest.content || rest.summary, rest.readTime),
+    publishDate: normalizePublishDate(rest.publishDate) || "",
+    status: rest.status || "draft",
+    articleType: rest.articleType || "blog",
+    difficulty: rest.difficulty || "beginner",
+    seoDescription: rest.seoDescription || "",
+    keywords: rest.keywords || "",
+    relatedProducts: Array.isArray(rest.relatedProducts) ? rest.relatedProducts : [],
     updatedAt: serverTimestamp(),
   };
   if (Object.keys(translations).length) {

@@ -1,3 +1,32 @@
+const stripHeadingHashes = (value = "") =>
+  value.replace(/^#{1,6}\s*/gm, "").replace(/#{1,6}/g, "");
+
+const normalizeParagraphs = (value = "") =>
+  stripHeadingHashes(value).replace(/\n{3,}/g, "\n\n").trim();
+
+export const translateText = async ({
+  text,
+  targetLang = "ar",
+  sourceLang = "auto",
+}) => {
+  const cleanText = text?.toString().trim();
+  if (!cleanText) return "";
+  try {
+    const query = encodeURIComponent(cleanText);
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=${query}`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Translation failed");
+    const payload = await response.json();
+    const translated = Array.isArray(payload?.[0])
+      ? payload[0].map((chunk) => chunk?.[0] || "").join("")
+      : "";
+    return normalizeParagraphs(translated || cleanText);
+  } catch (error) {
+    console.error("translateText error:", error);
+    return normalizeParagraphs(cleanText);
+  }
+};
+
 // AI Text Generation Function
 export const generateAiDraft = ({ topicKey, productContext, lineCount, content, style, type, text, direction }) => {
   // Handle rewriting content
@@ -33,15 +62,8 @@ export const generateAiDraft = ({ topicKey, productContext, lineCount, content, 
     };
   }
 
-  // Handle translation
-  if (direction && text) {
-    // Basic mock translation - in real app, use proper translation service
-    if (direction === 'en-to-ar') {
-      return text.split(' ').reverse().join(' ') + ' (بالعربية)';
-    } else if (direction === 'ar-to-en') {
-      return text.replace(/بالعربية$/, '') + ' (in English)';
-    }
-  }
+  // Translation flag retained for backwards compatibility.
+  // Use translateText helper for actual translations.
 
   const aiTopics = [
     {
@@ -132,8 +154,8 @@ export const generateAiDraft = ({ topicKey, productContext, lineCount, content, 
     titleAr: `${topic.tag}: استخدام ${productName}`,
     summary: summaryLinesEn.join(" "),
     summaryAr: summaryLinesAr.join(" "),
-    content: contentEn,
-    contentAr: contentAr,
+    content: normalizeParagraphs(contentEn),
+    contentAr: normalizeParagraphs(contentAr),
     tag: topic.tag,
     heroImage: topic.sampleHero,
     readTime: `${Math.max(3, Math.ceil(contentEn.length / 400))} min`,
