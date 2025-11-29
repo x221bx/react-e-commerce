@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import ReactMarkdown from "react-markdown";
-import { uploadImage } from "../../../services/firebase";
-import { generateAiDraft, translateText } from "../../../utils/aiHelpers";
+import { translateText } from "../../../utils/aiHelpers";
 import toast from "react-hot-toast";
+import ArticleFormHeader from "./ArticleFormHeader";
+import ArticleFormTabs from "./ArticleFormTabs";
+import ArticleFormContent from "./ArticleFormContent";
+
 const ArticleForm = ({
   form,
   editingId,
@@ -58,17 +60,17 @@ const ArticleForm = ({
       ? "Scheduling..."
       : "Saving..."
     : editingId
-      ? showScheduler
-        ? "Update Schedule"
-        : "Update Article"
-      : showScheduler
-        ? "Schedule Article"
-        : "Publish Article";
+    ? showScheduler
+      ? "Update Schedule"
+      : "Update Article"
+    : showScheduler
+    ? "Schedule Article"
+    : "Publish Article";
   const seoButtonLabel = generatingSEO
     ? "Generating SEO..."
     : seoSynced
-      ? "Refresh AI SEO"
-      : "Generate AI SEO";
+    ? "Refresh AI SEO"
+    : "Generate AI SEO";
   useEffect(() => {
     setSeoSynced(Boolean(seoSuggestions));
   }, [seoSuggestions]);
@@ -112,364 +114,32 @@ const ArticleForm = ({
         onSubmit={handleSubmit}
         className="card-surface rounded-3xl border border-muted shadow-sm"
       >
-        {/* Header */}
-        <div className="flex flex-wrap items-center justify-between gap-3 p-6 border-b border-muted">
-          <div>
-            <h2 className="text-xl font-semibold">
-              {editingId
-                ? t("articles.admin.editing", "Edit article")
-                : t("articles.admin.new", "New article")}
-            </h2>
-            <p className="text-sm text-[var(--text-muted)]">
-              {t(
-                "articles.admin.fillFields",
-                "Create comprehensive articles with AI assistance and product integration.",
-              )}
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setShowPreview(true)}
-              className="rounded-xl border border-blue-200 px-3 py-2 text-xs font-semibold text-blue-700 transition hover:bg-blue-50"
-            >
-              👁️ Preview
-            </button>
-            {editingId && (
-              <button
-                type="button"
-                onClick={() => {
-                  setEditingId(null);
-                  setForm(defaultForm);
-                  setAiReview(null);
-                  setSuggestedProducts?.([]);
-                  setSelectedProducts?.([]);
-                  setSeoSuggestions(null);
-                }}
-                className="rounded-xl border border-emerald-200 px-3 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50"
-              >
-                ➕ New Article
-              </button>
-            )}
-          </div>
-        </div>
-        {/* Tabs */}
-        <div className="border-b border-muted">
-          <div className="flex">
-            {[
-              { id: "content", label: "Content", icon: "📝" },
-              { id: "ai", label: "AI Tools", icon: "🤖" },
-              { id: "seo", label: "SEO", icon: "🔍" },
-              { id: "review", label: "AI Review", icon: "⭐" },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition ${
-                  activeTab === tab.id
-                    ? "border-emerald-500 text-emerald-600"
-                    : "border-transparent text-[var(--text-muted)] hover:text-[var(--text-main)]"
-                }`}
-              >
-                {tab.icon} {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
-        {/* Tab Content */}
+        <ArticleFormHeader
+          editingId={editingId}
+          setShowPreview={setShowPreview}
+          setEditingId={setEditingId}
+          setForm={setForm}
+          defaultForm={defaultForm}
+          setAiReview={setAiReview}
+          setSuggestedProducts={setSuggestedProducts}
+          setSelectedProducts={setSelectedProducts}
+          setSeoSuggestions={setSeoSuggestions}
+        />
+        <ArticleFormTabs activeTab={activeTab} setActiveTab={setActiveTab} />
         <div className="p-6">
           {activeTab === "content" && (
-            <div className="space-y-6">
-              {/* Status and Type */}
-              <div className="grid gap-4 md:grid-cols-3">
-                <div>
-                  <label className="block text-sm font-semibold mb-2">
-                    Status
-                  </label>
-                  <select
-                    name="status"
-                    value={form.status}
-                    onChange={handleChange}
-                    className="w-full rounded-lg border border-muted bg-panel px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                  >
-                    <option value="draft">📝 Draft</option>
-                    <option value="scheduled">⏰ Scheduled</option>
-                    <option value="published">✅ Published</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-2">
-                    Type
-                  </label>
-                  <select
-                    name="articleType"
-                    value={form.articleType}
-                    onChange={handleChange}
-                    className="w-full rounded-lg border border-muted bg-panel px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                  >
-                    <option value="blog">📝 Blog Post</option>
-                    <option value="guide">📖 Guide</option>
-                    <option value="news">📰 News</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-2">
-                    Difficulty
-                  </label>
-                  <select
-                    name="difficulty"
-                    value={form.difficulty}
-                    onChange={handleChange}
-                    className="w-full rounded-lg border border-muted bg-panel px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                  >
-                    <option value="beginner">🌱 Beginner</option>
-                    <option value="intermediate">🌿 Intermediate</option>
-                    <option value="advanced">🌳 Advanced</option>
-                  </select>
-                </div>
-              </div>
-              {showScheduler && (
-                <div className="rounded-2xl border border-dashed border-emerald-200 bg-emerald-50/40 p-4 space-y-2">
-                  <label className="block text-sm font-semibold">
-                    Publish Date &amp; Time
-                  </label>
-                  <input
-                    type="datetime-local"
-                    name="publishDate"
-                    value={form.publishDate || ""}
-                    min={nowIso}
-                    onChange={handleChange}
-                    required
-                    className="w-full rounded-lg border border-emerald-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                  />
-                  <p className="text-xs text-emerald-800">
-                    Scheduled articles will auto-publish at this exact time.
-                  </p>
-                </div>
-              )}
-              {/* Basic Fields */}
-              <div className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <label className="block text-sm font-semibold mb-2">
-                      English Title
-                    </label>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        name="title"
-                        value={form.title}
-                        onChange={handleChange}
-                        placeholder="Article title (English)"
-                        className="flex-1 rounded-lg border border-muted bg-panel px-4 py-3 text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                        required
-                      />
-                      <button
-                        type="button"
-                        onClick={handleGenerateTitle}
-                        className="px-3 py-3 rounded-lg bg-blue-500 text-white text-sm hover:bg-blue-600"
-                        title="Generate AI Title"
-                      >
-                        🤖
-                      </button>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold mb-2">
-                      Arabic Title (العنوان بالعربية)
-                    </label>
-                    <input
-                      type="text"
-                      name="titleAr"
-                      value={form.titleAr}
-                      onChange={handleChange}
-                      placeholder="العنوان بالعربية"
-                      className="w-full rounded-lg border border-muted bg-panel px-4 py-3 text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                      dir="rtl"
-                    />
-                  </div>
-                </div>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <label className="block text-sm font-semibold mb-2">
-                      English Summary
-                    </label>
-                    <div className="flex gap-2">
-                      <textarea
-                        name="summary"
-                        value={form.summary}
-                        onChange={handleChange}
-                        placeholder="Brief summary (appears in previews)"
-                        rows={3}
-                        className="flex-1 rounded-lg border border-muted bg-panel px-4 py-3 text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                        required
-                      />
-                      <button
-                        type="button"
-                        onClick={handleGenerateSummary}
-                        className="px-3 py-3 rounded-lg bg-blue-500 text-white text-sm hover:bg-blue-600 self-start"
-                        title="Generate AI Summary"
-                      >
-                        🤖
-                      </button>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold mb-2">
-                      Arabic Summary (الملخص بالعربية)
-                    </label>
-                    <textarea
-                      name="summaryAr"
-                      value={form.summaryAr}
-                      onChange={handleChange}
-                      placeholder="الملخص بالعربية"
-                      rows={3}
-                      className="w-full rounded-lg border border-muted bg-panel px-4 py-3 text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                      dir="rtl"
-                    />
-                  </div>
-                </div>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <input
-                    type="text"
-                    name="author"
-                    value={form.author}
-                    onChange={handleChange}
-                    placeholder="Author name"
-                    className="rounded-lg border border-muted bg-panel px-4 py-3 text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                    required
-                  />
-                  <input
-                    type="text"
-                    name="heroImage"
-                    value={form.heroImage}
-                    onChange={handleChange}
-                    placeholder="Hero image URL"
-                    className="rounded-lg border border-muted bg-panel px-4 py-3 text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                  />
-                </div>
-                <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--text-muted)]">
-                  <label className="inline-flex items-center gap-2 rounded-lg border border-muted bg-surface px-3 py-2 text-[var(--text-main)] hover:bg-panel cursor-pointer disabled:opacity-50">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      disabled={uploadingImage}
-                      onChange={async (e) => {
-                        const file = e.target.files?.[0];
-                        if (!file) return;
-                        // التحقق من حجم الصورة (حد أقصى 5MB)
-                        if (file.size > 5 * 1024 * 1024) {
-                          toast.error("Image size must be less than 5MB");
-                          return;
-                        }
-                        setUploadingImage(true);
-                        try {
-                          const downloadURL = await uploadImage(
-                            file,
-                            "articles/",
-                          );
-                          handleChange({
-                            target: { name: "heroImage", value: downloadURL },
-                          });
-                          toast.success("Image uploaded successfully!");
-                        } catch (error) {
-                          console.error("Upload error:", error);
-                          toast.error("Failed to upload image");
-                        } finally {
-                          setUploadingImage(false);
-                        }
-                      }}
-                    />
-                    {uploadingImage ? "⏳" : "📷"}{" "}
-                    {uploadingImage ? "Uploading..." : "Upload image"}
-                  </label>
-                  {form.heroImage && (
-                    <span className="truncate text-[var(--text-main)]">
-                      ✅ Image uploaded
-                    </span>
-                  )}
-                </div>
-                <select
-                  name="tag"
-                  value={form.tag}
-                  onChange={handleChange}
-                  className="w-full rounded-lg border border-muted bg-panel px-4 py-3 text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                >
-                  <option value="Product Usage">Product Usage</option>
-                  <option value="Product Combo">Product Combo</option>
-                  <option value="Troubleshooting">Troubleshooting</option>
-                  <option value="Soil Care">Soil Care</option>
-                  <option value="Irrigation">Irrigation</option>
-                  <option value="Livestock">Livestock</option>
-                  <option value="Analytics">Analytics</option>
-                  <option value="Pollination">Pollination</option>
-                  <option value="Renewables">Renewables</option>
-                  <option value="Implements">Implements</option>
-                  <option value="Monitoring">Monitoring</option>
-                </select>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <label className="block text-sm font-semibold mb-2">
-                      English Content
-                    </label>
-                    <textarea
-                      name="content"
-                      value={form.content}
-                      onChange={handleChange}
-                      onDrop={handleImageDrop}
-                      onDragOver={(e) => e.preventDefault()}
-                      placeholder="Article content (Markdown supported)"
-                      rows={12}
-                      className="w-full rounded-lg border border-muted bg-panel px-4 py-3 text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-emerald-400 font-mono text-sm"
-                    />
-                    <div className="flex gap-2 mt-2">
-                      <button
-                        type="button"
-                        onClick={() => handleRewrite("shorter")}
-                        className="px-3 py-1 rounded bg-blue-500 text-white text-xs hover:bg-blue-600"
-                      >
-                        Shorter
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleRewrite("longer")}
-                        className="px-3 py-1 rounded bg-blue-500 text-white text-xs hover:bg-blue-600"
-                      >
-                        Longer
-                      </button>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold mb-2">
-                      Arabic Content (المحتوى بالعربية)
-                    </label>
-                    <textarea
-                      name="contentAr"
-                      value={form.contentAr}
-                      onChange={handleChange}
-                      placeholder="المحتوى بالعربية"
-                      rows={12}
-                      className="w-full rounded-lg border border-muted bg-panel px-4 py-3 text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-emerald-400 font-mono text-sm"
-                      dir="rtl"
-                    />
-                  </div>
-                </div>
-                {/* Features */}
-                <div className="flex flex-wrap gap-4 text-sm">
-                  <label className="inline-flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      name="featureHome"
-                      checked={form.featureHome}
-                      onChange={handleChange}
-                    />
-                    🏠 Feature on home page
-                  </label>
-                </div>
-              </div>
-            </div>
+            <ArticleFormContent
+              form={form}
+              handleChange={handleChange}
+              handleGenerateTitle={handleGenerateTitle}
+              handleGenerateSummary={handleGenerateSummary}
+              handleRewrite={handleRewrite}
+              handleImageDrop={handleImageDrop}
+              showScheduler={showScheduler}
+              nowIso={nowIso}
+              uploadingImage={uploadingImage}
+              setUploadingImage={setUploadingImage}
+            />
           )}
           {activeTab === "ai" && (
             <div className="space-y-6">
@@ -668,10 +338,10 @@ const ArticleForm = ({
                           Math.floor(
                             form.content.split(/\s+/).filter(Boolean).length /
                               10 +
-                              form.summary.split(/\s+/).filter(Boolean).length /
-                                2 +
-                              form.keywords.split(",").filter(Boolean).length *
-                                5,
+                            form.summary.split(/\s+/).filter(Boolean).length /
+                              2 +
+                            form.keywords.split(",").filter(Boolean).length *
+                              5,
                           ),
                         )}
                         /100
@@ -803,4 +473,5 @@ const ArticleForm = ({
     </div>
   );
 };
+
 export default ArticleForm;
