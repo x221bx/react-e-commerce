@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import ReactMarkdown from "react-markdown";
-import { uploadImage } from "../../../services/firebase";
-import { generateAiDraft, translateText } from "../../../utils/aiHelpers";
+import { translateText } from "../../../utils/aiHelpers";
 import toast from "react-hot-toast";
 import ArticleFormHeader from "./ArticleFormHeader";
 import ArticleFormTabs from "./ArticleFormTabs";
