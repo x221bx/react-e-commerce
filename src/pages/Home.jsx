@@ -13,23 +13,32 @@ export default function Home() {
   const { t, i18n } = useTranslation();
   const { data: catData = [] } = useCategoriesSorted({ dir: "desc" });
   const { articles: allFeaturedArticles } = useArticles({ featureHome: true });
-  const featuredArticles = allFeaturedArticles.filter(article => article.status === 'published');
-
+  const featuredArticles = allFeaturedArticles.filter(
+    (article) => article.status === "published"
+  );
 
   const locale = i18n.language || "en";
-  const localizedFeatured = featuredArticles.map((article) => localizeArticleRecord(article, locale));
+  const localizedFeatured = featuredArticles.map((article) =>
+    localizeArticleRecord(article, locale)
+  );
 
   const categories = catData.map((category) => ({
     id: category.id,
     title: category.name || t("home.categoryFallback"),
     note: category.note || t("home.categoryNoteFallback"),
-    img: category.img || "https://dummyimage.com/300x300/eeeeee/000000&text=No+Image",
+    img:
+      category.img ||
+      "https://dummyimage.com/300x300/eeeeee/000000&text=No+Image",
   }));
 
   const articles = localizedFeatured.map((article) => ({
     title: article.title,
     excerpt: article.summary,
-    img: article.heroImage || `https://dummyimage.com/400x300/0f172a/ffffff&text=${t("home.articleFallback")}`,
+    img:
+      article.heroImage ||
+      `https://dummyimage.com/400x300/0f172a/ffffff&text=${t(
+        "home.articleFallback"
+      )}`,
   }));
 
   return (
@@ -44,7 +53,10 @@ export default function Home() {
 
       <div className="bg-gradient-to-b from-transparent to-gray-50/50 py-12 dark:to-slate-800/30">
         <div className="container mx-auto">
-          <CategoriesSection header={t("home.shopByCategory")} items={categories} />
+          <CategoriesSection
+            header={t("home.shopByCategory")}
+            items={categories}
+          />
         </div>
       </div>
 

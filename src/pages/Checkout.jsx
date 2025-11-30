@@ -51,13 +51,7 @@ export default function Checkout() {
     user?.name || user?.displayName || user?.username || userEmail || "";
 
   // ...custom hooks...
-  const {
-    form,
-    setForm,
-    errors,
-    formErrors,
-    validate,
-  } = useCheckoutForm(user);
+  const { form, setForm, errors, formErrors, validate } = useCheckoutForm(user);
 
   const {
     methods,
@@ -99,13 +93,8 @@ export default function Checkout() {
 
   const summary = useOrderSummary(cartItems);
 
-  const {
-    cardForm,
-    setCardForm,
-    cardErrors,
-    validateCard,
-    resetCard,
-  } = useCardValidation();
+  const { cardForm, setCardForm, cardErrors, validateCard, resetCard } =
+    useCardValidation();
 
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("cod");
@@ -125,9 +114,9 @@ export default function Checkout() {
         title: t("checkout.payment.card.title"),
         subtitle: savedCards.length
           ? t(
-            "checkout.payment.card.dropdownHint",
-            "Choose an existing card or add a new one."
-          )
+              "checkout.payment.card.dropdownHint",
+              "Choose an existing card or add a new one."
+            )
           : t("checkout.payment.card.subtitle"),
       },
     ],
@@ -183,7 +172,9 @@ export default function Checkout() {
       return requested > available;
     });
     if (stockIssue) {
-      toast.error(t("checkout.messages.stockIssue", "Some items exceed stock."));
+      toast.error(
+        t("checkout.messages.stockIssue", "Some items exceed stock.")
+      );
       return;
     }
 

@@ -1,12 +1,7 @@
+// src/pages/admin/AdminCategories.jsx
 import { useEffect, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import {
-  FiEdit2,
-  FiTrash2,
-  FiArrowUp,
-  FiArrowDown,
-  FiPlus,
-} from "react-icons/fi";
+import { FiEdit2, FiTrash2, FiCheck, FiX, FiPlus } from "react-icons/fi";
+import { useSearchParams } from "react-router-dom";
 import PageHeader from "../../admin/PageHeader";
 import { useCategoriesSorted } from "../../hooks/useCategoriesSorted";
 import { usePagination } from "../../hooks/usePagination";
@@ -18,26 +13,27 @@ import {
 } from "../../hooks/useCategoriesMutations";
 import ConfirmDialog from "../../admin/ConfirmDialog";
 import { useTranslation } from "react-i18next";
-import { localizeCategory } from "../../utils/localizeContent";
 import { UseTheme } from "../../theme/ThemeProvider";
-import toast from "react-hot-toast";
 
 export default function AdminCategories() {
   const { t } = useTranslation();
   const { theme } = UseTheme();
   const dark = theme === "dark";
 
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [dir, setDir] = useState(searchParams.get("dir") || "desc");
-  const [pageSize, setPageSize] = useState(Number(searchParams.get("pageSize") || 10));
-  const pageFromUrl = Math.max(1, Number(searchParams.get("page") || 1));
-  const [toDelete, setToDelete] = useState(null);
+  // useSearchParams (مهم جداً للـ URL sync)
+  const [params, setParams] = useSearchParams();
+  const [dir, setDir] = useState(params.get("dir") || "desc");
+  const [pageSize, setPageSize] = useState(
+    Number(params.get("pageSize") || 10)
+  );
+  const pageFromUrl = Math.max(1, Number(params.get("page") || 1));
 
+  const [toDelete, setToDelete] = useState(null);
   const [newCategory, setNewCategory] = useState("");
-  const [editingCategory, setEditingCategory] = useState(null);
+
+  // Inline editing state
+  const [editingId, setEditingId] = useState(null);
   const [editingName, setEditingName] = useState("");
-  const { categoryId } = useParams();
-  const navigate = useNavigate();
 
   const {
     data: all = [],
@@ -54,7 +50,7 @@ export default function AdminCategories() {
   const update = useUpdateCategory();
 
   const {
-    paginatedData,
+    paginatedData = [],
     currentPage,
     totalPages,
     setPage,
@@ -67,160 +63,103 @@ export default function AdminCategories() {
     initialPage: pageFromUrl,
     resetKeys: [dir, pageSize],
     onPageChange: (p) => {
-      const next = new URLSearchParams(searchParams.toString());
+      const next = new URLSearchParams(params.toString());
       next.set("page", String(p));
-      setSearchParams(next, { replace: true });
+      setParams(next, { replace: true });
     },
   });
 
   useEffect(() => {
-    const next = new URLSearchParams(searchParams.toString());
+    const next = new URLSearchParams(params.toString());
     next.set("dir", dir);
     next.set("pageSize", String(pageSize));
-    setSearchParams(next, { replace: true });
+    setParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dir, pageSize]);
-
-  useEffect(() => {
-    if (!categoryId) {
-      setEditingCategory(null);
-      setEditingName("");
-      return;
-    }
-    if (isLoading) return;
-    const target = all.find((cat) => cat.id === categoryId);
-    if (target) {
-      setEditingCategory(target);
-      setEditingName(target.name || "");
-    } else {
-      toast.error(t("errors.category_not_found", "Category not found"));
-      navigate("/admin/categories", { replace: true });
-    }
-  }, [categoryId, all, isLoading, navigate, t]);
 
   const handleCreate = async (e) => {
     e.preventDefault();
-    if (!newCategory.trim()) return alert(t("errors.name_required"));
-    await create.mutateAsync({ name: newCategory });
-    setNewCategory("");
-  };
-
-  const handleCancelEdit = () => {
-    setEditingCategory(null);
-    setEditingName("");
-    navigate("/admin/categories", { replace: true });
-  };
-
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-    if (!editingCategory) return;
-    if (!editingName.trim()) {
-      toast.error(t("errors.name_required"));
-      return;
+    if (!newCategory.trim())
+      return alert(t("errors.name_required") || "Name required");
+    try {
+      await create.mutateAsync({ name: newCategory.trim() });
+      setNewCategory("");
+    } catch (err) {
+      console.error("Create category failed:", err);
+      alert("Failed to create category.");
     }
-    await update.mutateAsync({
-      id: editingCategory.id,
-      updatedFields: { name: editingName.trim() },
-    });
-    toast.success(t("admin.category_updated", "Category updated"));
-    handleCancelEdit();
+  };
+
+  const startEdit = (cat) => {
+    setEditingId(cat.id);
+    setEditingName(cat.name || "");
+  };
+
+  const saveEdit = async (catId) => {
+    if (!editingName.trim())
+      return alert(t("errors.name_required") || "Name required");
+    try {
+      await update.mutateAsync({
+        id: catId,
+        updatedFields: { name: editingName.trim() },
+      });
+      setEditingId(null);
+      setEditingName("");
+    } catch (err) {
+      console.error("Update failed:", err);
+      alert("Failed to update category.");
+    }
   };
 
   return (
     <div
       className={`
-        min-h-screen w-full pt-28 pb-10 px-4 md:px-6
-        transition-all duration-300
+        min-h-screen w-full pt-4 pb-10 px-4 md:px-6
         ${dark ? "bg-[#0d1a1a] text-[#cfecec]" : "bg-[#f9f9f9] text-gray-900"}
       `}
     >
-      <PageHeader title={t("admin.categories")} />
+      <PageHeader title={t("admin.categories") || "Categories"} />
 
-      {/* Create Form */}
+      {/* Create form */}
       <form
         onSubmit={handleCreate}
-        className={`
-          mb-5 flex flex-col sm:flex-row items-center gap-3 p-4 rounded-xl border shadow-sm
-          ${dark ? "bg-[#0f2222] border-[#1e3a3a]" : "bg-white border-gray-200"}
-        `}
+        className={`mb-5 flex flex-col sm:flex-row items-center gap-3 p-4 rounded-xl border shadow-sm
+          ${
+            dark ? "bg-[#0f2222] border-[#1e3a3a]" : "bg-white border-gray-200"
+          }`}
       >
         <input
           type="text"
-          placeholder={t("admin.category_name")}
+          placeholder={t("admin.category_name") || "Category name…"}
           value={newCategory}
           onChange={(e) => setNewCategory(e.target.value)}
           className={`
             flex-1 rounded-lg px-3 py-2 text-sm
-            focus:ring-2 focus:ring-[#49BBBD]/40
-            ${dark 
-              ? "bg-[#0c1919] border-[#1e3a3a] text-[#cfecec]" 
-              : "bg-white border-gray-300 text-gray-700"}
+            ${
+              dark
+                ? "bg-[#0c1919] text-[#cfecec] border-[#1e3a3a]"
+                : "bg-white text-gray-700 border-gray-300"
+            }
           `}
         />
-
         <button
           type="submit"
-          disabled={create.isPending}
-          className="inline-flex items-center gap-2 rounded-lg bg-[#048b02] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2F7E80] transition"
+          disabled={create.isLoading}
+          className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white ${
+            create.isLoading ? "bg-gray-400" : "bg-[#048b02] hover:bg-[#04785b]"
+          }`}
         >
-          <FiPlus /> {create.isPending ? t("loading") : t("admin.create")}
+          <FiPlus />{" "}
+          {create.isLoading
+            ? t("loading") || "Loading..."
+            : t("admin.create") || "Create"}
         </button>
       </form>
 
-      {editingCategory && (
-        <form
-          onSubmit={handleUpdate}
-          className={`
-            mb-6 flex flex-col sm:flex-row items-center gap-3 p-4 rounded-xl border shadow-sm
-            ${dark ? "bg-[#0f2222] border-[#1e3a3a]" : "bg-white border-gray-200"}
-          `}
-        >
-          <div className="flex-1 w-full">
-            <p className="text-xs font-semibold uppercase tracking-wide opacity-70 mb-1">
-              {t("admin.editing_category", "Editing category")}
-            </p>
-            <input
-              type="text"
-              value={editingName}
-              onChange={(e) => setEditingName(e.target.value)}
-              className={`
-                w-full rounded-lg px-3 py-2 text-sm
-                focus:ring-2 focus:ring-[#49BBBD]/40
-                ${dark
-                  ? "bg-[#0c1919] border border-[#1e3a3a] text-[#cfecec]"
-                  : "bg-white border border-gray-300 text-gray-700"}
-              `}
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleCancelEdit}
-              className={`
-                rounded-lg px-4 py-2 text-sm font-semibold border
-                ${dark
-                  ? "bg-[#0f2222] border-[#1e3a3a] text-[#cfecec] hover:bg-[#163434]"
-                  : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"}
-              `}
-            >
-              {t("common.cancel", "Cancel")}
-            </button>
-            <button
-              type="submit"
-              disabled={update.isPending}
-              className="inline-flex items-center gap-2 rounded-lg bg-[#2F7E80] px-4 py-2 text-sm font-semibold text-white hover:bg-[#266668] disabled:opacity-70"
-            >
-              {update.isPending
-                ? t("common.saving", "Saving...")
-                : t("common.save", "Save")}
-            </button>
-          </div>
-        </form>
-      )}
-
       {/* Toolbar */}
-      <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div className="mb-4 flex items-center justify-between">
         <div className="text-sm opacity-80">
-          {t("common.total")}:{" "}
+          {t("common.total") || "Total"}:{" "}
           <span className="font-semibold">{all.length}</span>
         </div>
 
@@ -230,23 +169,24 @@ export default function AdminCategories() {
             onClick={() => setDir((d) => (d === "asc" ? "desc" : "asc"))}
             className={`
               inline-flex h-9 items-center gap-1 px-3 rounded-lg border shadow-sm
-              ${dark
-                ? "bg-[#0f2222] border-[#1e3a3a] text-[#cfecec] hover:bg-[#163434]"
-                : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"}
+              ${
+                dark
+                  ? "bg-[#0f2222] border-[#1e3a3a] text-[#cfecec]"
+                  : "bg-white border-gray-200 text-gray-700"
+              }
             `}
           >
-            {dir === "asc" ? <FiArrowUp /> : <FiArrowDown />}
+            {dir === "asc" ? "Asc" : "Desc"}
           </button>
 
           <select
             value={pageSize}
             onChange={(e) => setPageSize(Number(e.target.value))}
-            className={`
-              rounded-lg px-2.5 py-2 text-sm shadow-sm
-              ${dark
+            className={`rounded-lg px-2.5 py-2 text-sm shadow-sm ${
+              dark
                 ? "bg-[#0f2222] border-[#1e3a3a] text-[#cfecec]"
-                : "bg-white border-gray-200 text-gray-700"}
-            `}
+                : "bg-white border-gray-200 text-gray-700"
+            }`}
           >
             {[10, 20, 50].map((n) => (
               <option key={n} value={n}>
@@ -258,160 +198,201 @@ export default function AdminCategories() {
       </div>
 
       {/* States */}
-      {isLoading && <Skeleton rows={6} />}
+      {isLoading && <Skeleton rows={6} dark={dark} />}
+
       {isError && (
         <div
-          className={`
-            rounded-lg p-4 border 
-            ${dark
-              ? "bg-[#331] border-red-900 text-red-300"
-              : "bg-rose-50 border-rose-200 text-rose-700"}
-          `}
+          className={`rounded-lg p-4 border ${
+            dark
+              ? "bg-[#2b0f0f] border-red-900 text-red-300"
+              : "bg-rose-50 border-rose-200 text-rose-700"
+          }`}
         >
-          {t("errors.categories_load_failed")}: {error?.message}
+          {t("errors.categories_load_failed") || "Failed to load categories"}:{" "}
+          {error?.message}
         </div>
       )}
 
       {!isLoading && !isError && all.length === 0 && (
-        <EmptyState
-          title={t("empty.categories_title")}
-          note={t("empty.create_first_category")}
-          dark={dark}
-        />
-      )}
-
-      {!isLoading && !isError && all.length > 0 && (
-        <div className="hidden md:block">
-          <div
-            className={`
-              overflow-x-auto rounded-xl border shadow-sm
-              ${dark ? "bg-[#0f2222] border-[#1e3a3a]" : "bg-white border-gray-200"}
-            `}
-          >
-            <table className="w-full border-separate border-spacing-0">
-              <thead
-                className={`
-                  text-left text-sm
-                  ${dark ? "bg-[#163434] text-[#cfecec]" : "bg-gray-50 text-gray-600"}
-                `}
-              >
-                <tr>
-                  <Th>{t("admin.categories")}</Th>
-                  <Th className="w-40">{t("sort.createdAt")}</Th>
-                  <Th className="w-28 text-right">Actions</Th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {paginatedData.map((cat) => (
-                  <tr
-                    key={cat.id}
-                    className={dark
-                      ? "hover:bg-[#163434] transition"
-                      : "hover:bg-gray-50 transition"}
-                  >
-                    <Td>
-                      <span className="font-medium">{localizeCategory(cat, t)}</span>
-                    </Td>
-
-                    <Td>{formatDate(cat.createdAt)}</Td>
-
-                    <Td className="text-right">
-                      <Actions cat={cat} onDelete={setToDelete} dark={dark} />
-                    </Td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <div
+          className={`rounded-lg p-8 text-center border ${
+            dark
+              ? "bg-[#0f2222] border-[#1e3a3a] text-[#cfecec]"
+              : "bg-gray-50 border-gray-200 text-gray-700"
+          }`}
+        >
+          <div className="text-lg font-semibold">
+            {t("empty.categories_title") || "No categories yet"}
           </div>
-
-          <Pager
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPrev={prevPage}
-            onNext={nextPage}
-            onGo={setPage}
-            rangeStart={rangeStart}
-            rangeEnd={rangeEnd}
-            totalItems={totalItems}
-          />
+          <div className="mt-1 text-sm opacity-80">
+            {t("empty.create_first_category") || "Create the first category"}
+          </div>
         </div>
       )}
 
+      {/* Table */}
+      {!isLoading && !isError && all.length > 0 && (
+        <div
+          className={`overflow-x-auto rounded-xl border shadow-sm mt-4 ${
+            dark ? "bg-[#0f2222] border-[#1e3a3a]" : "bg-white border-gray-200"
+          }`}
+        >
+          <table className="w-full border-separate border-spacing-0">
+            <thead
+              className={
+                dark
+                  ? "bg-[#163434] text-[#cfecec]"
+                  : "bg-gray-50 text-gray-600"
+              }
+            >
+              <tr>
+                <Th>{t("admin.categories") || "Category"}</Th>
+                <Th className="w-40">{t("sort.createdAt") || "Created"}</Th>
+                <Th className="w-28 text-right">Actions</Th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {paginatedData.map((cat) => (
+                <tr
+                  key={cat.id}
+                  className={
+                    dark
+                      ? "hover:bg-[#163434] transition"
+                      : "hover:bg-gray-50 transition"
+                  }
+                >
+                  <Td>
+                    {editingId === cat.id ? (
+                      <input
+                        className="px-2 py-1 rounded border text-sm w-full"
+                        value={editingName}
+                        onChange={(e) => setEditingName(e.target.value)}
+                      />
+                    ) : (
+                      <span className="font-medium">{cat.name}</span>
+                    )}
+                  </Td>
+
+                  <Td>{formatDate(cat.createdAt)}</Td>
+
+                  <Td className="text-right">
+                    {editingId === cat.id ? (
+                      <div className="flex gap-2 justify-end">
+                        <button
+                          onClick={() => saveEdit(cat.id)}
+                          className="p-2 rounded bg-green-600 text-white"
+                          title="Save"
+                        >
+                          <FiCheck />
+                        </button>
+                        <button
+                          onClick={() => setEditingId(null)}
+                          className="p-2 rounded bg-gray-400 text-white"
+                          title="Cancel"
+                        >
+                          <FiX />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2 justify-end">
+                        <button
+                          onClick={() => startEdit(cat)}
+                          className="p-2 rounded border"
+                          title="Edit"
+                        >
+                          <FiEdit2 />
+                        </button>
+                        <button
+                          onClick={() => setToDelete(cat)}
+                          className="p-2 rounded border text-rose-600"
+                          title="Delete"
+                        >
+                          <FiTrash2 />
+                        </button>
+                      </div>
+                    )}
+                  </Td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Pager */}
+      <div className="mt-4">
+        <Pager
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPrev={prevPage}
+          onNext={nextPage}
+          onGo={setPage}
+          rangeStart={rangeStart}
+          rangeEnd={rangeEnd}
+          totalItems={totalItems}
+        />
+      </div>
+
+      {/* Confirm delete dialog */}
       <ConfirmDialog
         open={!!toDelete}
-        title={t("confirm.delete_category_title", "Delete category")}
-        message={
-          toDelete
-            ? t("confirm.delete_category_body", {
-                name: toDelete.name,
-                defaultValue: `Are you sure you want to delete “${toDelete.name}”?`,
-              })
-            : ""
-        }
-        confirmText={t("common.delete")}
+        title={t("confirm.delete_category_title") || "Delete category?"}
+        message={toDelete?.name || ""}
+        confirmText={t("common.delete") || "Delete"}
         confirmTone="danger"
-        loading={del.isPending}
+        loading={del.isLoading}
         onCancel={() => setToDelete(null)}
         onConfirm={async () => {
           if (!toDelete) return;
-          await del.mutateAsync(toDelete.id);
-          setToDelete(null);
+          try {
+            await del.mutateAsync(toDelete.id);
+            setToDelete(null);
+          } catch (err) {
+            console.error("Delete failed:", err);
+            alert("Failed to delete.");
+          }
         }}
       />
     </div>
   );
 }
 
-/* ===== Subcomponents ===== */
-
-function Actions({ cat, onDelete, dark }) {
-  const navigate = useNavigate();
-  return (
-    <div className="inline-flex items-center gap-2">
-      <button
-        type="button"
-        onClick={() => navigate(`/admin/categories/${cat.id}/edit`)}
-        className={`
-          rounded-md p-2 border shadow-sm transition
-          ${dark
-            ? "bg-[#0f2222] border-[#1e3a3a] text-[#cfecec] hover:bg-[#163434]"
-            : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"}
-        `}
-      >
-        <FiEdit2 />
-      </button>
-
-      <button
-        onClick={() => onDelete({ id: cat.id, name: cat.name })}
-        className={`
-          rounded-md p-2 border shadow-sm transition
-          ${dark
-            ? "bg-[#2b0f0f] border-red-900 text-red-300 hover:bg-[#3d1616]"
-            : "bg-white border-gray-200 text-rose-600 hover:bg-rose-50"}
-        `}
-      >
-        <FiTrash2 />
-      </button>
-    </div>
-  );
-}
-
+/* Small helpers */
 function Th({ children, className = "" }) {
   return (
-    <th className={`border-b px-3 py-2 ${className}`}>{children}</th>
+    <th className={`border-b px-3 py-2 text-sm ${className}`}>{children}</th>
   );
 }
-
 function Td({ children, className = "" }) {
   return (
-    <td className={`border-b px-3 py-3 ${className}`}>{children}</td>
+    <td className={`border-b px-3 py-3 text-sm ${className}`}>{children}</td>
   );
 }
 
-function Skeleton({ rows = 6 }) {
+function formatDate(ts) {
+  if (!ts) return "—";
+  // Firestore Timestamp may have toMillis()
+  const ms =
+    typeof ts?.toMillis === "function"
+      ? ts.toMillis()
+      : ts?.seconds
+      ? ts.seconds * 1000
+      : +new Date(ts);
+  return new Date(ms).toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function Skeleton({ rows = 6, dark = false }) {
   return (
-    <div className="animate-pulse rounded-xl border p-4 shadow-sm bg-white dark:bg-[#0f2222] border-gray-200 dark:border-[#1e3a3a]">
+    <div
+      className={`animate-pulse rounded-xl border p-4 shadow-sm ${
+        dark ? "bg-[#0f2222] border-[#1e3a3a]" : "bg-white border-gray-200"
+      }`}
+    >
       {Array.from({ length: rows }).map((_, i) => (
         <div key={i} className="flex justify-between py-2">
           <div className="h-4 w-40 rounded bg-gray-200 dark:bg-[#244]" />
@@ -420,33 +401,4 @@ function Skeleton({ rows = 6 }) {
       ))}
     </div>
   );
-}
-
-function EmptyState({ title, note, dark }) {
-  return (
-    <div
-      className={`grid place-items-center rounded-lg border p-8 text-center ${
-        dark
-          ? "bg-[#0f2222] border-[#1e3a3a] text-[#cfecec]"
-          : "bg-gray-50 border-gray-200 text-gray-700"
-      }`}
-    >
-      <div className="text-lg font-semibold">{title}</div>
-      <div className="mt-1 text-sm opacity-80">{note}</div>
-    </div>
-  );
-}
-      
-function formatDate(ts) {
-  if (!ts) return "—";
-  const ms = ts?.toMillis
-    ? ts.toMillis()
-    : ts?.seconds
-    ? ts.seconds * 1000
-    : +new Date(ts);
-  return new Date(ms).toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
 }

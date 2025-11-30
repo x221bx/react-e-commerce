@@ -9,48 +9,38 @@ import {
   where,
   getDocs,
 } from "firebase/firestore";
-import { setCurrentUser, setAuthInitialized } from "../features/auth/authSlice";
-import { setUser as setCartUser, clearUserData as clearCartData, setCartItems } from "../features/cart/cartSlice";
-import { setUser as setFavoritesUser, clearUserData as clearFavoritesData, setFavoritesItems } from "../features/favorites/favoritesSlice";
-import { subscribeToUserCart, subscribeToUserFavorites } from "../services/userDataService";
 
-// Helper function to serialize Firestore data for Redux
+import { setCurrentUser, setAuthInitialized } from "../features/auth/authSlice";
+import { setCartItems, clearCart } from "../features/cart/cartSlice";
+import {
+  setFavoritesItems,
+  clearUserData as clearFavoritesData,
+} from "../features/favorites/favoritesSlice";
+import {
+  subscribeToUserCart,
+  subscribeToUserFavorites,
+} from "../services/userDataService";
+
+// ---------------------------
+// Helper: Serialize Firestore data
+// ---------------------------
 const serializeFirestoreData = (data) => {
   if (!data) return data;
-
-  // Handle arrays
-  if (Array.isArray(data)) {
-    return data.map(item => serializeFirestoreData(item));
-  }
-
-  // Handle Firebase Timestamps
-  if (data && typeof data === 'object' && data.toDate) {
-    return data.toDate().toISOString();
-  }
-
-  // Handle objects
-  if (typeof data === 'object') {
-    const serialized = { ...data };
-
-    // Convert Firebase Timestamps to ISO strings
-    Object.keys(serialized).forEach(key => {
-      const value = serialized[key];
-      if (value && typeof value === 'object' && value.toDate) {
-        // It's a Firebase Timestamp
-        serialized[key] = value.toDate().toISOString();
-      } else if (value && typeof value === 'object') {
-        // Recursively serialize nested objects/arrays
-        serialized[key] = serializeFirestoreData(value);
-      }
-    });
-
-    return serialized;
-  }
-
-  // Return primitives as-is
-  return data;
+  const serialized = { ...data };
+  Object.keys(serialized).forEach((key) => {
+    const value = serialized[key];
+    if (value?.toDate) {
+      serialized[key] = value.toDate().toISOString(); // Firebase Timestamp → ISO
+    } else if (typeof value === "object" && value !== null) {
+      serialized[key] = serializeFirestoreData(value); // Nested objects
+    }
+  });
+  return serialized;
 };
 
+// ---------------------------
+// Listener Middleware
+// ---------------------------
 export const listenerMiddleware = createListenerMiddleware();
 
 export const startAuthListener = (store) => {
@@ -66,8 +56,7 @@ export const startAuthListener = (store) => {
     }
   };
 
-  onAuthStateChanged(auth, (fbUser) => {
-    // cleanup previous listeners
+  const cleanupAll = () => {
     if (profileUnsub) {
       profileUnsub();
       profileUnsub = null;
@@ -80,17 +69,38 @@ export const startAuthListener = (store) => {
       favoritesUnsub();
       favoritesUnsub = null;
     }
+  };
 
+  // ---------------------------
+  // Preload from localStorage
+  // ---------------------------
+  const preloadCart = JSON.parse(localStorage.getItem("cartItems") || "[]");
+  const preloadFavorites = JSON.parse(
+    localStorage.getItem("favoritesItems") || "[]"
+  );
+  store.dispatch(setCartItems(preloadCart));
+  store.dispatch(setFavoritesItems(preloadFavorites));
+
+  // ---------------------------
+  // Firebase Auth Listener
+  // ---------------------------
+  onAuthStateChanged(auth, (fbUser) => {
+    cleanupAll();
+
+    // ---------------------------
+    // LOGOUT
+    // ---------------------------
     if (!fbUser) {
       store.dispatch(setCurrentUser(null));
-      // Clear user-specific data on logout
-      store.dispatch(clearCartData());
+      store.dispatch(clearCart());
       store.dispatch(clearFavoritesData());
       ensureInit();
       return;
     }
 
-    // subscribe to user profile doc
+    // ---------------------------
+    // LOGIN
+    // ---------------------------
     profileUnsub = onSnapshot(doc(db, "users", fbUser.uid), async (snap) => {
       const rawData = snap.exists() ? serializeFirestoreData(snap.data()) : {};
       const profile = {
@@ -98,9 +108,11 @@ export const startAuthListener = (store) => {
         ...rawData,
         email: rawData.email || fbUser.email || "",
         name: rawData.name || fbUser.displayName || fbUser.email || "",
-        photoURL: rawData.photoURL || fbUser.photoURL || rawData.photoUrl || null,
+        photoURL:
+          rawData.photoURL || fbUser.photoURL || rawData.photoUrl || null,
       };
 
+      // Resolve username if missing
       if (!profile.username) {
         try {
           const usernameQuery = query(
@@ -108,30 +120,35 @@ export const startAuthListener = (store) => {
             where("uid", "==", fbUser.uid)
           );
           const usernameDocs = await getDocs(usernameQuery);
-          if (!usernameDocs.empty) {
-            profile.username = usernameDocs.docs[0].id;
-          }
+          if (!usernameDocs.empty) profile.username = usernameDocs.docs[0].id;
         } catch (error) {
-          console.error("Failed to resolve username from Firestore", error);
+          console.error("Failed to resolve username", error);
         }
       }
 
       store.dispatch(setCurrentUser(profile));
 
-      // Set up Firebase subscriptions for user data
-      store.dispatch(setCartUser(profile));
+      // ---------------------------
+      // CART Subscription
+      // ---------------------------
       cartUnsub = subscribeToUserCart(profile.uid, (cartItems) => {
-        store.dispatch(setCartItems(serializeFirestoreData(cartItems)));
+        store.dispatch(setCartItems(cartItems));
       });
 
-      store.dispatch(setFavoritesUser(profile));
+      // ---------------------------
+      // FAVORITES Subscription
+      // ---------------------------
       favoritesUnsub = subscribeToUserFavorites(profile.uid, (favorites) => {
-        store.dispatch(setFavoritesItems(serializeFirestoreData(favorites)));
+        store.dispatch(setFavoritesItems(favorites));
       });
 
+      // ---------------------------
+      // Apply locale
+      // ---------------------------
       const locale = profile?.preferences?.locale || "en";
       document.documentElement.lang = locale;
       document.documentElement.dir = locale === "ar" ? "rtl" : "ltr";
+
       ensureInit();
     });
   });

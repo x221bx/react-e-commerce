@@ -213,8 +213,9 @@ export default function AdminOrders() {
                   </div>
 
                   <div className="flex gap-2 mt-3 md:mt-0 items-center flex-wrap">
+                    {/* الزرار ده هيوديك لصفحة التفاصيل */}
                     <button
-                      onClick={() => navigate(`/admin/orders/${order.id}`)}
+                      onClick={() => navigate(`/admin/AdminOrders/${order.id}`)}
                       className="px-3 py-2 rounded-md bg-white border hover:bg-green-50 text-sm font-semibold"
                     >
                       View

@@ -6,19 +6,10 @@ import {
 } from "../features/favorites/favoritesSlice";
 import { addToCart } from "../features/cart/cartSlice";
 import { Link, useNavigate } from "react-router-dom";
-import {
-  FiTrash2,
-  FiArrowLeft,
-  FiShoppingCart,
-  FiHeart,
-} from "react-icons/fi";
+import { FiTrash2, FiArrowLeft, FiShoppingCart, FiHeart } from "react-icons/fi";
 
 export default function Favorites() {
-  const favorites = useSelector((state) => {
-    const favs = state.favorites?.items ?? state.favorites ?? [];
-    // Ensure it's always an array
-    return Array.isArray(favs) ? favs : [];
-  });
+  const favorites = useSelector((state) => state.favorites.items ?? []);
   const cart = useSelector((state) => state.cart.items);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -83,7 +74,6 @@ export default function Favorites() {
                     </span>
 
                     <div className="flex items-center gap-3">
-
                       {/* ❤️ toggle favourite (add/remove) */}
                       <button
                         onClick={() => dispatch(toggleFavourite(item))}
@@ -100,7 +90,6 @@ export default function Favorites() {
                       >
                         <FiShoppingCart size={16} /> Buy
                       </button>
-
                     </div>
                   </div>
                 </div>

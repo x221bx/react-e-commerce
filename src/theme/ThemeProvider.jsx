@@ -1,71 +1,33 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import { useSelector } from "react-redux";
-import { selectCurrentUser } from "../features/auth/authSlice";
-import { saveUserPreferences, subscribeToUserPreferences } from "../services/userDataService";
+// ThemeProvider.jsx
+import { createContext, useContext, useState, useEffect } from "react";
 
-const ThemeCtx = createContext({ theme: "light", toggle: () => {} });
-export const UseTheme = () => useContext(ThemeCtx);
+const ThemeContext = createContext();
 
-const getInitialTheme = () => {
-  try {
-    const stored = localStorage.getItem("theme");
-    if (stored === "dark" || stored === "light") return stored;
-  } catch {
-    /* ignore storage errors */
-  }
-  return "light"; // default start: light mode
-};
+export const UseTheme = () => useContext(ThemeContext);
 
-export default function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState(getInitialTheme);
-  const user = useSelector(selectCurrentUser);
+export const ThemeProvider = ({ children }) => {
+  const [theme, setTheme] = useState("light");
 
-  // Sync from user preferences when authenticated
   useEffect(() => {
-    if (!user?.uid) {
-      setTheme(getInitialTheme());
-      return;
-    }
-
-    const unsubscribe = subscribeToUserPreferences(user.uid, (preferences) => {
-      if (preferences && typeof preferences.theme === "string") {
-        setTheme((prev) => (preferences.theme === prev ? prev : preferences.theme));
-      }
-    });
-
-    return unsubscribe;
-  }, [user?.uid]);
-
-  // Apply theme class to <html> and persist for guests
-  useEffect(() => {
-    const html = document.documentElement;
-    html.classList.remove("light", "dark");
-    html.classList.add(theme);
-
-    try {
-      localStorage.setItem("theme", theme);
-    } catch {
-      /* ignore */
-    }
-  }, [theme]);
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) setTheme(savedTheme);
+  }, []);
 
   const toggle = () => {
-    setTheme((prev) => {
-      const next = prev === "dark" ? "light" : "dark";
-
-      if (user?.uid) {
-        saveUserPreferences(user.uid, { theme: next }).catch(console.error);
-      } else {
-        try {
-          localStorage.setItem("theme", next);
-        } catch {
-          /* ignore */
-        }
-      }
-
-      return next;
-    });
+    const newTheme = theme === "light" ? "dark" : "light";
+    setTheme(newTheme);
+    localStorage.setItem("theme", newTheme);
+    document.documentElement.classList.toggle("dark", newTheme === "dark");
   };
 
-  return <ThemeCtx.Provider value={{ theme, toggle }}>{children}</ThemeCtx.Provider>;
-}
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+  }, [theme]);
+
+  return (
+    <ThemeContext.Provider value={{ theme, toggle }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+};
+export default ThemeProvider;

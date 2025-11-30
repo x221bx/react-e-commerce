@@ -48,14 +48,17 @@ export default function OrderTracking() {
   if (ordersConnectionError || orderConnectionError) {
     return (
       <div className="space-y-4 text-center py-12">
-        <p className={`text-sm font-semibold uppercase tracking-wide ${accent}`}>
+        <p
+          className={`text-sm font-semibold uppercase tracking-wide ${accent}`}
+        >
           Connection Blocked
         </p>
         <h1 className={`text-3xl font-semibold ${headingColor}`}>
           Unable to Load Order Data
         </h1>
         <p className={`text-sm ${headerMuted}`}>
-          Real-time connections are blocked by your browser. Please disable ad blockers for this site.
+          Real-time connections are blocked by your browser. Please disable ad
+          blockers for this site.
         </p>
         <button
           onClick={() => window.location.reload()}
@@ -71,7 +74,9 @@ export default function OrderTracking() {
   if (!orders || !orders.length) {
     return (
       <div className="space-y-4 text-center py-12">
-        <p className={`text-sm font-semibold uppercase tracking-wide ${accent}`}>
+        <p
+          className={`text-sm font-semibold uppercase tracking-wide ${accent}`}
+        >
           {t("tracking.eyebrow", "Track your recent purchases")}
         </p>
         <h1 className={`text-3xl font-semibold ${headingColor}`}>
@@ -104,7 +109,10 @@ export default function OrderTracking() {
           isDark={isDark}
         />
         <p className={`text-sm ${headerMuted}`}>
-          {t("tracking.selectOrder", "Select an order to display live updates.")}
+          {t(
+            "tracking.selectOrder",
+            "Select an order to display live updates."
+          )}
         </p>
       </div>
     );
@@ -133,11 +141,16 @@ export default function OrderTracking() {
       <div className={`rounded-3xl border shadow-sm ${shellSurface}`}>
         {/* Order Header Info */}
         <div
-          className={`flex flex-wrap items-center justify-between gap-4 border-b px-6 py-5 ${isDark ? "border-slate-800" : "border-slate-100"
-            }`}
+          className={`flex flex-wrap items-center justify-between gap-4 border-b px-6 py-5 ${
+            isDark ? "border-slate-800" : "border-slate-100"
+          }`}
         >
           <div>
-            <p className={`text-xs font-semibold uppercase tracking-wide ${isDark ? "text-slate-500" : "text-slate-400"}`}>
+            <p
+              className={`text-xs font-semibold uppercase tracking-wide ${
+                isDark ? "text-slate-500" : "text-slate-400"
+              }`}
+            >
               {t("tracking.order", "Order")}
             </p>
             <p className={`mt-1 text-lg font-semibold ${headingColor}`}>
@@ -150,7 +163,11 @@ export default function OrderTracking() {
             </p>
           </div>
           <div className="text-right">
-            <p className={`text-xs font-semibold uppercase tracking-wide ${isDark ? "text-slate-500" : "text-slate-400"}`}>
+            <p
+              className={`text-xs font-semibold uppercase tracking-wide ${
+                isDark ? "text-slate-500" : "text-slate-400"
+              }`}
+            >
               {t("tracking.total", "Total")}
             </p>
             <p className={`mt-1 text-3xl font-bold ${headingColor}`}>

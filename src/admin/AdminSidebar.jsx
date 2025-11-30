@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import {
   FiHome,
   FiPackage,
@@ -9,13 +9,10 @@ import {
   FiFileText,
   FiMessageSquare,
   FiShoppingCart,
-  FiLogOut,
 } from "react-icons/fi";
 import { createPortal } from "react-dom";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useDispatch } from "react-redux";
 import MessageBadge from "../pages/admin/MessagesBadge";
-import { signOut } from "../features/auth/authSlice";
 
 function PortalTooltip({ open, label, x, y, onClose }) {
   useEffect(() => {
@@ -45,8 +42,6 @@ const linkIdle = "text-gray-700 hover:bg-[#49BBBD]/5";
 
 export default function AdminSidebar({ onNavigate, collapsed = false }) {
   const [tip, setTip] = useState({ open: false, label: "", x: 0, y: 0 });
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
 
   const showTip = useCallback((label, rect) => {
     setTip({ open: true, label, x: rect.right, y: rect.top + rect.height / 2 });
@@ -60,24 +55,36 @@ export default function AdminSidebar({ onNavigate, collapsed = false }) {
     return () => window.removeEventListener("scroll", onScroll);
   }, [hideTip]);
 
-  const handleLogout = useCallback(() => {
-    dispatch(signOut());
-    navigate("/login", { replace: true });
-  }, [dispatch, navigate]);
-
   const links = useMemo(
     () => [
       { to: "/admin", end: true, label: "Dashboard", icon: <FiHome /> },
       { to: "/admin/products", label: "Products", icon: <FiPackage /> },
-      { to: "/admin/products/new", label: "Add Product", icon: <FiPlusCircle /> },
-      { to: "/admin/orders", end: true, label: "Orders", icon: <FiShoppingCart /> },
-      { to: "/admin/messages", label: "Messages", icon: <FiMail />, badge: true },
+      {
+        to: "/admin/products/new",
+        label: "Add Product",
+        icon: <FiPlusCircle />,
+      },
+      {
+        to: "AdminOrders",
+        end: true,
+        label: "Orders",
+        icon: <FiShoppingCart />,
+      },
+      {
+        to: "/admin/messages",
+        label: "Messages",
+        icon: <FiMail />,
+        badge: true,
+      },
       { to: "/admin/categories", label: "Categories", icon: <FiTag /> },
       { to: "/admin/articles", label: "Articles", icon: <FiFileText /> },
-      { to: "/admin/complaints", label: "Complaints", icon: <FiMessageSquare /> },
-      { label: "Logout", icon: <FiLogOut />, action: handleLogout },
+      {
+        to: "/admin/complaints",
+        label: "Complaints",
+        icon: <FiMessageSquare />,
+      },
     ],
-    [handleLogout]
+    []
   );
 
   return (
@@ -88,8 +95,12 @@ export default function AdminSidebar({ onNavigate, collapsed = false }) {
         </div>
         {!collapsed && (
           <div className="min-w-0">
-            <div className="truncate text-sm font-semibold text-gray-900">Admin Dashboard</div>
-            <div className="truncate text-[11px] text-gray-500">AgriTech Panel</div>
+            <div className="truncate text-sm font-semibold text-gray-900">
+              Admin Dashboard
+            </div>
+            <div className="truncate text-[11px] text-gray-500">
+              AgriTech Panel
+            </div>
           </div>
         )}
       </div>
@@ -97,7 +108,7 @@ export default function AdminSidebar({ onNavigate, collapsed = false }) {
       <nav className="mt-1 flex flex-col gap-1 px-2">
         {links.map((l) => (
           <SideLink
-            key={l.to || l.label}
+            key={l.to}
             {...l}
             collapsed={collapsed}
             onNavigate={onNavigate}
@@ -136,7 +147,6 @@ function SideLink({
   label,
   icon,
   badge,
-  action,
   onShowTip,
   onHideTip,
 }) {
@@ -152,40 +162,6 @@ function SideLink({
     if (!collapsed) return;
     onHideTip();
   };
-
-  if (action) {
-    return (
-      <button
-        type="button"
-        ref={ref}
-        onClick={() => {
-          action();
-          onHideTip?.();
-        }}
-        onMouseEnter={handleEnter}
-        onMouseLeave={handleLeave}
-        onFocus={handleEnter}
-        onBlur={handleLeave}
-        className={[
-          linkBase,
-          linkIdle,
-          "w-full text-left",
-          collapsed ? "justify-center pl-0" : "",
-        ].join(" ")}
-        aria-label={collapsed ? label : undefined}
-      >
-        <span className="relative text-[18px]">
-          {icon}
-          {badge && (
-            <span className="absolute -top-1 -right-1">
-              <MessageBadge />
-            </span>
-          )}
-        </span>
-        {!collapsed && <span className="truncate">{label}</span>}
-      </button>
-    );
-  }
 
   return (
     <NavLink

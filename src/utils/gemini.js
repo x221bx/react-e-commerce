@@ -1,22 +1,21 @@
-﻿import { GoogleGenerativeAI } from "@google/generative-ai";
+// src/utils/gemini.js
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// المفتاح بتاعك شغال فوراً (حطيته بالكامل زي ما بعثته)
 const genAI = new GoogleGenerativeAI("REDACTED");
 
-// أقوى وأسرع موديل مجاني حالياً (gemini-1.5-flash) - لو عايز أقوى غير لـ pro
 const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-flash", // غيّر لـ "gemini-1.5-pro-latest" لو عايز قوة أكبر (لسه مجاني)
-    generationConfig: {
-        temperature: 0.7,
-        topP: 0.95,
-        topK: 40,
-        maxOutputTokens: 8192,
-        responseMimeType: "text/plain",
-    },
+  model: "gemini-2.5-flash", // غيّر لـ "gemini-1.5-pro-latest" لو عايز قوة أكبر (لسه مجاني)
+  generationConfig: {
+    temperature: 0.7,
+    topP: 0.95,
+    topK: 40,
+    maxOutputTokens: 8192,
+    responseMimeType: "text/plain",
+  },
 });
 
 export const analyzeWithGemini = async (firebaseData, customPrompt = null) => {
-    const defaultPrompt = `
+  const defaultPrompt = `
 أنت خبير تحليل بيانات محترف وبتتكلم عربي ممتاز.
 
 البيانات دي جاية من Firebase دلوقتي:
@@ -33,17 +32,17 @@ ${JSON.stringify(firebaseData, null, 2)}
 رد بصيغة جميلة ومنسقة وسهلة القراءة.
 `;
 
-    try {
-        const result = await model.generateContent(customPrompt || defaultPrompt);
-        const response = await result.response;
-        const text = response.text();
-        return text;
-    } catch (error) {
-        console.error("خطأ في Gemini:", error);
+  try {
+    const result = await model.generateContent(customPrompt || defaultPrompt);
+    const response = await result.response;
+    const text = response.text();
+    return text;
+  } catch (error) {
+    console.error("خطأ في Gemini:", error);
 
-        // رسالة ودودة لو حصل مشكلة (مش هتظهر إلا لو الكوتا خلصت أو في مشكلة نت)
-        return `عذراً، حصل مشكلة في الاتصال بالذكاء الاصطناعي.\nالتفاصيل: ${error.message}\n\nجرب تاني بعد شوية أو تأكد إن النت شغال كويس.`;
-    }
+    
+    return `عذراً، حصل مشكلة في الاتصال بالذكاء الاصطناعي.\nالتفاصيل: ${error.message}\n\nجرب تاني بعد شوية أو تأكد إن النت شغال كويس.`;
+  }
 };
 
 // اختبار سريع (اختياري - امسح السطر ده لو مش عايزه)

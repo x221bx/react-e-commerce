@@ -33,7 +33,7 @@ const navItems = [
     icon: CreditCard,
   },
   {
-    to: "orders",
+    to: "OrderHistory",
     labelKey: "account.order_history",
     descriptionKey: "account.order_description",
     icon: ReceiptText,
@@ -116,79 +116,93 @@ export default function AccountLayout() {
   const sectionRing = isDark ? "ring-slate-800" : "ring-slate-100";
 
   return (
-    <div className={`min-h-screen transition-colors ${mainBackground} flex flex-col`}>
+    <div
+      className={`min-h-screen transition-colors ${mainBackground} flex flex-col`}
+    >
       <div className="flex-1 pt-10 pb-6">
         <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 sm:px-6 lg:flex-row lg:gap-8 lg:px-8">
-        <aside className={`w-full shrink-0 rounded-3xl p-6 shadow-lg ring-1 lg:w-72 ${asideSurface} text-slate-900 dark:text-slate-100`}>
-          <div className="flex items-center gap-4">
-            <div className={`flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl text-lg font-semibold ring-1 ${avatarSurface}`}>
-              {user?.photoURL || user?.photoUrl ? (
-                <img
-                  src={user.photoURL || user.photoUrl}
-                  alt="Profile avatar"
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                initials
-              )}
-            </div>
-            <div>
-              <p className={`text-lg font-semibold ${isDark ? "text-white" : "text-slate-900"}`}>
-                {user?.name || "Your Account"}
-              </p>
-              <p className={`text-sm ${isDark ? "text-slate-400" : "text-slate-500"}`}>
-                {user?.email}
-              </p>
-            </div>
-          </div>
-
-          <div className={`mt-6 rounded-2xl border p-4 text-xs ${helperCard}`}>
-            {t('account.helper_text')}
-          </div>
-
-          <nav className="mt-6 space-y-2" aria-label="Account menu">
-           {navItems.map((item) => {
-             const IconComponent = item.icon;
-             return (
-               <NavLink
-                 key={item.to}
-                 to={item.to}
-                 className={({ isActive }) =>
-                   `flex items-start gap-3 rounded-2xl border px-4 py-3 text-sm transition ${
-                     isActive ? navActive : navIdle
-                   }`
-                 }
-               >
-                 <IconComponent className="h-5 w-5 flex-shrink-0" />
-                 <div>
-                   <p className="font-semibold">{t(item.labelKey)}</p>
-                   <p className={`text-xs ${navDescription}`}>
-                     {t(item.descriptionKey)}
-                   </p>
-                 </div>
-               </NavLink>
-             );
-           })}
-          </nav>
-          <button
-            onClick={handleLogout}
-            className={`mt-6 flex w-full items-center justify-center gap-2 rounded-2xl border px-4 py-2 text-sm font-semibold transition ${logoutButton}`}
+          <aside
+            className={`w-full shrink-0 rounded-3xl p-6 shadow-lg ring-1 lg:w-72 ${asideSurface} text-slate-900 dark:text-slate-100`}
           >
-            <LogOut className="h-4 w-4" />
-            {t('account.logout')}
-          </button>
-        </aside>
+            <div className="flex items-center gap-4">
+              <div
+                className={`flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl text-lg font-semibold ring-1 ${avatarSurface}`}
+              >
+                {user?.photoURL || user?.photoUrl ? (
+                  <img
+                    src={user.photoURL || user.photoUrl}
+                    alt="Profile avatar"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  initials
+                )}
+              </div>
+              <div>
+                <p
+                  className={`text-lg font-semibold ${
+                    isDark ? "text-white" : "text-slate-900"
+                  }`}
+                >
+                  {user?.name || "Your Account"}
+                </p>
+                <p
+                  className={`text-sm ${
+                    isDark ? "text-slate-400" : "text-slate-500"
+                  }`}
+                >
+                  {user?.email}
+                </p>
+              </div>
+            </div>
 
-        <section
-          className={`flex-1 rounded-3xl p-6 shadow-lg ring-1 transition-colors ${sectionRing} ${sectionSurface} text-slate-900 dark:text-slate-100`}
-        >
-          <Outlet />
-        </section>
+            <div
+              className={`mt-6 rounded-2xl border p-4 text-xs ${helperCard}`}
+            >
+              {t("account.helper_text")}
+            </div>
+
+            <nav className="mt-6 space-y-2" aria-label="Account menu">
+              {navItems.map((item) => {
+                const IconComponent = item.icon;
+                return (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    className={({ isActive }) =>
+                      `flex items-start gap-3 rounded-2xl border px-4 py-3 text-sm transition ${
+                        isActive ? navActive : navIdle
+                      }`
+                    }
+                  >
+                    <IconComponent className="h-5 w-5 flex-shrink-0" />
+                    <div>
+                      <p className="font-semibold">{t(item.labelKey)}</p>
+                      <p className={`text-xs ${navDescription}`}>
+                        {t(item.descriptionKey)}
+                      </p>
+                    </div>
+                  </NavLink>
+                );
+              })}
+            </nav>
+            <button
+              onClick={handleLogout}
+              className={`mt-6 flex w-full items-center justify-center gap-2 rounded-2xl border px-4 py-2 text-sm font-semibold transition ${logoutButton}`}
+            >
+              <LogOut className="h-4 w-4" />
+              {t("account.logout")}
+            </button>
+          </aside>
+
+          <section
+            className={`flex-1 rounded-3xl p-6 shadow-lg ring-1 transition-colors ${sectionRing} ${sectionSurface} text-slate-900 dark:text-slate-100`}
+          >
+            <Outlet />
+          </section>
         </div>
       </div>
       <Footer />
     </div>
   );
 }
-
-
