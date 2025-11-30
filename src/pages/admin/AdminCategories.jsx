@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { NavLink, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   FiEdit2,
   FiTrash2,
@@ -14,24 +14,30 @@ import Pager from "../../admin/Pager";
 import {
   useDeleteCategory,
   useCreateCategory,
+  useUpdateCategory,
 } from "../../hooks/useCategoriesMutations";
 import ConfirmDialog from "../../admin/ConfirmDialog";
 import { useTranslation } from "react-i18next";
 import { localizeCategory } from "../../utils/localizeContent";
 import { UseTheme } from "../../theme/ThemeProvider";
+import toast from "react-hot-toast";
 
 export default function AdminCategories() {
   const { t } = useTranslation();
   const { theme } = UseTheme();
   const dark = theme === "dark";
 
-  const [params, setParams] = useSearchParams();
-  const [dir, setDir] = useState(params.get("dir") || "desc");
-  const [pageSize, setPageSize] = useState(Number(params.get("pageSize") || 10));
-  const pageFromUrl = Math.max(1, Number(params.get("page") || 1));
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [dir, setDir] = useState(searchParams.get("dir") || "desc");
+  const [pageSize, setPageSize] = useState(Number(searchParams.get("pageSize") || 10));
+  const pageFromUrl = Math.max(1, Number(searchParams.get("page") || 1));
   const [toDelete, setToDelete] = useState(null);
 
   const [newCategory, setNewCategory] = useState("");
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [editingName, setEditingName] = useState("");
+  const { categoryId } = useParams();
+  const navigate = useNavigate();
 
   const {
     data: all = [],
@@ -45,6 +51,7 @@ export default function AdminCategories() {
 
   const del = useDeleteCategory();
   const create = useCreateCategory();
+  const update = useUpdateCategory();
 
   const {
     paginatedData,
@@ -60,24 +67,62 @@ export default function AdminCategories() {
     initialPage: pageFromUrl,
     resetKeys: [dir, pageSize],
     onPageChange: (p) => {
-      const next = new URLSearchParams(params.toString());
+      const next = new URLSearchParams(searchParams.toString());
       next.set("page", String(p));
-      setParams(next, { replace: true });
+      setSearchParams(next, { replace: true });
     },
   });
 
   useEffect(() => {
-    const next = new URLSearchParams(params.toString());
+    const next = new URLSearchParams(searchParams.toString());
     next.set("dir", dir);
     next.set("pageSize", String(pageSize));
-    setParams(next, { replace: true });
+    setSearchParams(next, { replace: true });
   }, [dir, pageSize]);
+
+  useEffect(() => {
+    if (!categoryId) {
+      setEditingCategory(null);
+      setEditingName("");
+      return;
+    }
+    if (isLoading) return;
+    const target = all.find((cat) => cat.id === categoryId);
+    if (target) {
+      setEditingCategory(target);
+      setEditingName(target.name || "");
+    } else {
+      toast.error(t("errors.category_not_found", "Category not found"));
+      navigate("/admin/categories", { replace: true });
+    }
+  }, [categoryId, all, isLoading, navigate, t]);
 
   const handleCreate = async (e) => {
     e.preventDefault();
     if (!newCategory.trim()) return alert(t("errors.name_required"));
     await create.mutateAsync({ name: newCategory });
     setNewCategory("");
+  };
+
+  const handleCancelEdit = () => {
+    setEditingCategory(null);
+    setEditingName("");
+    navigate("/admin/categories", { replace: true });
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    if (!editingCategory) return;
+    if (!editingName.trim()) {
+      toast.error(t("errors.name_required"));
+      return;
+    }
+    await update.mutateAsync({
+      id: editingCategory.id,
+      updatedFields: { name: editingName.trim() },
+    });
+    toast.success(t("admin.category_updated", "Category updated"));
+    handleCancelEdit();
   };
 
   return (
@@ -120,6 +165,57 @@ export default function AdminCategories() {
           <FiPlus /> {create.isPending ? t("loading") : t("admin.create")}
         </button>
       </form>
+
+      {editingCategory && (
+        <form
+          onSubmit={handleUpdate}
+          className={`
+            mb-6 flex flex-col sm:flex-row items-center gap-3 p-4 rounded-xl border shadow-sm
+            ${dark ? "bg-[#0f2222] border-[#1e3a3a]" : "bg-white border-gray-200"}
+          `}
+        >
+          <div className="flex-1 w-full">
+            <p className="text-xs font-semibold uppercase tracking-wide opacity-70 mb-1">
+              {t("admin.editing_category", "Editing category")}
+            </p>
+            <input
+              type="text"
+              value={editingName}
+              onChange={(e) => setEditingName(e.target.value)}
+              className={`
+                w-full rounded-lg px-3 py-2 text-sm
+                focus:ring-2 focus:ring-[#49BBBD]/40
+                ${dark
+                  ? "bg-[#0c1919] border border-[#1e3a3a] text-[#cfecec]"
+                  : "bg-white border border-gray-300 text-gray-700"}
+              `}
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleCancelEdit}
+              className={`
+                rounded-lg px-4 py-2 text-sm font-semibold border
+                ${dark
+                  ? "bg-[#0f2222] border-[#1e3a3a] text-[#cfecec] hover:bg-[#163434]"
+                  : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"}
+              `}
+            >
+              {t("common.cancel", "Cancel")}
+            </button>
+            <button
+              type="submit"
+              disabled={update.isPending}
+              className="inline-flex items-center gap-2 rounded-lg bg-[#2F7E80] px-4 py-2 text-sm font-semibold text-white hover:bg-[#266668] disabled:opacity-70"
+            >
+              {update.isPending
+                ? t("common.saving", "Saving...")
+                : t("common.save", "Save")}
+            </button>
+          </div>
+        </form>
+      )}
 
       {/* Toolbar */}
       <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -180,6 +276,7 @@ export default function AdminCategories() {
         <EmptyState
           title={t("empty.categories_title")}
           note={t("empty.create_first_category")}
+          dark={dark}
         />
       )}
 
@@ -243,10 +340,13 @@ export default function AdminCategories() {
 
       <ConfirmDialog
         open={!!toDelete}
-        title={t("confirm.delete_category_title")}
+        title={t("confirm.delete_category_title", "Delete category")}
         message={
           toDelete
-            ? t("confirm.delete_category_body", { name: toDelete.name })
+            ? t("confirm.delete_category_body", {
+                name: toDelete.name,
+                defaultValue: `Are you sure you want to delete “${toDelete.name}”?`,
+              })
             : ""
         }
         confirmText={t("common.delete")}
@@ -266,10 +366,12 @@ export default function AdminCategories() {
 /* ===== Subcomponents ===== */
 
 function Actions({ cat, onDelete, dark }) {
+  const navigate = useNavigate();
   return (
     <div className="inline-flex items-center gap-2">
-      <NavLink
-        to={`/admin/categories/${cat.id}/edit`}
+      <button
+        type="button"
+        onClick={() => navigate(`/admin/categories/${cat.id}/edit`)}
         className={`
           rounded-md p-2 border shadow-sm transition
           ${dark
@@ -278,7 +380,7 @@ function Actions({ cat, onDelete, dark }) {
         `}
       >
         <FiEdit2 />
-      </NavLink>
+      </button>
 
       <button
         onClick={() => onDelete({ id: cat.id, name: cat.name })}
@@ -320,21 +422,20 @@ function Skeleton({ rows = 6 }) {
   );
 }
 
-function EmptyState({ title, note }) {
+function EmptyState({ title, note, dark }) {
   return (
-    <div 
-    grid place-items-center rounded-lg p-8 text-center border
-    className={`
-    ${theme === "dark"
-      ? "bg-[#0f2222] border-[#1e3a3a] text-[#cfecec]"
-      : "bg-gray-50 border-gray-200 text-gray-700"}
-      `}
-      >
+    <div
+      className={`grid place-items-center rounded-lg border p-8 text-center ${
+        dark
+          ? "bg-[#0f2222] border-[#1e3a3a] text-[#cfecec]"
+          : "bg-gray-50 border-gray-200 text-gray-700"
+      }`}
+    >
       <div className="text-lg font-semibold">{title}</div>
       <div className="mt-1 text-sm opacity-80">{note}</div>
-      </div>
-      );
-      }
+    </div>
+  );
+}
       
 function formatDate(ts) {
   if (!ts) return "—";

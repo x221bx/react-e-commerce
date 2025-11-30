@@ -1,9 +1,11 @@
-import { Routes, Route, Navigate } from "react-router-dom";
-import { Suspense, lazy } from "react";
+import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Suspense, lazy, useEffect } from "react";
 import ProtectedRoute from "./Authcomponents/ProtectedRoute";
 import Navbar from "./components/layout/Navbar";
 import { Toaster } from "react-hot-toast";
 import AdminMessages from "./pages/admin/AdminMessages";
+import { useSelector } from "react-redux";
+import { selectCurrentUser } from "./features/auth/authSlice";
 
 // Lazy load all components for better performance
 const Login = lazy(() => import("./pages/Login"));
@@ -52,10 +54,23 @@ const LoadingSpinner = () => (
 );
 
 export default function App() {
+    const user = useSelector(selectCurrentUser);
+    const location = useLocation();
+    const navigate = useNavigate();
+    const isAdmin = Boolean(user?.isAdmin);
+    const isAdminRoute = location.pathname.startsWith("/admin");
+    const hideUserShell = isAdmin && isAdminRoute;
+
+    useEffect(() => {
+        if (isAdmin && !isAdminRoute) {
+            navigate("/admin", { replace: true });
+        }
+    }, [isAdmin, isAdminRoute, navigate]);
+
     return (
         <div className="min-h-screen transition-colors duration-300">
             {/* Navbar */}
-            <Navbar />
+            {!hideUserShell && <Navbar />}
 
             {/* Toast Notifications */}
             <Toaster position="top-right" reverseOrder={false} />
@@ -106,6 +121,7 @@ export default function App() {
                             <Route path="products/new" element={<AdminProductForm />} />
                             <Route path="products/:id/edit" element={<AdminProductForm />} />
                             <Route path="categories" element={<AdminCategories />} />
+                            <Route path="categories/:categoryId/edit" element={<AdminCategories />} />
                             <Route path="articles" element={<AdminArticles />} />
                             <Route path="orders" element={<AdminOrders />} />
                             <Route path="orders/:id" element={<AdminOrderDetails />} />
@@ -131,7 +147,7 @@ export default function App() {
                     <Route path="*" element={<NotFound />} />
                 </Routes>
             </Suspense>
-            <ChatBot />
+            {!hideUserShell && <ChatBot />}
         </div>
     );
 }
