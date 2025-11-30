@@ -21,11 +21,11 @@ export default function OrderItemsList({ items, isDark }) {
                 {items.map((item, index) => (
                     <div
                         key={index}
-                        className={`flex items-center gap-4 rounded-xl border p-4 transition ${infoSurface}`}
+                        className={`flex items-center gap-4 rounded-xl border p-4 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg ${infoSurface}`}
                     >
-                        {item.thumbnailUrl || item.img ? (
+                        {item.thumbnailUrl || item.img || item.image || item.imageUrl ? (
                             <img
-                                src={item.thumbnailUrl || item.img}
+                                src={item.thumbnailUrl || item.img || item.image || item.imageUrl}
                                 alt={item.name || item.title}
                                 className="h-14 w-14 rounded-lg object-cover"
                             />

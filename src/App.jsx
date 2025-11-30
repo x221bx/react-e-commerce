@@ -1,5 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Suspense, lazy } from "react";
+import { useTranslation } from "react-i18next";
+import i18n from "./i18n";
 import ProtectedRoute from "./Authcomponents/ProtectedRoute";
 import Navbar from "./components/layout/Navbar";
 import { Toaster } from "react-hot-toast";
@@ -27,6 +29,7 @@ const UserSettings = lazy(() => import("./pages/UserSettings"));
 const AccountLayout = lazy(() => import("./pages/account/AccountLayout"));
 const OrderTracking = lazy(() => import("./pages/account/OrderTracking"));
 const OrderHistory = lazy(() => import("./pages/account/OrderHistory"));
+const OrderInvoice = lazy(() => import("./pages/account/OrderInvoice"));
 const SavedProducts = lazy(() => import("./pages/account/SavedProducts"));
 const FavoriteArticles = lazy(() => import("./pages/account/FavoriteArticles"));
 const SupportCenter = lazy(() => import("./pages/account/SupportCenter"));
@@ -40,27 +43,36 @@ const AdminCategories = lazy(() => import("./pages/admin/AdminCategories"));
 const AdminArticles = lazy(() => import("./pages/admin/AdminArticles"));
 const AdminComplaints = lazy(() => import("./pages/admin/AdminComplaints"));
 const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
+const AdminOrderDetails = lazy(() => import("./pages/admin/AdminOrderDetails"));
+const AdminMessages = lazy(() => import("./pages/admin/AdminMessages"));
+const Notifications = lazy(() => import("./pages/Notifications"));
 const ChatBot = lazy(() => import("./components/Ai/ChatBot"));
 const AiConversations = lazy(() => import("./pages/account/AiConversations"));
 const OrderDetails = lazy(() => import("./pages/OrderDetails"));
 // Loading component for Suspense fallback
-const LoadingSpinner = () => (
-  <div className="min-h-screen flex items-center justify-center">
+const LoadingSpinner = ({ text }) => (
+  <div className="min-h-screen flex items-center justify-center flex-col gap-4">
     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
+    {text && <p className="text-gray-600 dark:text-gray-300">{text}</p>}
   </div>
 );
 
 export default function App() {
+  const { t } = useTranslation();
+
   return (
     <div className="min-h-screen transition-colors duration-300">
       {/* Navbar */}
       <Navbar />
 
       {/* Toast Notifications */}
-      <Toaster position="top-right" reverseOrder={false} />
+      <Toaster
+        position={i18n.language === "ar" ? "top-left" : "top-right"}
+        reverseOrder={false}
+      />
 
       {/* Routes */}
-      <Suspense fallback={<LoadingSpinner />}>
+      <Suspense fallback={<LoadingSpinner text={t("common.loading", "Loading...")} />}>
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
@@ -85,6 +97,7 @@ export default function App() {
               path="/checkout/confirmation"
               element={<OrderConfirmation />}
             />
+            <Route path="/notifications" element={<Notifications />} />
             <Route path="/settings" element={<UserSettings />} />
             <Route path="/account" element={<AccountLayout />}>
               <Route index element={<Navigate to="tracking" replace />} />
@@ -95,6 +108,7 @@ export default function App() {
               <Route path="payments" element={<PaymentMethods />} />
               <Route path="OrderHistory" element={<OrderHistory />} />
               <Route path="tracking" element={<OrderTracking />} />
+              <Route path="invoice/:orderId" element={<OrderInvoice />} />
               <Route path="saved" element={<SavedProducts />} />
               <Route path="articles" element={<FavoriteArticles />} />
               <Route path="ai" element={<AiConversations />} />
@@ -106,16 +120,16 @@ export default function App() {
           <Route element={<ProtectedRoute requireAdmin={true} />}>
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboard />} />
+              <Route path="dashboard" element={<AdminDashboard />} />
               <Route path="products" element={<AdminProducts />} />
               <Route path="products/new" element={<AdminProductForm />} />
               <Route path="products/:id/edit" element={<AdminProductForm />} />
-              <Route path="AdminOrders" element={<AdminOrders />} />
-              <Route path="AdminOrders/:id" element={<OrderDetails />} />
-
-              <Route path="complaints" element={<AdminComplaints />} />
+              <Route path="orders" element={<AdminOrders />} />
+              <Route path="orders/:id" element={<AdminOrderDetails />} />
+              <Route path="messages" element={<AdminMessages />} />
               <Route path="categories" element={<AdminCategories />} />
-
               <Route path="articles" element={<AdminArticles />} />
+              <Route path="complaints" element={<AdminComplaints />} />
             </Route>
           </Route>
           {/* Forbidden */}
@@ -124,10 +138,10 @@ export default function App() {
             element={
               <div className="flex h-screen items-center justify-center flex-col">
                 <h1 className="text-4xl font-bold text-red-600">
-                  403 Forbidden
+                  {t("errors.403_code")} {t("errors.403_title")}
                 </h1>
                 <p className="text-gray-600 mt-2 dark:text-gray-300">
-                  You do not have permission to access this page.
+                  {t("errors.403_message")}
                 </p>
               </div>
             }

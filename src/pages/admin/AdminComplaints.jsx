@@ -1,6 +1,22 @@
-import React, { useState, useMemo } from "react";
-import { FiRefreshCw, FiClock, FiMessageSquare, FiUser, FiPhone } from "react-icons/fi";
-import { collection, query, onSnapshot, doc, updateDoc, orderBy } from "firebase/firestore";
+import React, { useState, useMemo, useEffect, useRef } from "react";
+import {
+  FiRefreshCw,
+  FiClock,
+  FiMessageSquare,
+  FiUser,
+  FiPhone,
+  FiAlertTriangle,
+  FiX,
+} from "react-icons/fi";
+import {
+  arrayUnion,
+  collection,
+  query,
+  onSnapshot,
+  doc,
+  updateDoc,
+  orderBy
+} from "firebase/firestore";
 import { db } from "../../services/firebase";
 import { UseTheme } from "../../theme/ThemeProvider";
 import toast from "react-hot-toast";
@@ -28,16 +44,35 @@ export default function AdminComplaints() {
   React.useEffect(() => {
     const qSupport = query(collection(db, "support"), orderBy("createdAt", "desc"));
     const unsubSupport = onSnapshot(qSupport, (snapshot) => {
-      const data = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        source: doc.data().source || "account_support"
-      }));
+      const data = snapshot.docs.map((docSnapshot) => {
+        const raw = docSnapshot.data() || {};
+        const normalizedStatus = (raw.status || "pending").toLowerCase();
+        const responsesArray = Array.isArray(raw.adminResponses)
+          ? raw.adminResponses
+          : raw.adminResponse
+          ? [{
+            message: raw.adminResponse,
+            createdAt: raw.respondedAt || raw.updatedAt || raw.createdAt
+          }]
+          : [];
+        const latestResponse =
+          responsesArray[responsesArray.length - 1]?.message ||
+          raw.adminResponse ||
+          "";
+
+        return {
+          id: docSnapshot.id,
+          ...raw,
+          status: normalizedStatus,
+          adminResponses: responsesArray,
+          adminResponse: latestResponse,
+          source: raw.source || "account_support"
+        };
+      });
       setComplaints(data);
       setLoading(false);
     }, (error) => {
       console.error("Error fetching complaints:", error);
-      toast.error("Failed to load complaints");
       setLoading(false);
     });
 
@@ -46,19 +81,24 @@ export default function AdminComplaints() {
     };
   }, []);
 
-  const counts = useMemo(() => {
-    const c = {};
-    filters.forEach((status) => {
-      c[status] = status === "All" ? complaints.length : complaints.filter((comp) => comp.status === status).length;
-    });
-    return c;
-  }, [complaints, filters]);
+  const hasAdminReply = (complaint) => {
+    const responses = Array.isArray(complaint.adminResponses)
+      ? complaint.adminResponses.length
+      : 0;
+    return responses > 0 || Boolean(complaint.adminResponse);
+  };
+
+
+
 
   const filteredComplaints = useMemo(() => {
     let filtered = activeFilter === "All" ? complaints : complaints.filter((comp) => comp.status === activeFilter);
 
-    // Source filter
-    filtered = filtered.filter((comp) => !comp.source || comp.source === "account_support");
+    if (activeSourceFilter === "Account Support") {
+      filtered = filtered.filter(
+        (comp) => !comp.source || comp.source === "account_support"
+      );
+    }
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -86,30 +126,19 @@ export default function AdminComplaints() {
   };
 
   const statusColorClass = (status) => {
-    switch (status) {
-      case "pending":
-        return isDark ? "bg-amber-900/40 text-amber-200" : "bg-amber-100 text-amber-800";
-      case "in-progress":
-        return isDark ? "bg-sky-900/40 text-sky-200" : "bg-sky-100 text-sky-700";
-      case "resolved":
-        return isDark ? "bg-emerald-900/40 text-emerald-200" : "bg-emerald-100 text-emerald-700";
-      case "closed":
-        return isDark ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-700";
-      default:
-        return isDark ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-700";
-    }
+    // Always green as requested
+    return isDark ? "bg-emerald-900/40 text-emerald-200" : "bg-emerald-100 text-emerald-700";
   };
 
   const handleStatusChange = async (complaintId, newStatus) => {
+    const normalizedStatus = (newStatus || "").toLowerCase();
     try {
       await updateDoc(doc(db, "support", complaintId), {
-        status: newStatus,
+        status: normalizedStatus,
         updatedAt: new Date()
       });
-      toast.success(`Complaint status updated to ${newStatus}`);
     } catch (error) {
       console.error("Error updating status:", error);
-      toast.error("Failed to update status");
     }
   };
 
@@ -120,15 +149,19 @@ export default function AdminComplaints() {
     }
 
     try {
+      const responseText = adminResponse.trim();
       await updateDoc(doc(db, "support", complaintId), {
-        adminResponse: adminResponse.trim(),
+        adminResponse: responseText,
+        adminResponses: arrayUnion({
+          message: responseText,
+          createdAt: new Date()
+        }),
         status: "resolved",
         respondedAt: new Date(),
         updatedAt: new Date()
       });
       setAdminResponse("");
       setRespondingTo(null);
-      toast.success("Response sent successfully");
     } catch (error) {
       console.error("Error sending response:", error);
       toast.error("Failed to send response");
@@ -173,6 +206,7 @@ export default function AdminComplaints() {
           </div>
         </div>
 
+
         <div className="mb-6">
           <input
             type="text"
@@ -206,16 +240,9 @@ export default function AdminComplaints() {
               <button
                 key={status}
                 onClick={() => setActiveFilter(status)}
-                className={`flex justify-between items-center gap-2 p-3 rounded-lg border ${border} ${bg} hover:shadow-md transition`}
+                className={`flex justify-center items-center gap-2 p-3 rounded-lg border ${border} ${bg} hover:shadow-md transition`}
               >
                 <span className="font-medium capitalize">{status}</span>
-                <span
-                  className={`px-2 py-1 rounded-lg text-sm font-semibold ${
-                    isDark ? "bg-emerald-900/50 text-emerald-200" : "bg-emerald-50 text-emerald-800"
-                  }`}
-                >
-                  {counts[status]}
-                </span>
               </button>
             );
           })}
@@ -280,7 +307,7 @@ export default function AdminComplaints() {
                           </div>
                           {complaint.source === "contact_form" && (
                             <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                              ?? Contact Form Message
+                              Contact form message
                             </p>
                           )}
                         </div>
@@ -372,7 +399,7 @@ export default function AdminComplaints() {
                       }`}
                     >
                       <span className="flex h-4 w-4 items-center justify-center rounded-full border border-current text-[10px]">
-                        ⏱
+                        i
                       </span>
                       History
                     </button>

@@ -237,7 +237,7 @@ export default function OrderDetails() {
               className="flex gap-4 border rounded-xl p-4 bg-green-50 hover:bg-green-100 transition"
             >
               <img
-                src={item.imageUrl}
+                src={item.imageUrl || item.image || item.thumbnailUrl || item.img || "/placeholder.png"}
                 alt={item.name}
                 className="w-20 h-20 rounded-lg object-cover"
               />

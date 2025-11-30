@@ -12,7 +12,7 @@ import {
 } from "react-icons/bs";
 import { AiOutlineHeart, AiFillHeart } from "react-icons/ai";
 import { useProductsSorted } from "../hooks/useProductsSorted";
-import Footer from "../components/layout/footer";
+import Footer from "../components/layout/Footer";
 import { UseTheme } from "../theme/ThemeProvider";
 import { toggleFavourite } from "../features/favorites/favoritesSlice";
 import { addToCart } from "../features/cart/cartSlice";

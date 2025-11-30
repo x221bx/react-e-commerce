@@ -72,8 +72,12 @@ export default function AdminOrders() {
     setRefreshing(false);
   };
 
-  const statusColorClass = (status) => {
-    switch ((status || "").toLowerCase()) {
+  const statusColorClass = (order) => {
+    const status = (order.status || "").toLowerCase();
+    const lastHistory = order.statusHistory?.[order.statusHistory.length - 1];
+    const isCustomerConfirmed = lastHistory?.confirmedBy === "customer";
+
+    switch (status) {
       case "pending":
         return "bg-yellow-100 text-yellow-800";
       case "processing":
@@ -81,7 +85,9 @@ export default function AdminOrders() {
       case "shipped":
         return "bg-purple-100 text-purple-800";
       case "delivered":
-        return "bg-green-100 text-green-800";
+        return isCustomerConfirmed
+          ? "bg-emerald-100 text-emerald-800 border-2 border-emerald-300"
+          : "bg-green-100 text-green-800";
       case "canceled":
         return "bg-red-100 text-red-800";
       default:
@@ -180,7 +186,7 @@ export default function AdminOrders() {
                           className="flex items-center gap-3 border p-2 rounded-md bg-green-50"
                         >
                           <img
-                            src={item.imageUrl}
+                            src={item.imageUrl || item.image || item.thumbnailUrl || item.img || "/placeholder.png"}
                             alt={item.name}
                             className="w-12 h-12 object-cover rounded"
                           />
@@ -201,10 +207,13 @@ export default function AdminOrders() {
                     <div className="mt-3 flex gap-4 items-center flex-wrap">
                       <span
                         className={`px-3 py-1 rounded-full text-sm font-semibold ${statusColorClass(
-                          order.status
+                          order
                         )}`}
                       >
                         {order.status}
+                        {order.statusHistory?.[order.statusHistory.length - 1]?.confirmedBy === "customer" && (
+                          <span className="ml-1 text-xs">✓</span>
+                        )}
                       </span>
                       <span className="text-green-900 font-semibold">
                         Total: {order.total} EGP

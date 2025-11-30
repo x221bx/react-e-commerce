@@ -3,7 +3,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, updateProfile } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { getFunctions } from "firebase/functions";
 
 // ✅ إعدادات Firebase الخاصة بمشروعك
@@ -29,6 +29,17 @@ export const functions = getFunctions(app);
 
 // تصدير تحديث البروفايل
 export { updateProfile };
+
+export async function uploadImage(file, folderPath = "uploads/") {
+  if (!file) {
+    throw new Error("No file provided");
+  }
+  const folder = folderPath.endsWith("/") ? folderPath : `${folderPath}/`;
+  const safeName = (file.name || "image").replace(/\s+/g, "_");
+  const imageRef = ref(storage, `${folder}${Date.now()}_${safeName}`);
+  const snapshot = await uploadBytes(imageRef, file);
+  return getDownloadURL(snapshot.ref);
+}
 
 // لو هتحتاج الـ app في أي مكان
 export default app;

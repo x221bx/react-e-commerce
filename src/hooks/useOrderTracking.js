@@ -14,7 +14,12 @@ export const useOrderTracking = (userId) => {
     const query = useMemo(() => new URLSearchParams(location.search), [location.search]);
     const orderIdQuery = query.get("orderId");
 
-    const { orders, loading, connectionError: ordersConnectionError } = useUserOrders(userId);
+    const { orders: allOrders, loading, connectionError: ordersConnectionError, confirmDelivery } = useUserOrders(userId);
+  
+    // Filter out completed/canceled orders for tracking - they should only show in Order History
+    const orders = allOrders.filter(order =>
+      !['delivered', 'canceled'].includes(order.status?.toLowerCase())
+    );
     const [order, setOrder] = useState(null);
     const [orderConnectionError, setOrderConnectionError] = useState(false);
 
@@ -80,5 +85,6 @@ export const useOrderTracking = (userId) => {
         ordersConnectionError,
         handleSelectOrder,
         buildTrackingUrl,
+        confirmDelivery,
     };
 };

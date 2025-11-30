@@ -1,298 +1,433 @@
-﻿// src/components/Navbar.jsx
-import React, { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { selectCurrentUser, signOut } from "../../features/auth/authSlice";
 import { UseTheme } from "../../theme/ThemeProvider";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion as Motion, AnimatePresence } from "framer-motion";
+import {
+  FiHeart,
+  FiShoppingCart,
+  FiUser,
+  FiBell,
+  FiGlobe,
+  FiSun,
+  FiMoon,
+  FiMenu,
+  FiBook,
+  FiLogOut,
+  FiLogIn,
+  FiUserPlus,
+  FiFeather,
+} from "react-icons/fi";
+import toast from "react-hot-toast";
 import i18n from "../../i18n";
 import { useTranslation } from "react-i18next";
-import SearchBar from "../search/SearchBar";
-import Button from "../../components/ui/Button";
 
-import {
-  Home,
-  Package,
-  Heart,
-  ShoppingCart,
-  User,
-  Menu,
-  X,
-  Sun,
-  Moon,
-  Globe,
-} from "lucide-react";
+import SearchBar from "../search/SearchBar";
+import Button from "../ui/Button";
+import { useNotifications } from "../../hooks/useNotifications";
 
 export default function Navbar() {
-  const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [currentLang, setCurrentLang] = useState(i18n.language || "en");
 
   const { theme, toggle } = UseTheme();
   const user = useSelector(selectCurrentUser);
-  const cart = useSelector((state) => state.cart?.items || []);
+  const cartItems = useSelector((state) => state.cart?.items || []);
   const favorites = useSelector((state) => state.favorites?.items || []);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
+  const isAdminUser = user?.role === "admin" || user?.isAdmin;
+  const isRTL = currentLang === "ar";
 
-  const isDark = theme === "dark";
-  const cartCount = cart.reduce((acc, item) => acc + (item.quantity || 1), 0);
-  const favCount = favorites.length;
-
-  const hideNavbar = ["/login", "/register", "/reset"].includes(
-    location.pathname
-  );
-
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 10);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  const { unreadCount, connectionError } = useNotifications({
+    uid: user?.uid,
+    role: isAdminUser ? "admin" : user?.role,
+  });
 
   const toggleLanguage = async () => {
-    const newLang = i18n.language === "ar" ? "en" : "ar";
+    const newLang = currentLang === "en" ? "ar" : "en";
     await i18n.changeLanguage(newLang);
+    setCurrentLang(newLang);
     document.documentElement.dir = newLang === "ar" ? "rtl" : "ltr";
   };
 
   const handleLogout = () => {
     dispatch(signOut());
-    navigate("/");
-    setMobileOpen(false);
+    toast.success(t("navbar.logout_success"));
   };
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    if (connectionError) {
+      toast.error(t("navbar.notification_error"), { duration: 6000 });
+    }
+  }, [connectionError, t]);
+
+  const isDark = theme === "dark";
+  const navbarColorDark =
+    "bg-[#0c1717]/45 backdrop-blur-2xl text-[#B8E4E6] shadow-[0_2px_5px_rgba(0,0,0,0.45)] border-b border-white/10";
+  const navbarColorLight =
+    "bg-[#123033]/55 backdrop-blur-2xl text-[#B8E4E6] shadow-[0_6px_20px_rgba(0,0,0,0.28)] border-b border-white/12";
+  const navbarBg = `${isDark ? navbarColorDark : navbarColorLight} ${
+    scrolled ? "shadow-xl border-b border-white/20" : ""
+  }`;
+  const mobileMenuBg = isDark
+    ? "bg-[#0e1b1b]/95 backdrop-blur-xl text-[#B8E4E6]"
+    : "bg-[#142727]/95 backdrop-blur-xl text-[#B8E4E6]";
+  const subtleControlBg = "bg-white/20 hover:bg-white/30 text-white transition";
+  const navLinkBase = "text-sm font-semibold tracking-tight transition-colors";
+  const navLinkActive = "text-white";
+  const navLinkIdle = "text-[#B8E4E6]/80 hover:text-white";
+  const cartCount = cartItems.reduce(
+    (sum, item) => sum + (item?.quantity || 1),
+    0
+  );
+
+  const hideNavbar =
+    ["/login", "/register", "/reset"].includes(location.pathname) ||
+    location.pathname.startsWith("/admin");
 
   if (hideNavbar) return null;
 
   return (
-    <>
-      {/* Fixed Navbar */}
-      <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled
-            ? "bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg shadow-lg"
-            : "bg-transparent"
-        }`}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
-            {/* Logo */}
-            <div
-              onClick={() => navigate("/")}
-              className="flex items-center gap-3 cursor-pointer"
-            >
-              <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl shadow-lg">
-                <Package className="w-8 h-8 text-white" />
-              </div>
-              <h1 className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
-                FarmVet
-              </h1>
-            </div>
-
-            {/* Desktop Links */}
-            <nav className="hidden md:flex items-center gap-8">
-              <NavLink
-                to="/"
-                className={({ isActive }) =>
-                  `flex items-center gap-2 font-bold text-lg transition-colors ${
-                    isActive
-                      ? "text-emerald-600 dark:text-emerald-400"
-                      : "text-gray-800 dark:text-gray-200 hover:text-emerald-600 dark:hover:text-emerald-400"
-                  }`
-                }
-              >
-                <Home className="w-5 h-5" /> {t("nav.home")}
-              </NavLink>
-
-              <NavLink
-                to="/products"
-                className={({ isActive }) =>
-                  `flex items-center gap-2 font-bold text-lg transition-colors ${
-                    isActive
-                      ? "text-emerald-600 dark:text-emerald-400"
-                      : "text-gray-800 dark:text-gray-200 hover:text-emerald-600 dark:hover:text-emerald-400"
-                  }`
-                }
-              >
-                <Package className="w-5 h-5" /> {t("nav.products")}
-              </NavLink>
-
-              {user?.role === "admin" && (
-                <NavLink
-                  to="/admin"
-                  className="font-bold text-lg text-purple-600 hover:text-purple-700"
-                >
-                  {t("nav.admin")}
-                </NavLink>
-              )}
-            </nav>
-
-            {/* Right Icons */}
-            <div className="flex items-center gap-3">
-              {/* Desktop Search */}
-              <div className="hidden lg:block">
-                <SearchBar
-                  placeholder={t("search_placeholder") || "ابحث عن منتج..."}
-                />
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex items-center gap-3">
-                {/* Language */}
-                <button
-                  onClick={toggleLanguage}
-                  className="p-3 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                  aria-label="تغيير اللغة"
-                >
-                  <Globe className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
-                </button>
-
-                {/* Theme */}
-                <button
-                  onClick={toggle}
-                  className="p-3 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                  aria-label="تغيير الثيم"
-                >
-                  {isDark ? (
-                    <Sun className="w-6 h-6 text-yellow-500" />
-                  ) : (
-                    <Moon className="w-6 h-6 text-emerald-600" />
-                  )}
-                </button>
-
-                {/* Favorites */}
-                <button
-                  onClick={() => navigate("/favorites")}
-                  className="relative p-3 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <Heart
-                    className={`w-6 h-6 transition-colors ${
-                      favCount > 0
-                        ? "text-red-500 fill-red-500"
-                        : "text-gray-600 dark:text-gray-400"
-                    }`}
-                  />
-                  {favCount > 0 && (
-                    <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg">
-                      {favCount}
-                    </span>
-                  )}
-                </button>
-
-                {/* Cart */}
-                <button
-                  onClick={() => navigate("/cart")}
-                  className="relative p-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white transition-all shadow-lg"
-                >
-                  <ShoppingCart className="w-6 h-6" />
-                  {cartCount > 0 && (
-                    <span className="absolute -top-2 -right-2 min-w-[24px] h-6 px-1.5 bg-red-600 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg animate-pulse">
-                      {cartCount}
-                    </span>
-                  )}
-                </button>
-
-                {/* Account - أيقونة واحدة بس */}
-                <button
-                  onClick={() =>
-                    navigate(user ? "/account/settings" : "/login")
-                  }
-                  className="p-3 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <User className="w-6 h-6 text-gray-700 dark:text-gray-300" />
-                </button>
-
-                {/* Mobile Menu Toggle */}
-                <button
-                  onClick={() => setMobileOpen(!mobileOpen)}
-                  className="md:hidden p-3 rounded-xl bg-gray-100 dark:bg-gray-800"
-                >
-                  {mobileOpen ? (
-                    <X className="w-6 h-6" />
-                  ) : (
-                    <Menu className="w-6 h-6" />
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
+    <header
+      className={`sticky top-0 z-50 transition-all duration-500 ${navbarBg}`}
+      dir={isRTL ? "rtl" : "ltr"}
+    >
+      <div className="max-w-7xl mx-auto w-full flex items-center gap-4 px-4 sm:px-6 md:px-8 py-3">
+        <div className="flex items-center gap-4 flex-shrink-0">
+          <NavLink className="text-lg sm:text-xl font-semibold tracking-tight" to="/">
+            <span className="inline-flex items-center gap-2">
+              <FiFeather className="w-5 h-5 text-emerald-400" />
+              {t("brand.name")}
+            </span>
+          </NavLink>
         </div>
 
-        {/* Mobile Menu */}
-        <AnimatePresence>
-          {mobileOpen && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="md:hidden bg-white dark:bg-gray-900 border 경 dark:border-gray-800 overflow-hidden"
+        <nav
+          className={`hidden md:flex items-center gap-6 text-sm font-semibold ${
+            isRTL ? "flex-row-reverse" : ""
+          }`}
+        >
+          <NavLink
+            to="/"
+            className={({ isActive }) =>
+              `${navLinkBase} ${isActive ? navLinkActive : navLinkIdle}`
+            }
+          >
+            {t("nav.home", "Home")}
+          </NavLink>
+          <NavLink
+            to="/products"
+            className={({ isActive }) =>
+              `${navLinkBase} ${isActive ? navLinkActive : navLinkIdle}`
+            }
+          >
+            {t("nav.products")}
+          </NavLink>
+          <NavLink
+            to="/articles"
+            className={({ isActive }) =>
+              `${navLinkBase} ${isActive ? navLinkActive : navLinkIdle}`
+            }
+          >
+            {t("nav.articles", "Articles")}
+          </NavLink>
+          {isAdminUser && (
+            <NavLink
+              className={`${navLinkBase} ${navLinkIdle}`}
+              to="/admin"
             >
-              <div className="px-6 py-8 space-y-6">
-                <NavLink
-                  to="/"
-                  onClick={() => setMobileOpen(false)}
-                  className="block text-2xl font-bold text-emerald-600 dark:text-emerald-400"
-                >
-                  الرئيسية
-                </NavLink>
-                <NavLink
-                  to="/products"
-                  onClick={() => setMobileOpen(false)}
-                  className="block text-2xl font-bold text-emerald-600 dark:text-emerald-400"
-                >
-                  المنتجات
-                </NavLink>
-                <NavLink
-                  to="/favorites"
-                  onClick={() => setMobileOpen(false)}
-                  className="block text-xl text-gray-700 dark:text-gray-300"
-                >
-                  المفضلة ({favCount})
-                </NavLink>
-                <NavLink
-                  to="/cart"
-                  onClick={() => setMobileOpen(false)}
-                  className="block text-xl text-gray-700 dark:text-gray-300"
-                >
-                  السلة ({cartCount})
-                </NavLink>
-
-                {user ? (
-                  <button
-                    onClick={handleLogout}
-                    className="w-full py-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition"
-                  >
-                    تسجيل الخروج
-                  </button>
-                ) : (
-                  <>
-                    <Button
-                      text="تسجيل الدخول"
-                      onClick={() => {
-                        navigate("/login");
-                        setMobileOpen(false);
-                      }}
-                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
-                    />
-                    <Button
-                      text="إنشاء حساب"
-                      onClick={() => {
-                        navigate("/register");
-                        setMobileOpen(false);
-                      }}
-                      className="w-full bg-gray-800 hover:bg-gray-900 text-white font-bold"
-                    />
-                  </>
-                )}
-              </div>
-            </motion.div>
+              {t("admin.dashboard")}
+            </NavLink>
           )}
-        </AnimatePresence>
-      </header>
+        </nav>
 
-      {/* Spacer عشان المحتوى ميختفيش تحت النافبار */}
-      <div className="h-20" />
-    </>
+        <div className="hidden lg:block flex-1">
+          <SearchBar placeholder={t("navbar.search_placeholder")} />
+        </div>
+
+        <div className="flex items-center gap-2 ml-auto">
+          <button
+            onClick={toggleLanguage}
+            className={`h-9 w-9 rounded-lg flex items-center justify-center ${subtleControlBg}`}
+          >
+            <FiGlobe className="w-4 h-4" />
+            <span className="sr-only">
+              {t("navbar.toggle_language", "Toggle language")}
+            </span>
+          </button>
+
+          <button
+            onClick={toggle}
+            className={`h-9 w-9 rounded-lg flex items-center justify-center ${subtleControlBg}`}
+          >
+            {theme === "dark" ? (
+              <FiSun className="w-4 h-4" />
+            ) : (
+              <FiMoon className="w-4 h-4" />
+            )}
+            <span className="sr-only">
+              {t("navbar.toggle_theme", "Toggle theme")}
+            </span>
+          </button>
+
+          <div className="hidden md:flex items-center gap-2">
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                navigate("/favorites");
+              }}
+              className={`relative h-9 w-9 rounded-lg flex items-center justify-center ${subtleControlBg}`}
+              aria-label={t("navbar.favorites")}
+            >
+              <FiHeart size={18} />
+              {favorites.length > 0 && (
+                <span className="absolute -top-1 rtl-left-1 rtl-right-0 bg-pink-500 text-xs rounded-full px-1">
+                  {favorites.length}
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                navigate("/cart");
+              }}
+              className={`relative h-9 w-9 rounded-lg flex items-center justify-center ${subtleControlBg}`}
+              aria-label={t("navbar.cart")}
+            >
+              <FiShoppingCart size={18} />
+              {cartCount > 0 && (
+                <span className="absolute -top-1 rtl-left-1 rtl-right-0 bg-cyan-600 text-xs rounded-full px-1">
+                  {cartCount}
+                </span>
+              )}
+            </button>
+
+            {user && (
+              <>
+                <button
+                  onClick={() => navigate("/notifications")}
+                  className="relative h-9 w-9 rounded-lg flex items-center justify-center bg-white/20 hover:bg-white/30 text-white"
+                  aria-label={t("navbar.notifications", "Notifications")}
+                >
+                  <FiBell size={18} />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 rtl-left-1 rtl-right-0 min-w-[18px] px-1 py-0.5 text-[10px] font-semibold rounded-full bg-red-500 text-white">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate("/account/settings");
+                  }}
+                  className="flex h-9 w-9 rounded-full items-center justify-center bg-white/20 hover:bg-white/30 text-white"
+                  aria-label={t("navbar.account")}
+                >
+                  <FiUser size={18} />
+                </button>
+              </>
+            )}
+          </div>
+
+          {!user && (
+            <>
+              <Button
+                text={t("auth.login")}
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate("/login");
+                }}
+                className="hidden md:block px-3 py-1 text-sm bg-[#2F7E80] text-white hover:bg-[#236a6c]"
+              />
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate("/register");
+                }}
+                className="hidden md:block text-sm underline opacity-80 hover:opacity-100"
+              >
+                {t("auth.register")}
+              </button>
+            </>
+          )}
+
+          {user && (
+            <button
+              onClick={handleLogout}
+              className="hidden md:block px-3 py-1 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700"
+            >
+              {t("auth.logout")}
+            </button>
+          )}
+
+          <button
+            onClick={() => setMobileOpen((open) => !open)}
+            className={`md:hidden h-10 w-10 rounded-lg ${subtleControlBg}`}
+            aria-label={t("navbar.toggle_menu", { defaultValue: "Toggle menu" })}
+          >
+            <FiMenu className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+      <AnimatePresence>
+        {mobileOpen && (
+          <Motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className={`lg:hidden border-t border-white/10 ${mobileMenuBg}`}
+            dir={isRTL ? "rtl" : "ltr"}
+          >
+            <div
+              className={`px-6 py-4 flex flex-col gap-4 ${
+                isRTL ? "text-right items-end" : ""
+              }`}
+            >
+              <SearchBar placeholder={t("navbar.search_placeholder")} />
+
+              <button
+                onClick={() => {
+                  toggleLanguage();
+                  setMobileOpen(false);
+                }}
+                className="flex items-center gap-3 py-2"
+              >
+                <FiGlobe className="w-4 h-4" />
+                {currentLang === "en"
+                  ? t("languages.switch_to_ar")
+                  : t("languages.switch_to_en")}
+              </button>
+
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  setMobileOpen(false);
+                  navigate("/favorites");
+                }}
+                className={`py-2 w-full ${isRTL ? "text-right" : "text-left"} inline-flex items-center gap-2`}
+              >
+                <FiHeart className="w-4 h-4" />
+                {t("navbar.favorites")}
+              </button>
+
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  setMobileOpen(false);
+                  navigate("/cart");
+                }}
+                className={`py-2 w-full ${isRTL ? "text-right" : "text-left"} inline-flex items-center gap-2`}
+              >
+                <FiShoppingCart className="w-4 h-4" />
+                {t("navbar.cart")}
+              </button>
+
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  setMobileOpen(false);
+                  navigate("/articles");
+                }}
+                className={`py-2 w-full ${isRTL ? "text-right" : "text-left"} inline-flex items-center gap-2`}
+              >
+                <FiBook className="w-4 h-4" />
+                {t("nav.articles", "Articles")}
+              </button>
+
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  setMobileOpen(false);
+                  navigate("/notifications");
+                }}
+                className={`py-2 w-full ${isRTL ? "text-right" : "text-left"} flex items-center justify-between`}
+              >
+                <span className="inline-flex items-center gap-2">
+                  <FiBell className="w-4 h-4" />
+                  {t("navbar.notifications")}
+                </span>
+                {unreadCount > 0 && (
+                  <span className="rtl-ml-auto rtl-mr-3 inline-flex items-center justify-center rounded-full bg-red-500 text-white text-xs px-2 py-0.5">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
+              </button>
+
+              {user && (
+                <>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setMobileOpen(false);
+                      navigate("/account/settings");
+                    }}
+                    className={`py-2 w-full ${
+                      isRTL ? "text-right" : "text-left"
+                    } inline-flex items-center gap-2`}
+                  >
+                    👤 {t("navbar.account")}
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleLogout();
+                      setMobileOpen(false);
+                    }}
+                    className={`text-red-400 py-2 w-full ${
+                      isRTL ? "text-right" : "text-left"
+                    } inline-flex items-center gap-2`}
+                  >
+                    🚪 {t("navbar.logout")}
+                  </button>
+                </>
+              )}
+
+              {!user && (
+                <>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setMobileOpen(false);
+                      navigate("/login");
+                    }}
+                    className={`py-2 w-full ${
+                      isRTL ? "text-right" : "text-left"
+                    } inline-flex items-center gap-2`}
+                  >
+                    🔐 {t("navbar.login")}
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setMobileOpen(false);
+                      navigate("/register");
+                    }}
+                    className={`py-2 w-full ${
+                      isRTL ? "text-right" : "text-left"
+                    } inline-flex items-center gap-2`}
+                  >
+                    📝 {t("navbar.register")}
+                  </button>
+                </>
+              )}
+            </div>
+          </Motion.div>
+        )}
+      </AnimatePresence>
+    </header>
   );
 }

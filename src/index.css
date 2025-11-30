@@ -80,8 +80,6 @@ body {
   background: var(--bg-main);
   color: var(--text-main);
   font-family: "Cairo", sans-serif;
-  direction: rtl;
-  text-align: right;
 }
 
 /* Shared surface helpers */
@@ -91,7 +89,7 @@ body {
 }
 
 .bg-panel {
-    background: var(--bg-panel);
+
     color: var(--text-main);
 }
 
@@ -106,33 +104,7 @@ body {
 }
 
 /* Icon Color Helpers */
-.icon-primary {
-  color: var(--icon-primary);
-}
 
-.icon-secondary {
-  color: var(--icon-secondary);
-}
-
-.icon-muted {
-  color: var(--icon-muted);
-}
-
-.icon-accent {
-  color: var(--icon-accent);
-}
-
-.icon-success {
-  color: var(--icon-success);
-}
-
-.icon-warning {
-  color: var(--icon-warning);
-}
-
-.icon-danger {
-  color: var(--icon-danger);
-}
 
 /* Grid Pattern for Hero Backgrounds */
 .bg-grid-pattern {
@@ -218,12 +190,135 @@ textarea::placeholder {
 }
 
 /* =========================
-   RTL Support
-   ========================= */
+    RTL Support
+    ========================= */
 [dir="rtl"] {
   text-align: right;
 }
 
 [dir="rtl"] .form-input {
   text-align: right;
+}
+
+/* RTL Utility Classes */
+[dir="rtl"] .rtl-flex-row {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .rtl-flex-row-reverse {
+  flex-direction: row;
+}
+
+[dir="rtl"] .rtl-text-left {
+  text-align: left;
+}
+
+[dir="rtl"] .rtl-text-right {
+  text-align: right;
+}
+
+[dir="rtl"] .rtl-justify-start {
+  justify-content: flex-end;
+}
+
+[dir="rtl"] .rtl-justify-end {
+  justify-content: flex-start;
+}
+
+[dir="rtl"] .rtl-items-start {
+  align-items: flex-end;
+}
+
+[dir="rtl"] .rtl-items-end {
+  align-items: flex-start;
+}
+
+[dir="rtl"] .rtl-ml-auto {
+  margin-left: auto;
+  margin-right: 0;
+}
+
+[dir="rtl"] .rtl-mr-auto {
+  margin-right: auto;
+  margin-left: 0;
+}
+
+[dir="rtl"] .rtl-pl-3 {
+  padding-left: 0.75rem;
+  padding-right: 0;
+}
+
+[dir="rtl"] .rtl-pr-3 {
+  padding-right: 0.75rem;
+  padding-left: 0;
+}
+
+[dir="rtl"] .rtl-left-1 {
+  left: auto;
+  right: 0.25rem;
+}
+
+[dir="rtl"] .rtl-right-1 {
+  right: auto;
+  left: 0.25rem;
+}
+
+[dir="rtl"] .rtl-left-0 {
+  left: auto;
+  right: 0;
+}
+
+[dir="rtl"] .rtl-right-0 {
+  right: auto;
+  left: 0;
+}
+
+/* Icon flipping for RTL */
+[dir="rtl"] .rtl-flip-icon {
+  transform: scaleX(-1);
+}
+
+/* Specific component RTL fixes */
+[dir="rtl"] .navbar-nav {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .input-icon {
+  order: 1;
+}
+
+[dir="rtl"] .input-field {
+  order: 2;
+}
+
+[dir="rtl"] .modal-close {
+  left: 1rem;
+  right: auto;
+}
+
+[dir="rtl"] .modal-footer {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .kpi-icon {
+  order: 2;
+}
+
+[dir="rtl"] .kpi-text {
+  order: 1;
+  text-align: right;
+}
+
+[dir="rtl"] .card-actions {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .badge-notification {
+  left: auto;
+  right: 0;
+}
+
+[dir="rtl"] .dropdown-menu {
+  left: auto;
+  right: 0;
 }

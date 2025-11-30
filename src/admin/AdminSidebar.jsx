@@ -13,6 +13,7 @@ import {
 import { createPortal } from "react-dom";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import MessageBadge from "../pages/admin/MessagesBadge";
+import ComplaintsBadge from "../pages/admin/ComplaintsBadge";
 
 function PortalTooltip({ open, label, x, y, onClose }) {
   useEffect(() => {
@@ -65,7 +66,7 @@ export default function AdminSidebar({ onNavigate, collapsed = false }) {
         icon: <FiPlusCircle />,
       },
       {
-        to: "AdminOrders",
+        to: "/admin/orders",
         end: true,
         label: "Orders",
         icon: <FiShoppingCart />,
@@ -82,6 +83,8 @@ export default function AdminSidebar({ onNavigate, collapsed = false }) {
         to: "/admin/complaints",
         label: "Complaints",
         icon: <FiMessageSquare />,
+        badge: true,
+        badgeComponent: ComplaintsBadge,
       },
     ],
     []
@@ -147,6 +150,7 @@ function SideLink({
   label,
   icon,
   badge,
+  badgeComponent: BadgeComponent,
   onShowTip,
   onHideTip,
 }) {
@@ -192,7 +196,7 @@ function SideLink({
         {icon}
         {badge && (
           <span className="absolute -top-1 -right-1">
-            <MessageBadge />
+            {BadgeComponent ? <BadgeComponent /> : <MessageBadge />}
           </span>
         )}
       </span>

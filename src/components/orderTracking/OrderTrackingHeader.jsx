@@ -35,7 +35,7 @@ export default function OrderTrackingHeader({
                     </p>
                 </div>
                 <button
-                    onClick={() => navigate("/account/orders")}
+                    onClick={() => navigate("/account/OrderHistory")}
                     className={`rounded-xl border px-4 py-2 text-sm font-semibold transition ${subtleButton}`}
                 >
                     {t("tracking.viewAllOrders", "View all orders")}

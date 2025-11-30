@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -9,6 +9,8 @@ import OrderTrackingHeader from "../../components/orderTracking/OrderTrackingHea
 import OrderTimeline from "../../components/orderTracking/OrderTimeline";
 import OrderItemsList from "../../components/orderTracking/OrderItemsList";
 import ShippingInfoCard from "../../components/orderTracking/ShippingInfoCard";
+import { CheckCircle, FileText } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function OrderTracking() {
   const { theme } = UseTheme();
@@ -25,7 +27,25 @@ export default function OrderTracking() {
     ordersConnectionError,
     handleSelectOrder,
     buildTrackingUrl,
+    confirmDelivery,
   } = useOrderTracking(user?.uid);
+
+  const [confirmingDelivery, setConfirmingDelivery] = useState(false);
+
+  const handleConfirmDelivery = async () => {
+    if (!order || order.status !== "Shipped") return;
+
+    try {
+      setConfirmingDelivery(true);
+      await confirmDelivery(order.id);
+      toast.success("Order marked as delivered! Thank you for confirming.");
+    } catch (err) {
+      console.error("Confirm delivery error:", err);
+      toast.error(err.message || "Failed to confirm delivery");
+    } finally {
+      setConfirmingDelivery(false);
+    }
+  };
 
   const headingColor = isDark ? "text-white" : "text-slate-900";
   const headerMuted = isDark ? "text-slate-400" : "text-slate-500";
@@ -162,21 +182,54 @@ export default function OrderTracking() {
                 : t("tracking.awaitingUpdate", "Awaiting update")}
             </p>
           </div>
-          <div className="text-right">
-            <p
-              className={`text-xs font-semibold uppercase tracking-wide ${
-                isDark ? "text-slate-500" : "text-slate-400"
-              }`}
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate(`/account/invoice/${order.id}`)}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-colors text-sm font-medium"
             >
-              {t("tracking.total", "Total")}
-            </p>
-            <p className={`mt-1 text-3xl font-bold ${headingColor}`}>
-              {order.totals?.total
-                ? `${Number(order.totals.total).toLocaleString()} EGP`
-                : "-"}
-            </p>
+              <FileText size={16} />
+              View Invoice
+            </button>
+            <div className="text-right">
+              <p
+                className={`text-xs font-semibold uppercase tracking-wide ${
+                  isDark ? "text-slate-500" : "text-slate-400"
+                }`}
+              >
+                {t("tracking.total", "Total")}
+              </p>
+              <p className={`mt-1 text-3xl font-bold ${headingColor}`}>
+                {order.totals?.total
+                  ? `${Number(order.totals.total).toLocaleString()} EGP`
+                  : "-"}
+              </p>
+            </div>
           </div>
         </div>
+
+        {/* Delivery Confirmation */}
+        {order.status === "Shipped" && (
+          <div className={`border-b px-6 py-4 ${isDark ? "border-slate-800" : "border-slate-100"}`}>
+            <div className="flex items-center justify-between animate-in slide-in-from-top-2 duration-500">
+              <div>
+                <p className={`text-sm font-semibold ${headingColor}`}>
+                  Package Delivered?
+                </p>
+                <p className={`text-xs ${headerMuted}`}>
+                  Confirm that you've received your order
+                </p>
+              </div>
+              <button
+                onClick={handleConfirmDelivery}
+                disabled={confirmingDelivery}
+                className="flex items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600 hover:scale-105 disabled:opacity-70 transition-all duration-200 shadow-lg hover:shadow-xl active:scale-95"
+              >
+                <CheckCircle size={16} className={confirmingDelivery ? "animate-spin" : ""} />
+                {confirmingDelivery ? "Confirming..." : "Mark as Delivered"}
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Timeline and Shipping Grid */}
         <div className="grid gap-8 p-6 lg:grid-cols-[2fr,1fr]">
