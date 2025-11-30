@@ -1,7 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 
-const NEW_CARD_OPTION = "__new_card__";
+export const NEW_CARD_OPTION = "__new_card__";
 
 const formatSavedMethod = (method) => {
     if (!method) return "";

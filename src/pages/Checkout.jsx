@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -6,7 +6,9 @@ import toast from "react-hot-toast";
 import CheckoutContactForm from "../components/checkout/CheckoutContactForm";
 import CheckoutShippingForm from "../components/checkout/CheckoutShippingForm";
 import CheckoutPaymentSection from "../components/checkout/CheckoutPaymentSection";
-import CheckoutSavedCards from "../components/checkout/CheckoutSavedCards";
+import CheckoutSavedCards, {
+  NEW_CARD_OPTION,
+} from "../components/checkout/CheckoutSavedCards";
 import CheckoutCardModal from "../components/checkout/CheckoutCardModal";
 import CheckoutSummary from "../components/checkout/CheckoutSummary";
 import { clearCart } from "../features/cart/cartSlice";
@@ -58,12 +60,40 @@ export default function Checkout() {
   } = useCheckoutForm(user);
 
   const {
-    savedCards,
-    savedPaymentLoading,
-    selectedSavedCardId,
-    setSelectedSavedCardId,
-    NEW_CARD_OPTION,
+    methods,
+    loading: savedPaymentLoading,
+    defaultMethod,
   } = usePaymentMethods(user?.uid);
+
+  const savedCards = useMemo(
+    () => methods.filter((method) => method.type === "card"),
+    [methods]
+  );
+
+  const [selectedSavedCardId, setSelectedSavedCardId] = useState(() => {
+    const defaultCard =
+      defaultMethod?.type === "card"
+        ? defaultMethod
+        : savedCards.find((card) => card.isDefault);
+    return defaultCard?.id || savedCards[0]?.id || NEW_CARD_OPTION;
+  });
+
+  useEffect(() => {
+    setSelectedSavedCardId((prev) => {
+      if (
+        prev &&
+        (prev === NEW_CARD_OPTION ||
+          savedCards.some((card) => card.id === prev))
+      ) {
+        return prev;
+      }
+      const defaultCard =
+        defaultMethod?.type === "card"
+          ? defaultMethod
+          : savedCards.find((card) => card.isDefault);
+      return defaultCard?.id || savedCards[0]?.id || NEW_CARD_OPTION;
+    });
+  }, [defaultMethod, savedCards]);
 
   useUserProfile(user?.uid, form, setForm);
 
