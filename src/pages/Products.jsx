@@ -49,6 +49,8 @@ export default function Products() {
     setCategoryFilter(categoryId || "all");
   }, [categoryId]);
 
+
+
   const {
     data: all = [],
     isLoading,

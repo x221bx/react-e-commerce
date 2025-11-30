@@ -1,125 +1,285 @@
-import React, { useState, useMemo } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { useNavigate, Link } from "react-router-dom";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
-import { db, auth } from "../services/firebase";
-import { finalizeOrderLocal } from "../features/cart/cartSlice";
-import useOrders from "../hooks/useOrders";
+import React, { useEffect, useMemo, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
+import CheckoutContactForm from "../components/checkout/CheckoutContactForm";
+import CheckoutShippingForm from "../components/checkout/CheckoutShippingForm";
+import CheckoutPaymentSection from "../components/checkout/CheckoutPaymentSection";
+import CheckoutSavedCards, {
+  NEW_CARD_OPTION,
+} from "../components/checkout/CheckoutSavedCards";
+import CheckoutCardModal from "../components/checkout/CheckoutCardModal";
+import CheckoutSummary from "../components/checkout/CheckoutSummary";
+import { clearCart } from "../features/cart/cartSlice";
+import { selectCurrentUser } from "../features/auth/authSlice";
+import { createOrder } from "../services/ordersService";
+import { auth } from "../services/firebase";
+import { useCheckoutForm } from "../hooks/useCheckoutForm";
+import { usePaymentMethods } from "../hooks/usePaymentMethods";
+import { useUserProfile } from "../hooks/useUserProfile";
+import { useOrderSummary } from "../hooks/useOrderSummary";
+import { useCardValidation } from "../hooks/useCardValidation";
+
+const formatSavedMethod = (method) => {
+  if (!method) return "";
+  if (method.type === "card") {
+    const brand = method.brand
+      ? method.brand.charAt(0).toUpperCase() + method.brand.slice(1)
+      : "Card";
+    return `${brand} **** ${method.last4 || "----"}`;
+  }
+  if (method.type === "wallet") {
+    const provider = method.provider
+      ? method.provider.charAt(0).toUpperCase() + method.provider.slice(1)
+      : "Wallet";
+    return `${provider} (${method.email})`;
+  }
+  return method.nickname || "Saved method";
+};
 
 export default function Checkout() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { items } = useSelector((state) => state.cart);
-  const { reduceStock } = useOrders();
-  const user = auth.currentUser;
+  const { t } = useTranslation();
+  const cartItems = useSelector((state) => state.cart.items || []);
+  const storeUser = useSelector(selectCurrentUser);
+  const firebaseUser = auth.currentUser;
+  const user = storeUser || firebaseUser;
+  const userEmail = user?.email || firebaseUser?.email || "";
+  const userName =
+    user?.name || user?.displayName || user?.username || userEmail || "";
 
-  const [form, setForm] = useState({
-    fullName: "",
-    phone: "",
-    address: "",
-    city: "",
-    notes: "",
+  // ...custom hooks...
+  const { form, setForm, errors, formErrors, validate } = useCheckoutForm(user);
+
+  const {
+    methods,
+    loading: savedPaymentLoading,
+    defaultMethod,
+  } = usePaymentMethods(user?.uid);
+
+  const savedCards = useMemo(
+    () => methods.filter((method) => method.type === "card"),
+    [methods]
+  );
+
+  const [selectedSavedCardId, setSelectedSavedCardId] = useState(() => {
+    const defaultCard =
+      defaultMethod?.type === "card"
+        ? defaultMethod
+        : savedCards.find((card) => card.isDefault);
+    return defaultCard?.id || savedCards[0]?.id || NEW_CARD_OPTION;
   });
-  const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("cod"); // COD by default
 
-  // Validation logic
-  const validate = () => {
-    const err = {};
-    if (!form.fullName.trim()) err.fullName = "Full name is required";
-    if (!/^(01)[0-9]{9}$/.test(form.phone)) err.phone = "Invalid phone number";
-    if (!form.address.trim()) err.address = "Address is required";
-    if (!form.city.trim()) err.city = "City is required";
-    setErrors(err);
-    return Object.keys(err).length === 0;
+  useEffect(() => {
+    setSelectedSavedCardId((prev) => {
+      if (
+        prev &&
+        (prev === NEW_CARD_OPTION ||
+          savedCards.some((card) => card.id === prev))
+      ) {
+        return prev;
+      }
+      const defaultCard =
+        defaultMethod?.type === "card"
+          ? defaultMethod
+          : savedCards.find((card) => card.isDefault);
+      return defaultCard?.id || savedCards[0]?.id || NEW_CARD_OPTION;
+    });
+  }, [defaultMethod, savedCards]);
+
+  useUserProfile(user?.uid, form, setForm);
+
+  const summary = useOrderSummary(cartItems);
+
+  const { cardForm, setCardForm, cardErrors, validateCard, resetCard } =
+    useCardValidation();
+
+  const [loading, setLoading] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("cod");
+  const [showCardModal, setShowCardModal] = useState(false);
+
+  const paymentOptions = useMemo(
+    () => [
+      {
+        value: "cod",
+        type: "cod",
+        title: t("checkout.payment.cod.title"),
+        subtitle: t("checkout.payment.cod.subtitle"),
+      },
+      {
+        value: "card",
+        type: "card",
+        title: t("checkout.payment.card.title"),
+        subtitle: savedCards.length
+          ? t(
+              "checkout.payment.card.dropdownHint",
+              "Choose an existing card or add a new one."
+            )
+          : t("checkout.payment.card.subtitle"),
+      },
+    ],
+    [savedCards.length, t]
+  );
+
+  const buildPaymentDetails = () => {
+    if (
+      paymentMethod === "card" &&
+      selectedSavedCardId &&
+      selectedSavedCardId !== NEW_CARD_OPTION
+    ) {
+      const selectedCard = savedCards.find(
+        (card) => card.id === selectedSavedCardId
+      );
+      if (selectedCard) {
+        return {
+          type: "saved-card",
+          label: formatSavedMethod(selectedCard),
+          methodId: selectedCard.id,
+          brand: selectedCard.brand || "",
+          last4: selectedCard.last4 || "",
+          nickname: selectedCard.nickname || "",
+        };
+      }
+    }
+    if (paymentMethod === "card") {
+      const digits = cardForm.number.replace(/\D/g, "");
+      return {
+        type: "card",
+        label: t("checkout.payment.card.title"),
+        holder: cardForm.holder.trim(),
+        last4: digits.slice(-4),
+      };
+    }
+    return {
+      type: "cod",
+      label: t("checkout.payment.cod.title"),
+    };
   };
 
-  const handleConfirm = async () => {
-    if (!validate()) return;
-    if (!user) return toast.error("User not logged in");
-    if (!items.length) return toast.error("Cart is empty");
+  const placeOrder = async () => {
+    if (!user?.uid && !firebaseUser?.uid) {
+      toast.error(t("checkout.messages.loginRequired"));
+      return;
+    }
+
+    const stockIssue = cartItems.some((item) => {
+      const requested = Number(item.quantity || 0);
+      const available = Number(
+        item.stock ?? item.available ?? Number.POSITIVE_INFINITY
+      );
+      return requested > available;
+    });
+    if (stockIssue) {
+      toast.error(
+        t("checkout.messages.stockIssue", "Some items exceed stock.")
+      );
+      return;
+    }
 
     setLoading(true);
     try {
-      // Reduce stock first
-      await reduceStock(
-        items.map((i) => ({ id: i.id, quantity: i.quantity ?? 0 }))
-      );
-
-      // Prepare order data
-      const orderData = {
-        uid: user.uid,
-        email: user.email,
-        fullName: form.fullName,
-        phone: form.phone,
-        address: form.address,
-        city: form.city,
-        notes: form.notes || "",
-        paymentMethod,
-        items: items.map((i) => ({
-          productId: i.id || "unknown-id",
-          name: i.name || i.title,
-          category: i.category || "—",
-          quantity: i.quantity ?? 0,
-          price: i.price ?? 0,
-          imageUrl: i.imageUrl || i.thumbnailUrl || "",
-        })),
-        total: items.reduce(
-          (sum, i) => sum + (i.price ?? 0) * (i.quantity ?? 0),
-          0
-        ),
-        status: "Pending",
-        statusHistory: [
-          { status: "Pending", changedAt: new Date().toISOString() },
-        ],
-        createdAt: serverTimestamp(),
+      const paymentDetails = buildPaymentDetails();
+      const shipping = {
+        fullName: form.fullName.trim(),
+        addressLine1: form.address.trim(),
+        city: form.city.trim(),
+        phone: form.phone.trim(),
+        email: userEmail,
+        notes: form.notes.trim(),
       };
 
-      // Add order to Firebase
-      await addDoc(collection(db, "orders"), orderData);
+      const { id } = await createOrder({
+        uid: user?.uid || firebaseUser?.uid,
+        userId: user?.uid || firebaseUser?.uid,
+        userEmail,
+        userName,
+        shipping,
+        paymentMethod: paymentDetails.type,
+        paymentSummary: paymentDetails.label,
+        paymentDetails,
+        totals: summary,
+        items: cartItems,
+        notes: form.notes.trim(),
+      });
 
-      dispatch(finalizeOrderLocal());
-      toast.success("Order placed successfully!");
-      navigate("/success");
+      dispatch(clearCart());
+      resetCard();
+      toast.success(t("checkout.messages.success"));
+      navigate(`/order-confirmation?orderId=${id}`, {
+        state: { orderId: id },
+      });
     } catch (err) {
       console.error("Checkout error:", err);
-      toast.error("Failed to place order. Please try again.");
+      toast.error(
+        err?.message || t("checkout.messages.failure", "Something went wrong.")
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  // Summary calculations
-  const summary = useMemo(() => {
-    const subtotal = items.reduce(
-      (sum, i) => sum + (i.price ?? 0) * (i.quantity ?? 0),
-      0
-    );
-    const shipping = items.length > 0 ? 50 : 0;
-    const total = subtotal + shipping;
-    return { subtotal, shipping, total };
-  }, [items]);
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (!user) {
+      toast.error(t("checkout.messages.loginRequired"));
+      return;
+    }
+    if (!cartItems.length) {
+      toast.error(t("checkout.messages.emptyCart"));
+      return;
+    }
+    if (!validate()) return;
 
-  const inputClasses =
-    "w-full rounded-2xl border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 transition";
+    if (
+      paymentMethod === "card" &&
+      (!selectedSavedCardId || selectedSavedCardId === NEW_CARD_OPTION)
+    ) {
+      setShowCardModal(true);
+      return;
+    }
 
-  if (!items.length) {
+    await placeOrder();
+  };
+
+  const handleCardSubmit = async (event) => {
+    event.preventDefault();
+    if (!validateCard()) return;
+    setShowCardModal(false);
+    await placeOrder();
+  };
+
+  const handlePaymentSelection = (value) => {
+    setPaymentMethod(value);
+    if (value !== "card") return;
+    setSelectedSavedCardId((prev) => {
+      if (
+        prev &&
+        (prev === NEW_CARD_OPTION ||
+          savedCards.some((card) => card.id === prev))
+      ) {
+        return prev;
+      }
+      return savedCards[0]?.id || NEW_CARD_OPTION;
+    });
+  };
+
+  if (!cartItems.length) {
     return (
       <section className="mx-auto mt-20 max-w-2xl rounded-3xl border border-dashed border-emerald-200 bg-white/80 p-10 text-center shadow-sm">
         <p className="text-xl font-semibold text-slate-800">
-          Your cart is empty
+          {t("checkout.empty.title", "Your cart is empty")}
         </p>
         <p className="mt-2 text-sm text-slate-500">
-          Please add some products first.
+          {t("checkout.empty.subtitle", "Please add some products first.")}
         </p>
         <div className="mt-6 flex justify-center gap-3">
           <Link
             to="/products"
             className="rounded-2xl bg-emerald-500 px-5 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-600"
           >
-            Go to Products
+            {t("checkout.empty.cta", "Go to Products")}
           </Link>
         </div>
       </section>
@@ -130,17 +290,17 @@ export default function Checkout() {
     return (
       <section className="mx-auto mt-20 max-w-2xl rounded-3xl border border-amber-200 bg-amber-50/80 p-10 text-center shadow-sm">
         <p className="text-lg font-semibold text-amber-900">
-          You need to login
+          {t("checkout.loginRequired.title", "You need to login")}
         </p>
         <p className="mt-2 text-sm text-amber-800">
-          Please login to complete your order.
+          {t("checkout.loginRequired.subtitle", "Please login to continue.")}
         </p>
         <div className="mt-6 flex justify-center gap-3">
           <Link
             to="/login"
             className="rounded-2xl bg-emerald-500 px-5 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-600"
           >
-            Login
+            {t("checkout.loginRequired.cta", "Login")}
           </Link>
         </div>
       </section>
@@ -150,220 +310,68 @@ export default function Checkout() {
   return (
     <div className="min-h-screen bg-slate-50 py-10">
       <div className="mx-auto grid max-w-6xl gap-8 px-4 sm:px-6 lg:grid-cols-[2fr,1fr]">
-        <form className="rounded-3xl border bg-white p-6 shadow-sm space-y-6">
+        <form
+          className="rounded-3xl border bg-white p-6 shadow-sm space-y-6"
+          onSubmit={handleSubmit}
+        >
           <header>
-            <h1 className="text-2xl font-semibold">Checkout</h1>
+            <h1 className="text-2xl font-semibold">
+              {t("checkout.header.title", "Review and confirm")}
+            </h1>
           </header>
-
-          {/* Contact Info */}
-          <section className="space-y-4">
-            <h2 className="text-lg font-semibold">Contact Info</h2>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="text-sm font-medium">Full Name</label>
-                <input
-                  type="text"
-                  value={form.fullName}
-                  onChange={(e) =>
-                    setForm({ ...form, fullName: e.target.value })
-                  }
-                  className={`${inputClasses} ${
-                    errors.fullName ? "border-red-400" : "border-slate-200"
-                  }`}
-                />
-                {errors.fullName && (
-                  <p className="mt-1 text-xs text-red-500">{errors.fullName}</p>
-                )}
-              </div>
-              <div>
-                <label className="text-sm font-medium">Phone</label>
-                <input
-                  type="tel"
-                  value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  className={`${inputClasses} ${
-                    errors.phone ? "border-red-400" : "border-slate-200"
-                  }`}
-                />
-                {errors.phone && (
-                  <p className="mt-1 text-xs text-red-500">{errors.phone}</p>
-                )}
-              </div>
+          {formErrors && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+              {formErrors}
             </div>
-          </section>
+          )}
 
-          {/* Shipping Info */}
-          <section className="space-y-4">
-            <h2 className="text-lg font-semibold">Shipping Address</h2>
-            <div className="grid gap-4">
-              <div>
-                <label className="text-sm font-medium">Address</label>
-                <input
-                  type="text"
-                  value={form.address}
-                  onChange={(e) =>
-                    setForm({ ...form, address: e.target.value })
-                  }
-                  className={`${inputClasses} ${
-                    errors.address ? "border-red-400" : "border-slate-200"
-                  }`}
-                />
-                {errors.address && (
-                  <p className="mt-1 text-xs text-red-500">{errors.address}</p>
-                )}
-              </div>
-              <div>
-                <label className="text-sm font-medium">City</label>
-                <input
-                  type="text"
-                  value={form.city}
-                  onChange={(e) => setForm({ ...form, city: e.target.value })}
-                  className={`${inputClasses} ${
-                    errors.city ? "border-red-400" : "border-slate-200"
-                  }`}
-                />
-                {errors.city && (
-                  <p className="mt-1 text-xs text-red-500">{errors.city}</p>
-                )}
-              </div>
-              <div>
-                <label className="text-sm font-medium">Notes (optional)</label>
-                <textarea
-                  rows="3"
-                  value={form.notes}
-                  onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                  className={inputClasses}
-                ></textarea>
-              </div>
-            </div>
-          </section>
+          <CheckoutContactForm form={form} setForm={setForm} errors={errors} />
+          <CheckoutShippingForm form={form} setForm={setForm} errors={errors} />
 
-          {/* Payment Method */}
-          <section className="space-y-4">
-            <h2 className="text-lg font-semibold">Payment Method</h2>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {["cod", "card"].map((method) => (
-                <label
-                  key={method}
-                  className={`flex cursor-pointer flex-col gap-2 rounded-2xl border px-4 py-3 text-sm ${
-                    paymentMethod === method
-                      ? "border-emerald-500 bg-emerald-50/50"
-                      : "border-slate-200"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="radio"
-                      name="payment"
-                      checked={paymentMethod === method}
-                      onChange={() => setPaymentMethod(method)}
-                    />
-                    <div>
-                      <p className="font-semibold">
-                        {method === "cod" ? "Cash on Delivery" : "Card Payment"}
-                      </p>
-                    </div>
-                  </div>
-                </label>
-              ))}
-            </div>
-          </section>
+          <CheckoutPaymentSection
+            paymentMethod={paymentMethod}
+            handlePaymentSelection={handlePaymentSelection}
+            paymentOptions={paymentOptions}
+            savedCards={savedCards}
+          />
 
-          {/* Action Buttons */}
+          <CheckoutSavedCards
+            paymentMethod={paymentMethod}
+            savedCards={savedCards}
+            selectedSavedCardId={selectedSavedCardId}
+            setSelectedSavedCardId={setSelectedSavedCardId}
+            savedPaymentLoading={savedPaymentLoading}
+          />
+
           <div className="flex flex-wrap gap-3 pt-2">
             <Link
               to="/cart"
               className="rounded-2xl border border-slate-200 px-5 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50"
             >
-              Back to Cart
+              {t("checkout.actions.backToCart", "Back to Cart")}
             </Link>
             <button
-              type="button"
-              onClick={handleConfirm}
+              type="submit"
               disabled={loading}
               className="inline-flex items-center rounded-2xl bg-emerald-500 px-6 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-600 disabled:opacity-70"
             >
-              {loading ? "Processing..." : "Confirm Order"}
+              {loading
+                ? t("checkout.actions.processing", "Processing...")
+                : t("checkout.actions.confirmOrder", "Confirm Order")}
             </button>
           </div>
         </form>
 
-        {/* Order Summary (Sidebar on large screens, full width on mobile) */}
-        <aside className="rounded-3xl border bg-white p-6 shadow-sm lg:block hidden">
-          <h2 className="text-lg font-semibold">Order Summary</h2>
-          <div className="mt-4 space-y-4">
-            {items.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center gap-3 rounded-2xl border border-slate-100 p-3"
-              >
-                <img
-                  src={item.thumbnailUrl || item.img}
-                  alt={item.name || item.title}
-                  className="h-16 w-16 rounded-xl object-cover"
-                />
-                <div className="flex-1">
-                  <p className="text-sm font-semibold">
-                    {item.name || item.title}
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    Qty: {item.quantity ?? 1}
-                  </p>
-                </div>
-                <p className="text-sm font-semibold">{`${Number(
-                  item.price
-                ).toLocaleString()} EGP`}</p>
-              </div>
-            ))}
-          </div>
+        <CheckoutSummary cartItems={cartItems} summary={summary} />
 
-          <div className="mt-6 space-y-2 text-sm">
-            <div className="flex items-center justify-between">
-              <span>Subtotal</span>
-              <span>{`${summary.subtotal.toLocaleString()} EGP`}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span>Shipping</span>
-              <span>{`${summary.shipping.toLocaleString()} EGP`}</span>
-            </div>
-            <div className="flex items-center justify-between text-base font-semibold">
-              <span>Total</span>
-              <span>{`${summary.total.toLocaleString()} EGP`}</span>
-            </div>
-          </div>
-        </aside>
-
-        {/* Mobile Order Details (visible only on small screens) */}
-        <div className="lg:hidden mt-6">
-          <h2 className="text-lg font-semibold mb-2">Order Summary</h2>
-          {items.map((item) => (
-            <div
-              key={item.id}
-              className="flex items-center gap-3 rounded-2xl border border-slate-100 p-3 mb-2"
-            >
-              <img
-                src={item.thumbnailUrl || item.img}
-                alt={item.name || item.title}
-                className="h-16 w-16 rounded-xl object-cover"
-              />
-              <div className="flex-1">
-                <p className="text-sm font-semibold">
-                  {item.name || item.title}
-                </p>
-                <p className="text-xs text-slate-500">
-                  Qty: {item.quantity ?? 1}
-                </p>
-              </div>
-              <p className="text-sm font-semibold">{`${Number(
-                item.price
-              ).toLocaleString()} EGP`}</p>
-            </div>
-          ))}
-          <div className="mt-4 flex justify-between font-semibold">
-            <span>Total:</span>
-            <span>{`${summary.total.toLocaleString()} EGP`}</span>
-          </div>
-        </div>
+        <CheckoutCardModal
+          isOpen={showCardModal}
+          onClose={() => setShowCardModal(false)}
+          cardForm={cardForm}
+          setCardForm={setCardForm}
+          cardErrors={cardErrors}
+          onSubmit={handleCardSubmit}
+        />
       </div>
     </div>
   );

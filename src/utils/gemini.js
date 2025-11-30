@@ -1,10 +1,8 @@
 // src/utils/gemini.js
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// المفتاح بتاعك شغال فوراً (حطيته بالكامل زي ما بعثته)
 const genAI = new GoogleGenerativeAI("REDACTED");
 
-// أقوى وأسرع موديل مجاني حالياً (gemini-1.5-flash) - لو عايز أقوى غير لـ pro
 const model = genAI.getGenerativeModel({
   model: "gemini-2.5-flash", // غيّر لـ "gemini-1.5-pro-latest" لو عايز قوة أكبر (لسه مجاني)
   generationConfig: {
@@ -42,7 +40,7 @@ ${JSON.stringify(firebaseData, null, 2)}
   } catch (error) {
     console.error("خطأ في Gemini:", error);
 
-    // رسالة ودودة لو حصل مشكلة (مش هتظهر إلا لو الكوتا خلصت أو في مشكلة نت)
+    
     return `عذراً، حصل مشكلة في الاتصال بالذكاء الاصطناعي.\nالتفاصيل: ${error.message}\n\nجرب تاني بعد شوية أو تأكد إن النت شغال كويس.`;
   }
 };

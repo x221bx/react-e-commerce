@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { forwardRef, useState } from "react";
 import { UseTheme } from "../../theme/ThemeProvider";
 
-export default function Input({
+const Input = (
+  {
   label,
   icon,
   error,
@@ -10,7 +11,9 @@ export default function Input({
   placeholder = "Type something...",
   type = "text",
   ...props
-}) {
+},
+  ref
+) => {
   const [focused, setFocused] = useState(false);
   const { theme } = UseTheme();
   const isDark = theme === "dark";
@@ -54,6 +57,7 @@ export default function Input({
           value={value}
           onChange={onChange}
           placeholder={placeholder}
+          ref={ref}
           onFocus={() => !isDisabled && setFocused(true)}
           onBlur={() => setTimeout(() => setFocused(false), 120)}
           className={`flex-1 bg-transparent outline-none text-sm ${textColor} ${
@@ -75,4 +79,6 @@ export default function Input({
       )}
     </div>
   );
-}
+};
+
+export default forwardRef(Input);

@@ -167,8 +167,13 @@ const PersonalSection = ({
             label={t("settings.phone_number", "Phone Number")}
             name="phone"
             type="tel"
+            inputMode="numeric"
+            maxLength={11}
             value={profile.profileForm.phone}
-            onChange={(e) => handleProfileChange("phone", e.target.value)}
+            onChange={(e) => {
+              const digitsOnly = e.target.value.replace(/\D/g, "").slice(0, 11);
+              handleProfileChange("phone", digitsOnly);
+            }}
             placeholder={t("settings.phone_placeholder", "01XXXXXXXXX")}
             error={errors.phone}
           />

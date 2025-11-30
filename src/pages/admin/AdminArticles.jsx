@@ -63,17 +63,64 @@ const aiTopics = [
   },
 ];
 
+const formatPublishDateForInput = (raw) => {
+  if (!raw) return "";
+  try {
+    if (typeof raw === "string") {
+      if (raw.endsWith("Z")) {
+        const date = new Date(raw);
+        return Number.isNaN(date.getTime()) ? "" : date.toISOString().slice(0, 16);
+      }
+      if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(raw)) {
+        return raw.slice(0, 16);
+      }
+      const parsed = new Date(raw);
+      return Number.isNaN(parsed.getTime()) ? "" : parsed.toISOString().slice(0, 16);
+    }
+    if (raw?.seconds) {
+      return new Date(raw.seconds * 1000).toISOString().slice(0, 16);
+    }
+    if (typeof raw.toDate === "function") {
+      return raw.toDate().toISOString().slice(0, 16);
+    }
+    if (raw instanceof Date) {
+      return Number.isNaN(raw.getTime()) ? "" : raw.toISOString().slice(0, 16);
+    }
+  } catch (error) {
+    console.error("formatPublishDateForInput error:", error);
+  }
+  return "";
+};
+
+const serializePublishDate = (value) => {
+  if (!value) return "";
+  try {
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    return date.toISOString();
+  } catch (error) {
+    console.error("serializePublishDate error:", error);
+    return "";
+  }
+};
+
 const AdminArticles = () => {
   const { t } = useTranslation();
   UseTheme(); // ensures CSS variables are set for theming
   const { articles } = useArticles();
 
   const savedDraft = localStorage.getItem('articleDraft');
-  const initialForm = savedDraft ? JSON.parse(savedDraft) : defaultForm;
-  const [form, setForm] = useState(initialForm);
+  const parsedDraft = savedDraft ? JSON.parse(savedDraft) : null;
+  const [form, setForm] = useState(() => ({
+    ...defaultForm,
+    ...(parsedDraft || {}),
+    publishDate: formatPublishDateForInput(
+      parsedDraft?.publishDate || defaultForm.publishDate
+    ),
+  }));
   const [editingId, setEditingId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-  const [aiTopic, setAiTopic] = useState(aiTopics[0].value);
+  const [aiTopic, setAiTopic] = useState("");
   const [aiLines, setAiLines] = useState(5);
   const [productContext, setProductContext] = useState("");
 
@@ -122,6 +169,14 @@ const AdminArticles = () => {
   };
 
   const handleGenerate = () => {
+    if (!aiTopic) {
+      toast.error("Select a topic focus before generating.");
+      return;
+    }
+    if (!productContext.trim()) {
+      toast.error("Describe the product or context for the article.");
+      return;
+    }
     const draft = generateAiDraft({
       topicKey: aiTopic,
       productContext,
@@ -233,8 +288,10 @@ const AdminArticles = () => {
         keywords: prev.keywords || seoData.keywords,
       }));
       toast.success("SEO suggestions generated!");
+      return true;
     } catch {
       toast.error("SEO generation failed");
+      return false;
     } finally {
       setGeneratingSEO(false);
     }
@@ -265,18 +322,35 @@ const AdminArticles = () => {
   const handleConfirmPublish = async () => {
     setSubmitting(true);
     try {
-      const { titleAr, summaryAr, contentAr, ...rest } = form;
+      const { titleAr, summaryAr, contentAr, publishDate, ...rest } = form;
       const translations = buildTranslationsFromForm({ titleAr, summaryAr, contentAr });
       const slug = generateSlug(form.title);
       const ensuredReadTime = computeReadTime(form.content || form.summary, rest.readTime);
       const ensuredAuthor = (rest.author || "").trim() || "Vet Clinic Admin";
-      let status = rest.status;
-      if (rest.publishDate && new Date(rest.publishDate) > new Date()) {
+      const publishDateISO = serializePublishDate(publishDate);
+      const publishDateDate = publishDateISO ? new Date(publishDateISO) : null;
+      let status = rest.status || "draft";
+      const now = new Date();
+      if (status === "scheduled") {
+        if (!publishDateDate) {
+          toast.error("Select a publish date and time for scheduled articles.");
+          setShowPublishOverlay(false);
+          setSubmitting(false);
+          return;
+        }
+        if (publishDateDate <= now) {
+          toast.error("Publish date must be in the future.");
+          setShowPublishOverlay(false);
+          setSubmitting(false);
+          return;
+        }
+      } else if (publishDateDate && publishDateDate > now) {
         status = "scheduled";
       }
       const payload = {
         ...rest,
         status,
+        publishDate: publishDateISO,
         readTime: ensuredReadTime,
         author: ensuredAuthor,
         slug,
@@ -293,12 +367,12 @@ const AdminArticles = () => {
       setForm(defaultForm);
       setEditingId(null);
       setAiReview(null);
-      setShowPublishOverlay(false);
       localStorage.removeItem('articleDraft');
     } catch (error) {
       console.error(error);
       toast.error("Unable to save article");
     } finally {
+      setShowPublishOverlay(false);
       setSubmitting(false);
     }
   };
@@ -325,7 +399,8 @@ const AdminArticles = () => {
       author: article.author || "",
       seoDescription: article.seoDescription || "",
       keywords: article.keywords || "",
-      publishDate: article.publishDate || "",
+      publishDate: formatPublishDateForInput(article.publishDate),
+      relatedProducts: Array.isArray(article.relatedProducts) ? article.relatedProducts : [],
     });
 
     // Ensure slug exists for URL routing
@@ -362,6 +437,7 @@ const AdminArticles = () => {
       seoDescription: article.seoDescription || "",
       keywords: article.keywords || "",
       publishDate: "",
+      relatedProducts: Array.isArray(article.relatedProducts) ? [...article.relatedProducts] : [],
     });
 
 
@@ -514,3 +590,4 @@ const AdminArticles = () => {
 };
 
 export default AdminArticles;
+

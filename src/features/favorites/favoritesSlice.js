@@ -2,7 +2,8 @@ import { createSlice } from "@reduxjs/toolkit";
 import { saveUserFavorites } from "../../services/userDataService";
 
 // Helper function to get user-specific favorites key
-const getFavoritesKey = (userId) => userId ? `favorites_${userId}` : "favorites";
+const getFavoritesKey = (userId) =>
+  userId ? `favorites_${userId}` : "favorites";
 
 // Get current user from localStorage (temporary solution until we have proper auth state)
 const getCurrentUserId = () => {
@@ -15,7 +16,9 @@ const getCurrentUserId = () => {
 };
 
 const currentUserId = getCurrentUserId();
-const initialFavorites = JSON.parse(localStorage.getItem(getFavoritesKey(currentUserId)) || "[]");
+const initialFavorites = JSON.parse(
+  localStorage.getItem(getFavoritesKey(currentUserId)) || "[]"
+);
 
 const favouritesSlice = createSlice({
   name: "favorites",
@@ -68,5 +71,11 @@ const favouritesSlice = createSlice({
   },
 });
 
-export const { setUser, clearUserData, setFavoritesItems, toggleFavourite, clearFavourites } = favouritesSlice.actions;
+export const {
+  setUser,
+  clearUserData,
+  setFavoritesItems,
+  toggleFavourite,
+  clearFavourites,
+} = favouritesSlice.actions;
 export default favouritesSlice.reducer;

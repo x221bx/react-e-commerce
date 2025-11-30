@@ -1,48 +1,50 @@
-import { useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { UseTheme } from "../../theme/ThemeProvider";
+import { useProductsSorted } from "../../hooks/useProductsSorted";
 
 export default function SearchBar({
-                          products = [], // 🧩 تمررها من صفحة shop أو من Redux
-                        placeholder = "Search products...",
-                        onSearch, // ✅ callback (للموبايل علشان يقفل المنيو)
-                        }) {
+                           products: propProducts = [], // 🧩 تمررها من صفحة shop أو من Redux
+                         placeholder = "Search products...",
+                         onSearch, // ✅ callback (للموبايل علشان يقفل المنيو)
+                         }) {
     const [query, setQuery] = useState("");
     const [focused, setFocused] = useState(false);
-    const [results, setResults] = useState([]);
     const navigate = useNavigate();
     const { theme } = UseTheme();
 
+    // Fetch products if not provided
+    const { data: fetchedProducts = [] } = useProductsSorted({ sortBy: "createdAt", dir: "desc" });
+    const products = propProducts.length > 0 ? propProducts : fetchedProducts;
+    const results = useMemo(() => {
+        if (!query.trim() || products.length === 0) return [];
+        const normalized = query.toLowerCase();
+        return products
+            .filter((item) =>
+                (item.name || item.title || "").toLowerCase().includes(normalized)
+            )
+            .slice(0, 5);
+    }, [products, query]);
+
     // 🔍 تصفية المنتجات حسب الكلمة
-    useEffect(() => {
-        if (query.trim() && products.length > 0) {
-            const filtered = products.filter((item) =>
-                item.name.toLowerCase().includes(query.toLowerCase())
-            );
-            setResults(filtered);
-        } else {
-            setResults([]);
-        }
-    }, [query]);
 
     // 🧭 عند الضغط على Enter أو زر البحث
     const handleSubmit = (e) => {
         e.preventDefault();
         if (query.trim()) {
-            navigate(`/shop?search=${encodeURIComponent(query.trim())}`);
+            navigate(`/products?search=${encodeURIComponent(query.trim())}`);
             setFocused(false);
-            setResults([]);
             if (onSearch) onSearch(query.trim()); // ✅ للموبايل: يقفل المنيو بعد البحث
         }
     };
 
     // 🧠 عند اختيار اقتراح من القائمة
     const handleSelect = (item) => {
-        setQuery(item.name);
-        navigate(`/shop?search=${encodeURIComponent(item.name)}`);
+        const name = item.name || item.title || "";
+        setQuery(name);
+        navigate(`/products?search=${encodeURIComponent(name)}`);
         setFocused(false);
-        setResults([]);
-        if (onSearch) onSearch(item.name); // ✅ يقفل المنيو لو في موبايل
+        if (onSearch) onSearch(name); // ✅ يقفل المنيو لو في موبايل
     };
 
     return (
@@ -119,7 +121,7 @@ export default function SearchBar({
               <span className="material-symbols-outlined text-base opacity-70">
                 inventory_2
               </span>
-                            {item.name}
+                            {item.name || item.title || "Unnamed"}
                         </button>
                     ))}
                 </div>
