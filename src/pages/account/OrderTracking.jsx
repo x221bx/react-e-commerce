@@ -16,7 +16,10 @@ export default function OrderTracking() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const query = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const query = useMemo(
+    () => new URLSearchParams(location.search),
+    [location.search]
+  );
   const orderIdQuery = query.get("orderId");
   const isDark = theme === "dark";
   const user = useSelector(selectCurrentUser);
@@ -59,7 +62,10 @@ export default function OrderTracking() {
   const baseSteps = [
     { key: "processing", label: t("tracking.steps.processing", "Processing") },
     { key: "shipped", label: t("tracking.steps.shipped", "Shipped") },
-    { key: "out_for_delivery", label: t("tracking.steps.outForDelivery", "Out for Delivery") },
+    {
+      key: "out_for_delivery",
+      label: t("tracking.steps.outForDelivery", "Out for Delivery"),
+    },
     { key: "delivered", label: t("tracking.steps.delivered", "Delivered") },
   ];
 
@@ -120,7 +126,8 @@ export default function OrderTracking() {
     recipient: "Farmhouse HQ",
     address: "123 Green Valley Rd",
     carrier: order?.shippingCarrier || "Agri-Logistics Express",
-    trackingNumber: order?.shipping?.trackingNumber || order?.trackingNumber || "",
+    trackingNumber:
+      order?.shipping?.trackingNumber || order?.trackingNumber || "",
   };
 
   const trackingUrl = shippingInfo.trackingNumber
@@ -138,7 +145,9 @@ export default function OrderTracking() {
   if (!orders || !orders.length) {
     return (
       <div className="space-y-4 text-center">
-        <p className={`text-sm font-semibold uppercase tracking-wide ${accent}`}>
+        <p
+          className={`text-sm font-semibold uppercase tracking-wide ${accent}`}
+        >
           {t("tracking.eyebrow", "Track your recent purchases")}
         </p>
         <h1 className={`text-3xl font-semibold ${headingColor}`}>
@@ -177,7 +186,10 @@ export default function OrderTracking() {
           ))}
         </div>
         <p className={`text-sm ${headerMuted}`}>
-          {t("tracking.selectOrder", "Select an order to display live updates.")}
+          {t(
+            "tracking.selectOrder",
+            "Select an order to display live updates."
+          )}
         </p>
       </div>
     );
@@ -186,7 +198,9 @@ export default function OrderTracking() {
   const headerSummary = (
     <>
       <div>
-        <p className={`text-sm font-semibold uppercase tracking-wide ${accent}`}>
+        <p
+          className={`text-sm font-semibold uppercase tracking-wide ${accent}`}
+        >
           {t("tracking.eyebrow", "Track your recent purchases")}
         </p>
         <h1 className={`text-3xl font-semibold ${headingColor}`}>
@@ -200,7 +214,7 @@ export default function OrderTracking() {
         </p>
       </div>
       <button
-        onClick={() => navigate("/account/orders")}
+        onClick={() => navigate("/account/orderhistory")}
         className={`rounded-xl border px-4 py-2 text-sm font-semibold transition ${subtleButton}`}
       >
         {t("tracking.viewAllOrders", "View all orders")}
@@ -242,10 +256,15 @@ export default function OrderTracking() {
             <p className="text-xs uppercase tracking-wide text-slate-400">
               {t("tracking.order", "Order")}
             </p>
-            <p className={`text-base font-semibold ${headingColor}`}>{order.reference}</p>
+            <p className={`text-base font-semibold ${headingColor}`}>
+              {order.reference}
+            </p>
             <p className={`text-xs ${muted}`}>
               {order.createdAt
-                ? formatDateTime(order.createdAt, t("tracking.awaitingUpdate", "Awaiting update"))
+                ? formatDateTime(
+                    order.createdAt,
+                    t("tracking.awaitingUpdate", "Awaiting update")
+                  )
                 : t("tracking.awaitingUpdate", "Awaiting update")}
             </p>
           </div>
@@ -262,7 +281,9 @@ export default function OrderTracking() {
         </div>
         <div className="grid gap-6 p-6 lg:grid-cols-[2fr,1fr]">
           <section>
-            <h2 className={`text-sm font-semibold uppercase tracking-wide ${muted}`}>
+            <h2
+              className={`text-sm font-semibold uppercase tracking-wide ${muted}`}
+            >
               {t("tracking.trackingStatus", "Tracking Status")}
             </h2>
             <ol className="mt-4 space-y-4">
@@ -281,9 +302,14 @@ export default function OrderTracking() {
                     )}
                   </div>
                   <div>
-                    <p className={`font-semibold ${strongText}`}>{step.label}</p>
+                    <p className={`font-semibold ${strongText}`}>
+                      {step.label}
+                    </p>
                     <p className={`text-sm ${muted}`}>
-                      {formatDateTime(step.updatedAt, t("tracking.awaitingUpdate", "Awaiting update"))}
+                      {formatDateTime(
+                        step.updatedAt,
+                        t("tracking.awaitingUpdate", "Awaiting update")
+                      )}
                     </p>
                   </div>
                 </li>
@@ -300,21 +326,26 @@ export default function OrderTracking() {
                 <dt className={`text-xs uppercase tracking-wide ${muted}`}>
                   {t("tracking.shippingTo", "Shipping To")}
                 </dt>
-                <dd className={`font-medium ${strongText}`}>{shippingInfo.recipient}</dd>
+                <dd className={`font-medium ${strongText}`}>
+                  {shippingInfo.recipient}
+                </dd>
                 <dd>{shippingInfo.address}</dd>
               </div>
               <div>
                 <dt className={`text-xs uppercase tracking-wide ${muted}`}>
                   {t("tracking.carrier", "Carrier")}
                 </dt>
-                <dd className={`font-medium ${strongText}`}>{shippingInfo.carrier}</dd>
+                <dd className={`font-medium ${strongText}`}>
+                  {shippingInfo.carrier}
+                </dd>
               </div>
               <div>
                 <dt className={`text-xs uppercase tracking-wide ${muted}`}>
                   {t("tracking.trackingNumber", "Tracking Number")}
                 </dt>
                 <dd className={`font-medium ${strongText}`}>
-                  {shippingInfo.trackingNumber || t("tracking.awaitingUpdate", "Awaiting update")}
+                  {shippingInfo.trackingNumber ||
+                    t("tracking.awaitingUpdate", "Awaiting update")}
                 </dd>
                 {trackingUrl && (
                   <dd>
@@ -322,7 +353,9 @@ export default function OrderTracking() {
                       href={trackingUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={`text-sm font-semibold hover:underline ${linkColor(isDark)}`}
+                      className={`text-sm font-semibold hover:underline ${linkColor(
+                        isDark
+                      )}`}
                     >
                       {t("tracking.trackCarrier", "Track on carrier site")}
                     </a>

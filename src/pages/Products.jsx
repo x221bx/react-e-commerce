@@ -1,7 +1,6 @@
-﻿// src/pages/Products.jsx
-import React, { useState, useMemo } from "react";
+﻿import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   BsHeart,
@@ -11,19 +10,13 @@ import {
   BsArrowDown,
   BsTag,
 } from "react-icons/bs";
+import { AiOutlineHeart, AiFillHeart } from "react-icons/ai";
 import { useProductsSorted } from "../hooks/useProductsSorted";
-import { usePagination } from "../hooks/usePagination";
-import Pager from "../admin/Pager";
-// Fallback data util (if you use it)
-import { getFallbackProducts } from "../data/products";
-// Footer component
-import Footer from "../components/layout/Footer";
-// Theme hook (optional)
+import Footer from "../components/layout/footer";
 import { UseTheme } from "../theme/ThemeProvider";
-
-// ACTIONS - عدّل المسار لو أفعالك في مكان ثاني
 import { toggleFavourite } from "../features/favorites/favoritesSlice";
 import { addToCart } from "../features/cart/cartSlice";
+import { useCategoriesSorted } from "../hooks/useCategoriesSorted";
 
 const SORT_FIELDS = [
   { value: "createdAt", label: "Newest" },
@@ -32,24 +25,30 @@ const SORT_FIELDS = [
 ];
 
 export default function Products() {
-  // UI state
+  const { categoryId } = useParams(); // ID الفئة من URL
   const [q, setQ] = useState("");
   const [sortBy, setSortBy] = useState("createdAt");
   const [dir, setDir] = useState("desc");
-  const [pageSize, setPageSize] = useState(12);
+  const [categoryFilter, setCategoryFilter] = useState(categoryId || "all");
 
   const { theme } = UseTheme();
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
+  const isDark = theme === "dark";
   const favorites = useSelector((state) => state.favorites?.items ?? []);
   const favoriteIds = useMemo(
     () => new Set(favorites.map((item) => item?.id).filter(Boolean)),
     [favorites]
   );
 
-  // Products hook: should return `data`, `isLoading`, `isError`, optionally `error`
+  const { data: categories = [] } = useCategoriesSorted({ dir: "asc" });
+
+  // تحديث الفلتر عند تغيير الـ URL
+  useEffect(() => {
+    setCategoryFilter(categoryId || "all");
+  }, [categoryId]);
+
   const {
     data: all = [],
     isLoading,
@@ -57,116 +56,68 @@ export default function Products() {
     error,
   } = useProductsSorted({ sortBy, dir, qText: q });
 
-  // Fallback catalog when live DB empty / failing
-  const fallbackCatalog = useMemo(() => getFallbackProducts(), []);
-  const usingFallback = useMemo(() => {
-    if (isLoading) return false;
-    if (isError) return true;
-    return all.length === 0;
-  }, [isLoading, isError, all.length]);
+  // فلترة المنتجات حسب الفئة
+  const filteredList = useMemo(() => {
+    if (!categoryFilter || categoryFilter === "all") return all;
+    return all.filter((p) => p.categoryId === categoryFilter);
+  }, [all, categoryFilter]);
 
-  const filteredFallback = useMemo(() => {
-    if (!usingFallback) return [];
-    const term = q.trim().toLowerCase();
-    const filtered = fallbackCatalog.filter((p) => {
-      if (!term) return true;
-      const hay = `${p.title} ${p.category} ${p.description || ""} ${
-        p.keywords?.join(" ") || ""
-      }`.toLowerCase();
-      return hay.includes(term);
-    });
+  // Infinite Scroll
+  const [visibleCount, setVisibleCount] = useState(12);
+  const loadMoreRef = useRef(null);
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisibleCount((prev) => prev + 12);
+        }
+      },
+      { threshold: 1 }
+    );
+    if (loadMoreRef.current) observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
+  }, []);
 
-    return [...filtered].sort((a, b) => {
-      if (sortBy === "price")
-        return dir === "asc" ? a.price - b.price : b.price - a.price;
-      if (sortBy === "title")
-        return dir === "asc"
-          ? a.title.localeCompare(b.title)
-          : b.title.localeCompare(a.title);
-      // createdAt expected as timestamp number in fallback
-      return dir === "asc"
-        ? a.createdAt - b.createdAt
-        : b.createdAt - a.createdAt;
-    });
-  }, [usingFallback, fallbackCatalog, q, sortBy, dir]);
+  const paginatedData = filteredList.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredList.length;
 
-  const list = useMemo(
-    () => (usingFallback ? filteredFallback : all),
-    [usingFallback, filteredFallback, all]
-  );
-
-  // pagination - expecting hook returns these fields; adapt if your hook differs
-  const {
-    paginatedData,
-    currentPage,
-    totalPages,
-    setPage,
-    nextPage,
-    prevPage,
-    rangeStart,
-    rangeEnd,
-    totalItems,
-  } = usePagination(list, pageSize);
-
-  // dispatch helpers
   const handleToggleFavorite = (product) => dispatch(toggleFavourite(product));
   const handleAddToCart = (product) => dispatch(addToCart(product));
-  const handleCardClick = (productId) => navigate(`/products/${productId}`);
+  const handleCardClick = (productId) => navigate(`/product/${productId}`);
 
   return (
-    <div className="min-h-screen bg-neutral-50 text-slate-900 font-sans">
-      {/* Premium header area */}
-      <div className="mx-auto max-w-7xl px-6 py-12">
-        <div className="rounded-2xl bg-white shadow-xl border border-gray-100 overflow-hidden">
-          {/* Top strip */}
+    <div className="min-h-screen bg-neutral-50 text-slate-900 font-sans ">
+      <div className="mx-auto max-w-8xl px-6 py-4">
+        <div className="rounded-2xl bg-white shadow-md border border-gray-100 overflow-hidden">
           <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="rounded-full bg-gradient-to-br from-green-500 to-teal-400 p-3 text-white shadow-md">
-                <BsTag size={20} />
-              </div>
               <div>
-                <h1 className="text-2xl font-semibold">
-                  {" "}
-                  {t("products.title", "Products")}
+                <h1 className="text-4xl lg:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-400 via-blue-500 to-cyan-500">
+                  {t("products.title", " Our Products")}
                 </h1>
-                <p className="text-sm text-slate-500 mt-1">
-                  {t(
-                    "products.subtitle",
-                    "Browse our catalog — premium selection"
-                  )}
-                </p>
-              </div>
-            </div>
-
-            {/* actions area */}
-            <div className="flex items-center gap-3">
-              <div className="text-sm text-slate-500">
-                {totalItems ? `${rangeStart}-${rangeEnd} of ${totalItems}` : ""}
               </div>
             </div>
           </div>
 
-          {/* Filters row */}
+          {/* Filters */}
           <div className="px-6 py-6 bg-white">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
-              <div className="relative md:col-span-2">
-                <input
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                  placeholder={t("products.search", "Search products...")}
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-green-300"
-                />
-              </div>
+              <input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder={t("products.search", "Search products...")}
+                className="md:col-span-2 w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm"
+              />
 
               <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
                 className="rounded-lg border border-gray-200 bg-white px-3 py-3 text-sm"
               >
-                {SORT_FIELDS.map((s) => (
-                  <option key={s.value} value={s.value}>
-                    {t("products.sortLabel", "Sort")}:{" "}
-                    {t(`products.sort.${s.value}`, s.label)}
+                <option value="all">All Categories</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
                   </option>
                 ))}
               </select>
@@ -175,24 +126,18 @@ export default function Products() {
                 <button
                   onClick={() => setDir((d) => (d === "asc" ? "desc" : "asc"))}
                   className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-3 text-sm shadow-sm"
-                  title={dir === "asc" ? "Ascending" : "Descending"}
                 >
                   {dir === "asc" ? <BsArrowUp /> : <BsArrowDown />}
-                  <span className="text-sm">
-                    {dir === "asc"
-                      ? t("products.asc", "Asc")
-                      : t("products.desc", "Desc")}
-                  </span>
                 </button>
 
                 <select
-                  value={pageSize}
-                  onChange={(e) => setPageSize(Number(e.target.value))}
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
                   className="rounded-lg border border-gray-200 bg-white px-3 py-3 text-sm"
                 >
-                  {[8, 12, 24, 48].map((n) => (
-                    <option key={n} value={n}>
-                      {n} / {t("products.perPage", "page")}
+                  {SORT_FIELDS.map((s) => (
+                    <option key={s.value} value={s.value}>
+                      {s.label}
                     </option>
                   ))}
                 </select>
@@ -200,34 +145,24 @@ export default function Products() {
             </div>
           </div>
 
-          {/* status / messages */}
           <div className="px-6 py-4">
-            {isLoading && <GridSkeleton count={pageSize} premium />}
-            {isError && !usingFallback && (
+            {isLoading && <GridSkeleton count={12} premium />}
+            {isError && (
               <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-700 text-sm">
                 {t("products.error", "Failed to load products.")}{" "}
                 {error?.message}
               </div>
             )}
-            {usingFallback && (
-              <div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-amber-800 text-sm">
-                {t(
-                  "products.fallback",
-                  "Live products are still syncing. Showing a fallback catalog."
-                )}
-              </div>
-            )}
-            {!isLoading && !usingFallback && !isError && list.length === 0 && (
+            {!isLoading && !isError && filteredList.length === 0 && (
               <div className="rounded-md border border-gray-100 bg-gray-50 p-6 text-center text-sm text-slate-600">
-                {t("products.noResults", "No products found.")}
+                No products found.
               </div>
             )}
           </div>
         </div>
 
-        {/* Product grid */}
         <main className="mt-8">
-          {!isLoading && list.length > 0 && (
+          {!isLoading && filteredList.length > 0 && (
             <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {paginatedData.map((p) => {
                 const isFavorite = favoriteIds.has(p.id);
@@ -237,7 +172,7 @@ export default function Products() {
                     className="group bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden cursor-pointer hover:shadow-lg transition"
                   >
                     <div
-                      className="relative h-64 w-full bg-gray-50 flex items-center justify-center"
+                      className="relative h-66 w-full bg-gray-50 flex items-center justify-center"
                       onClick={() => handleCardClick(p.id)}
                     >
                       {p.thumbnailUrl ? (
@@ -247,29 +182,35 @@ export default function Products() {
                           className="object-contain h-full w-full transition-transform duration-300 group-hover:scale-105"
                         />
                       ) : (
-                        <div className="text-sm text-slate-400">
-                          {t("products.noImage", "No image")}
-                        </div>
+                        <div className="text-sm text-slate-400">No image</div>
                       )}
 
-                      {/* price badge */}
                       <div className="absolute left-4 top-4 rounded-md bg-white/90 px-3 py-1 text-sm font-semibold text-slate-800 shadow-sm">
                         {Number(p.price || 0).toLocaleString()} EGP
                       </div>
 
-                      {/* favorite heart */}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleToggleFavorite(p);
                         }}
-                        className="absolute right-4 top-4 rounded-full bg-white/90 p-2 shadow-sm"
-                        title={isFavorite ? "Remove favorite" : "Add favorite"}
+                        className={`
+    absolute right-3 top-3 p-2 rounded-full 
+    transition-all duration-200 ease-in-out
+    ${isDark ? "bg-gray-800/80" : "bg-white/90"}
+    shadow-md hover:scale-110 hover:shadow-lg
+    flex items-center justify-center
+  `}
                       >
                         {isFavorite ? (
-                          <BsHeartFill className="text-red-500" />
+                          <AiFillHeart size={22} className="text-red-500" />
                         ) : (
-                          <BsHeart className="text-slate-600" />
+                          <AiOutlineHeart
+                            size={22}
+                            className={
+                              isDark ? "text-gray-300" : "text-gray-500"
+                            }
+                          />
                         )}
                       </button>
                     </div>
@@ -281,26 +222,14 @@ export default function Products() {
                       >
                         {p.title}
                       </h3>
+
                       <p className="text-sm text-slate-500 mt-2">
-                        {p.category}
+                        {categories.find((c) => c.id === p.categoryId)?.name ||
+                          "Unknown"}
                       </p>
 
                       <div className="mt-4 flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                          <div
-                            className={`text-sm font-medium ${
-                              p.stock > 0 ? "text-emerald-600" : "text-rose-500"
-                            }`}
-                          >
-                            {p.stock > 0
-                              ? t("products.inStock", "In stock")
-                              : t("products.outStock", "Out of stock")}
-                          </div>
-                          <div className="text-sm text-slate-400">•</div>
-                          <div className="text-sm text-slate-400">
-                            {p.sku || ""}
-                          </div>
-                        </div>
+                        <div className="text-sm text-slate-400">{p.sku}</div>
 
                         <button
                           onClick={(e) => {
@@ -311,12 +240,8 @@ export default function Products() {
                           className="inline-flex items-center gap-2 rounded-lg bg-green-600 text-white px-3 py-2 text-sm font-semibold shadow hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <BsCartPlus />
-                          <span>{t("products.addToCart", "Add to cart")}</span>
+                          <span>Add to cart</span>
                         </button>
-                      </div>
-
-                      <div className="mt-3 text-xs text-slate-400">
-                        {p.shortDescription || ""}
                       </div>
                     </div>
                   </li>
@@ -325,26 +250,9 @@ export default function Products() {
             </ul>
           )}
 
-          {/* pager */}
-          {list.length > 0 && (
-            <div className="mt-8">
-              <Pager
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPrev={prevPage}
-                onNext={nextPage}
-                onGo={setPage}
-                rangeStart={rangeStart}
-                rangeEnd={rangeEnd}
-                totalItems={totalItems}
-              />
-            </div>
-          )}
-
-          {/* empty fallback */}
-          {!isLoading && list.length === 0 && (
-            <div className="mt-10 text-center text-sm text-slate-500">
-              {t("products.noResults", "No products found.")}
+          {hasMore && (
+            <div ref={loadMoreRef} className="py-10 text-center text-slate-400">
+              Loading more...
             </div>
           )}
         </main>
@@ -357,9 +265,6 @@ export default function Products() {
   );
 }
 
-/**
- * GridSkeleton - premium skeleton placeholders
- */
 function GridSkeleton({ count = 6, premium = false }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

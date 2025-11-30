@@ -104,8 +104,7 @@ export default function AdminProducts() {
       to="/admin/products/new"
       className="inline-flex items-center gap-2 rounded-lg bg-[#2B7A0B] px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#205F09]"
     >
-      <FiPlus />{" "}
-      {t("admin.new_product", { defaultValue: "New product" })}
+      <FiPlus /> {t("admin.new_product", { defaultValue: "New product" })}
     </NavLink>
   );
 
@@ -274,12 +273,8 @@ export default function AdminProducts() {
             <table className="w-full border-separate border-spacing-0">
               <thead className="sticky top-0 z-10">
                 <tr className="bg-gray-50 text-left text-sm text-gray-600 dark:bg-slate-800 dark:text-slate-200">
-                  <Th>
-                    {t("admin.products", { defaultValue: "Products" })}
-                  </Th>
-                  <Th>
-                    {t("sort.price", { defaultValue: "Price" })}
-                  </Th>
+                  <Th>{t("admin.products", { defaultValue: "Products" })}</Th>
+                  <Th>{t("sort.price", { defaultValue: "Price" })}</Th>
                   <Th>Stock</Th>
                   <Th>
                     {t("admin.categories", {
@@ -506,8 +501,7 @@ function StatusBadge({ available, small = false }) {
         small ? "px-1.5 py-0 text-[11px]" : ""
       } bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-200 dark:ring-amber-500/40`}
     >
-      •{" "}
-      {t("admin.status.unavailable", { defaultValue: "Out of stock" })}
+      • {t("admin.status.unavailable", { defaultValue: "Out of stock" })}
     </span>
   );
 }
@@ -526,10 +520,7 @@ function SkeletonTable({ rows = 6 }) {
   return (
     <div className="divide-y divide-gray-100 dark:divide-slate-800">
       {Array.from({ length: rows }).map((_, i) => (
-        <div
-          key={i}
-          className="animate-pulse bg-white py-4 dark:bg-slate-900"
-        >
+        <div key={i} className="animate-pulse bg-white py-4 dark:bg-slate-900">
           <div className="h-4 rounded bg-gray-200 dark:bg-slate-700" />
         </div>
       ))}
@@ -547,4 +538,3 @@ function EmptyState({ title, note }) {
     </div>
   );
 }
-

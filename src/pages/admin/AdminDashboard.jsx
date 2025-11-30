@@ -35,6 +35,7 @@ export default function AdminDashboard() {
   const [categories, setCategories] = useState([]);
   const [users, setUsers] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [userNameMap, setUserNameMap] = useState({});
 
   // الحسابات الديناميكية
   const stats = useMemo(() => {
@@ -110,7 +111,7 @@ export default function AdminDashboard() {
 
     const topCustomers = Object.entries(stats.customerMap)
       .map(([uid, info]) => ({
-        customer: uid.length > 12 ? uid.slice(0, 10) + "..." : uid,
+        customer: userNameMap[uid] || "مستخدم",
         revenue: info.revenue,
       }))
       .sort((a, b) => b.revenue - a.revenue)
@@ -131,19 +132,17 @@ export default function AdminDashboard() {
 
   const fetchAllData = async () => {
     setLoading(true);
+    const usersRef = collection(db, "users");
+    const usersSnap = await getDocs(usersRef);
     try {
-      const [productsSnap, catsSnap, usersSnap, ordersSnap] = await Promise.all(
-        [
-          getDocs(
-            query(collection(db, "products"), orderBy("createdAt", "desc"))
-          ),
-          getDocs(collection(db, "categories")),
-          getDocs(query(collection(db, "users"), orderBy("createdAt", "desc"))),
-          getDocs(
-            query(collection(db, "orders"), orderBy("createdAt", "desc"))
-          ),
-        ]
-      );
+      const [productsSnap, catsSnap, ordersSnap] = await Promise.all([
+        getDocs(
+          query(collection(db, "products"), orderBy("createdAt", "desc"))
+        ),
+        getDocs(collection(db, "categories")),
+
+        getDocs(query(collection(db, "orders"), orderBy("createdAt", "desc"))),
+      ]);
 
       setProducts(
         productsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
@@ -151,7 +150,25 @@ export default function AdminDashboard() {
       setCategories(
         catsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
       );
-      setUsers(usersSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+      const usersList = usersSnap.docs.map((doc) => {
+        const data = doc.data() || {};
+
+        return {
+          id: doc.id,
+          fullName: data.fullName || data.name || "مستخدم",
+          email: data.email || "غير متوفر",
+          createdAt: data.createdAt?.toDate
+            ? data.createdAt.toDate()
+            : new Date(data.createdAt || Date.now()),
+        };
+      });
+
+      setUsers(usersList);
+      const nameMap = Object.fromEntries(
+        usersList.map((u) => [u.id, u.fullName])
+      );
+      setUserNameMap(nameMap);
+
       setOrders(
         ordersSnap.docs.map((doc) => ({
           id: doc.id,
@@ -187,7 +204,7 @@ export default function AdminDashboard() {
       <div className="max-w-full mx-auto p-6 lg:p-10">
         <div className="flex justify-between items-center mb-10">
           <h1 className="text-4xl lg:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-400 via-blue-500 to-cyan-500">
-            لوحة تحكم المتجر البيطري
+            Admin Dashboard
           </h1>
           <button
             onClick={fetchAllData}
@@ -205,19 +222,14 @@ export default function AdminDashboard() {
         ) : (
           <>
             {/* KPIs */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-6 mb-10">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10">
               <KPICard
                 icon={Package}
                 label="المنتجات"
                 value={stats.totalProducts}
                 gradient="from-green-500 to-blue-500"
               />
-              <KPICard
-                icon={PackageCheck}
-                label="متوفر"
-                value={stats.availableProducts}
-                gradient="from-green-400 to-cyan-500"
-              />
+
               <KPICard
                 icon={ShoppingCart}
                 label="الطلبات"
@@ -272,7 +284,7 @@ export default function AdminDashboard() {
                     <YAxis
                       dataKey="name"
                       type="category"
-                      stroke="#94a3b8"
+                      stroke="#FFFFFF"
                       width={110}
                     />
                     <Tooltip />
@@ -291,7 +303,7 @@ export default function AdminDashboard() {
                     <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                     <XAxis
                       dataKey="customer"
-                      stroke="#94a3b8"
+                      stroke="#F9FAF9"
                       angle={-15}
                       textAnchor="end"
                     />

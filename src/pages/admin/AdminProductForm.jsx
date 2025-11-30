@@ -117,7 +117,7 @@ export default function AdminProductForm() {
   return (
     <div
       className={`
-        min-h-screen w-full pt-28 pb-10 px-4 md:px-6
+        min-h-screen w-full pt-4 pb-10 px-4 md:px-6
         transition-all duration-300
         ${dark ? "bg-[#0d1a1a] text-[#cfecec]" : "bg-gray-50 text-gray-900"}
       `}

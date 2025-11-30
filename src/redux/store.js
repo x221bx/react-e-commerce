@@ -5,12 +5,18 @@ import favorites from "../features/favorites/favoritesSlice";
 import ordersSlice from "../features/orders/ordersSlice";
 import { listenerMiddleware, startAuthListener } from "./listenerMiddleware";
 
+// 🔹 Load cart from localStorage
+const savedCart = JSON.parse(localStorage.getItem("cartItems") || "[]");
+
 export const store = configureStore({
   reducer: {
     auth,
     cart,
     favorites,
     ordersSlice,
+  },
+  preloadedState: {
+    cart: { items: savedCart }, // <-- هنا الـ cart هيبدأ بالبيانات المحفوظة
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

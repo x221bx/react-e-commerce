@@ -1,10 +1,8 @@
-// src/components/AdminDashboard.jsx  (أو Dashboard.jsx حسب تفضيلك)
-// داشبورد شامل احترافي 100% ديناميكي – كل البيانات من Firebase فقط (products • categories • users • orders)
-
+// src/components/AdminDashboard.jsx
 import { useState, useEffect, useMemo } from "react";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
-import { db } from "../services/firebase";
-import { analyzeWithGemini } from "../utils/gemini";
+import { db } from "../../services/firebase";
+import { analyzeWithGemini } from "../../utils/gemini";
 import {
   LineChart,
   Line,
@@ -20,7 +18,6 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import {
-  TrendingUp,
   Package,
   ShoppingCart,
   Users,
@@ -28,34 +25,19 @@ import {
   RefreshCw,
   Sparkles,
   PackageCheck,
-  AlertCircle,
-  Tag,
-  Calendar,
 } from "lucide-react";
 import { format } from "date-fns";
-
-const COLORS = [
-  "#6366F1",
-  "#8B5CF6",
-  "#EC4899",
-  "#F59E0B",
-  "#10B981",
-  "#06B6D4",
-];
 
 export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [analysis, setAnalysis] = useState("جاري تحليل البيانات...");
-
-  // البيانات الخام من Firebase
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [users, setUsers] = useState([]);
   const [orders, setOrders] = useState([]);
 
-  // الحسابات الديناميكية (useMemo عشان الأداء)
+  // الحسابات الديناميكية
   const stats = useMemo(() => {
-    // منتجات
     const totalProducts = products.length;
     const availableProducts = products.filter((p) => (p.stock || 0) > 0).length;
     const outOfStock = totalProducts - availableProducts;
@@ -63,19 +45,12 @@ export default function AdminDashboard() {
       (p) => (p.stock || 0) > 0 && (p.stock || 0) <= 5
     ).length;
 
-    // فئات
-    const totalCategories = categories.length;
-
-    // مستخدمين
     const totalUsers = users.length;
-
-    // طلبات & مبيعات
     const totalOrders = orders.length;
     const totalSales = orders.reduce((sum, o) => sum + (o.totalValue || 0), 0);
     const avgOrderValue =
       totalOrders > 0 ? Math.round(totalSales / totalOrders) : 0;
 
-    // عملاء متكررين
     const customerMap = {};
     orders.forEach((o) => {
       const uid = o.uid || o.userId || o.phone || o.email || "unknown_" + o.id;
@@ -83,11 +58,9 @@ export default function AdminDashboard() {
       customerMap[uid].orders += 1;
       customerMap[uid].revenue += o.totalValue || 0;
     });
-
     const repeatCustomers = Object.values(customerMap).filter(
       (c) => c.orders > 1
     );
-    const repeatRevenue = repeatCustomers.reduce((s, c) => s + c.revenue, 0);
     const repeatRate =
       Object.keys(customerMap).length > 0
         ? (
@@ -96,33 +69,22 @@ export default function AdminDashboard() {
           ).toFixed(1)
         : "0";
 
-    // أحدث 6 منتجات
-    const recentProducts = [...products]
-      .sort(
-        (a, b) => (b.createdAt?.toDate() || 0) - (a.createdAt?.toDate() || 0)
-      )
-      .slice(0, 6);
-
     return {
       totalProducts,
       availableProducts,
       outOfStock,
       lowStockCount,
-      totalCategories,
       totalUsers,
       totalOrders,
       totalSales,
       avgOrderValue,
       repeatRate,
-      repeatRevenue,
-      recentProducts,
       customerMap,
     };
-  }, [products, categories, users, orders]);
+  }, [products, users, orders]);
 
   // Charts Data
   const charts = useMemo(() => {
-    // 1. تريند المبيعات اليومي
     const dailySalesMap = {};
     orders.forEach((o) => {
       const dateKey = format(o.createdAt || new Date(), "dd/MM");
@@ -133,24 +95,6 @@ export default function AdminDashboard() {
       .map((date) => ({ date, amount: dailySalesMap[date] }))
       .sort((a, b) => a.date.localeCompare(b.date));
 
-    // 2. توزيع المنتجات (Pie)
-    const productDistribution = [
-      { name: "متوفر", value: stats.availableProducts, color: "#10B981" },
-      { name: "نفد", value: stats.outOfStock, color: "#EF4444" },
-      { name: "منخفض المخزون", value: stats.lowStockCount, color: "#F59E0B" },
-    ];
-
-    // 3. نمو المستخدمين (Bar)
-    const usersByMonth = {};
-    users.forEach((u) => {
-      const month = format(u.createdAt?.toDate() || new Date(), "MMM yyyy");
-      usersByMonth[month] = (usersByMonth[month] || 0) + 1;
-    });
-    const userGrowth = Object.keys(usersByMonth)
-      .map((month) => ({ month, users: usersByMonth[month] }))
-      .sort((a, b) => new Date(a.month) - new Date(b.month));
-
-    // 4. مبيعات حسب المنتج
     const productSalesMap = {};
     orders.forEach((order) => {
       (order.items || []).forEach((item) => {
@@ -164,7 +108,6 @@ export default function AdminDashboard() {
       .sort((a, b) => b.amount - a.amount)
       .slice(0, 8);
 
-    // 5. أفضل العملاء
     const topCustomers = Object.entries(stats.customerMap)
       .map(([uid, info]) => ({
         customer: uid.length > 12 ? uid.slice(0, 10) + "..." : uid,
@@ -173,64 +116,73 @@ export default function AdminDashboard() {
       .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 6);
 
+    // Low stock products
+    const lowStockProducts = products.filter(
+      (p) => p.stock > 0 && p.stock <= 5
+    );
+
     return {
       dailySales,
-      productDistribution,
-      userGrowth,
       productSales,
       topCustomers,
+      lowStockProducts,
     };
-  }, [stats, orders, users]);
+  }, [stats, orders, products]);
 
   const fetchAllData = async () => {
     setLoading(true);
+
     try {
-      // جلب الكولكشنز بالتوازي
-      const [productsSnap, catsSnap, usersSnap, ordersSnap] = await Promise.all(
-        [
-          getDocs(
-            query(collection(db, "products"), orderBy("createdAt", "desc"))
-          ),
-          getDocs(collection(db, "categories")),
-          getDocs(query(collection(db, "users"), orderBy("createdAt", "desc"))),
-          getDocs(
-            query(collection(db, "orders"), orderBy("createdAt", "desc"))
-          ),
-        ]
+      const usersRef = collection(db, "users");
+      const usersSnap = await getDocs(usersRef);
+      const [productsSnap, catsSnap, ordersSnap] = await Promise.all([
+        getDocs(
+          query(collection(db, "products"), orderBy("createdAt", "desc"))
+        ),
+        getDocs(collection(db, "categories")),
+
+        getDocs(query(collection(db, "orders"), orderBy("createdAt", "desc"))),
+      ]);
+
+      setProducts(
+        productsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+      );
+      setCategories(
+        catsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+      );
+      const usersList = usersSnap.docs.map((doc) => {
+        const data = doc.data() || {};
+
+        return {
+          id: doc.id,
+          fullName: data.fullName || data.name || "مستخدم",
+          email: data.email || "غير متوفر",
+
+          // نفس معالجة createdAt القديمة
+          createdAt: data.createdAt?.toDate
+            ? data.createdAt.toDate()
+            : new Date(data.createdAt || Date.now()),
+        };
+      });
+
+      setUsers(usersList);
+      setOrders(
+        ordersSnap.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+          totalValue:
+            doc.data().total ||
+            doc.data().totals?.total ||
+            (doc.data().totals?.subtotal || 0) +
+              (doc.data().totals?.shipping || 0) ||
+            0,
+          createdAt: doc.data().createdAt?.toDate() || new Date(),
+        }))
       );
 
-      const productsList = productsSnap.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      const categoriesList = catsSnap.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      const usersList = usersSnap.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-
-      const ordersList = ordersSnap.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-        totalValue:
-          doc.data().total ||
-          doc.data().totals?.total ||
-          (doc.data().totals?.subtotal || 0) +
-            (doc.data().totals?.shipping || 0) ||
-          0,
-        createdAt: doc.data().createdAt?.toDate() || new Date(),
-      }));
-
-      setProducts(productsList);
-      setCategories(categoriesList);
-      setUsers(usersList);
-      setOrders(ordersList);
-
-      // AI Analysis
-      const aiText = await analyzeWithGemini(ordersList);
+      const aiText = await analyzeWithGemini(
+        ordersSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+      );
       setAnalysis(aiText);
     } catch (err) {
       console.error(err);
@@ -245,98 +197,65 @@ export default function AdminDashboard() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 text-white">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-green-950 to-blue-950 text-white">
       <div className="max-w-full mx-auto p-6 lg:p-10">
-        {/* Header */}
         <div className="flex justify-between items-center mb-10">
-          <h1 className="text-4xl lg:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500">
-            لوحة التحكم الإدارية الشاملة
+          <h1 className="text-4xl lg:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-400 via-blue-500 to-cyan-500">
+            Admin Dasboard
           </h1>
           <button
             onClick={fetchAllData}
-            className="flex items-center gap-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-6 py-3 rounded-xl shadow-xl transition"
+            className="flex items-center gap-3 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 px-6 py-3 rounded-xl shadow-xl transition"
           >
-            <RefreshCw className={loading ? "animate-spin" : ""} size={22} />
+            <RefreshCw className={loading ? "animate-spin" : ""} size={22} />{" "}
             تحديث الكل
           </button>
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center h-96">
-            <div className="text-2xl animate-pulse">
-              جاري تحميل البيانات من Firebase...
-            </div>
+            <div className="text-2xl animate-pulse">جارٍ تحميل البيانات...</div>
           </div>
         ) : (
           <>
-            {/* KPIs Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6 mb-10">
+            {/* KPIs */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-6 mb-10">
               <KPICard
                 icon={Package}
-                label="إجمالي المنتجات"
+                label="المنتجات"
                 value={stats.totalProducts}
-                gradient="from-blue-500 to-cyan-600"
+                gradient="from-green-500 to-blue-500"
               />
               <KPICard
                 icon={PackageCheck}
                 label="متوفر"
                 value={stats.availableProducts}
-                gradient="from-emerald-500 to-teal-600"
-              />
-              <KPICard
-                icon={AlertCircle}
-                label="نفد المخزون"
-                value={stats.outOfStock}
-                gradient="from-red-500 to-rose-600"
-              />
-              <KPICard
-                icon={Tag}
-                label="الفئات"
-                value={stats.totalCategories}
-                gradient="from-purple-500 to-pink-600"
-              />
-              <KPICard
-                icon={Users}
-                label="المستخدمين"
-                value={stats.totalUsers}
-                gradient="from-orange-500 to-amber-600"
+                gradient="from-green-400 to-cyan-500"
               />
               <KPICard
                 icon={ShoppingCart}
                 label="الطلبات"
                 value={stats.totalOrders}
-                gradient="from-indigo-500 to-purple-600"
+                gradient="from-blue-500 to-indigo-600"
               />
               <KPICard
                 icon={DollarSign}
                 label="إجمالي المبيعات"
                 value={`${stats.totalSales.toLocaleString()} ج.م`}
-                gradient="from-emerald-600 to-teal-700"
-              />
-              <KPICard
-                icon={TrendingUp}
-                label="متوسط الطلب"
-                value={`${stats.avgOrderValue.toLocaleString()} ج.م`}
-                gradient="from-pink-500 to-rose-600"
-              />
-              <KPICard
-                icon={AlertCircle}
-                label="منخفض المخزون"
-                value={stats.lowStockCount}
-                gradient="from-yellow-500 to-orange-600"
+                gradient="from-green-600 to-blue-700"
               />
               <KPICard
                 icon={Users}
-                label="معدل التكرار"
-                value={`${stats.repeatRate}%`}
-                gradient="from-cyan-500 to-blue-600"
+                label="عدد المستخدمين"
+                value={stats.totalUsers}
+                gradient="from-indigo-500 to-purple-600"
               />
             </div>
 
-            {/* Main Charts Row */}
+            {/* Main Charts */}
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-10">
               <ChartCard title="تريند المبيعات اليومي">
-                <ResponsiveContainer width="100%" height={420}>
+                <ResponsiveContainer width="100%" height={400}>
                   <LineChart data={charts.dailySales}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                     <XAxis dataKey="date" stroke="#94a3b8" />
@@ -351,58 +270,11 @@ export default function AdminDashboard() {
                     <Line
                       type="monotone"
                       dataKey="amount"
-                      stroke="#EC4899"
-                      strokeWidth={5}
-                      dot={{ fill: "#8B5CF6", r: 8 }}
+                      stroke="#22c55e"
+                      strokeWidth={4}
+                      dot={{ fill: "#3b82f6", r: 6 }}
                     />
                   </LineChart>
-                </ResponsiveContainer>
-              </ChartCard>
-
-              <ChartCard title="نمو المستخدمين الشهري">
-                <ResponsiveContainer width="100%" height={420}>
-                  <BarChart data={charts.userGrowth}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                    <XAxis dataKey="month" stroke="#94a3b8" />
-                    <YAxis stroke="#94a3b8" />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "#1e293b",
-                        borderRadius: "12px",
-                      }}
-                    />
-                    <Bar
-                      dataKey="users"
-                      fill="#8B5CF6"
-                      radius={[12, 12, 0, 0]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartCard>
-            </div>
-
-            {/* Secondary Row */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
-              <ChartCard title="توزيع حالة المنتجات">
-                <ResponsiveContainer width="100%" height={380}>
-                  <PieChart>
-                    <Pie
-                      data={charts.productDistribution}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={70}
-                      outerRadius={130}
-                      paddingAngle={5}
-                      label={({ name, value }) => `${name}: ${value}`}
-                    >
-                      {charts.productDistribution.map((e, i) => (
-                        <Cell key={i} fill={e.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
                 </ResponsiveContainer>
               </ChartCard>
 
@@ -420,7 +292,7 @@ export default function AdminDashboard() {
                     <Tooltip />
                     <Bar
                       dataKey="amount"
-                      fill="#F59E0B"
+                      fill="#f97316"
                       radius={[0, 12, 12, 0]}
                     />
                   </BarChart>
@@ -441,7 +313,7 @@ export default function AdminDashboard() {
                     <Tooltip />
                     <Bar
                       dataKey="revenue"
-                      fill="#10B981"
+                      fill="#22c55e"
                       radius={[12, 12, 0, 0]}
                     />
                   </BarChart>
@@ -449,37 +321,30 @@ export default function AdminDashboard() {
               </ChartCard>
             </div>
 
-            {/* Recent Products + AI Analysis */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <ChartCard title="أحدث المنتجات">
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  {stats.recentProducts.map((p) => (
+            {/* Low Stock Highlight + AI Analysis */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <ChartCard title="المنتجات منخفضة المخزون">
+                <div className="grid grid-cols-1 gap-4 max-h-96 overflow-y-auto">
+                  {charts.lowStockProducts.map((p) => (
                     <div
                       key={p.id}
-                      className="bg-slate-800/60 backdrop-blur rounded-xl p-4 border border-purple-500/20 hover:border-purple-400 transition"
+                      className="bg-red-900/40 p-3 rounded-lg border border-red-500"
                     >
-                      <img
-                        src={
-                          p.thumbnailUrl || p.images?.[0] || "/placeholder.png"
-                        }
-                        alt={p.title}
-                        className="w-full h-40 object-cover rounded-lg mb-3"
-                      />
-                      <p className="text-sm font-semibold truncate">
-                        {p.title || "بدون عنوان"}
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        {p.category?.name || "غير مصنف"}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        المخزون: {p.stock || 0}
+                      <p className="text-sm font-semibold">{p.title}</p>
+                      <p className="text-xs text-gray-300">
+                        المخزون: {p.stock}
                       </p>
                     </div>
                   ))}
+                  {charts.lowStockProducts.length === 0 && (
+                    <p className="text-gray-400">
+                      لا توجد منتجات منخفضة المخزون
+                    </p>
+                  )}
                 </div>
               </ChartCard>
 
-              <div className="bg-gradient-to-br from-purple-900/50 to-pink-900/50 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-purple-500/30">
+              <div className="bg-gradient-to-br from-green-900/50 to-blue-900/50 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-green-500/30 col-span-2">
                 <div className="flex items-center gap-3 mb-6">
                   <Sparkles className="text-yellow-400" size={32} />
                   <h2 className="text-2xl font-bold">
@@ -498,7 +363,6 @@ export default function AdminDashboard() {
   );
 }
 
-// Components
 function KPICard({ icon: Icon, label, value, gradient }) {
   return (
     <div
@@ -514,14 +378,12 @@ function KPICard({ icon: Icon, label, value, gradient }) {
 }
 
 function ChartCard({ title, children }) {
-  {
-    return (
-      <div className="bg-slate-900/70 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-purple-500/20">
-        <h2 className="text-2xl font-bold mb-6 text-center bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-purple-500">
-          {title}
-        </h2>
-        {children}
-      </div>
-    );
-  }
+  return (
+    <div className="bg-slate-900/70 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-green-500/20">
+      <h2 className="text-2xl font-bold mb-6 text-center bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-500">
+        {title}
+      </h2>
+      {children}
+    </div>
+  );
 }

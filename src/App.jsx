@@ -42,7 +42,7 @@ const AdminComplaints = lazy(() => import("./pages/admin/AdminComplaints"));
 const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
 const ChatBot = lazy(() => import("./components/Ai/ChatBot"));
 const AiConversations = lazy(() => import("./pages/account/AiConversations"));
-
+const OrderDetails = lazy(() => import("./pages/OrderDetails"));
 // Loading component for Suspense fallback
 const LoadingSpinner = () => (
   <div className="min-h-screen flex items-center justify-center">
@@ -65,22 +65,20 @@ export default function App() {
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
           <Route path="/products" element={<Products />} />
+          <Route path="/category/:categoryId" element={<Products />} />
+          <Route path="/product/:id" element={<ProductDetails />} />{" "}
+          {/* ده الصح */}
           <Route path="/favorites" element={<Favorites />} />
-          <Route path="/products/:id" element={<ProductDetails />} />
           <Route path="/cart" element={<Cart />} />
-
           <Route path="/articles" element={<ArticlesList />} />
           <Route path="/articles/:articleId" element={<ArticleDetails />} />
           <Route path="/login" element={<Login />} />
-
           <Route path="/register" element={<Register />} />
           <Route path="/reset" element={<Reset />} />
           <Route path="/about" element={<About />} />
-
           <Route path="/contactus" element={<ContactUs />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/success" element={<SuccessPage />} />
-
           {/* Authenticated User Routes */}
           <Route element={<ProtectedRoute />}>
             <Route
@@ -104,7 +102,6 @@ export default function App() {
               <Route path="complaints" element={<Complaints />} />
             </Route>
           </Route>
-
           {/* Admin Routes */}
           <Route element={<ProtectedRoute requireAdmin={true} />}>
             <Route path="/admin" element={<AdminLayout />}>
@@ -113,11 +110,14 @@ export default function App() {
               <Route path="products/new" element={<AdminProductForm />} />
               <Route path="products/:id/edit" element={<AdminProductForm />} />
               <Route path="AdminOrders" element={<AdminOrders />} />
+              <Route path="AdminOrders/:id" element={<OrderDetails />} />
+
+              <Route path="complaints" element={<AdminComplaints />} />
               <Route path="categories" element={<AdminCategories />} />
+
               <Route path="articles" element={<AdminArticles />} />
             </Route>
           </Route>
-
           {/* Forbidden */}
           <Route
             path="/403"

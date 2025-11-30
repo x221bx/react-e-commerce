@@ -1,343 +1,298 @@
-﻿import React, { useState, useEffect } from "react";
+﻿// src/components/Navbar.jsx
+import React, { useState, useEffect } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { selectCurrentUser, signOut } from "../../features/auth/authSlice";
 import { UseTheme } from "../../theme/ThemeProvider";
-import { motion as Motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import i18n from "../../i18n";
 import { useTranslation } from "react-i18next";
-
 import SearchBar from "../search/SearchBar";
 import Button from "../../components/ui/Button";
 
-// أيقونات احترافية من react-icons
 import {
-  AiOutlineHome,
-  AiOutlineAppstore,
-  AiOutlineLogout,
-  AiOutlineUser,
-  AiOutlineMenu,
-  AiOutlineClose,
-  AiOutlineShopping,
-  AiOutlineHeart,
-} from "react-icons/ai";
+  Home,
+  Package,
+  Heart,
+  ShoppingCart,
+  User,
+  Menu,
+  X,
+  Sun,
+  Moon,
+  Globe,
+} from "lucide-react";
 
 export default function Navbar() {
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [currentLang, setCurrentLang] = useState(i18n.language || "en");
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const { theme, toggle } = UseTheme();
   const user = useSelector(selectCurrentUser);
-  const cart = useSelector((state) => state.cart.items);
-  const favorites = useSelector((state) => state.favorites);
+  const cart = useSelector((state) => state.cart?.items || []);
+  const favorites = useSelector((state) => state.favorites?.items || []);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
 
-  const isAdmin = user?.role === "admin";
   const isDark = theme === "dark";
+  const cartCount = cart.reduce((acc, item) => acc + (item.quantity || 1), 0);
+  const favCount = favorites.length;
 
-  // إخفاء Navbar في صفحات الدخول أو التسجيل
   const hideNavbar = ["/login", "/register", "/reset"].includes(
     location.pathname
   );
 
-  // حساب عدد المنتجات في الكارت
-  const cartCount = cart.reduce((sum, i) => sum + (i.quantity || 1), 0);
-
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
+    const handleScroll = () => setScrolled(window.scrollY > 10);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const toggleLanguage = async () => {
-    const newLang = currentLang === "en" ? "ar" : "en";
+    const newLang = i18n.language === "ar" ? "en" : "ar";
     await i18n.changeLanguage(newLang);
-    setCurrentLang(newLang);
     document.documentElement.dir = newLang === "ar" ? "rtl" : "ltr";
   };
 
   const handleLogout = () => {
     dispatch(signOut());
     navigate("/");
+    setMobileOpen(false);
   };
-
-  const navbarBg = isDark
-    ? scrolled
-      ? "bg-gray-900/90 text-white shadow-md"
-      : "bg-gray-900/80 text-white"
-    : scrolled
-    ? "bg-white/90 text-gray-900 shadow-md"
-    : "bg-white/95 text-gray-800";
-
-  const btnBg = isDark
-    ? "bg-gray-700 hover:bg-gray-600 text-white"
-    : "bg-emerald-500 hover:bg-emerald-600 text-white";
-
-  const linkBase =
-    "flex items-center gap-1 px-3 py-2 rounded-md transition-colors";
-  const linkActive = isDark
-    ? "bg-gray-800 text-white"
-    : "bg-emerald-100 text-emerald-700";
-  const linkIdle = isDark
-    ? "hover:bg-gray-800 text-gray-200"
-    : "hover:bg-emerald-50 text-gray-800";
 
   if (hideNavbar) return null;
 
   return (
-    <header className={`sticky top-0 z-50 border-b ${navbarBg}`}>
-      <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-3">
-        {/* Logo */}
-        <div
-          className="cursor-pointer flex items-center"
-          onClick={() => {
-            navigate("/");
-            setMobileOpen(false);
-          }}
-        >
-          <AiOutlineAppstore size={28} className="mr-2" />
-          <span className="text-xl font-bold">Farm Vet Shop</span>
-        </div>
-
-        {/* Desktop menu */}
-        <nav className="hidden md:flex items-center space-x-4">
-          <NavLink
-            to="/"
-            className={({ isActive }) =>
-              `${linkBase} ${isActive ? linkActive : linkIdle}`
-            }
-          >
-            <AiOutlineHome size={20} />
-            {t("nav.home") || "Home"}
-          </NavLink>
-
-          <NavLink
-            to="/products"
-            className={({ isActive }) =>
-              `${linkBase} ${isActive ? linkActive : linkIdle}`
-            }
-          >
-            <AiOutlineAppstore size={20} />
-            {t("nav.products") || "Products"}
-          </NavLink>
-
-          {isAdmin && (
-            <NavLink
-              to="/admin"
-              className={({ isActive }) =>
-                `${linkBase} ${isActive ? linkActive : linkIdle}`
-              }
+    <>
+      {/* Fixed Navbar */}
+      <header
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          scrolled
+            ? "bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg shadow-lg"
+            : "bg-transparent"
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-20">
+            {/* Logo */}
+            <div
+              onClick={() => navigate("/")}
+              className="flex items-center gap-3 cursor-pointer"
             >
-              <AiOutlineUser size={20} />
-              {t("nav.admin") || "Admin"}
-            </NavLink>
-          )}
-        </nav>
+              <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl shadow-lg">
+                <Package className="w-8 h-8 text-white" />
+              </div>
+              <h1 className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                FarmVet
+              </h1>
+            </div>
 
-        {/* Controls */}
-        <div className="flex items-center gap-3">
-          {/* Search */}
-          <div className="hidden sm:block w-40 md:w-52">
-            <SearchBar placeholder={t("nav.search") || "Search..."} />
-          </div>
-
-          {/* Language toggle */}
-          <button
-            onClick={toggleLanguage}
-            className={`h-10 w-10 flex items-center justify-center rounded-lg ${btnBg}`}
-          >
-            {currentLang === "en" ? "🇺🇸" : "🇸🇦"}
-          </button>
-
-          {/* Theme toggle */}
-          <button
-            onClick={toggle}
-            className={`h-10 w-10 flex items-center justify-center rounded-lg ${btnBg}`}
-          >
-            {isDark ? "🌙" : "☀️"}
-          </button>
-
-          {/* Favorites */}
-          <button
-            onClick={() => {
-              navigate("/favorites");
-              setMobileOpen(false);
-            }}
-            className={`relative h-10 w-10 flex items-center justify-center rounded-lg ${btnBg}`}
-          >
-            <AiOutlineHeart size={20} />
-            {favorites.length > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-xs text-white rounded-full px-1">
-                {favorites.length}
-              </span>
-            )}
-          </button>
-
-          {/* Cart */}
-          <button
-            onClick={() => {
-              navigate("/cart");
-              setMobileOpen(false);
-            }}
-            className={`relative h-10 w-10 flex items-center justify-center rounded-lg ${btnBg}`}
-          >
-            <AiOutlineShopping size={22} />
-            {cartCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-cyan-600 text-xs text-white rounded-full px-1">
-                {cartCount}
-              </span>
-            )}
-          </button>
-
-          {/* Account / Auth */}
-          {user ? (
-            <>
-              <button
-                onClick={() => {
-                  navigate("/account/settings");
-                  setMobileOpen(false);
-                }}
-                className={`flex items-center gap-1 px-3 py-1 rounded-md ${btnBg}`}
-              >
-                <AiOutlineUser size={18} />
-                {t("nav.account") || "Account"}
-              </button>
-              <Button
-                text={t("Logout") || "Logout"}
-                onClick={handleLogout}
-                className="px-3 py-1 rounded-md bg-red-600 hover:bg-red-500 text-white"
-              />
-            </>
-          ) : (
-            <>
-              <Button
-                text={t("Login") || "Login"}
-                onClick={() => {
-                  navigate("/login");
-                  setMobileOpen(false);
-                }}
-                className="px-3 py-1 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white"
-              />
-              <NavLink
-                to="/register"
-                onClick={() => setMobileOpen(false)}
-                className={`px-3 py-1 rounded-md ${
-                  isDark ? "text-gray-200" : "text-gray-800"
-                } hover:underline`}
-              >
-                {t("Register") || "Register"}
-              </NavLink>
-            </>
-          )}
-
-          {/* Mobile menu toggle */}
-          <button
-            onClick={() => setMobileOpen(!mobileOpen)}
-            className={`md:hidden h-10 w-10 flex items-center justify-center rounded-lg ${btnBg}`}
-          >
-            {mobileOpen ? (
-              <AiOutlineClose size={24} />
-            ) : (
-              <AiOutlineMenu size={24} />
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile Menu */}
-      <AnimatePresence>
-        {mobileOpen && (
-          <Motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className={`md:hidden px-6 py-4 ${
-              isDark ? "bg-gray-900" : "bg-white"
-            }`}
-          >
-            <div className="flex flex-col gap-4">
+            {/* Desktop Links */}
+            <nav className="hidden md:flex items-center gap-8">
               <NavLink
                 to="/"
-                onClick={() => setMobileOpen(false)}
-                className={linkBase}
+                className={({ isActive }) =>
+                  `flex items-center gap-2 font-bold text-lg transition-colors ${
+                    isActive
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : "text-gray-800 dark:text-gray-200 hover:text-emerald-600 dark:hover:text-emerald-400"
+                  }`
+                }
               >
-                <AiOutlineHome size={20} />
-                {t("nav.home") || "Home"}
+                <Home className="w-5 h-5" /> {t("nav.home")}
               </NavLink>
 
               <NavLink
                 to="/products"
-                onClick={() => setMobileOpen(false)}
-                className={linkBase}
+                className={({ isActive }) =>
+                  `flex items-center gap-2 font-bold text-lg transition-colors ${
+                    isActive
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : "text-gray-800 dark:text-gray-200 hover:text-emerald-600 dark:hover:text-emerald-400"
+                  }`
+                }
               >
-                <AiOutlineAppstore size={20} />
-                {t("nav.products") || "Products"}
+                <Package className="w-5 h-5" /> {t("nav.products")}
               </NavLink>
 
-              {isUserLoaded && isAdmin && (
+              {user?.role === "admin" && (
                 <NavLink
                   to="/admin"
-                  onClick={() => setMobileOpen(false)}
-                  className={linkBase}
+                  className="font-bold text-lg text-purple-600 hover:text-purple-700"
                 >
-                  <AiOutlineUser size={20} />
-                  {t("nav.admin") || "Admin Dashboard"}
+                  {t("nav.admin")}
                 </NavLink>
               )}
+            </nav>
 
-              {user && !isAdmin && (
-                <NavLink
-                  to="/account/orders"
-                  onClick={() => setMobileOpen(false)}
-                  className={linkBase}
-                >
-                  {t("nav.myOrders") || "My Orders"}
-                </NavLink>
-              )}
+            {/* Right Icons */}
+            <div className="flex items-center gap-3">
+              {/* Desktop Search */}
+              <div className="hidden lg:block">
+                <SearchBar
+                  placeholder={t("search_placeholder") || "ابحث عن منتج..."}
+                />
+              </div>
 
-              <NavLink
-                to="/favorites"
-                onClick={() => setMobileOpen(false)}
-                className={linkBase}
-              >
-                <AiOutlineHeart size={20} />
-                {t("nav.favorites") || "Favorites"}
-              </NavLink>
-
-              <NavLink
-                to="/cart"
-                onClick={() => setMobileOpen(false)}
-                className={linkBase}
-              >
-                <AiOutlineShopping size={20} />
-                {t("nav.cart") || "Cart"}
-              </NavLink>
-
-              {user ? (
+              {/* Action Buttons */}
+              <div className="flex items-center gap-3">
+                {/* Language */}
                 <button
-                  onClick={handleLogout}
-                  className={`${linkBase} text-red-500`}
+                  onClick={toggleLanguage}
+                  className="p-3 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                  aria-label="تغيير اللغة"
                 >
-                  <AiOutlineLogout size={20} />
-                  {t("nav.logout") || "Logout"}
+                  <Globe className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
                 </button>
-              ) : (
-                <NavLink
-                  to="/login"
-                  onClick={() => setMobileOpen(false)}
-                  className={linkBase}
+
+                {/* Theme */}
+                <button
+                  onClick={toggle}
+                  className="p-3 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                  aria-label="تغيير الثيم"
                 >
-                  {t("nav.login") || "Login"}
-                </NavLink>
-              )}
+                  {isDark ? (
+                    <Sun className="w-6 h-6 text-yellow-500" />
+                  ) : (
+                    <Moon className="w-6 h-6 text-emerald-600" />
+                  )}
+                </button>
+
+                {/* Favorites */}
+                <button
+                  onClick={() => navigate("/favorites")}
+                  className="relative p-3 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <Heart
+                    className={`w-6 h-6 transition-colors ${
+                      favCount > 0
+                        ? "text-red-500 fill-red-500"
+                        : "text-gray-600 dark:text-gray-400"
+                    }`}
+                  />
+                  {favCount > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg">
+                      {favCount}
+                    </span>
+                  )}
+                </button>
+
+                {/* Cart */}
+                <button
+                  onClick={() => navigate("/cart")}
+                  className="relative p-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white transition-all shadow-lg"
+                >
+                  <ShoppingCart className="w-6 h-6" />
+                  {cartCount > 0 && (
+                    <span className="absolute -top-2 -right-2 min-w-[24px] h-6 px-1.5 bg-red-600 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg animate-pulse">
+                      {cartCount}
+                    </span>
+                  )}
+                </button>
+
+                {/* Account - أيقونة واحدة بس */}
+                <button
+                  onClick={() =>
+                    navigate(user ? "/account/settings" : "/login")
+                  }
+                  className="p-3 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <User className="w-6 h-6 text-gray-700 dark:text-gray-300" />
+                </button>
+
+                {/* Mobile Menu Toggle */}
+                <button
+                  onClick={() => setMobileOpen(!mobileOpen)}
+                  className="md:hidden p-3 rounded-xl bg-gray-100 dark:bg-gray-800"
+                >
+                  {mobileOpen ? (
+                    <X className="w-6 h-6" />
+                  ) : (
+                    <Menu className="w-6 h-6" />
+                  )}
+                </button>
+              </div>
             </div>
-          </Motion.div>
-        )}
-      </AnimatePresence>
-    </header>
+          </div>
+        </div>
+
+        {/* Mobile Menu */}
+        <AnimatePresence>
+          {mobileOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="md:hidden bg-white dark:bg-gray-900 border 경 dark:border-gray-800 overflow-hidden"
+            >
+              <div className="px-6 py-8 space-y-6">
+                <NavLink
+                  to="/"
+                  onClick={() => setMobileOpen(false)}
+                  className="block text-2xl font-bold text-emerald-600 dark:text-emerald-400"
+                >
+                  الرئيسية
+                </NavLink>
+                <NavLink
+                  to="/products"
+                  onClick={() => setMobileOpen(false)}
+                  className="block text-2xl font-bold text-emerald-600 dark:text-emerald-400"
+                >
+                  المنتجات
+                </NavLink>
+                <NavLink
+                  to="/favorites"
+                  onClick={() => setMobileOpen(false)}
+                  className="block text-xl text-gray-700 dark:text-gray-300"
+                >
+                  المفضلة ({favCount})
+                </NavLink>
+                <NavLink
+                  to="/cart"
+                  onClick={() => setMobileOpen(false)}
+                  className="block text-xl text-gray-700 dark:text-gray-300"
+                >
+                  السلة ({cartCount})
+                </NavLink>
+
+                {user ? (
+                  <button
+                    onClick={handleLogout}
+                    className="w-full py-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition"
+                  >
+                    تسجيل الخروج
+                  </button>
+                ) : (
+                  <>
+                    <Button
+                      text="تسجيل الدخول"
+                      onClick={() => {
+                        navigate("/login");
+                        setMobileOpen(false);
+                      }}
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+                    />
+                    <Button
+                      text="إنشاء حساب"
+                      onClick={() => {
+                        navigate("/register");
+                        setMobileOpen(false);
+                      }}
+                      className="w-full bg-gray-800 hover:bg-gray-900 text-white font-bold"
+                    />
+                  </>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </header>
+
+      {/* Spacer عشان المحتوى ميختفيش تحت النافبار */}
+      <div className="h-20" />
+    </>
   );
 }

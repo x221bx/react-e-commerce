@@ -71,6 +71,19 @@ export const startAuthListener = (store) => {
     }
   };
 
+  // ---------------------------
+  // Preload from localStorage
+  // ---------------------------
+  const preloadCart = JSON.parse(localStorage.getItem("cartItems") || "[]");
+  const preloadFavorites = JSON.parse(
+    localStorage.getItem("favoritesItems") || "[]"
+  );
+  store.dispatch(setCartItems(preloadCart));
+  store.dispatch(setFavoritesItems(preloadFavorites));
+
+  // ---------------------------
+  // Firebase Auth Listener
+  // ---------------------------
   onAuthStateChanged(auth, (fbUser) => {
     cleanupAll();
 
