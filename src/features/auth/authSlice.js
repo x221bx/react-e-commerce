@@ -70,7 +70,7 @@ export const signInWithIdentifier = createAsyncThunk(
       const userSnap = await getDoc(userRef);
 
       if (!userSnap.exists()) {
-        throw new Error("User document not found in Firestore");
+        throw { code: "auth/user-not-found" };
       }
 
       const userData = userSnap.data();

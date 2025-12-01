@@ -14,7 +14,14 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import AuthActions from "../Authcomponents/AuthActions";
 
 const LoginSchema = Yup.object({
-  identifier: Yup.string().required("Required"),
+  identifier: Yup.string()
+    .required("Required")
+    .test("email-or-username", "Invalid email format", (value) => {
+      if (value && value.includes("@")) {
+        return Yup.string().email().isValidSync(value);
+      }
+      return true;
+    }),
   password: Yup.string().min(6, "Too short").required("Required"),
 });
 
@@ -24,17 +31,9 @@ export default function Login() {
   const dispatch = useDispatch();
 
   const navigate = useNavigate();
-  const { search } = useLocation();
+  const location = useLocation();
+  const { search } = location;
   const redirectTo = new URLSearchParams(search).get("redirect") || "/";
-
-  const onSuccess = () => {
-    // If user is admin, redirect to admin dashboard
-    if (user?.isAdmin) {
-      navigate("/admin", { replace: true });
-    } else {
-      navigate(redirectTo, { replace: true });
-    }
-  };
 
   useEffect(() => {
     return () => dispatch(clearAuthError());
@@ -65,7 +64,15 @@ export default function Login() {
           const resultAction = await dispatch(signInWithIdentifier(vals));
           setSubmitting(false);
 
-          if (signInWithIdentifier.rejected.match(resultAction)) {
+          if (signInWithIdentifier.fulfilled.match(resultAction)) {
+            // Navigate based on user role
+            const user = resultAction.payload;
+            if (user?.isAdmin) {
+              navigate("/admin", { replace: true });
+            } else {
+              navigate(redirectTo, { replace: true });
+            }
+          } else if (signInWithIdentifier.rejected.match(resultAction)) {
             const err = resultAction.payload;
             err?.fieldErrors &&
               Object.entries(err.fieldErrors).forEach(([k, msg]) => {

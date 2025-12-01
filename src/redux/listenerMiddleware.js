@@ -104,6 +104,7 @@ export const startAuthListener = (store) => {
     // ---------------------------
     profileUnsub = onSnapshot(doc(db, "users", fbUser.uid), async (snap) => {
       const rawData = snap.exists() ? serializeFirestoreData(snap.data()) : {};
+      const isAdmin = rawData.isAdmin || rawData.role === "admin";
       const profile = {
         uid: fbUser.uid,
         ...rawData,
@@ -111,6 +112,8 @@ export const startAuthListener = (store) => {
         name: rawData.name || fbUser.displayName || fbUser.email || "",
         photoURL:
           rawData.photoURL || fbUser.photoURL || rawData.photoUrl || null,
+        isAdmin,
+        role: isAdmin ? "admin" : "user",
       };
 
       // Resolve username if missing
