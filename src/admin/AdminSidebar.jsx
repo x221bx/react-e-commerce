@@ -65,7 +65,7 @@ export default function AdminSidebar({ onNavigate, collapsed = false }) {
         icon: <FiPlusCircle />,
       },
       {
-        to: "AdminOrders",
+        to: "/admin/orders",
         end: true,
         label: "Orders",
         icon: <FiShoppingCart />,

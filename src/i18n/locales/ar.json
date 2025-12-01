@@ -1,4 +1,4 @@
-{
+﻿{
   "brand": {
     "name": "متجر فارم فيت",
     "store": "متجر فارم فيت"
@@ -66,20 +66,23 @@
     "switch_to_en": "English"
   },
   "navbar": {
-    "logout_success": "تم تسجيل الخروج بنجاح",
-    "language_changed": "تم تغيير اللغة إلى {{language}}",
-    "language_error": "فشل تغيير اللغة",
-    "search_placeholder": "ابحث عن المنتجات...",
-    "language_toggle": "تبديل اللغة",
-    "menu_toggle": "تبديل القائمة",
-    "notifications": "الإشعارات",
-    "notification_error": "الإشعارات الحية محجوبة. الرجاء تعطيل مانع الإعلانات لهذا الموقع.",
-    "favorites": "المفضلة",
-    "cart": "السلة",
-    "account": "الحساب",
-    "logout": "تسجيل الخروج",
-    "login": "تسجيل الدخول",
-    "register": "إنشاء حساب"
+      "logout_success": "تم تسجيل الخروج بنجاح",
+      "language_changed": "تم تغيير اللغة إلى {{language}}",
+      "language_error": "فشل تغيير اللغة",
+      "search_placeholder": "ابحث عن المنتجات...",
+      "language_toggle": "تبديل اللغة",
+      "toggle_language": "تبديل اللغة",
+      "toggle_theme": "تبديل المظهر",
+      "toggle_menu": "تبديل القائمة",
+      "menu_toggle": "تبديل القائمة",
+      "notifications": "الإشعارات",
+      "notification_error": "الإشعارات الحية محجوبة. الرجاء تعطيل مانع الإعلانات لهذا الموقع.",
+      "favorites": "المفضلة",
+      "cart": "السلة",
+      "account": "الحساب",
+      "logout": "تسجيل الخروج",
+      "login": "تسجيل الدخول",
+      "register": "إنشاء حساب"
   },
   "nav": {
     "home": "الرئيسية",
@@ -188,20 +191,22 @@
     "403_message": "ليست لديك صلاحية الوصول لهذه الصفحة."
   },
   "common": {
-    "go_home": "الانتقال للرئيسية",
-    "signing_in": "جارٍ تسجيل الدخول...",
-    "creating": "جارٍ الإنشاء...",
-    "sending": "جارٍ الإرسال...",
-    "delete": "حذف",
-    "cancel": "إلغاء",
-    "working": "جارٍ العمل...",
-    "light_mode": "وضع النهار",
-    "dark_mode": "الوضع الليلي",
-    "retry": "إعادة المحاولة",
-    "error": "خطأ",
-    "rateLimitExceeded": "محاولات كثيرة. الرجاء الانتظار {{seconds}} ثانية.",
-    "valid": "صالح",
-    "total": "الإجمالي"
+      "go_home": "الانتقال للرئيسية",
+      "signing_in": "جارٍ تسجيل الدخول...",
+      "creating": "جارٍ الإنشاء...",
+      "sending": "جارٍ الإرسال...",
+      "delete": "حذف",
+      "cancel": "إلغاء",
+      "working": "جارٍ العمل...",
+      "light_mode": "وضع النهار",
+      "dark_mode": "الوضع الليلي",
+      "retry": "إعادة المحاولة",
+      "error": "خطأ",
+      "rateLimitExceeded": "محاولات كثيرة. الرجاء الانتظار {{seconds}} ثانية.",
+      "valid": "صالح",
+      "total": "الإجمالي",
+      "customer": "العميل",
+      "admin": "الإدارة"
   },
   "settings": {
     "language_display": "اللغة والعرض",
@@ -453,6 +458,22 @@
       "title": "المقالات المفضلة",
       "subtitle": "قائمة قراءة مخصصة لفريقك. العناصر المحفوظة تتجاوز اختياراتنا القياسية.",
       "readMore": "متابعة القراءة →"
+    },
+    "orderHistory": {
+      "title": "تاريخ الطلبات",
+      "subtitle": "تتبع جميع طلباتك وحالة كل منها الحالية",
+      "noOrders": "لا توجد طلبات بعد",
+      "noOrdersDesc": "سيظهر تاريخ طلباتك هنا بمجرد إجراء أول عملية شراء.",
+      "orderNumber": "الطلب رقم",
+      "total": "المجموع",
+      "invoice": "الفاتورة",
+      "track": "تتبع",
+      "orderItems": "عناصر الطلب",
+      "shippingInfo": "معلومات الشحن",
+      "paymentInfo": "معلومات الدفع",
+      "orderTimeline": "جدول زمني للطلب",
+      "customerConfirmed": "تم التأكيد من العميل",
+      "by": "بواسطة"
     }
   },
   "checkout": {
@@ -677,7 +698,9 @@
       "removed": "أزيل من المفضلة",
       "error": "تعذر تحديث المفضلة",
       "byline": "كتبه {{author}}",
-      "emptyContent": "المحتوى قادم قريباً."
+      "emptyContent": "المحتوى قادم قريباً.",
+      "share": "مشاركة",
+      "save": "حفظ"
     },
     "admin": {
       "eyebrow": "مركز المعرفة",

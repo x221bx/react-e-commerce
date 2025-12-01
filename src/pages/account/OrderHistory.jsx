@@ -1,172 +1,249 @@
-// src/pages/UserOrders.jsx
+// src/pages/account/OrderHistory.jsx
 import React, { useState } from "react";
-import { FiClock } from "react-icons/fi";
+import { FiClock, FiEye, FiChevronDown, FiChevronUp, FiPackage, FiMapPin, FiCreditCard, FiTruck, FiFileText } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { auth } from "../../services/firebase";
 import useOrders from "../../hooks/useOrders";
-import { UseTheme } from "../../theme/ThemeProvider"; // استيراد ThemeProvider
+import { UseTheme } from "../../theme/ThemeProvider";
 
-export default function UserOrders() {
-  const { isDark } = UseTheme(); // <--- هنا عرفنا isDark
-  const user = auth.currentUser;
-  const { orders, loading } = useOrders(user?.uid);
+export default function OrderHistory() {
+    const { isDark } = UseTheme();
+    const navigate = useNavigate();
+    const { t } = useTranslation();
+    const user = auth.currentUser;
+    const { orders, loading } = useOrders(user?.uid);
+    const [expandedId, setExpandedId] = useState(null);
 
-  const [expandedId, setExpandedId] = useState(null);
+   if (loading)
+     return (
+       <div className="min-h-screen flex items-center justify-center">
+         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
+       </div>
+     );
 
-  if (loading)
-    return (
-      <div className="p-10 text-center text-green-800 text-lg">
-        Loading orders...
-      </div>
-    );
+   if (!orders.length)
+     return (
+       <div className="min-h-screen flex flex-col items-center justify-center text-center p-8">
+         <FiPackage className="h-16 w-16 text-slate-400 mb-4" />
+         <h2 className="text-2xl font-bold text-slate-600 mb-2">{t("account.orderHistory.noOrders")}</h2>
+         <p className="text-slate-500">{t("account.orderHistory.noOrdersDesc")}</p>
+       </div>
+     );
 
-  if (!orders.length)
-    return (
-      <div className="p-10 text-center text-green-900 text-xl font-semibold">
-        No orders yet.
-      </div>
-    );
+   const getStatusColor = (status) => {
+     switch (status?.toLowerCase()) {
+       case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+       case 'processing': return 'bg-blue-100 text-blue-800 border-blue-200';
+       case 'shipped': return 'bg-purple-100 text-purple-800 border-purple-200';
+       case 'delivered': return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+       case 'canceled': return 'bg-red-100 text-red-800 border-red-200';
+       default: return 'bg-slate-100 text-slate-800 border-slate-200';
+     }
+   };
 
-  const containerBg = isDark ? "bg-slate-950" : "bg-white";
+   const containerBg = isDark ? "bg-slate-950" : "bg-slate-50";
+   const cardBg = isDark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200";
+   const textColor = isDark ? "text-white" : "text-slate-900";
+   const mutedText = isDark ? "text-slate-400" : "text-slate-500";
 
-  return (
-    <div className={`space-y-6 p-5 min-h-screen ${containerBg}`}>
-      <header>
-        <p className="text-sm font-semibold uppercase tracking-wide text-emerald-600">
-          Overview
-        </p>
-        <h1 className="text-3xl font-semibold text-slate-900">Order History</h1>
-        <p className="text-sm text-slate-500">
-          Track invoices, statuses, and totals for every transaction.
-        </p>
-      </header>
+   return (
+     <div className={`min-h-screen ${containerBg} py-8 px-4 sm:px-6 lg:px-8`}>
+       <div className="max-w-7xl mx-auto">
+         {/* Header */}
+         <div className="mb-8">
+           <h1 className={`text-3xl font-bold ${textColor} mb-2`}>{t("account.orderHistory.title")}</h1>
+           <p className={mutedText}>{t("account.orderHistory.subtitle")}</p>
+         </div>
 
-      {/* Desktop Table */}
-      <div className="hidden lg:block overflow-hidden rounded-3xl border shadow-sm border-slate-100 bg-white">
-        <table className="min-w-full divide-y divide-slate-100 text-sm">
-          <thead className="bg-slate-50">
-            <tr className="text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-              <th className="px-6 py-3">Order</th>
-              <th className="px-6 py-3">Date</th>
-              <th className="px-6 py-3">Items</th>
-              <th className="px-6 py-3">Total</th>
-              <th className="px-6 py-3">Status</th>
-              <th className="px-6 py-3 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {orders.map((order) => (
-              <tr key={order.id} className="text-slate-700">
-                <td className="px-6 py-4 font-semibold text-slate-900">
-                  {order.orderNumber || order.id}
-                </td>
-                <td className="px-6 py-4">
-                  {new Date(order.createdAt).toLocaleString()}
-                </td>
-                <td className="px-6 py-4">{order.items?.length || 0}</td>
-                <td className="px-6 py-4">{order.total} EGP</td>
-                <td className="px-6 py-4">
-                  <span className="rounded-full px-3 py-1 text-xs font-semibold bg-emerald-100 text-emerald-700">
-                    {order.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <button
-                    className="text-sm font-semibold text-emerald-600 hover:underline"
-                    onClick={() =>
-                      setExpandedId(expandedId === order.id ? null : order.id)
-                    }
-                  >
-                    View details
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+         {/* Orders Grid */}
+         <div className="space-y-4">
+           {orders.map((order) => (
+             <div
+               key={order.id}
+               className={`rounded-2xl border shadow-sm transition-all duration-300 hover:shadow-lg ${cardBg}`}
+             >
+               {/* Order Header */}
+               <div className="p-6">
+                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                   <div className="flex items-center gap-4">
+                     <div className="flex-shrink-0">
+                       <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
+                         <FiPackage className="w-6 h-6 text-emerald-600" />
+                       </div>
+                     </div>
+                     <div>
+                       <h3 className={`text-lg font-semibold ${textColor}`}>
+                         {t("account.orderHistory.orderNumber")} {order.orderNumber || order.id.slice(-8)}
+                       </h3>
+                       <p className={`text-sm ${mutedText}`}>
+                         {new Date(order.createdAt).toLocaleDateString('en-US', {
+                           year: 'numeric',
+                           month: 'long',
+                           day: 'numeric'
+                         })}
+                       </p>
+                     </div>
+                   </div>
 
-      {/* Mobile Cards */}
-      <div className="space-y-4 lg:hidden">
-        {orders.map((order) => (
-          <div
-            key={order.id}
-            className="rounded-3xl border p-4 shadow-sm border-slate-100 bg-white"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-slate-900">
-                  {order.orderNumber || order.id}
-                </p>
-                <p className="text-xs text-slate-500">
-                  {new Date(order.createdAt).toLocaleString()}
-                </p>
-              </div>
-              <span className="rounded-full px-3 py-1 text-xs font-semibold bg-emerald-100 text-emerald-700">
-                {order.status}
-              </span>
-            </div>
+                   <div className="flex items-center gap-4">
+                     <div className="text-right">
+                       <p className={`text-sm ${mutedText}`}>{t("account.orderHistory.total")}</p>
+                       <p className={`text-xl font-bold ${textColor}`}>
+                         {order.total?.toLocaleString()} EGP
+                       </p>
+                     </div>
 
-            <button
-              className="text-sm text-emerald-600 hover:underline mt-2"
-              onClick={() =>
-                setExpandedId(expandedId === order.id ? null : order.id)
-              }
-            >
-              View details
-            </button>
+                     <span className={`px-4 py-2 rounded-full text-sm font-semibold border ${getStatusColor(order.status)}`}>
+                       {order.status}
+                     </span>
 
-            {expandedId === order.id && (
-              <div className="mt-3 space-y-3">
-                {order.items?.map((item, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center gap-4 bg-green-50 p-3 rounded-xl"
-                  >
-                    <img
-                      src={item.imageUrl}
-                      alt={item.name}
-                      className="w-16 h-16 rounded-lg border border-green-200 object-cover"
-                    />
-                    <div>
-                      <p className="font-medium text-green-900">{item.name}</p>
-                      <p className="text-green-700 text-sm">
-                        {item.price} EGP × {item.quantity}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-                <div className="bg-green-50 p-3 rounded-lg">
-                  <p className="text-green-800 text-sm">Shipping Address:</p>
-                  <p className="font-semibold text-green-900">
-                    {order.address}
-                  </p>
-                </div>
-                <div>
-                  <p className="font-medium text-green-900 mb-2">
-                    Status Updates:
-                  </p>
-                  <ul className="space-y-2">
-                    {order.statusHistory?.map((h, i) => (
-                      <li
-                        key={i}
-                        className="flex items-center gap-2 bg-white rounded-lg p-2 border border-green-200"
-                      >
-                        <FiClock className="text-green-700" />
-                        <span className="font-semibold text-green-900">
-                          {h.status}
-                        </span>
-                        <span className="text-sm text-green-700">
-                          {new Date(h.changedAt).toLocaleString()}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+                     <div className="flex gap-2 card-actions">
+                       {/* View Invoice Button */}
+                       <button
+                         onClick={() => navigate(`/account/invoice/${order.id}`)}
+                         className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-colors text-sm font-medium"
+                       >
+                         <FiFileText className="w-4 h-4" />
+                         {t("account.orderHistory.invoice")}
+                       </button>
+
+                       {/* Only show tracking button for non-completed orders */}
+                       {!['delivered', 'canceled'].includes(order.status?.toLowerCase()) && (
+                         <button
+                           onClick={() => navigate(`/account/tracking?order=${order.id}`)}
+                           className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors text-sm font-medium"
+                         >
+                           <FiTruck className="w-4 h-4" />
+                           {t("account.orderHistory.track")}
+                         </button>
+                       )}
+
+                       <button
+                         onClick={() => setExpandedId(expandedId === order.id ? null : order.id)}
+                         className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                       >
+                         {expandedId === order.id ?
+                           <FiChevronUp className="w-5 h-5" /> :
+                           <FiChevronDown className="w-5 h-5" />
+                         }
+                       </button>
+                     </div>
+                   </div>
+                 </div>
+               </div>
+
+               {/* Expanded Details */}
+               {expandedId === order.id && (
+                 <div className="border-t border-slate-200 dark:border-slate-700 px-6 pb-6">
+                   <div className="pt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+                     {/* Order Items */}
+                     <div>
+                       <h4 className={`text-lg font-semibold ${textColor} mb-4 flex items-center gap-2`}>
+                         <FiPackage className="w-5 h-5" />
+                         {t("account.orderHistory.orderItems")} ({order.items?.length || 0})
+                       </h4>
+                       <div className="space-y-3">
+                         {order.items?.map((item, idx) => (
+                           <div
+                             key={idx}
+                             className="flex items-center gap-4 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50"
+                           >
+                             <img
+                               src={item.imageUrl || item.image || item.thumbnailUrl || item.img || "/placeholder.png"}
+                               alt={item.name}
+                               className="w-16 h-16 rounded-lg object-cover border border-slate-200 dark:border-slate-700"
+                             />
+                             <div className="flex-1">
+                               <p className={`font-medium ${textColor}`}>{item.name}</p>
+                               <p className={`text-sm ${mutedText}`}>
+                                 {item.price?.toLocaleString()} EGP × {item.quantity}
+                               </p>
+                             </div>
+                             <div className={`text-right ${textColor}`}>
+                               <p className="font-semibold">
+                                 {(item.price * item.quantity)?.toLocaleString()} EGP
+                               </p>
+                             </div>
+                           </div>
+                         ))}
+                       </div>
+                     </div>
+
+                     {/* Order Details */}
+                     <div className="space-y-6">
+                       {/* Shipping Info */}
+                       <div>
+                         <h4 className={`text-lg font-semibold ${textColor} mb-4 flex items-center gap-2`}>
+                           <FiMapPin className="w-5 h-5" />
+                           {t("account.orderHistory.shippingInfo")}
+                         </h4>
+                         <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+                           <p className={`font-medium ${textColor}`}>{order.fullName || order.shipping?.fullName}</p>
+                           <p className={mutedText}>{order.address || order.shipping?.addressLine1}</p>
+                           <p className={mutedText}>{order.city || order.shipping?.city}</p>
+                           <p className={mutedText}>{order.phone || order.shipping?.phone}</p>
+                         </div>
+                       </div>
+
+                       {/* Payment Info */}
+                       <div>
+                         <h4 className={`text-lg font-semibold ${textColor} mb-4 flex items-center gap-2`}>
+                           <FiCreditCard className="w-5 h-5" />
+                           {t("account.orderHistory.paymentInfo")}
+                         </h4>
+                         <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+                           <p className={`font-medium ${textColor}`}>{order.paymentSummary || order.paymentMethod}</p>
+                           <p className={mutedText}>Reference: {order.reference}</p>
+                         </div>
+                       </div>
+
+                       {/* Status Timeline */}
+                       <div>
+                         <h4 className={`text-lg font-semibold ${textColor} mb-4 flex items-center gap-2`}>
+                           <FiClock className="w-5 h-5" />
+                           {t("account.orderHistory.orderTimeline")}
+                         </h4>
+                         <div className="space-y-3">
+                           {order.statusHistory?.slice().reverse().map((history, i) => (
+                             <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+                               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
+                                 history.actor === 'customer'
+                                   ? 'bg-blue-100 text-blue-600'
+                                   : 'bg-emerald-100 text-emerald-600'
+                               }`}>
+                                 {history.actor === 'customer' ? '👤' : '👨‍💼'}
+                               </div>
+                               <div className="flex-1">
+                                 <p className={`font-medium ${textColor}`}>
+                                   {history.status}
+                                   {history.confirmedBy === 'customer' && (
+                                     <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                                       {t("account.orderHistory.customerConfirmed")}
+                                     </span>
+                                   )}
+                                 </p>
+                                 <p className={`text-sm ${mutedText}`}>
+                                   {new Date(history.changedAt).toLocaleString()}
+                                   {history.actor && (
+                                     <span className="ml-2 text-xs">
+                                       {t("account.orderHistory.by")} {history.actor === 'customer' ? t('common.customer') : t('common.admin')}
+                                     </span>
+                                   )}
+                                 </p>
+                               </div>
+                             </div>
+                           ))}
+                         </div>
+                       </div>
+                     </div>
+                   </div>
+                 </div>
+               )}
+             </div>
+           ))}
+         </div>
+       </div>
+     </div>
+   );
 }

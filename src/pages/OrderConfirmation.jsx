@@ -283,7 +283,7 @@ const OrderConfirmation = () => {
                     className={`flex items-center gap-4 rounded-2xl border px-4 py-3 text-sm ${dividerColor}`}
                   >
                     <img
-                      src={item.image}
+                      src={item.image || item.imageUrl || item.thumbnailUrl || item.img || "/placeholder.png"}
                       alt={item.name}
                       className="h-16 w-16 rounded-xl object-cover"
                     />
@@ -305,7 +305,13 @@ const OrderConfirmation = () => {
 
             <div className="flex flex-wrap justify-center gap-4">
               <Link
-                to="/account/orders"
+                to={`/account/invoice/${orderId}`}
+                className="rounded-2xl bg-blue-500 px-5 py-2 text-sm font-semibold text-white shadow hover:bg-blue-600"
+              >
+                {t("confirmation.actions.viewInvoice", "View Invoice")}
+              </Link>
+              <Link
+                to="/account/OrderHistory"
                 className={`rounded-2xl border px-5 py-2 text-sm font-semibold transition ${ctaOutline}`}
               >
                 {t("confirmation.actions.viewOrders")}

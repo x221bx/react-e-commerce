@@ -1,5 +1,6 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit";
 import { auth, db } from "../services/firebase";
+import i18n from "../i18n";
 import { onAuthStateChanged } from "firebase/auth";
 import {
   doc,
@@ -145,9 +146,11 @@ export const startAuthListener = (store) => {
       // ---------------------------
       // Apply locale
       // ---------------------------
-      const locale = profile?.preferences?.locale || "en";
+      const locale = profile?.preferences?.locale || i18n.language || "en";
+      if (i18n.language !== locale) {
+        await i18n.changeLanguage(locale);
+      }
       document.documentElement.lang = locale;
-      document.documentElement.dir = locale === "ar" ? "rtl" : "ltr";
 
       ensureInit();
     });

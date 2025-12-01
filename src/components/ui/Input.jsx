@@ -46,7 +46,7 @@ const Input = (
         }`}
       >
         {icon && (
-          <span className={`material-symbols-outlined text-base ${iconColor}`}>
+          <span className={`material-symbols-outlined text-base ${iconColor} input-icon`}>
             {icon}
           </span>
         )}
@@ -60,7 +60,7 @@ const Input = (
           ref={ref}
           onFocus={() => !isDisabled && setFocused(true)}
           onBlur={() => setTimeout(() => setFocused(false), 120)}
-          className={`flex-1 bg-transparent outline-none text-sm ${textColor} ${
+          className={`flex-1 bg-transparent outline-none text-sm ${textColor} input-field ${
             isDisabled ? "cursor-not-allowed" : ""
           }`}
         />

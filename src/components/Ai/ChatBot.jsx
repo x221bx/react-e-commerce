@@ -1,4 +1,4 @@
-// src/components/Ai/ChatBot.jsx  
+﻿// src/components/Ai/ChatBot.jsx  
 import { useState, useEffect, useRef } from "react";
 import { useAIChat } from "../../hooks/useAIChat.js";
 import { motion as Motion, AnimatePresence } from "framer-motion";
@@ -12,38 +12,40 @@ import {
   FiTrash2,
 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { addToCart } from "../../features/cart/cartSlice";
+import { selectCurrentUser } from "../../features/auth/authSlice";
 import { db } from "../../services/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { UseTheme } from "../../theme/ThemeProvider";
 
-// 🟢 تشغيل صوت بأمان بدون Errors
+// ðŸŸ¢ ØªØ´ØºÙŠÙ„ ØµÙˆØª Ø¨Ø£Ù…Ø§Ù† Ø¨Ø¯ÙˆÙ† Errors
 const safePlay = (audio) => {
   if (!audio) return;
   const playPromise = audio.play();
   if (playPromise !== undefined) playPromise.catch(() => {});
 };
 
-// 🟢 أصوات إرسال واستقبال
+// ðŸŸ¢ Ø£ØµÙˆØ§Øª Ø¥Ø±Ø³Ø§Ù„ ÙˆØ§Ø³ØªÙ‚Ø¨Ø§Ù„
 const sendSound = new Audio("/send.mp3");
 const receiveSound = new Audio("/receive.mp3");
-// أصوات إضافية
+// Ø£ØµÙˆØ§Øª Ø¥Ø¶Ø§ÙÙŠØ©
 const openSound = new Audio("/Open.mp3");
 const closeSound = new Audio("/close.mp3");
 // const notifySound = new Audio("/notify.mp3");
 const typingSound = new Audio("/typing.mp3");
 
-// 🟢 اقتراحات سريعة
+// Quick replies
 const QUICK_REPLIES = [
-  "عندي قمح أوراقه صفراء، عايز سماد مناسب",
-  "عايز سماد ورقي عام يقوي النبات",
-  "مبيد حشائش للذرة من غير ما يضر المحصول",
-  "أفضل برنامج تسميد للبطاطس في مرحلة النمو",
+  "أحتاج مساعدة في تتبع طلبي",
+  "أريد تقديم شكوى",
+  "اقترح منتج لمزرعتي",
+  "كيف أتصل بالدعم؟",
 ];
 
 export default function ChatBot() {
-  const { messages, sendMessage, setMessages } = useAIChat(); // ⭐ مهم جداً
+  const user = useSelector(selectCurrentUser);
+  const { messages, sendMessage, setMessages } = useAIChat(); // â­ Ù…Ù‡Ù… Ø¬Ø¯Ø§Ù‹
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
@@ -67,13 +69,13 @@ export default function ChatBot() {
     });
   };
 
-  // 🟢 History — FIXED (كان سبب 429)
+  // ðŸŸ¢ History â€” FIXED (ÙƒØ§Ù† Ø³Ø¨Ø¨ 429)
   useEffect(() => {
     const saved = localStorage.getItem("chatHistory");
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        setMessages(parsed); // ❗ بدل push (كان عامل loop)
+        setMessages(parsed); // â— Ø¨Ø¯Ù„ push (ÙƒØ§Ù† Ø¹Ø§Ù…Ù„ loop)
         // eslint-disable-next-line
       } catch {}
     }
@@ -88,14 +90,14 @@ export default function ChatBot() {
     localStorage.setItem("chatHistory", JSON.stringify(messages));
   }, [messages]);
 
-  // 🟢 Scroll
+  // ðŸŸ¢ Scroll
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, open]);
 
-  // 🟢 Meta للرسائل (توقيت كل رسالة)
+  // ðŸŸ¢ Meta Ù„Ù„Ø±Ø³Ø§Ø¦Ù„ (ØªÙˆÙ‚ÙŠØª ÙƒÙ„ Ø±Ø³Ø§Ù„Ø©)
   useEffect(() => {
     setMessageMeta((prev) => {
       if (messages.length > prev.length) {
@@ -110,7 +112,7 @@ export default function ChatBot() {
     });
   }, [messages.length, messages]);
 
-  // 🟢 صوت رد البوت + unread (يتشغل فقط لما عدد الرسائل يزيد مش مع كل توكن)
+  // ðŸŸ¢ ØµÙˆØª Ø±Ø¯ Ø§Ù„Ø¨ÙˆØª + unread (ÙŠØªØ´ØºÙ„ ÙÙ‚Ø· Ù„Ù…Ø§ Ø¹Ø¯Ø¯ Ø§Ù„Ø±Ø³Ø§Ø¦Ù„ ÙŠØ²ÙŠØ¯ Ù…Ø´ Ù…Ø¹ ÙƒÙ„ ØªÙˆÙƒÙ†)
   useEffect(() => {
     if (messages.length === 0) return;
     const last = messages[messages.length - 1];
@@ -129,11 +131,17 @@ export default function ChatBot() {
     const textToSend = (overrideText ?? input).trim();
     if (!textToSend) return;
 
+    if (handleIntent(textToSend)) {
+      if (!overrideText) setInput("");
+      return;
+    }
+
     if (soundEnabled) safePlay(sendSound);
 
     setTyping(true);
     try {
-      await sendMessage(textToSend);
+      const langHint = /[a-zA-Z]/.test(textToSend) ? "[Respond in English]" : "[Respond in Arabic]";
+      await sendMessage(`${langHint} ${textToSend}`);
       if (!overrideText) setInput("");
     } finally {
       setTyping(false);
@@ -149,21 +157,21 @@ export default function ChatBot() {
   };
 
   const handleClearChat = () => {
-  // امسح الرسائل من الذاكرة
+  // Ø§Ù…Ø³Ø­ Ø§Ù„Ø±Ø³Ø§Ø¦Ù„ Ù…Ù† Ø§Ù„Ø°Ø§ÙƒØ±Ø©
   setMessages([]);
 
-  // امسح من التخزين المحلي
+  // Ø§Ù…Ø³Ø­ Ù…Ù† Ø§Ù„ØªØ®Ø²ÙŠÙ† Ø§Ù„Ù…Ø­Ù„ÙŠ
   localStorage.removeItem("chatHistory");
 
-  // اقفل المنيو فقط
+  // Ø§Ù‚ÙÙ„ Ø§Ù„Ù…Ù†ÙŠÙˆ ÙÙ‚Ø·
   setMenuOpen(false);
 
-  // مفيش reload هنا ✔️
+  // Ù…ÙÙŠØ´ reload Ù‡Ù†Ø§ âœ”ï¸
 };
 
 
   // ===========================================================
-  // 🧠 Mini Product Card
+  // ðŸ§  Mini Product Card
   // ===========================================================
   const ProductCardMini = ({ id }) => {
     const [product, setProduct] = useState(null);
@@ -178,7 +186,7 @@ export default function ChatBot() {
     if (!product)
       return (
         <div className="border p-2 rounded-lg bg-gray-100 text-sm animate-pulse">
-          جارٍ تحميل المنتج...
+          Loading product...
         </div>
       );
 
@@ -233,8 +241,47 @@ export default function ChatBot() {
     );
   };
 
+  const respondAsAssistant = (content) => {
+    setMessages((prev) => [...prev, { role: "assistant", content }]);
+    setTyping(false);
+  };
+
+  const handleIntent = (text) => {
+    const lower = text.toLowerCase();
+
+    if (/complain|شكوى|problem|issue/.test(lower)) {
+      respondAsAssistant(
+        "فهمت أن لديك مشكلة. يمكنك تقديم شكوى من خلال حسابك تحت 'الحساب -> الشكاوى'. إذا كنت تفضل، يمكنني توجيهك إلى الرابط المباشر: /account/complaints، أو اكتب تفاصيل شكواك هنا وسأساعد في التحقق منها."
+      );
+      return true;
+    }
+
+    if (/order|طلب|shipment|tracking|شحنة|تتبع/.test(lower)) {
+      respondAsAssistant(
+        "للاطلاع على حالة طلبك الأخير، افتح صفحة تتبع الطلبات من 'الحساب -> تتبع الطلبات' أو انتقل مباشرة إلى /account/tracking. هل تريد أن أظهر لك طلب معين؟"
+      );
+      return true;
+    }
+
+    if (/support|help|مساعدة|مشورة/.test(lower)) {
+      respondAsAssistant(
+        "أنا هنا للمساعدة! يمكنك السؤال عن المنتجات، تتبع الطلبات، أو تقديم شكوى. اختر أي خيار من الردود السريعة أدناه للحصول على مساعدة أسرع."
+      );
+      return true;
+    }
+
+    if (/english|Ø§Ù†Ø¬Ù„ÙŠØ²/.test(lower)) {
+      respondAsAssistant(
+        "Sure! I can reply in English as well. Ask me anything about your orders, complaints, or products and Iâ€™ll do my best to help."
+      );
+      return true;
+    }
+
+    return false;
+  };
+
   // ===========================================================
-  // 🧠 Parser المنتج داخل الرسالة
+  // ðŸ§  Parser Ø§Ù„Ù…Ù†ØªØ¬ Ø¯Ø§Ø®Ù„ Ø§Ù„Ø±Ø³Ø§Ù„Ø©
   // ===========================================================
   const renderMessage = (text) => {
     if (typeof text !== "string") return text;
@@ -273,6 +320,9 @@ export default function ChatBot() {
 
   const isDark = theme === "dark";
 
+  // Hide bot for admin users
+  if (user?.isAdmin) return null;
+
   const toggleOpen = () => {
     setOpen((prev) => {
       const next = !prev;
@@ -297,7 +347,7 @@ export default function ChatBot() {
   };
 
   // ===========================================================
-  // 🖥️ JSX UI
+  // ðŸ–¥ï¸ JSX UI
   // ===========================================================
 
   return (
@@ -327,16 +377,17 @@ export default function ChatBot() {
             drag
             dragMomentum={false}
             dragElastic={0.15}
-            className={`fixed bottom-24 right-6 w-80 shadow-2xl rounded-2xl overflow-hidden flex flex-col 
+            className={`fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-4 left-4 sm:left-auto sm:right-6
+            w-[min(96vw,460px)] sm:w-[460px] min-h-[60vh] max-h-[92vh] shadow-2xl rounded-2xl overflow-hidden flex flex-col
             backdrop-blur-2xl border z-50 ${
               isDark
                 ? "bg-[#071010]/70 border-white/10"
-                : "bg-white/70 border-gray-200"
+                : "bg-white/80 border-gray-200"
             }`}
-            initial={{ opacity: 0, scale: 0.8, y: 50 }}
+            initial={{ opacity: 0, scale: 0.9, y: 40 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.75, y: 30 }}
-            transition={{ duration: 0.3 }}
+            exit={{ opacity: 0, scale: 0.8, y: 20 }}
+            transition={{ duration: 0.25 }}
           >
             {/* Header */}
             <div className="flex items-center justify-between bg-teal-600/90 text-white px-4 py-3 shadow-lg cursor-move">
@@ -349,14 +400,14 @@ export default function ChatBot() {
                 <div>
                   <span className="font-semibold text-sm">AI Assistant</span>
                   <span className="block text-[10px] text-emerald-100">
-                    متصل الآن لمساعدتك في الأسمدة و المحاصيل
+                    Online to help with farming and livestock
                   </span>
                 </div>
               </div>
 
               {/* Controls */}
               <div className="flex items-center gap-1 relative">
-                {/* صوت */}
+                {/* ØµÙˆØª */}
                 <button
                   onClick={toggleSound}
                   className="p-1 rounded-full hover:bg-white/10"
@@ -368,7 +419,7 @@ export default function ChatBot() {
                   )}
                 </button>
 
-                {/* منيو */}
+                {/* Ù…Ù†ÙŠÙˆ */}
                 <div className="relative">
                   <button
                     onClick={() => setMenuOpen((p) => !p)}
@@ -390,13 +441,13 @@ export default function ChatBot() {
                         className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-red-50 text-red-600"
                       >
                         <FiTrash2 size={12} />
-                        <span>مسح المحادثة</span>
+                        <span>Clear chat</span>
                       </button>
                     </div>
                   )}
                 </div>
 
-                {/* إغلاق */}
+                {/* Ø¥ØºÙ„Ø§Ù‚ */}
                 <FiX
                   size={20}
                   className="cursor-pointer hover:scale-110"
@@ -410,7 +461,7 @@ export default function ChatBot() {
 
             {/* Messages */}
             <div
-              className={`h-80 overflow-y-auto p-3 space-y-3 custom-scroll ${
+              className={`flex-1 overflow-y-auto p-3 space-y-3 custom-scroll ${
                 isDark ? "bg-[#0b1b1b]/40" : "bg-gray-50/60"
               }`}
             >
@@ -437,7 +488,7 @@ export default function ChatBot() {
                     )}
                     {m.role === "user" && (
                       <div className="w-6 h-6 rounded-full bg-gray-300 text-gray-800 flex items-center justify-center text-[10px]">
-                        أنت
+                        You
                       </div>
                     )}
 
@@ -464,35 +515,34 @@ export default function ChatBot() {
               {/* bot typing */}
               {typing && (
                 <div className="mr-auto px-3 py-1 text-xs rounded-lg text-gray-200 bg-gray-600/60 animate-pulse w-fit flex gap-2">
-                  <span>المساعد يكتب…</span>
+                  <span>Typing a reply...</span>
                 </div>
               )}
-
-              <div ref={messagesEndRef} />
             </div>
 
             {/* Quick Replies */}
-            <div
-              className={`px-3 pt-2 pb-1 flex flex-wrap gap-2 border-t ${
-                isDark ? "bg-[#051213]/80 border-white/10" : "bg-white/70"
-              }`}
-            >
-              {QUICK_REPLIES.map((q, idx) => (
-                <Motion.button
-                  key={idx}
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.96 }}
-                  onClick={() => handleSend(q)}
-                  className={`text-[10px] px-2 py-1 rounded-full border max-w-full truncate ${
-                    isDark
-                      ? "bg-[#0f2020] border-white/15 text-[#C9F2F2]"
-                      : "bg-white border-teال-200 text-teal-700"
-                  }`}
-                >
-                  {q}
-                </Motion.button>
-              ))}
-            </div>
+            {messages.length === 0 && (
+              <div className={`p-3 border-t ${isDark ? "border-white/10" : "border-gray-200"}`}>
+                <p className={`text-xs mb-2 ${isDark ? "text-gray-300" : "text-gray-600"}`}>
+                  اختر من الاقتراحات السريعة:
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {QUICK_REPLIES.map((reply, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleSend(reply)}
+                      className={`px-3 py-2 rounded-lg text-sm transition ${
+                        isDark
+                          ? "bg-teal-600/20 text-teal-200 border border-teal-500/30 hover:bg-teal-600/30"
+                          : "bg-teal-50 text-teal-700 border border-teal-200 hover:bg-teal-100"
+                      }`}
+                    >
+                      {reply}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Input */}
             <div
@@ -504,7 +554,7 @@ export default function ChatBot() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="اكتب رسالتك..."
+                placeholder="Type your message..."
                 rows={1}
                 className={`flex-1 rounded-xl px-3 py-2 outline-none shadow-sm text-sm resize-none ${
                   isDark
@@ -533,3 +583,6 @@ export default function ChatBot() {
     </>
   );
 }
+
+
+

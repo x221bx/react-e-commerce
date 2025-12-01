@@ -13,6 +13,7 @@ import {
   Timestamp,
   increment,
   writeBatch,
+  addDoc,
 } from "firebase/firestore";
 import { db } from "../services/firebase";
 
@@ -135,7 +136,7 @@ export default function useOrders(uid = null, isAdmin = false) {
    * updateOrderStatus
    * - if status becomes "Canceled", optionally restore stock via restoreStockFn
    */
-  const updateOrderStatus = async (orderId, newStatus, restoreStockFn) => {
+  const updateOrderStatus = async (orderId, newStatus, restoreStockFn, actor = 'admin') => {
     const order = orders.find((o) => o.id === orderId);
     if (!order) throw new Error("Order not found");
 
@@ -148,13 +149,70 @@ export default function useOrders(uid = null, isAdmin = false) {
       if (itemsToRestore.length) await restoreStockFn(itemsToRestore);
     }
 
+    // Add actor information to status history
+    const statusEntry = {
+      status: newStatus,
+      changedAt: new Date().toISOString(),
+      actor: actor, // 'admin' or 'customer'
+    };
+
+    // For customer actions, add additional metadata
+    if (actor === 'customer') {
+      if (newStatus === 'Delivered') {
+        statusEntry.confirmedBy = 'customer';
+      }
+    }
+
     await updateDoc(doc(db, "orders", orderId), {
       status: newStatus,
       statusHistory: [
         ...(order.statusHistory || []),
-        { status: newStatus, changedAt: new Date().toISOString() },
+        statusEntry,
       ],
     });
+
+    // Create notification for user if admin updated status
+    if (isAdmin && order.uid && newStatus !== order.status) {
+      try {
+        await addDoc(collection(db, "notifications"), {
+          uid: order.uid,
+          type: "order-status",
+          category: "orders",
+          title: `Order #${order.orderNumber} Update`,
+          message: `Your order status has been updated to ${newStatus}`,
+          createdAt: Timestamp.now(),
+          read: false,
+          target: "/account/tracking",
+          meta: { orderId, status: newStatus }
+        });
+      } catch (error) {
+        console.error("Failed to create order notification:", error);
+      }
+    }
+  };
+
+  /**
+   * confirmDelivery - allows customers to mark shipped orders as delivered
+   */
+  const confirmDelivery = async (orderId) => {
+    const order = orders.find((o) => o.id === orderId);
+    if (!order) throw new Error("Order not found");
+
+    // Only allow if status is "Shipped" and user is the owner (not admin)
+    if (order.status !== "Shipped") {
+      throw new Error("Order must be shipped before confirming delivery");
+    }
+
+    if (isAdmin) {
+      throw new Error("Admins cannot confirm delivery on behalf of customers");
+    }
+
+    if (order.uid !== uid) {
+      throw new Error("You can only confirm delivery for your own orders");
+    }
+
+    // Use updateOrderStatus with customer actor
+    await updateOrderStatus(orderId, "Delivered", null, 'customer');
   };
 
   /**
@@ -200,6 +258,7 @@ export default function useOrders(uid = null, isAdmin = false) {
     fetchOrders,
     refreshOrders: fetchOrders,
     updateOrderStatus,
+    confirmDelivery,
     deleteOrder,
     reduceStock,
     restoreStock,

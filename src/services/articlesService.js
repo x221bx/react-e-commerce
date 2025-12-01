@@ -16,7 +16,7 @@ import {
   where,
 } from "firebase/firestore";
 import { db } from "./firebase";
-import { localizeArticleRecord, normalizeLocale } from "../data/articles";
+import { localizeArticleRecord, normalizeLocale, generateSlug } from "../data/articles";
 
 const articlesCollection = collection(db, "articles");
 
@@ -130,7 +130,7 @@ export const subscribeToArticles = (options = {}, handler = () => {}) => {
 
 export const subscribeToArticle = (articleId, handler) => {
   if (!articleId) return () => {};
-  const ref = doc(db, "articles", articleId);
+  const ref = doc(db, "Articles", articleId);
   return onSnapshot(ref, handler);
 };
 
@@ -143,33 +143,58 @@ export const fetchArticles = async () => {
 };
 
 export const fetchArticle = async (articleId) => {
-  const snap = await getDoc(doc(db, "articles", articleId));
+  const snap = await getDoc(doc(db, "Articles", articleId));
   if (!snap.exists()) return null;
   return { id: snap.id, ...snap.data() };
 };
 
-export const fetchArticleBySlug = async (slug) => {
-  const q = query(articlesCollection, where("slug", "==", slug));
-  const snapshot = await getDocs(q);
-  if (snapshot.empty) return null;
-  const docSnap = snapshot.docs[0];
-  return { id: docSnap.id, ...docSnap.data() };
+export const fetchArticleBySlug = async (slugOrId) => {
+  try {
+    // First try by slug
+    let q = query(articlesCollection, where("slug", "==", slugOrId));
+    let snapshot = await getDocs(q);
+    if (!snapshot.empty) {
+      const docSnap = snapshot.docs[0];
+      return { id: docSnap.id, ...docSnap.data() };
+    }
+
+    // If not found, try by id
+    const docSnap = await getDoc(doc(db, "articles", slugOrId));
+    if (docSnap.exists()) {
+      return { id: docSnap.id, ...docSnap.data() };
+    }
+
+    return null;
+  } catch (error) {
+    console.error("Error fetching article by slug:", error);
+    return null;
+  }
 };
 
 export const fetchArticlesByIds = async (ids = [], locale = "en") => {
   if (!ids.length) return [];
-  const normalized = normalizeLocale(locale);
-  const results = await Promise.all(
-    ids.map(async (articleId) => {
-      const data = await fetchArticle(articleId);
-      if (data && data.status === 'published') {
-        return localizeArticleRecord({ id: articleId, ...data }, normalized);
-      }
-      // Don't return fallback articles for favorites - only return real published articles
-      return null;
-    })
-  );
-  return results.filter(Boolean);
+  try {
+    const normalized = normalizeLocale(locale);
+    const results = await Promise.all(
+      ids.map(async (articleId) => {
+        try {
+          const data = await fetchArticle(articleId);
+          if (data && data.status === 'published') {
+            return localizeArticleRecord({ id: articleId, ...data }, normalized);
+          }
+          // Don't return fallback articles for favorites - only return real published articles
+          return null;
+        } catch (error) {
+          console.error(`Error fetching article ${articleId}:`, error);
+          return null;
+        }
+      })
+    );
+    return results.filter(Boolean);
+  } catch (error) {
+    console.error("Error fetching articles by IDs:", error);
+    return [];
+  }
 };
 
 export const createArticle = async (article) => {
@@ -179,6 +204,7 @@ export const createArticle = async (article) => {
   const publishDate = normalizePublishDate(rest.publishDate);
   const payload = withTimestamps({
     title: rest.title,
+    slug: rest.slug || generateSlug(rest.title) || "",
     summary: rest.summary,
     tag: rest.tag || "General",
     readTime: computedReadTime,
@@ -202,30 +228,31 @@ export const createArticle = async (article) => {
 };
 
 export const updateArticle = async (articleId, updates = {}) => {
-  const { translations: rawTranslations, ...rest } = updates;
-  const translations = cleanTranslations(rawTranslations);
-  const ref = doc(db, "articles", articleId);
-  const payload = {
-    ...rest,
-    readTime: deriveReadTime(rest.content || rest.summary, rest.readTime),
-    publishDate: normalizePublishDate(rest.publishDate) || "",
-    status: rest.status || "draft",
-    articleType: rest.articleType || "blog",
-    difficulty: rest.difficulty || "beginner",
-    seoDescription: rest.seoDescription || "",
-    keywords: rest.keywords || "",
-    relatedProducts: Array.isArray(rest.relatedProducts) ? rest.relatedProducts : [],
-    updatedAt: serverTimestamp(),
-  };
-  if (Object.keys(translations).length) {
-    payload.translations = translations;
-  }
-  await updateDoc(ref, payload);
-};
+   const { translations: rawTranslations, ...rest } = updates;
+   const translations = cleanTranslations(rawTranslations);
+   const ref = doc(db, "articles", articleId);
+   const payload = {
+     ...rest,
+     slug: rest.slug || (rest.title ? generateSlug(rest.title) : ""),
+     readTime: deriveReadTime(rest.content || rest.summary, rest.readTime),
+     publishDate: normalizePublishDate(rest.publishDate) || "",
+     status: rest.status || "draft",
+     articleType: rest.articleType || "blog",
+     difficulty: rest.difficulty || "beginner",
+     seoDescription: rest.seoDescription || "",
+     keywords: rest.keywords || "",
+     relatedProducts: Array.isArray(rest.relatedProducts) ? rest.relatedProducts : [],
+     updatedAt: serverTimestamp(),
+   };
+   if (Object.keys(translations).length) {
+     payload.translations = translations;
+   }
+   await updateDoc(ref, payload);
+ };
 
 export const deleteArticle = async (articleId) => {
-  await deleteDoc(doc(db, "articles", articleId));
-};
+   await deleteDoc(doc(db, "articles", articleId));
+ };
 
 export const saveArticleFavorite = async (userId, articleId) => {
   if (!userId || !articleId) return;
@@ -246,11 +273,11 @@ export const removeArticleFavorite = async (userId, articleId) => {
 };
 
 // Like/Dislike functionality
-export const addArticleLike = async (userId, articleId) => {
-  if (!userId || !articleId) return;
+ export const addArticleLike = async (userId, articleId) => {
+   if (!userId || !articleId) return;
 
-  const articleRef = doc(db, "articles", articleId);
-  const userRef = doc(db, "users", userId);
+   const articleRef = doc(db, "articles", articleId);
+   const userRef = doc(db, "users", userId);
 
   // Add to user's liked articles
   await updateDoc(userRef, {
@@ -353,10 +380,10 @@ export const removeArticleDislike = async (userId, articleId) => {
 };
 
 export const incrementArticleViews = async (articleId) => {
-  if (!articleId) return;
+   if (!articleId) return;
 
-  const articleRef = doc(db, "articles", articleId);
-  const articleSnap = await getDoc(articleRef);
+   const articleRef = doc(db, "articles", articleId);
+   const articleSnap = await getDoc(articleRef);
   if (articleSnap.exists()) {
     const currentViews = articleSnap.data().views || 0;
     await updateDoc(articleRef, {
@@ -367,29 +394,29 @@ export const incrementArticleViews = async (articleId) => {
 };
 
 export const addArticleComment = async (articleId, userId, comment, userName) => {
-  if (!articleId || !userId || !comment?.trim()) return;
+   if (!articleId || !userId || !comment?.trim()) return;
 
-  const commentData = {
-    userId,
-    userName: userName || "Anonymous",
-    comment: comment.trim(),
-    createdAt: serverTimestamp(),
-    isAdminOnly: true, // Comments are only visible to admins
-  };
+   const commentData = {
+     userId,
+     userName: userName || "Anonymous",
+     comment: comment.trim(),
+     createdAt: serverTimestamp(),
+     isAdminOnly: true, // Comments are only visible to admins
+   };
 
-  const articleRef = doc(db, "articles", articleId);
-  await updateDoc(articleRef, {
-    comments: arrayUnion(commentData),
-    updatedAt: serverTimestamp(),
-  });
-};
+   const articleRef = doc(db, "articles", articleId);
+   await updateDoc(articleRef, {
+     comments: arrayUnion(commentData),
+     updatedAt: serverTimestamp(),
+   });
+ };
 
 export const getArticleComments = async (articleId) => {
-  if (!articleId) return [];
+   if (!articleId) return [];
 
-  const articleSnap = await getDoc(doc(db, "articles", articleId));
-  if (articleSnap.exists()) {
-    return articleSnap.data().comments || [];
-  }
-  return [];
-};
+   const articleSnap = await getDoc(doc(db, "articles", articleId));
+   if (articleSnap.exists()) {
+     return articleSnap.data().comments || [];
+   }
+   return [];
+ };

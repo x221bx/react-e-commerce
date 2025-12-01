@@ -27,11 +27,24 @@ export default function Login() {
   const { search } = useLocation();
   const redirectTo = new URLSearchParams(search).get("redirect") || "/";
 
-  const onSuccess = () => navigate(redirectTo, { replace: true });
+  const onSuccess = () => {
+    // If user is admin, redirect to admin dashboard
+    if (user?.isAdmin) {
+      navigate("/admin", { replace: true });
+    } else {
+      navigate(redirectTo, { replace: true });
+    }
+  };
 
   useEffect(() => {
     return () => dispatch(clearAuthError());
   }, [dispatch]);
+
+  useEffect(() => {
+    if (user?.isAdmin && location.pathname !== "/admin") {
+      navigate("/admin", { replace: true });
+    }
+  }, [user, navigate, location.pathname]);
 
   return (
     <AuthLayout
@@ -59,7 +72,7 @@ export default function Login() {
                 setFieldError(k, msg);
               });
             setServerMsg(err?.message || "Login failed.");
-          } else onSuccess();
+          }
         }}
       >
         {({ isSubmitting }) => (

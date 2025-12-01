@@ -111,9 +111,9 @@ export default function FavoriteArticles() {
 
                         <p className={`mt-2 text-sm ${muted}`}>{article.summary}</p>
 
-                        {/* ⭐ FIXED LINK — always uses correct slug */}
+                        {/* ⭐ FIXED LINK — uses article ID for reliable routing */}
                         <Link
-                            to={`/articles/${article.slug}`}
+                            to={`/articles/${article.id}`}
                             className={`mt-4 inline-flex items-center text-sm font-semibold hover:underline ${accent}`}
                         >
                             {t("account.favoriteArticles.readMore", "Continue reading →")}

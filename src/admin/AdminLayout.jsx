@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState, Suspense } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { FiMenu, FiChevronLeft, FiChevronRight, FiX } from "react-icons/fi";
+import { FiMenu, FiChevronLeft, FiChevronRight, FiX, FiLogOut } from "react-icons/fi";
+import { useSelector, useDispatch } from "react-redux";
+import { signOut } from "../features/auth/authSlice";
+import toast from "react-hot-toast";
 import AdminSidebar from "./AdminSidebar";
 import { UseTheme } from "../theme/ThemeProvider";
 
@@ -10,6 +13,7 @@ const LS_KEY = "admin.sidebar.collapsed";
 export default function AdminLayout() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { theme } = UseTheme();
   const isDark = theme === "dark";
   const [collapsed, setCollapsed] = useState(() => {
@@ -45,6 +49,16 @@ export default function AdminLayout() {
       document.body.style.overflow = original;
     };
   }, [mobileOpen]);
+
+  const handleLogout = () => {
+    dispatch(signOut());
+    toast.success(t("admin.logout_success", "Logged out successfully"));
+
+    // Clear complaints counter on logout
+    window.dispatchEvent(new CustomEvent('userLogout'));
+
+    navigate("/");
+  };
 
   return (
     <div
@@ -103,6 +117,14 @@ export default function AdminLayout() {
                 Vet Clinic Admin Panel
               </h1>
               <div className="flex-1" />
+              <button
+                onClick={handleLogout}
+                className="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40"
+                title={t("admin.logout", "Logout")}
+              >
+                <FiLogOut className="w-4 h-4" />
+                <span className="hidden sm:inline">{t("admin.logout", "Logout")}</span>
+              </button>
             </div>
           </div>
 

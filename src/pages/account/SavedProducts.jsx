@@ -104,6 +104,8 @@ export default function SavedProducts() {
         isAvailable:
           typeof product.isAvailable === "boolean" ? product.isAvailable : true,
         thumbnail:
+          product.img ||
+          product.thumbnailUrl ||
           product.coverImg ||
           product.thumbnail ||
           product.images?.[0] ||
@@ -123,7 +125,7 @@ export default function SavedProducts() {
 
   const handleViewProduct = (id) => {
     if (!id) return;
-    navigate(`/products/${id}`);
+    navigate(`/product/${id}`);
   };
 
   if (!items.length) {

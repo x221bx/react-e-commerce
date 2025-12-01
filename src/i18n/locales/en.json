@@ -71,6 +71,9 @@
         "language_error": "Failed to change language",
         "search_placeholder": "Search products...",
         "language_toggle": "Toggle language",
+        "toggle_language": "Toggle language",
+        "toggle_theme": "Toggle theme",
+        "toggle_menu": "Toggle menu",
         "menu_toggle": "Toggle menu",
         "notifications": "Notifications",
         "notification_error": "Real-time notifications are blocked. Please disable ad blockers for this site.",
@@ -201,7 +204,9 @@
         "error": "Error",
         "rateLimitExceeded": "Too many attempts. Please wait {{seconds}} seconds.",
         "valid": "Valid",
-        "total": "Total"
+        "total": "Total",
+        "customer": "Customer",
+        "admin": "Admin"
     },
     "settings": {
         "language_display": "Language & Display",
@@ -454,6 +459,22 @@
             "title": "Favorite Articles",
             "subtitle": "Personalized reading list for your farm crew. Saved items override our curated picks.",
             "readMore": "Continue reading →"
+        },
+        "orderHistory": {
+            "title": "Order History",
+            "subtitle": "Track all your orders and their current status",
+            "noOrders": "No orders yet",
+            "noOrdersDesc": "Your order history will appear here once you make your first purchase.",
+            "orderNumber": "Order #",
+            "total": "Total",
+            "invoice": "Invoice",
+            "track": "Track",
+            "orderItems": "Order Items",
+            "shippingInfo": "Shipping Information",
+            "paymentInfo": "Payment Information",
+            "orderTimeline": "Order Timeline",
+            "customerConfirmed": "Customer Confirmed",
+            "by": "by"
         }
     },
     "checkout": {
@@ -668,17 +689,19 @@
             "comingSoonSubtitle": "We are preparing bilingual resources for this space. Check back shortly."
         },
         "detail": {
-            "loading": "Loading article...",
-            "notFound": "Article not found",
-            "back": "Back to articles",
-            "authNeeded": "Sign in to save articles",
-            "saved": "Saved",
-            "savedButton": "Saved",
-            "saveButton": "Save for later",
-            "removed": "Removed from favorites",
-            "error": "Unable to update favorites",
-            "byline": "Written by {{author}}",
-            "emptyContent": "Content coming soon."
+          "loading": "Loading article...",
+          "notFound": "Article not found",
+          "back": "Back to articles",
+          "authNeeded": "Sign in to save articles",
+          "saved": "Saved",
+          "savedButton": "Saved",
+          "saveButton": "Save for later",
+          "removed": "Removed from favorites",
+          "error": "Unable to update favorites",
+          "byline": "Written by {{author}}",
+          "emptyContent": "Content coming soon.",
+          "share": "Share",
+          "save": "Save"
         },
         "admin": {
             "eyebrow": "Knowledge center",
