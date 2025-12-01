@@ -130,7 +130,7 @@ export const subscribeToArticles = (options = {}, handler = () => {}) => {
 
 export const subscribeToArticle = (articleId, handler) => {
   if (!articleId) return () => {};
-  const ref = doc(db, "Articles", articleId);
+  const ref = doc(db, "articles", articleId);
   return onSnapshot(ref, handler);
 };
 
@@ -143,7 +143,7 @@ export const fetchArticles = async () => {
 };
 
 export const fetchArticle = async (articleId) => {
-  const snap = await getDoc(doc(db, "Articles", articleId));
+  const snap = await getDoc(doc(db, "articles", articleId));
   if (!snap.exists()) return null;
   return { id: snap.id, ...snap.data() };
 };

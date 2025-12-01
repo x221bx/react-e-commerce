@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { subscribeToArticle, fetchArticleBySlug } from "../services/articlesService";
+import { getFallbackArticle } from "../data/articles";
 
 export const useArticle = (slugOrId) => {
     const [article, setArticle] = useState(null);
@@ -19,6 +20,13 @@ export const useArticle = (slugOrId) => {
                 if (!active) return;
 
                 if (!doc) {
+                    // Try fallback articles if not found in Firebase
+                    const fallbackArticle = getFallbackArticle(slugOrId);
+                    if (fallbackArticle) {
+                        setArticle(fallbackArticle);
+                        setLoading(false);
+                        return;
+                    }
                     setNotFound(true);
                     setLoading(false);
                     return;
@@ -35,6 +43,13 @@ export const useArticle = (slugOrId) => {
                 });
             })
             .catch(() => {
+                // Try fallback articles on error
+                const fallbackArticle = getFallbackArticle(slugOrId);
+                if (fallbackArticle) {
+                    setArticle(fallbackArticle);
+                    setLoading(false);
+                    return;
+                }
                 setNotFound(true);
                 setLoading(false);
             });
