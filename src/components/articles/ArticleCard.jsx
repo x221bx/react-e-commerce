@@ -1,6 +1,8 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { motion as Motion } from "framer-motion";
+import { UseTheme } from "../../theme/ThemeProvider";
 import { FiHeart, FiBookmark, FiThumbsUp, FiThumbsDown } from "react-icons/fi";
 
 const ArticleCard = ({
@@ -14,6 +16,7 @@ const ArticleCard = ({
   className = ""
 }) => {
   const { t } = useTranslation();
+  const { theme } = UseTheme();
 
   const handleFavoriteClick = (e) => {
     e.preventDefault();
@@ -23,63 +26,65 @@ const ArticleCard = ({
     }
   };
 
+  const fadeUp = {
+    hidden: { opacity: 0, y: 40 },
+    show: (delay = 0) => ({
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6, delay, ease: "easeOut" },
+    }),
+  };
+
   return (
-    <article
-      className={`group relative overflow-hidden rounded-2xl card-surface shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${className}`}
-      style={{ animationDelay: `${Math.random() * 200}ms` }}
+    <Motion.div
+      initial={{ opacity: 0, y: 40 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -4, scale: 1.02 }}
+      transition={{ type: "spring", stiffness: 200, damping: 15 }}
+      className={`relative flex flex-col gap-3 p-4 rounded-xl transition-all duration-500 overflow-hidden
+        ${
+          theme === "dark"
+            ? "bg-[#0e1b1b]/95 text-[#B8E4E6] shadow-[0_4px_20px_rgba(184,228,230,0.08)] hover:shadow-[0_6px_25px_rgba(184,228,230,0.15)]"
+            : "bg-white text-[#1a1a1a] shadow-[0_3px_15px_rgba(0,0,0,0.1)] hover:shadow-[0_5px_20px_rgba(0,0,0,0.15)]"
+        } ${className}`}
     >
       {/* Image */}
       {article.heroImage && (
-        <div className="aspect-video overflow-hidden bg-slate-100">
-          <img
-            src={article.heroImage}
-            alt={article.title}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-            loading="lazy"
-          />
-        </div>
+        <Motion.div
+          whileHover={{ scale: 1.05 }}
+          transition={{ duration: 0.4 }}
+          className="relative z-10 w-full aspect-square bg-center bg-cover rounded-lg shadow-inner"
+          style={{
+            backgroundImage: `url('${article.heroImage}')`,
+          }}
+        />
+      )}
+
+      {/* Favorite Button */}
+      {showFavorite && (
+        <Motion.button
+          whileTap={{ scale: 0.9 }}
+          onClick={handleFavoriteClick}
+          aria-label="favorite"
+          className="absolute top-3 right-3 z-20 p-2 rounded-full shadow-md border backdrop-blur-md bg-white/70 border-gray-200 hover:bg-gray-100 transition"
+        >
+          <FiHeart size={20} className={favoriteIds.includes(article.id) ? "text-red-600" : "icon-muted"} />
+        </Motion.button>
       )}
 
       {/* Content */}
-      <div className="p-6 space-y-3">
-        <div className="flex items-start justify-between">
-          <span className="inline-flex items-center gap-2 rounded-md bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-            {article.tag || t("articles.tag.insights", "Insights")}
-          </span>
-          {showFavorite && (
-            <button
-              onClick={handleFavoriteClick}
-              className={`p-2 rounded-full transition-colors ${
-                favoriteIds.includes(article.id)
-                  ? "text-red-500 hover:bg-red-50"
-                  : "text-gray-400 hover:bg-gray-50 hover:text-red-400"
-              }`}
-              title={
-                favoriteIds.includes(article.id)
-                  ? t("articles.detail.saved", "Saved")
-                  : t("articles.detail.save", "Save")
-              }
-            >
-              <FiHeart
-                className={`h-5 w-5 ${
-                  favoriteIds.includes(article.id) ? "fill-current" : ""
-                }`}
-              />
-            </button>
-          )}
-        </div>
+      <div className="flex flex-col gap-2 text-center relative z-10">
+        <span className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+          {article.tag || t("articles.tag.insights", "Insights")}
+        </span>
 
-        <h3
-          className={`font-semibold text-[var(--text-main)] line-clamp-2 transition-colors duration-200 group-hover:text-emerald-700 ${
-            isCompact ? "text-lg" : "text-lg"
-          }`}
-        >
+        <Motion.p variants={fadeUp} custom={0.2} className="text-base font-semibold">
           {article.title}
-        </h3>
+        </Motion.p>
 
-        <p className="text-sm leading-relaxed text-[var(--text-muted)] line-clamp-3">
+        <Motion.p variants={fadeUp} custom={0.3} className="text-sm leading-relaxed text-[var(--text-muted)] line-clamp-3">
           {article.summary}
-        </p>
+        </Motion.p>
 
         {/* Stats */}
         {showStats && (
@@ -126,17 +131,16 @@ const ArticleCard = ({
         )}
 
         {/* Read More Link */}
-        <Link
-          to={`/articles/${article.slug || article.id}`}
-          className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-600 transition-all duration-200 hover:gap-3 hover:text-emerald-700"
-        >
-          {t("articles.list.readMore", "Read Article")}
-          <svg className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </Link>
+        <Motion.div variants={fadeUp} custom={0.4}>
+          <Link
+            to={`/articles/${article.id}`}
+            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-500"
+          >
+            Continue reading →
+          </Link>
+        </Motion.div>
       </div>
-    </article>
+    </Motion.div>
   );
 };
 

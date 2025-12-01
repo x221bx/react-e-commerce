@@ -58,74 +58,99 @@ export default function OrderInvoice() {
     try {
       toast.loading("Generating PDF...", { id: "pdf-download" });
 
-      // Find the main invoice content (visible one)
-      const invoiceElement = document.querySelector('.invoice-container');
-      if (!invoiceElement) {
-        throw new Error("Invoice content not found");
-      }
-
-      // Temporarily modify styles for better PDF rendering
-      const originalStyles = {
-        backgroundColor: invoiceElement.style.backgroundColor,
-        boxShadow: invoiceElement.style.boxShadow,
-      };
-
-      invoiceElement.style.backgroundColor = '#ffffff';
-      invoiceElement.style.boxShadow = 'none';
-
-      // Create canvas from the visible invoice element
-      const canvas = await html2canvas(invoiceElement, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: false,
-        backgroundColor: '#ffffff',
-        logging: false,
-        imageTimeout: 15000,
-        removeContainer: true,
-        width: invoiceElement.scrollWidth,
-        height: invoiceElement.scrollHeight,
-        windowWidth: invoiceElement.scrollWidth,
-        windowHeight: invoiceElement.scrollHeight,
-      });
-
-      // Restore original styles
-      invoiceElement.style.backgroundColor = originalStyles.backgroundColor;
-      invoiceElement.style.boxShadow = originalStyles.boxShadow;
-
-      // Create PDF
-      const imgData = canvas.toDataURL('image/png', 0.8);
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4',
-        compress: true,
       });
 
-      // Calculate dimensions to fit A4
-      const imgWidth = 210; // A4 width in mm
-      const pageHeight = 295; // A4 height in mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      // Set font
+      pdf.setFont("helvetica", "normal");
 
-      // If image is taller than one page, split it
-      if (imgHeight > pageHeight) {
-        let position = 0;
-        let remainingHeight = imgHeight;
+      // Header
+      pdf.setFontSize(24);
+      pdf.setTextColor(0, 123, 255); // Blue color
+      pdf.text('INVOICE', 105, 30, { align: 'center' });
 
-        // Add first page
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, Math.min(pageHeight, remainingHeight));
-        remainingHeight -= pageHeight;
+      pdf.setFontSize(14);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text(`Order #${currentOrder.orderNumber || currentOrder.id.slice(-8)}`, 20, 50);
+      pdf.text(`Date: ${new Date(currentOrder.createdAt).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })}`, 20, 60);
+      pdf.text(`Status: ${currentOrder.status}`, 20, 70);
 
-        // Add additional pages if needed
-        while (remainingHeight > 0) {
-          pdf.addPage();
-          position = -imgHeight + (imgHeight - remainingHeight);
-          pdf.addImage(imgData, 'PNG', 0, position, imgWidth, Math.min(pageHeight, remainingHeight));
-          remainingHeight -= pageHeight;
-        }
-      } else {
-        // Single page
-        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      // Bill To
+      pdf.setFontSize(12);
+      pdf.text('Bill To:', 20, 90);
+      pdf.text(currentOrder.fullName || currentOrder.shipping?.fullName || user?.displayName || '', 20, 100);
+      pdf.text(currentOrder.email || user?.email || '', 20, 110);
+      pdf.text(currentOrder.phone || currentOrder.shipping?.phone || '', 20, 120);
+
+      // Ship To
+      pdf.text('Ship To:', 110, 90);
+      pdf.text(currentOrder.address || currentOrder.shipping?.addressLine1 || '', 110, 100);
+      pdf.text(currentOrder.city || currentOrder.shipping?.city || '', 110, 110);
+      pdf.text(currentOrder.country || currentOrder.shipping?.country || 'Egypt', 110, 120);
+
+      // Items header
+      let yPosition = 140;
+      pdf.setFontSize(12);
+      pdf.setFillColor(240, 240, 240);
+      pdf.rect(20, yPosition - 5, 170, 10, 'F');
+      pdf.setTextColor(0, 0, 0);
+      pdf.text('Item', 25, yPosition);
+      pdf.text('Qty', 120, yPosition);
+      pdf.text('Price', 140, yPosition);
+      pdf.text('Total', 165, yPosition);
+
+      yPosition += 15;
+
+      // Items
+      currentOrder.items?.forEach((item) => {
+        pdf.text(item.name || '', 25, yPosition);
+        pdf.text(item.quantity?.toString() || '1', 125, yPosition);
+        pdf.text(`${item.price?.toLocaleString() || 0} EGP`, 140, yPosition);
+        pdf.text(`${(item.price * item.quantity)?.toLocaleString() || 0} EGP`, 165, yPosition);
+        yPosition += 10;
+      });
+
+      // Summary
+      yPosition += 10;
+      pdf.setFontSize(12);
+      const subtotal = currentOrder.totals?.subtotal || currentOrder.total || 0;
+      const shipping = currentOrder.totals?.shipping || 0;
+      const tax = currentOrder.totals?.tax || 0;
+      const total = currentOrder.totals?.total || currentOrder.total || 0;
+
+      pdf.text(`Subtotal: ${subtotal.toLocaleString()} EGP`, 140, yPosition);
+      yPosition += 10;
+      if (shipping) {
+        pdf.text(`Shipping: ${shipping.toLocaleString()} EGP`, 140, yPosition);
+        yPosition += 10;
       }
+      if (tax) {
+        pdf.text(`Tax: ${tax.toLocaleString()} EGP`, 140, yPosition);
+        yPosition += 10;
+      }
+      pdf.setFontSize(14);
+      pdf.setTextColor(0, 123, 255);
+      pdf.text(`Total: ${total.toLocaleString()} EGP`, 140, yPosition + 10);
+
+      // Payment method
+      yPosition += 30;
+      pdf.setFontSize(12);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text(`Payment Method: ${currentOrder.paymentMethod || currentOrder.paymentSummary || 'Cash on Delivery'}`, 20, yPosition);
+
+      // Footer
+      yPosition += 20;
+      pdf.setFontSize(10);
+      pdf.setTextColor(128, 128, 128);
+      pdf.text('Thank you for your business!', 105, yPosition, { align: 'center' });
+      pdf.text(`Invoice generated on ${new Date().toLocaleDateString()}`, 105, yPosition + 10, { align: 'center' });
 
       // Download the PDF
       const fileName = `Invoice-${currentOrder?.orderNumber || currentOrder?.id?.slice(-8) || 'Order'}.pdf`;
@@ -134,43 +159,37 @@ export default function OrderInvoice() {
       toast.success("PDF downloaded successfully!", { id: "pdf-download" });
     } catch (error) {
       console.error("PDF generation error:", error);
-
-      // Fallback: Try a simpler approach
-      try {
-        toast.loading("Trying alternative method...", { id: "pdf-download" });
-
-        const pdf = new jsPDF({
-          orientation: 'portrait',
-          unit: 'mm',
-          format: 'a4',
-        });
-
-        // Add basic text content as fallback
-        pdf.setFontSize(20);
-        pdf.text('INVOICE', 105, 30, { align: 'center' });
-
-        pdf.setFontSize(12);
-        pdf.text(`Order: ${currentOrder?.orderNumber || currentOrder?.id?.slice(-8)}`, 20, 50);
-        pdf.text(`Date: ${new Date(currentOrder?.createdAt).toLocaleDateString()}`, 20, 60);
-        pdf.text(`Total: ${currentOrder?.totals?.total?.toLocaleString() || currentOrder?.total?.toLocaleString()} EGP`, 20, 70);
-
-        const fileName = `Invoice-${currentOrder?.orderNumber || currentOrder?.id?.slice(-8) || 'Order'}.pdf`;
-        pdf.save(fileName);
-
-        toast.success("PDF downloaded with basic format!", { id: "pdf-download" });
-      } catch (fallbackError) {
-        console.error("Fallback PDF generation failed:", fallbackError);
-        toast.error("Failed to generate PDF. Please try printing the page instead.", { id: "pdf-download" });
-      }
+      toast.error("Failed to generate PDF. Please try again.", { id: "pdf-download" });
     }
   };
 
   return (
-    <div className={`min-h-screen ${containerBg} py-8 px-4 sm:px-6 lg:px-8`}>
-      <div className="max-w-4xl mx-auto invoice-container">
+    <>
+      <style jsx>{`
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          .invoice-container, .invoice-container * {
+            visibility: visible;
+          }
+          .invoice-container {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            max-width: none;
+          }
+          .no-print {
+            display: none !important;
+          }
+        }
+      `}</style>
+      <div className={`min-h-screen ${containerBg} py-8 px-4 sm:px-6 lg:px-8`}>
+        <div className="max-w-4xl mx-auto invoice-container">
         {/* Main Invoice Display */}
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-8 no-print">
           <button
             onClick={() => navigate(-1)}
             className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
@@ -359,5 +378,6 @@ export default function OrderInvoice() {
         </div>
       </div>
     </div>
+    </>
   );
 }

@@ -25,7 +25,7 @@ import { useTranslation } from "react-i18next";
 
 import SearchBar from "../search/SearchBar";
 import Button from "../ui/Button";
-import { useNotifications } from "../../hooks/useNotifications";
+import { useUserNotifications } from "../../hooks/useUserNotifications";
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -43,10 +43,7 @@ export default function Navbar() {
   const isAdminUser = user?.role === "admin" || user?.isAdmin;
   const isRTL = currentLang === "ar";
 
-  const { unreadCount, connectionError } = useNotifications({
-    uid: user?.uid,
-    role: isAdminUser ? "admin" : user?.role,
-  });
+  const { unreadCount } = useUserNotifications(user?.uid);
 
   const toggleLanguage = async () => {
     const newLang = currentLang === "en" ? "ar" : "en";
@@ -66,11 +63,6 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  useEffect(() => {
-    if (connectionError) {
-      toast.error(t("navbar.notification_error"), { duration: 6000 });
-    }
-  }, [connectionError, t]);
 
   const isDark = theme === "dark";
   const navbarColorDark =

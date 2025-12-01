@@ -689,17 +689,19 @@
             "comingSoonSubtitle": "We are preparing bilingual resources for this space. Check back shortly."
         },
         "detail": {
-            "loading": "Loading article...",
-            "notFound": "Article not found",
-            "back": "Back to articles",
-            "authNeeded": "Sign in to save articles",
-            "saved": "Saved",
-            "savedButton": "Saved",
-            "saveButton": "Save for later",
-            "removed": "Removed from favorites",
-            "error": "Unable to update favorites",
-            "byline": "Written by {{author}}",
-            "emptyContent": "Content coming soon."
+          "loading": "Loading article...",
+          "notFound": "Article not found",
+          "back": "Back to articles",
+          "authNeeded": "Sign in to save articles",
+          "saved": "Saved",
+          "savedButton": "Saved",
+          "saveButton": "Save for later",
+          "removed": "Removed from favorites",
+          "error": "Unable to update favorites",
+          "byline": "Written by {{author}}",
+          "emptyContent": "Content coming soon.",
+          "share": "Share",
+          "save": "Save"
         },
         "admin": {
             "eyebrow": "Knowledge center",

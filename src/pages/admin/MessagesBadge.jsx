@@ -33,9 +33,9 @@ export default function MessageBadge() {
   return (
     <span
       className="
-        bg-red-600 text-white 
-        text-[10px] leading-none 
-        px-1.5 py-0.5 rounded-full 
+        bg-red-600 text-white
+        text-[10px] leading-none
+        px-1.5 py-0.5 rounded-full
         shadow absolute -top-1 -right-1
       "
     >

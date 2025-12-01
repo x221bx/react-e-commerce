@@ -49,6 +49,7 @@ const Notifications = lazy(() => import("./pages/Notifications"));
 const ChatBot = lazy(() => import("./components/Ai/ChatBot"));
 const AiConversations = lazy(() => import("./pages/account/AiConversations"));
 const OrderDetails = lazy(() => import("./pages/OrderDetails"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 // Loading component for Suspense fallback
 const LoadingSpinner = ({ text }) => (
   <div className="min-h-screen flex items-center justify-center flex-col gap-4">
@@ -65,8 +66,7 @@ export default function App() {
       {/* Navbar */}
       <Navbar />
 
-      {/* Toast Notifications */}
-      <Toaster
+       <Toaster
         position={i18n.language === "ar" ? "top-left" : "top-right"}
         reverseOrder={false}
       />
@@ -97,7 +97,7 @@ export default function App() {
               path="/checkout/confirmation"
               element={<OrderConfirmation />}
             />
-            <Route path="/notifications" element={<Notifications />} />
+              <Route path="/notifications" element={<Notifications />} />
             <Route path="/settings" element={<UserSettings />} />
             <Route path="/account" element={<AccountLayout />}>
               <Route index element={<Navigate to="tracking" replace />} />
@@ -146,6 +146,8 @@ export default function App() {
               </div>
             }
           />
+          {/* Not Found - Catch all */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
       <ChatBot />

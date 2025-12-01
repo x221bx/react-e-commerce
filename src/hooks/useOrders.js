@@ -13,6 +13,7 @@ import {
   Timestamp,
   increment,
   writeBatch,
+  addDoc,
 } from "firebase/firestore";
 import { db } from "../services/firebase";
 
@@ -169,6 +170,25 @@ export default function useOrders(uid = null, isAdmin = false) {
         statusEntry,
       ],
     });
+
+    // Create notification for user if admin updated status
+    if (isAdmin && order.uid && newStatus !== order.status) {
+      try {
+        await addDoc(collection(db, "notifications"), {
+          uid: order.uid,
+          type: "order-status",
+          category: "orders",
+          title: `Order #${order.orderNumber} Update`,
+          message: `Your order status has been updated to ${newStatus}`,
+          createdAt: Timestamp.now(),
+          read: false,
+          target: "/account/tracking",
+          meta: { orderId, status: newStatus }
+        });
+      } catch (error) {
+        console.error("Failed to create order notification:", error);
+      }
+    }
   };
 
   /**

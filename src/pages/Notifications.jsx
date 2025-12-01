@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { FiBell, FiMessageSquare, FiPackage, FiCheck } from "react-icons/fi";
 
 import { selectCurrentUser } from "../features/auth/authSlice";
-import { useNotifications } from "../hooks/useNotifications";
+import { useUserNotifications } from "../hooks/useUserNotifications";
 import Button from "../components/ui/Button";
 import { UseTheme } from "../theme/ThemeProvider";
 
@@ -38,7 +38,7 @@ export default function Notifications() {
     loading,
     markRead,
     markAllRead,
-  } = useNotifications({ uid: user?.uid, role: user?.role });
+  } = useUserNotifications(user?.uid);
 
   const isDark = theme === "dark";
   const baseSurface = isDark ? "bg-slate-900 text-white" : "bg-white text-slate-900";
@@ -67,9 +67,6 @@ export default function Notifications() {
   const handleMarkAll = async () => {
     if (!unreadCount) return;
     await markAllRead();
-
-    // Also clear complaints counter by dispatching event
-    window.dispatchEvent(new CustomEvent('clearComplaintsCounter'));
   };
 
   return (
@@ -121,7 +118,7 @@ export default function Notifications() {
         </header>
 
         {loading ? (
-          <div className={`rounded-2xl border p-8 shadow-sm space-y-4 ${cardSurface}`}>
+          <div className={`rounded-2xl border p-8 text-center shadow-sm ${cardSurface}`}>
             {[...Array(3)].map((_, idx) => (
               <div
                 key={idx}

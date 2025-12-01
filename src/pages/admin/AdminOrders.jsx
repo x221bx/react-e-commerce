@@ -3,8 +3,8 @@ import React, { useState, useMemo } from "react";
 import { FiRefreshCw, FiClock, FiTrash2 } from "react-icons/fi";
 import { MdHistory, MdNotifications } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
+// import useOrders from "../../hooks/useOrders";
 import useOrders from "../../hooks/useOrders";
-// import useNotifications from "../../hooks/useNotifications";
 
 export default function AdminOrders() {
   const {
@@ -16,7 +16,6 @@ export default function AdminOrders() {
     STATUS_FLOW,
     restoreStock,
   } = useOrders(null, true);
-  // const { notifications, unreadCount, markRead } = useNotifications(true);
 
   const [activeFilter, setActiveFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
@@ -103,17 +102,6 @@ export default function AdminOrders() {
             Orders Dashboard
           </h1>
           <div className="flex items-center gap-3 flex-wrap">
-            {/* <button
-              onClick={() => notifications.forEach((n) => markRead(n.id))}
-              className="relative p-2 rounded bg-white border"
-            >
-              <MdNotifications size={22} />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center">
-                  {unreadCount}
-                </span>
-              )}
-            </button> */}
             <button
               onClick={handleRefresh}
               className="px-3 py-2 rounded bg-white border flex items-center gap-2"

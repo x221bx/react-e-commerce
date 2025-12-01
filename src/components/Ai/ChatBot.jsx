@@ -12,8 +12,9 @@ import {
   FiTrash2,
 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { addToCart } from "../../features/cart/cartSlice";
+import { selectCurrentUser } from "../../features/auth/authSlice";
 import { db } from "../../services/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { UseTheme } from "../../theme/ThemeProvider";
@@ -43,6 +44,7 @@ const QUICK_REPLIES = [
 ];
 
 export default function ChatBot() {
+  const user = useSelector(selectCurrentUser);
   const { messages, sendMessage, setMessages } = useAIChat(); // â­ Ù…Ù‡Ù… Ø¬Ø¯Ø§Ù‹
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
@@ -317,6 +319,9 @@ export default function ChatBot() {
   };
 
   const isDark = theme === "dark";
+
+  // Hide bot for admin users
+  if (user?.isAdmin) return null;
 
   const toggleOpen = () => {
     setOpen((prev) => {

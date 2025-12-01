@@ -7,6 +7,7 @@ import {
   FiPhone,
   FiAlertTriangle,
   FiX,
+  FiPhoneCall,
 } from "react-icons/fi";
 import {
   arrayUnion,
@@ -15,6 +16,7 @@ import {
   onSnapshot,
   doc,
   updateDoc,
+  addDoc,
   orderBy
 } from "firebase/firestore";
 import { db } from "../../services/firebase";
@@ -150,22 +152,51 @@ export default function AdminComplaints() {
 
     try {
       const responseText = adminResponse.trim();
+      const complaint = complaints.find(c => c.id === complaintId);
+      const hasPreviousResponse = hasAdminReply(complaint);
+      const newStatus = hasPreviousResponse ? complaint.status : "in-progress";
+
       await updateDoc(doc(db, "support", complaintId), {
         adminResponse: responseText,
         adminResponses: arrayUnion({
           message: responseText,
           createdAt: new Date()
         }),
-        status: "resolved",
+        status: newStatus,
         respondedAt: new Date(),
         updatedAt: new Date()
       });
+
+      // Create notification for user
+      if (complaint && (complaint.uid || complaint.userId)) {
+        await addDoc(collection(db, "notifications"), {
+          uid: complaint.uid || complaint.userId,
+          type: "support-response",
+          category: "support",
+          title: complaint.topic || "Support Response",
+          message: responseText,
+          createdAt: new Date(),
+          read: false,
+          target: "/account/complaints",
+          meta: { complaintId }
+        });
+      }
+
       setAdminResponse("");
       setRespondingTo(null);
     } catch (error) {
       console.error("Error sending response:", error);
       toast.error("Failed to send response");
     }
+  };
+
+  const replyWhatsApp = (complaint) => {
+    const phone = complaint.phoneNumber?.replace(/\D/g, "");
+    if (!phone) return toast.error("User did not provide a phone number");
+
+    const text = `Hello ${complaint.userName || "Customer"},\n\nRegarding your complaint:\n"${complaint.message}"`;
+    const url = `https://wa.me/2${phone}?text=${encodeURIComponent(text)}`;
+    window.open(url, "_blank");
   };
 
   const formatDate = (timestamp) => {
@@ -377,17 +408,26 @@ export default function AdminComplaints() {
                     </select>
 
                     {complaint.status !== "closed" && (
-                      <button
-                        onClick={() => setRespondingTo(respondingTo === complaint.id ? null : complaint.id)}
-                        className={`px-3 py-2 rounded-md flex items-center gap-2 transition ${
-                          isDark
-                            ? "bg-emerald-700 text-white hover:bg-emerald-600"
-                            : "bg-emerald-600 text-white hover:bg-emerald-700"
-                        }`}
-                      >
-                        <FiMessageSquare />
-                        {complaint.adminResponse ? "Update Response" : "Respond"}
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setRespondingTo(respondingTo === complaint.id ? null : complaint.id)}
+                          className={`px-3 py-2 rounded-md flex items-center gap-2 transition ${
+                            isDark
+                              ? "bg-emerald-700 text-white hover:bg-emerald-600"
+                              : "bg-emerald-600 text-white hover:bg-emerald-700"
+                          }`}
+                        >
+                          <FiMessageSquare />
+                          Reply
+                        </button>
+                        <button
+                          onClick={() => replyWhatsApp(complaint)}
+                          className="px-3 py-2 bg-green-600 text-white rounded-md flex items-center gap-2 hover:bg-green-700"
+                        >
+                          <FiPhoneCall />
+                          WhatsApp
+                        </button>
+                      </div>
                     )}
 
                     <button
