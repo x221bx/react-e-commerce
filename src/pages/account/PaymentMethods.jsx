@@ -6,7 +6,6 @@ import { selectCurrentUser } from "../../features/auth/authSlice";
 import ConfirmDialog from "../../admin/ConfirmDialog";
 import { useCardValidation } from "../../hooks/useCardValidation";
 import { usePaymentMethods } from "../../hooks/usePaymentMethods";
-import { usePaymentMethodsTheme } from "../../hooks/usePaymentMethodsTheme";
 import CardPreview from "../../components/payment/CardPreview";
 import CardForm from "../../components/payment/CardForm";
 import PaymentMethodsList from "../../components/payment/PaymentMethodsList";
@@ -24,7 +23,6 @@ export default function PaymentMethods() {
   const user = useSelector(selectCurrentUser);
   const isDark = theme === "dark";
   const cardValidation = useCardValidation();
-  const themes = usePaymentMethodsTheme(isDark);
 
   const {
     methods,
@@ -85,34 +83,77 @@ export default function PaymentMethods() {
 
   return (
     <div className="space-y-6">
+
+      {/* HEADER */}
       <header className="space-y-3">
-        <p className={`text-sm font-semibold uppercase tracking-wide ${themes.accentText}`}>
+
+        {/* Eyebrow */}
+        <p
+          className={`
+            text-sm font-semibold uppercase tracking-wide
+            ${isDark ? "text-emerald-300" : "text-emerald-700"}
+          `}
+        >
           {t("payments.eyebrow", "Billing & payments")}
         </p>
+
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className={`text-3xl font-semibold ${themes.headingColor}`}>
+
+            {/* Title */}
+            <h1
+              className={`
+                text-3xl font-semibold 
+                ${isDark ? "text-white" : "text-slate-900"}
+              `}
+            >
               {t("payments.title", "Payment Methods")}
             </h1>
-            <p className={`text-sm ${themes.subText}`}>
+
+            {/* Subtitle */}
+            <p
+              className={`
+                text-sm
+                ${isDark ? "text-emerald-200/80" : "text-emerald-700/70"}
+              `}
+            >
               {t(
                 "payments.subtitle",
                 "Manage cards and wallets used for faster checkout."
               )}
             </p>
           </div>
-          <div className={`rounded-2xl border px-4 py-2 text-xs font-semibold ${themes.badgeSurface}`}>
+
+          {/* Default Method Box */}
+          <div
+            className={`
+              rounded-2xl border px-4 py-2 text-xs font-semibold
+              ${
+                isDark
+                  ? "bg-emerald-900/20 border-emerald-900/40 text-emerald-200"
+                  : "bg-emerald-50 border-emerald-200 text-emerald-700"
+              }
+            `}
+          >
             {defaultMethod
-              ? `Default: ${defaultMethod.type === "card"
-                ? `${defaultMethod.brand?.charAt(0).toUpperCase() + defaultMethod.brand?.slice(1)} **** ${defaultMethod.last4}`
-                : defaultMethod.email
-              }`
+              ? `Default: ${
+                  defaultMethod.type === "card"
+                    ? `${defaultMethod.brand
+                        ?.charAt(0)
+                        .toUpperCase() + defaultMethod.brand?.slice(1)} **** ${
+                        defaultMethod.last4
+                      }`
+                    : defaultMethod.email
+                }`
               : "No default method"}
           </div>
         </div>
       </header>
 
+      {/* MAIN LAYOUT */}
       <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
+        
+        {/* PAYMENT METHODS LIST */}
         <PaymentMethodsList
           methods={methods}
           loading={loading}
@@ -120,11 +161,16 @@ export default function PaymentMethods() {
           onSetDefault={handleSetDefault}
           isDark={isDark}
           t={t}
-          headingColor={themes.headingColor}
-          subText={themes.subText}
-          dashedSurface={themes.dashedSurface}
+          headingColor={isDark ? "text-white" : "text-slate-900"}
+          subText={isDark ? "text-emerald-200/80" : "text-emerald-700/70"}
+          dashedSurface={
+            isDark
+              ? "border-2 border-dashed border-emerald-900/40"
+              : "border-2 border-dashed border-emerald-300"
+          }
         />
 
+        {/* CARD PREVIEW + FORM */}
         <aside className="space-y-5">
           <CardPreview
             cardForm={cardValidation.cardForm}
@@ -143,6 +189,7 @@ export default function PaymentMethods() {
         </aside>
       </div>
 
+      {/* DELETE DIALOG */}
       <ConfirmDialog
         open={!!deleteConfirm}
         title={t("payments.confirmDeleteTitle", "Delete Payment Method")}

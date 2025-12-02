@@ -1,3 +1,4 @@
+// src/pages/UserSettings/components/sections/PreferencesSection.jsx
 import React from "react";
 import SectionCard from "../SectionCard";
 import { SelectInput, TextAreaInput } from "../FormComponents";

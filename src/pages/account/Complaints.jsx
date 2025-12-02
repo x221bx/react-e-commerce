@@ -1,3 +1,4 @@
+// src/pages/account/Complaints.jsx
 import React, { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
@@ -234,9 +235,13 @@ export default function Complaints() {
   }
 
   const heroSurface = isDark
-    ? "from-slate-900 via-slate-900 to-slate-900/90 text-white"
-    : "from-emerald-50 via-white to-white text-slate-900";
-  const cardSurface = isDark ? "bg-slate-900 border-slate-800 text-slate-100" : "bg-white border-slate-200 text-slate-900";
+  ? "from-green-950 via-green-900 to-green-900/90 text-white"
+  : "from-emerald-50 via-white to-white text-slate-900";
+
+  const cardSurface = isDark
+  ? "bg-green-990 border-green-200 text-green-200"
+  : "bg-white border-emerald-200 text-slate-900";
+
   const metaText = isDark ? "text-slate-300" : "text-slate-600";
 
   return (

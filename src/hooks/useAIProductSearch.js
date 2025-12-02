@@ -3,7 +3,7 @@ import { collection, getDocs } from "firebase/firestore";
 import { db } from "../services/firebase";
 
 /**
- * ========================= Helpers =========================
+ * ============== Helpers ==============
  */
 
 function normalizeArabic(text = "") {
@@ -45,74 +45,76 @@ function fuzzyMatch(word, target) {
 }
 
 /**
- * ========================= Main Search =========================
+ * ============== Main Search ==============
  *
- * تعتمد على: العنوان + الاسم + الوصف + الكاتيجوري
- * تضيف Scoring ذكي يخلي الترشيحات تختلف حسب السؤال
+ * - يشتغل على كل المنتجات في كوليكشن products
+ * - يدعم فلترة السعر minPrice / maxPrice
+ * - يدي سكور حسب التطابق مع العنوان / الوصف / الكاتيجوري
  */
 
-export async function aiSearchProducts({ keyword, intent = {} }) {
+export async function aiSearchProducts({
+  keyword = "",
+  filters = {},
+} = {}) {
   const snap = await getDocs(collection(db, "products"));
 
-  const all = snap.docs.map((d) => ({
+  let all = snap.docs.map((d) => ({
     id: d.id,
     ...d.data(),
   }));
 
+  const { minPrice, maxPrice } = filters || {};
+
+  // تأكد إن السعر Number
+  all = all.map((p) => ({
+    ...p,
+    _price: typeof p.price === "number" ? p.price : Number(p.price) || 0,
+  }));
+
+  // فلترة السعر الأول
+  if (typeof minPrice === "number") {
+    all = all.filter((p) => p._price >= minPrice);
+  }
+  if (typeof maxPrice === "number") {
+    all = all.filter((p) => p._price <= maxPrice);
+  }
+
+  // مفيش منتجات بعد فلترة السعر
+  if (!all.length) return [];
+
   let kw = normalizeArabic(keyword || "");
-  if (!kw) return [];
+  const hasKeyword = !!kw;
+
+  // لو مفيش كيوورد أصلاً (سؤال سعر بس) → رجّع المنتجات بعد فلترة السعر بس
+  if (!hasKeyword) {
+    // نرتب بالسعر تصاعدي عشان يبقى شكله منطقي
+    return all.sort((a, b) => a._price - b._price);
+  }
 
   const kwWords = kw.split(" ").filter((w) => w.length > 1);
 
-  // كلمات مستنتجة من intent
-  const extraWords = [];
-  if (intent.crop) extraWords.push(normalizeArabic(intent.crop));
-  if (intent.product_type) extraWords.push(normalizeArabic(intent.product_type));
-  if (intent.problem) extraWords.push(normalizeArabic(intent.problem));
-  if (intent.goal) extraWords.push(normalizeArabic(intent.goal));
-
-  const intentWords = extraWords
-    .join(" ")
-    .split(" ")
-    .filter((w) => w.length > 1);
-
-  const allWords = [...kwWords, ...intentWords];
-  if (!allWords.length) return [];
-
-  /**
-   * ========== Scoring الجديد ==========
-   *
-   * score =
-   *  +3 لو الكلمة في combined
-   *  +1.5 لو fuzzy
-   *  +2 لو الكلمة في title
-   *  +2 لو intent.product_type شبه اسم المنتج
-   */
-
   const scored = all
     .map((p) => {
-      const title = normalizeArabic(p.title || p.name_lc || p.name || "");
+      const title = normalizeArabic(
+        p.title || p.name_lc || p.name || ""
+      );
       const desc = normalizeArabic(p.description || "");
-      const category = normalizeArabic(p.categoryName || p.categoryId || "");
+      const category = normalizeArabic(
+        p.categoryName || p.category || p.categoryId || ""
+      );
 
       const combined = `${title} ${desc} ${category}`.trim();
       if (!combined) return null;
 
       let score = 0;
 
-      for (const w of allWords) {
+      for (const w of kwWords) {
         if (!w) continue;
         if (combined.includes(w)) score += 3;
         else if (fuzzyMatch(w, combined)) score += 1.5;
-      }
 
-      for (const w of kwWords) {
+        // بوست لو الكلمة موجودة في العنوان نفسه
         if (title.includes(w)) score += 2;
-      }
-
-      // بوست ذكي بناءً على نوع المنتج inferred from name only
-      if (intent?.product_type && title.includes(normalizeArabic(intent.product_type))) {
-        score += 2;
       }
 
       if (score <= 0) return null;
@@ -121,7 +123,8 @@ export async function aiSearchProducts({ keyword, intent = {} }) {
     })
     .filter(Boolean);
 
-  // الترتيب تنازلي
+  if (!scored.length) return [];
+
   scored.sort((a, b) => b.score - a.score);
 
   return scored.map((s) => s.product);

@@ -1,4 +1,8 @@
-﻿// src/components/Ai/ChatBot.jsx  
+﻿// src/components/Ai/ChatBot.jsx
+// -------------------------------------------------------
+// NEW ChatBot.jsx  (Resizable + Draggable + Shorter + Wider)
+// -------------------------------------------------------
+
 import { useState, useEffect, useRef } from "react";
 import { useAIChat } from "../../hooks/useAIChat.js";
 import { motion as Motion, AnimatePresence } from "framer-motion";
@@ -19,33 +23,20 @@ import { db } from "../../services/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { UseTheme } from "../../theme/ThemeProvider";
 
-// ðŸŸ¢ ØªØ´ØºÙŠÙ„ ØµÙˆØª Ø¨Ø£Ù…Ø§Ù† Ø¨Ø¯ÙˆÙ† Errors
 const safePlay = (audio) => {
   if (!audio) return;
   const playPromise = audio.play();
   if (playPromise !== undefined) playPromise.catch(() => {});
 };
 
-// ðŸŸ¢ Ø£ØµÙˆØ§Øª Ø¥Ø±Ø³Ø§Ù„ ÙˆØ§Ø³ØªÙ‚Ø¨Ø§Ù„
 const sendSound = new Audio("/send.mp3");
 const receiveSound = new Audio("/receive.mp3");
-// Ø£ØµÙˆØ§Øª Ø¥Ø¶Ø§ÙÙŠØ©
 const openSound = new Audio("/Open.mp3");
 const closeSound = new Audio("/close.mp3");
-// const notifySound = new Audio("/notify.mp3");
-const typingSound = new Audio("/typing.mp3");
-
-// Quick replies
-const QUICK_REPLIES = [
-  "أحتاج مساعدة في تتبع طلبي",
-  "أريد تقديم شكوى",
-  "اقترح منتج لمزرعتي",
-  "كيف أتصل بالدعم؟",
-];
 
 export default function ChatBot() {
   const user = useSelector(selectCurrentUser);
-  const { messages, sendMessage, setMessages } = useAIChat(); // â­ Ù…Ù‡Ù… Ø¬Ø¯Ø§Ù‹
+  const { messages, sendMessage, setMessages } = useAIChat();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
@@ -60,6 +51,41 @@ export default function ChatBot() {
   const { theme } = UseTheme();
   const messagesEndRef = useRef(null);
 
+  const isDark = theme === "dark";
+
+  // ----------------------- RESIZING LOGIC -----------------------
+  const chatRef = useRef(null);
+  const [size, setSize] = useState({ width: 460, height: 380 });
+
+  const startResize = (e) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startY = e.clientY;
+
+    const startWidth = size.width;
+    const startHeight = size.height;
+
+    const doDrag = (ev) => {
+      setSize({
+        width: Math.min(700, Math.max(320, startWidth + (ev.clientX - startX))),
+        height: Math.min(
+          700,
+          Math.max(250, startHeight + (ev.clientY - startY))
+        ),
+      });
+    };
+
+    const stopDrag = () => {
+      window.removeEventListener("mousemove", doDrag);
+      window.removeEventListener("mouseup", stopDrag);
+    };
+
+    window.addEventListener("mousemove", doDrag);
+    window.addEventListener("mouseup", stopDrag);
+  };
+
+  // --------------------------------------------------------------
+
   const formatTime = (date) => {
     if (!date) return "";
     const d = typeof date === "string" ? new Date(date) : date;
@@ -69,20 +95,13 @@ export default function ChatBot() {
     });
   };
 
-  // ðŸŸ¢ History â€” FIXED (ÙƒØ§Ù† Ø³Ø¨Ø¨ 429)
   useEffect(() => {
     const saved = localStorage.getItem("chatHistory");
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        setMessages(parsed); // â— Ø¨Ø¯Ù„ push (ÙƒØ§Ù† Ø¹Ø§Ù…Ù„ loop)
-        // eslint-disable-next-line
+        setMessages(parsed);
       } catch {}
-    }
-
-    const savedSound = localStorage.getItem("chatSoundEnabled");
-    if (savedSound !== null) {
-      setSoundEnabled(savedSound === "true");
     }
   }, [setMessages]);
 
@@ -90,63 +109,31 @@ export default function ChatBot() {
     localStorage.setItem("chatHistory", JSON.stringify(messages));
   }, [messages]);
 
-  // ðŸŸ¢ Scroll
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, open]);
 
-  // ðŸŸ¢ Meta Ù„Ù„Ø±Ø³Ø§Ø¦Ù„ (ØªÙˆÙ‚ÙŠØª ÙƒÙ„ Ø±Ø³Ø§Ù„Ø©)
   useEffect(() => {
     setMessageMeta((prev) => {
       if (messages.length > prev.length) {
-        const diff = messages.length - prev.length;
         const now = new Date();
-        const extra = Array.from({ length: diff }, () => ({
-          createdAt: now,
-        }));
-        return [...prev, ...extra];
+        return [...prev, { createdAt: now }];
       }
-      return prev.slice(0, messages.length);
+      return prev;
     });
-  }, [messages.length, messages]);
+  }, [messages.length]);
 
-  // ðŸŸ¢ ØµÙˆØª Ø±Ø¯ Ø§Ù„Ø¨ÙˆØª + unread (ÙŠØªØ´ØºÙ„ ÙÙ‚Ø· Ù„Ù…Ø§ Ø¹Ø¯Ø¯ Ø§Ù„Ø±Ø³Ø§Ø¦Ù„ ÙŠØ²ÙŠØ¯ Ù…Ø´ Ù…Ø¹ ÙƒÙ„ ØªÙˆÙƒÙ†)
   useEffect(() => {
-    if (messages.length === 0) return;
+    if (!messages.length) return;
     const last = messages[messages.length - 1];
 
     if (last.role === "assistant") {
-      if (soundEnabled) {
-        safePlay(receiveSound);
-        safePlay(typingSound);
-      }
+      if (soundEnabled) safePlay(receiveSound);
       if (!open) setUnread((u) => u + 1);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages.length, soundEnabled, open]);
-
-  const handleSend = async (overrideText) => {
-    const textToSend = (overrideText ?? input).trim();
-    if (!textToSend) return;
-
-    if (handleIntent(textToSend)) {
-      if (!overrideText) setInput("");
-      return;
-    }
-
-    if (soundEnabled) safePlay(sendSound);
-
-    setTyping(true);
-    try {
-      const langHint = /[a-zA-Z]/.test(textToSend) ? "[Respond in English]" : "[Respond in Arabic]";
-      await sendMessage(`${langHint} ${textToSend}`);
-      if (!overrideText) setInput("");
-    } finally {
-      setTyping(false);
-    }
-  };
 
   const toggleSound = () => {
     setSoundEnabled((prev) => {
@@ -156,23 +143,6 @@ export default function ChatBot() {
     });
   };
 
-  const handleClearChat = () => {
-  // Ø§Ù…Ø³Ø­ Ø§Ù„Ø±Ø³Ø§Ø¦Ù„ Ù…Ù† Ø§Ù„Ø°Ø§ÙƒØ±Ø©
-  setMessages([]);
-
-  // Ø§Ù…Ø³Ø­ Ù…Ù† Ø§Ù„ØªØ®Ø²ÙŠÙ† Ø§Ù„Ù…Ø­Ù„ÙŠ
-  localStorage.removeItem("chatHistory");
-
-  // Ø§Ù‚ÙÙ„ Ø§Ù„Ù…Ù†ÙŠÙˆ ÙÙ‚Ø·
-  setMenuOpen(false);
-
-  // Ù…ÙÙŠØ´ reload Ù‡Ù†Ø§ âœ”ï¸
-};
-
-
-  // ===========================================================
-  // ðŸ§  Mini Product Card
-  // ===========================================================
   const ProductCardMini = ({ id }) => {
     const [product, setProduct] = useState(null);
 
@@ -186,37 +156,32 @@ export default function ChatBot() {
     if (!product)
       return (
         <div className="border p-2 rounded-lg bg-gray-100 text-sm animate-pulse">
-          Loading product...
+          جاري التحميل...
         </div>
       );
 
-    const isDark = theme === "dark";
-
     return (
       <Motion.div
-        initial={{ opacity: 0, y: 20, scale: 0.9 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.35, ease: "easeOut" }}
-        className={`rounded-xl p-2 mb-2 flex gap-3 cursor-pointer transition shadow-lg 
-        ${
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className={`rounded-xl p-2 mb-2 flex gap-3 cursor-pointer shadow-md ${
           isDark
-            ? "bg-[#0f1d1d]/60 text-[#B8E4E6] border border-white/10 backdrop-blur-lg hover:shadow-xl"
-            : "bg-white/80 text-gray-800 border backdrop-blur-lg hover:shadow-lg"
+            ? "bg-[#0f1d1d]/60 border border-white/10 text-[#B8E4E6]"
+            : "bg-white border text-gray-800"
         }`}
         onClick={() => navigate(`/products/${product.id}`)}
       >
         <img
-          src={product.img || product.thumbnailUrl}
-          alt="product"
-          className="w-16 h-16 rounded-lg object-cover shadow-sm"
+          src={product.thumbnailUrl || product.img}
+          className="w-16 h-16 rounded-lg object-cover"
+          alt={product.title || "product"}
         />
+
         <div className="flex flex-col justify-between flex-1">
-          <p className="font-semibold text-sm">
-            {product.name || product.title}
-          </p>
+          <p className="font-semibold text-sm">{product.title}</p>
           <p
             className={`font-bold text-sm ${
-              isDark ? "text-[#8ee3e4]" : "text-[#2F7E80]"
+              isDark ? "text-[#79ccd4]" : "text-teal-700"
             }`}
           >
             {product.price} EGP
@@ -227,11 +192,8 @@ export default function ChatBot() {
               e.stopPropagation();
               dispatch(addToCart(product));
             }}
-            className={`text-xs px-2 py-1 rounded-md w-fit 
-            ${
-              isDark
-                ? "bg-[#1e3d3d] text-[#B8E4E6] hover:bg-[#295050]"
-                : "bg-teal-600 text-white hover:bg-teal-700"
+            className={`text-xs px-2 py-1 rounded-md ${
+              isDark ? "bg-[#1d3c3c]" : "bg-teal-600 text-white"
             }`}
           >
             Add To Cart
@@ -241,65 +203,25 @@ export default function ChatBot() {
     );
   };
 
-  const respondAsAssistant = (content) => {
-    setMessages((prev) => [...prev, { role: "assistant", content }]);
-    setTyping(false);
-  };
-
-  const handleIntent = (text) => {
-    const lower = text.toLowerCase();
-
-    if (/complain|شكوى|problem|issue/.test(lower)) {
-      respondAsAssistant(
-        "فهمت أن لديك مشكلة. يمكنك تقديم شكوى من خلال حسابك تحت 'الحساب -> الشكاوى'. إذا كنت تفضل، يمكنني توجيهك إلى الرابط المباشر: /account/complaints، أو اكتب تفاصيل شكواك هنا وسأساعد في التحقق منها."
-      );
-      return true;
-    }
-
-    if (/order|طلب|shipment|tracking|شحنة|تتبع/.test(lower)) {
-      respondAsAssistant(
-        "للاطلاع على حالة طلبك الأخير، افتح صفحة تتبع الطلبات من 'الحساب -> تتبع الطلبات' أو انتقل مباشرة إلى /account/tracking. هل تريد أن أظهر لك طلب معين؟"
-      );
-      return true;
-    }
-
-    if (/support|help|مساعدة|مشورة/.test(lower)) {
-      respondAsAssistant(
-        "أنا هنا للمساعدة! يمكنك السؤال عن المنتجات، تتبع الطلبات، أو تقديم شكوى. اختر أي خيار من الردود السريعة أدناه للحصول على مساعدة أسرع."
-      );
-      return true;
-    }
-
-    if (/english|Ø§Ù†Ø¬Ù„ÙŠØ²/.test(lower)) {
-      respondAsAssistant(
-        "Sure! I can reply in English as well. Ask me anything about your orders, complaints, or products and Iâ€™ll do my best to help."
-      );
-      return true;
-    }
-
-    return false;
-  };
-
-  // ===========================================================
-  // ðŸ§  Parser Ø§Ù„Ù…Ù†ØªØ¬ Ø¯Ø§Ø®Ù„ Ø§Ù„Ø±Ø³Ø§Ù„Ø©
-  // ===========================================================
   const renderMessage = (text) => {
     if (typeof text !== "string") return text;
 
-    const cardRegex = /<productCard id="([^"]+)"><\/productCard>/g;
+    text = text.replace(/\[[^\]]*\]/g, "");
 
+    const cardRegex = /<productCard id="([^"]+)"><\/productCard>/g;
     const parts = [];
     let lastIndex = 0;
     let match;
 
     while ((match = cardRegex.exec(text)) !== null) {
       const before = text.substring(lastIndex, match.index);
-      if (before.trim())
+      if (before.trim()) {
         parts.push(
           <p key={lastIndex} className="mb-2 whitespace-pre-wrap">
             {before}
           </p>
         );
+      }
 
       const productId = match[1];
       parts.push(<ProductCardMini key={`card-${productId}`} id={productId} />);
@@ -308,203 +230,139 @@ export default function ChatBot() {
     }
 
     const after = text.substring(lastIndex);
-    if (after.trim())
+    if (after.trim()) {
       parts.push(
         <p key={lastIndex + "-end"} className="whitespace-pre-wrap">
           {after}
         </p>
       );
+    }
 
     return parts;
   };
 
-  const isDark = theme === "dark";
+  const handleSend = async () => {
+    const text = input.trim();
+    if (!text) return;
+    if (soundEnabled) safePlay(sendSound);
+    setInput("");
+    setTyping(true);
+    await sendMessage(text);
+    setTyping(false);
+  };
 
-  // Hide bot for admin users
   if (user?.isAdmin) return null;
 
   const toggleOpen = () => {
-    setOpen((prev) => {
-      const next = !prev;
-
-      if (soundEnabled) {
-        if (next) safePlay(openSound);
-        else safePlay(closeSound);
-      }
-
+    setOpen((p) => {
+      const next = !p;
+      if (soundEnabled) safePlay(next ? openSound : closeSound);
       if (next) setUnread(0);
       return next;
     });
-
     setMenuOpen(false);
   };
-
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
-
-  // ===========================================================
-  // ðŸ–¥ï¸ JSX UI
-  // ===========================================================
 
   return (
     <>
       {/* Floating Icon */}
       <Motion.button
-        initial={{ scale: 0.7, opacity: 0, y: 15 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        whileHover={{ scale: 1.15, y: -4 }}
+        initial={{ scale: 0.7, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        whileHover={{ scale: 1.15 }}
         whileTap={{ scale: 0.92 }}
         onClick={toggleOpen}
-        className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] right-4 md:right-6 
-        bg-teal-600 p-4 rounded-full text-white shadow-xl z-50 hover:bg-teal-700"
+        className="fixed bottom-6 right-4 bg-teal-600 p-4 rounded-full text-white shadow-xl z-50"
       >
-        <FiMessageCircle size={28} />
+        <FiMessageCircle size={26} />
         {unread > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-[10px] leading-none text-white rounded-full px-1.5 py-0.5 border shadow-lg">
+          <span className="absolute -top-1 -right-1 bg-red-500 text-[10px] text-white rounded-full px-1.5 py-0.5">
             {unread}
           </span>
         )}
       </Motion.button>
 
-      {/* Chat Window */}
+      {/* CHAT WINDOW */}
       <AnimatePresence>
         {open && (
           <Motion.div
             drag
             dragMomentum={false}
-            dragElastic={0.15}
-            className={`fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-4 left-4 sm:left-auto sm:right-6
-            w-[min(96vw,460px)] sm:w-[460px] min-h-[60vh] max-h-[92vh] shadow-2xl rounded-2xl overflow-hidden flex flex-col
-            backdrop-blur-2xl border z-50 ${
-              isDark
-                ? "bg-[#071010]/70 border-white/10"
-                : "bg-white/80 border-gray-200"
-            }`}
-            initial={{ opacity: 0, scale: 0.9, y: 40 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.8, y: 20 }}
-            transition={{ duration: 0.25 }}
+            dragElastic={0.1}
+            ref={chatRef}
+            className={`
+              fixed z-50 
+              rounded-2xl shadow-2xl overflow-hidden flex flex-col border backdrop-blur-xl
+              ${isDark ? "bg-[#071010]/80 border-white/10" : "bg-white/90 border-gray-200"}
+            `}
+            style={{
+              width: size.width,
+              height: size.height,
+              bottom: "110px",
+              right: "50px",
+              position: "fixed",
+            }}
+            initial={{ opacity: 0, scale: 0.85 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
           >
-            {/* Header */}
-            <div className="flex items-center justify-between bg-teal-600/90 text-white px-4 py-3 shadow-lg cursor-move">
-              {/* AI Title */}
+            {/* RESIZE HANDLE */}
+            <div
+              onMouseDown={startResize}
+              className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize bg-transparent"
+            ></div>
+
+            {/* HEADER */}
+            <div className="flex items-center justify-between bg-teal-600/90 text-white px-4 py-2 cursor-move">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center text-xs font-bold">
+                <div className="w-6 h-6 bg-white/20 rounded-full text-xs flex items-center justify-center">
                   AI
                 </div>
-
-                <div>
-                  <span className="font-semibold text-sm">AI Assistant</span>
-                  <span className="block text-[10px] text-emerald-100">
-                    Online to help with farming and livestock
-                  </span>
-                </div>
+                <p className="text-sm font-semibold">AI Assistant</p>
               </div>
 
-              {/* Controls */}
-              <div className="flex items-center gap-1 relative">
-                {/* ØµÙˆØª */}
+              <div className="flex items-center gap-2">
                 <button
                   onClick={toggleSound}
-                  className="p-1 rounded-full hover:bg-white/10"
+                  className="p-1 hover:bg-white/10 rounded-full"
                 >
-                  {soundEnabled ? (
-                    <FiVolume2 size={16} />
-                  ) : (
-                    <FiVolumeX size={16} />
-                  )}
+                  {soundEnabled ? <FiVolume2 size={16} /> : <FiVolumeX size={16} />}
                 </button>
 
-                {/* Ù…Ù†ÙŠÙˆ */}
-                <div className="relative">
-                  <button
-                    onClick={() => setMenuOpen((p) => !p)}
-                    className="p-1 rounded-full hover:bg-white/10"
-                  >
-                    <FiMoreVertical size={16} />
-                  </button>
-
-                  {menuOpen && (
-                    <div
-                      className={`absolute right-0 mt-1 rounded-lg shadow-lg text-xs z-50 min-w-[130px] ${
-                        isDark
-                          ? "bg-[#061011]/95 border border-white/10 text-[#E5F7F7]"
-                          : "bg-white border border-gray-200 text-gray-800"
-                      }`}
-                    >
-                      <button
-                        onClick={handleClearChat}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-red-50 text-red-600"
-                      >
-                        <FiTrash2 size={12} />
-                        <span>Clear chat</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Ø¥ØºÙ„Ø§Ù‚ */}
                 <FiX
                   size={20}
                   className="cursor-pointer hover:scale-110"
-                  onClick={() => {
-                    setOpen(false);
-                    setMenuOpen(false);
-                  }}
+                  onClick={() => setOpen(false)}
                 />
               </div>
             </div>
 
-            {/* Messages */}
-            <div
-              className={`flex-1 overflow-y-auto p-3 space-y-3 custom-scroll ${
-                isDark ? "bg-[#0b1b1b]/40" : "bg-gray-50/60"
-              }`}
-            >
+            {/* MESSAGES */}
+            <div className="flex-1 overflow-y-auto p-3 space-y-3">
               {messages.map((m, i) => (
                 <Motion.div
-                  key={i}
+                  key={m.id || i}
                   initial={{ opacity: 0, x: m.role === "user" ? 40 : -40 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.25 }}
                   className={`max-w-[85%] ${
                     m.role === "user" ? "ml-auto" : "mr-auto"
                   }`}
                 >
-                  {/* meta */}
                   <div
-                    className={`flex items-center gap-2 mb-1 ${
-                      m.role === "user" ? "justify-end" : "justify-start"
+                    className={`text-[10px] text-gray-400 mb-1 ${
+                      m.role === "user" ? "text-right" : "text-left"
                     }`}
                   >
-                    {m.role === "assistant" && (
-                      <div className="w-6 h-6 rounded-full bg-teal-600 text-white flex items-center justify-center text-[10px]">
-                        AI
-                      </div>
-                    )}
-                    {m.role === "user" && (
-                      <div className="w-6 h-6 rounded-full bg-gray-300 text-gray-800 flex items-center justify-center text-[10px]">
-                        You
-                      </div>
-                    )}
-
-                    <span className="text-[10px] text-gray-400">
-                      {formatTime(messageMeta[i]?.createdAt)}
-                    </span>
+                    {formatTime(messageMeta[i]?.createdAt)}
                   </div>
 
-                  {/* bubble */}
                   <div
-                    className={`p-2 rounded-2xl shadow whitespace-pre-wrap ${
+                    className={`p-2 rounded-2xl shadow ${
                       m.role === "user"
-                        ? "bg-teal-500 text-white rounded-br-sm"
+                        ? "bg-teal-600 text-white rounded-br-sm"
                         : isDark
-                        ? "bg-[#102626]/70 text-[#B8E4E6] border border-white/10 rounded-bl-sm"
-                        : "bg-white/80 border text-gray-800 rounded-bl-sm"
+                        ? "bg-[#102626]/70 text-[#B8E4E6]"
+                        : "bg-white border text-gray-800"
                     }`}
                   >
                     {renderMessage(m.content)}
@@ -512,70 +370,43 @@ export default function ChatBot() {
                 </Motion.div>
               ))}
 
-              {/* bot typing */}
               {typing && (
-                <div className="mr-auto px-3 py-1 text-xs rounded-lg text-gray-200 bg-gray-600/60 animate-pulse w-fit flex gap-2">
-                  <span>Typing a reply...</span>
-                </div>
+                <p className="text-xs text-gray-400 animate-pulse">
+                  المساعد يكتب...
+                </p>
               )}
+
+              <div ref={messagesEndRef} />
             </div>
 
-            {/* Quick Replies */}
-            {messages.length === 0 && (
-              <div className={`p-3 border-t ${isDark ? "border-white/10" : "border-gray-200"}`}>
-                <p className={`text-xs mb-2 ${isDark ? "text-gray-300" : "text-gray-600"}`}>
-                  اختر من الاقتراحات السريعة:
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {QUICK_REPLIES.map((reply, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleSend(reply)}
-                      className={`px-3 py-2 rounded-lg text-sm transition ${
-                        isDark
-                          ? "bg-teal-600/20 text-teal-200 border border-teal-500/30 hover:bg-teal-600/30"
-                          : "bg-teal-50 text-teal-700 border border-teal-200 hover:bg-teal-100"
-                      }`}
-                    >
-                      {reply}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Input */}
-            <div
-              className={`flex p-3 gap-2 border-t ${
-                isDark ? "bg-[#0d1a1a]/70 border-white/10" : "bg-white/70"
-              }`}
-            >
+            {/* INPUT */}
+            <div className="p-2 flex gap-2 border-t">
               <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Type your message..."
-                rows={1}
-                className={`flex-1 rounded-xl px-3 py-2 outline-none shadow-sm text-sm resize-none ${
-                  isDark
-                    ? "bg-[#071414] text-white border border-white/10"
-                    : "bg-white border"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend();
+                  }
+                }}
+                className={`flex-1 rounded-xl px-3 py-2 text-sm resize-none outline-none ${
+                  isDark ? "bg-[#071414] text-white" : "bg-white border"
                 }`}
+                placeholder="اكتب رسالتك..."
               />
 
-              <Motion.button
-                whileHover={{ scale: 1.1, y: -1 }}
-                whileTap={{ scale: 0.92 }}
-                onClick={() => handleSend()}
+              <button
+                onClick={handleSend}
                 disabled={!input.trim()}
-                className={`px-3 rounded-xl shadow-md flex items-center justify-center ${
+                className={`px-3 rounded-xl ${
                   input.trim()
-                    ? "bg-teal-600 text-white hover:bg-teal-700"
-                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    ? "bg-teal-600 text-white"
+                    : "bg-gray-300 text-gray-500"
                 }`}
               >
                 <FiSend size={18} />
-              </Motion.button>
+              </button>
             </div>
           </Motion.div>
         )}
@@ -583,6 +414,3 @@ export default function ChatBot() {
     </>
   );
 }
-
-
-

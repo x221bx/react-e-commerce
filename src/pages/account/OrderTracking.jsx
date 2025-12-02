@@ -51,8 +51,9 @@ export default function OrderTracking() {
   const headerMuted = isDark ? "text-slate-400" : "text-slate-500";
   const accent = isDark ? "text-emerald-300" : "text-emerald-600";
   const shellSurface = isDark
-    ? "border-slate-800 bg-slate-900/50"
-    : "border-slate-100 bg-white";
+    ? "bg-[#0f1d1d]/70 border-emerald-900/30 backdrop-blur"
+    : "bg-white border-emerald-200";
+
 
   // ...loading state...
   if (loading) {

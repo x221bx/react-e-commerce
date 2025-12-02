@@ -1,3 +1,4 @@
+// src/pages/UserSettings/components/SectionCard.jsx
 import React from "react";
 import { sectionToneStyles } from "../utils/constants";
 import { UseTheme } from "../../../theme/ThemeProvider";

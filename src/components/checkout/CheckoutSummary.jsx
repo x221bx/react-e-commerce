@@ -1,21 +1,39 @@
+// src/components/checkout/CheckoutSummary.jsx
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { UseTheme } from "../../theme/ThemeProvider";
 
 export default function CheckoutSummary({ cartItems, summary }) {
     const { t } = useTranslation();
+    const { theme } = UseTheme();
+    const isDark = theme === "dark";
+
+    // unified green-themed surfaces
+    const shellSurface = isDark
+        ? "bg-emerald-900/20 border-emerald-900/40 text-white"
+        : "bg-emerald-50/70 border-emerald-200 text-slate-900";
+
+    const itemSurface = isDark
+        ? "border-emerald-900/40 bg-emerald-900/10"
+        : "border-emerald-200 bg-white";
+
+    const muted = isDark ? "text-slate-300" : "text-slate-600";
 
     return (
         <>
             {/* Desktop Summary */}
-            <aside className="rounded-3xl border bg-white p-6 shadow-sm lg:block hidden">
+            <aside
+                className={`rounded-3xl border p-6 shadow-sm lg:block hidden ${shellSurface}`}
+            >
                 <h2 className="text-lg font-semibold">
                     {t("checkout.summary.title", "Order Summary")}
                 </h2>
+
                 <div className="mt-4 space-y-4">
                     {cartItems.map((item) => (
                         <div
                             key={item.id}
-                            className="flex items-center gap-3 rounded-2xl border border-slate-100 p-3"
+                            className={`flex items-center gap-3 rounded-2xl border p-3 ${itemSurface}`}
                         >
                             <img
                                 src={item.thumbnailUrl || item.img}
@@ -26,13 +44,13 @@ export default function CheckoutSummary({ cartItems, summary }) {
                                 <p className="text-sm font-semibold">
                                     {item.name || item.title}
                                 </p>
-                                <p className="text-xs text-slate-500">
+                                <p className={`text-xs ${muted}`}>
                                     {t("checkout.summary.qty", { count: item.quantity ?? 1 })}
                                 </p>
                             </div>
-                            <p className="text-sm font-semibold">{`${Number(
-                                item.price
-                            ).toLocaleString()} EGP`}</p>
+                            <p className="text-sm font-semibold">
+                                {`${Number(item.price).toLocaleString()} EGP`}
+                            </p>
                         </div>
                     ))}
                 </div>
@@ -58,10 +76,11 @@ export default function CheckoutSummary({ cartItems, summary }) {
                 <h2 className="text-lg font-semibold mb-2">
                     {t("checkout.summary.title", "Order Summary")}
                 </h2>
+
                 {cartItems.map((item) => (
                     <div
                         key={item.id}
-                        className="flex items-center gap-3 rounded-2xl border border-slate-100 p-3 mb-2"
+                        className={`flex items-center gap-3 rounded-2xl border p-3 mb-2 ${itemSurface}`}
                     >
                         <img
                             src={item.thumbnailUrl || item.img}
@@ -72,15 +91,16 @@ export default function CheckoutSummary({ cartItems, summary }) {
                             <p className="text-sm font-semibold">
                                 {item.name || item.title}
                             </p>
-                            <p className="text-xs text-slate-500">
+                            <p className={`text-xs ${muted}`}>
                                 {t("checkout.summary.qty", { count: item.quantity ?? 1 })}
                             </p>
                         </div>
-                        <p className="text-sm font-semibold">{`${Number(
-                            item.price
-                        ).toLocaleString()} EGP`}</p>
+                        <p className="text-sm font-semibold">
+                            {`${Number(item.price).toLocaleString()} EGP`}
+                        </p>
                     </div>
                 ))}
+
                 <div className="mt-4 flex justify-between font-semibold">
                     <span>{t("checkout.summary.total", "Total")}:</span>
                     <span>{`${summary.total.toLocaleString()} EGP`}</span>

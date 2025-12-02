@@ -18,16 +18,6 @@ const OptimizedImage = ({ src, alt, className, onError }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 
-  const handleLoad = () => {
-    setIsLoading(false);
-  };
-
-  const handleError = () => {
-    setIsLoading(false);
-    setHasError(true);
-    onError?.();
-  };
-
   if (hasError || !src) {
     return (
       <div className={`flex h-full w-full items-center justify-center ${className}`}>
@@ -47,11 +37,11 @@ const OptimizedImage = ({ src, alt, className, onError }) => {
         src={src}
         alt={alt}
         className={`h-full w-full object-cover transition-opacity duration-300 ${
-          isLoading ? 'opacity-0' : 'opacity-100'
+          isLoading ? "opacity-0" : "opacity-100"
         }`}
         loading="lazy"
-        onLoad={handleLoad}
-        onError={handleError}
+        onLoad={() => setIsLoading(false)}
+        onError={() => setHasError(true)}
       />
     </div>
   );
@@ -64,32 +54,6 @@ export default function SavedProducts() {
   const { theme } = UseTheme();
   const { t } = useTranslation();
   const isDark = theme === "dark";
-  const accent = isDark ? "text-emerald-300" : "text-emerald-600";
-  const headingColor = isDark ? "text-white" : "text-slate-900";
-  const muted = isDark ? "text-slate-400" : "text-slate-500";
-  const cardSurface = isDark
-    ? "border-slate-800 bg-slate-900/70"
-    : "border-slate-100 bg-white/95";
-  const emptySurface = isDark
-    ? "border-slate-800 bg-slate-900/60"
-    : "border-slate-200 bg-white/80";
-  const previewSurface = isDark
-    ? "bg-slate-800 text-slate-300"
-    : "bg-slate-100 text-slate-500";
-  const outlineButton = isDark
-    ? "border-slate-700 text-slate-200 hover:bg-slate-800/80"
-    : "border-slate-200 text-slate-700 hover:bg-slate-50";
-  const destructiveButton = isDark
-    ? "border-red-900/40 text-red-200 hover:bg-red-900/30"
-    : "border-red-200 text-red-600 hover:bg-red-50";
-  const availabilityClass = (available) =>
-    available
-      ? isDark
-        ? "text-emerald-300"
-        : "text-emerald-600"
-      : isDark
-        ? "text-amber-300"
-        : "text-amber-600";
 
   const items = useMemo(
     () =>
@@ -100,9 +64,12 @@ export default function SavedProducts() {
         price:
           typeof product.price === "number"
             ? currency.format(product.price)
-            : product.price || t("account.savedProducts.priceUnknown", "N/A"),
+            : product.price ||
+              t("account.savedProducts.priceUnknown", "N/A"),
         isAvailable:
-          typeof product.isAvailable === "boolean" ? product.isAvailable : true,
+          typeof product.isAvailable === "boolean"
+            ? product.isAvailable
+            : true,
         thumbnail:
           product.img ||
           product.thumbnailUrl ||
@@ -111,39 +78,53 @@ export default function SavedProducts() {
           product.images?.[0] ||
           product.photoURL ||
           "",
+        original: product,
       })),
     [favourites]
   );
 
-  const handleRemove = (original) => {
-    dispatch(toggleFavourite(original));
-  };
+  const handleRemove = (original) => dispatch(toggleFavourite(original));
+  const handleAddToCart = (original) => dispatch(addToCart(original));
+  const handleViewProduct = (id) => id && navigate(`/product/${id}`);
 
-  const handleAddToCart = (original) => {
-    dispatch(addToCart(original));
-  };
+  const headingColor = isDark ? "text-white" : "text-slate-900";
+  const muted = isDark ? "text-white/60" : "text-slate-500";
 
-  const handleViewProduct = (id) => {
-    if (!id) return;
-    navigate(`/product/${id}`);
-  };
+  const glassCard = isDark
+    ? "bg-[#0f1a1a]/60 border-white/10 backdrop-blur-md"
+    : "bg-white border-slate-200";
 
+  const glassButton = isDark
+    ? "bg-white/10 border border-white/20 text-white hover:bg-white/20"
+    : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100";
+
+  const glassRemove = isDark
+    ? "border-red-300/40 text-red-300 hover:bg-red-300/20"
+    : "border-red-300 text-red-600 hover:bg-red-50";
+
+  const glassImageSurface = isDark
+    ? "bg-white/5 border-white/10"
+    : "bg-slate-100 border-slate-200";
+
+  // Empty state
   if (!items.length) {
     return (
-      <div className={`rounded-3xl border border-dashed p-8 text-center shadow-sm ${emptySurface}`}>
-        <FiHeart className="mx-auto mb-3 h-8 w-8 text-emerald-500" />
-        <p className={`text-lg font-semibold ${headingColor}`}>
-          {t("account.savedProducts.emptyTitle", "No saved products yet")}
+      <div
+        className={`rounded-3xl border border-white/10 bg-[#0f1a1a]/50 backdrop-blur-md p-8 text-center shadow-lg`}
+      >
+        <FiHeart className="mx-auto mb-3 h-10 w-10 text-emerald-400" />
+        <p className={`text-xl font-bold ${headingColor}`}>
+          {t("account.savedProducts.emptyTitle")}
         </p>
         <p className={`mt-2 text-sm ${muted}`}>
-          {t("account.savedProducts.emptySubtitle", "Explore the catalog curated by your admins and tap the heart icon to keep favourites handy.")}
+          {t("account.savedProducts.emptySubtitle")}
         </p>
+
         <button
-          type="button"
           onClick={() => navigate("/products")}
-          className="mt-4 inline-flex items-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-500"
+          className="mt-4 inline-flex items-center rounded-xl bg-emerald-600 px-5 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-500"
         >
-          {t("account.savedProducts.browse", "Browse products")}
+          {t("account.savedProducts.browse")}
         </button>
       </div>
     );
@@ -151,27 +132,31 @@ export default function SavedProducts() {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <header>
-        <p className={`text-sm font-semibold uppercase tracking-wide ${accent}`}>
-          {t("account.savedProducts.eyebrow", "Favorites")}
+        <p className="text-sm font-semibold uppercase tracking-wide text-emerald-400">
+          {t("account.savedProducts.eyebrow")}
         </p>
-        <h1 className={`text-3xl font-semibold ${headingColor}`}>
-          {t("account.savedProducts.title", "Saved Products")}
+        <h1 className={`text-3xl font-bold ${headingColor}`}>
+          {t("account.savedProducts.title")}
         </h1>
         <p className={`text-sm ${muted}`}>
-          {t("account.savedProducts.subtitle", "These items stay in sync with the real inventory managed from the admin area.")}
+          {t("account.savedProducts.subtitle")}
         </p>
       </header>
 
-      <div className="grid gap-4 sm:gap-6">
+      {/* Items */}
+      <div className="grid gap-6">
         {items.map((item, idx) => (
           <div
-            key={`${item.id || "saved"}-${idx}`}
-            className={`rounded-2xl border p-4 shadow-sm transition hover:shadow-md ${cardSurface}`}
+            key={`${item.id}-${idx}`}
+            className={`rounded-2xl border p-5 shadow-md transition hover:shadow-xl hover:-translate-y-1 ${glassCard}`}
           >
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-              {/* Product Image */}
-              <div className={`h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl ${previewSurface} sm:h-24 sm:w-24`}>
+              {/* Image */}
+              <div
+                className={`h-24 w-24 rounded-xl overflow-hidden flex-shrink-0 border ${glassImageSurface}`}
+              >
                 <OptimizedImage
                   src={item.thumbnail}
                   alt={item.title}
@@ -179,59 +164,52 @@ export default function SavedProducts() {
                 />
               </div>
 
-              {/* Product Info */}
-              <div className="flex-1 space-y-2">
-                <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="space-y-1">
-                    <p className={`text-xs uppercase tracking-wide ${muted}`}>
-                      {item.category}
-                    </p>
-                    <h3 className={`text-lg font-semibold ${headingColor} line-clamp-2`}>
-                      {item.title}
-                    </h3>
-                  </div>
-                  <div className="flex items-center gap-2 sm:flex-col sm:items-end">
-                    <p className={`text-lg font-bold ${isDark ? "text-emerald-300" : "text-emerald-600"}`}>
-                      {item.price}
-                    </p>
-                    <p className={`text-xs font-semibold ${availabilityClass(item.isAvailable)}`}>
-                      {item.isAvailable ? t("account.savedProducts.inStock", "In stock") : t("account.savedProducts.unavailable", "Currently unavailable")}
-                    </p>
-                  </div>
-                </div>
+              {/* Info */}
+              <div className="flex-1 space-y-1">
+                <p className={`text-xs uppercase tracking-wide ${muted}`}>
+                  {item.category}
+                </p>
+                <h3 className={`text-xl font-semibold ${headingColor}`}>
+                  {item.title}
+                </h3>
+
+                <p className="text-emerald-400 font-semibold">{item.price}</p>
+                <p
+                  className={`text-xs ${
+                    item.isAvailable ? "text-emerald-400" : "text-amber-400"
+                  }`}
+                >
+                  {item.isAvailable
+                    ? t("account.savedProducts.inStock")
+                    : t("account.savedProducts.unavailable")}
+                </p>
               </div>
 
-              {/* Action Buttons */}
+              {/* Buttons */}
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                 <button
-                  type="button"
                   onClick={() => handleViewProduct(item.id)}
-                  className={`inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition ${outlineButton} min-w-[100px]`}
+                  className={`px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 ${glassButton}`}
                 >
-                  <FiExternalLink className="h-4 w-4" />
-                  <span className="hidden sm:inline">{t("account.savedProducts.view", "View")}</span>
-                  <span className="sm:hidden">{t("account.savedProducts.view", "View")}</span>
+                  <FiExternalLink size={16} />
+                  {t("account.savedProducts.view")}
                 </button>
 
                 <button
-                  type="button"
-                  onClick={() => handleAddToCart(favourites[idx])}
+                  onClick={() => handleAddToCart(item.original)}
                   disabled={!item.isAvailable}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-500 disabled:opacity-60 min-w-[100px]"
+                  className="px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-40"
                 >
-                  <FiShoppingCart className="h-4 w-4" />
-                  <span className="hidden sm:inline">{t("account.savedProducts.addToCart", "Add to cart")}</span>
-                  <span className="sm:hidden">{t("account.savedProducts.addToCart", "Cart")}</span>
+                  <FiShoppingCart size={16} />
+                  {t("account.savedProducts.addToCart")}
                 </button>
 
                 <button
-                  type="button"
-                  onClick={() => handleRemove(favourites[idx])}
-                  className={`inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition ${destructiveButton} min-w-[100px]`}
+                  onClick={() => handleRemove(item.original)}
+                  className={`px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 ${glassRemove}`}
                 >
-                  <FiHeart className="h-4 w-4" />
-                  <span className="hidden sm:inline">{t("account.savedProducts.remove", "Remove")}</span>
-                  <span className="sm:hidden">{t("account.savedProducts.remove", "Remove")}</span>
+                  <FiHeart size={16} />
+                  {t("account.savedProducts.remove")}
                 </button>
               </div>
             </div>
@@ -241,4 +219,3 @@ export default function SavedProducts() {
     </div>
   );
 }
-
