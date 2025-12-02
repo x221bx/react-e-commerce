@@ -89,7 +89,7 @@ export const startAuthListener = (store) => {
     cleanupAll();
 
     // ---------------------------
-    // LOGOUT
+// LOGOUT
     // ---------------------------
     if (!fbUser) {
       store.dispatch(setCurrentUser(null));
@@ -100,7 +100,7 @@ export const startAuthListener = (store) => {
     }
 
     // ---------------------------
-    // LOGIN
+// LOGIN
     // ---------------------------
     profileUnsub = onSnapshot(doc(db, "users", fbUser.uid), async (snap) => {
       const rawData = snap.exists() ? serializeFirestoreData(snap.data()) : {};
@@ -133,21 +133,21 @@ export const startAuthListener = (store) => {
       store.dispatch(setCurrentUser(profile));
 
       // ---------------------------
-      // CART Subscription
+// CART Subscription
       // ---------------------------
       cartUnsub = subscribeToUserCart(profile.uid, (cartItems) => {
         store.dispatch(setCartItems(cartItems));
       });
 
       // ---------------------------
-      // FAVORITES Subscription
+// FAVORITES Subscription
       // ---------------------------
       favoritesUnsub = subscribeToUserFavorites(profile.uid, (favorites) => {
         store.dispatch(setFavoritesItems(favorites));
       });
 
       // ---------------------------
-      // Apply locale
+// Apply locale
       // ---------------------------
       const locale = profile?.preferences?.locale || i18n.language || "en";
       if (i18n.language !== locale) {

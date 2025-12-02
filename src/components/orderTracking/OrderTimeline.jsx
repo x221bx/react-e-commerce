@@ -14,15 +14,16 @@ export default function OrderTimeline({ order, isDark }) {
     const { t } = useTranslation();
 
     const timelineSteps = useMemo(() => {
+        const toKey = (val = "") => val.toLowerCase().replace(/[\s-]+/g, "_");
         const statusOrder = BASE_STEPS.map((step) => step.key);
-        const currentStatusIndex = order
-            ? statusOrder.indexOf(order.status?.toLowerCase() || "pending")
-            : 0;
+        const currentStatusKey = order ? toKey(order.status || "pending") : "pending";
+        const lookupIndex = statusOrder.indexOf(currentStatusKey);
+        const currentStatusIndex = lookupIndex === -1 ? 0 : lookupIndex;
 
         const statusTimestamps = {};
         if (order?.statusHistory) {
             order.statusHistory.forEach(history => {
-                statusTimestamps[history.status.toLowerCase()] = history.changedAt;
+                statusTimestamps[toKey(history.status)] = history.changedAt;
             });
         }
 
@@ -61,17 +62,20 @@ export default function OrderTimeline({ order, isDark }) {
 
     // 🎨 Indicator styling adapted visually to match Product cards
     const timelineIndicator = (state) => {
-        if (state === "done") {
+        if (state === "done" || state === "current") {
             return "border-emerald-500 bg-emerald-500 text-white shadow-md";
         }
-        if (state === "current") {
-            return isDark
-                ? "border-amber-400 bg-amber-900/40 text-amber-200 shadow"
-                : "border-amber-400 bg-amber-50 text-amber-600 shadow";
-        }
         return isDark
-            ? "border-white/10 bg-[#0f1d1d]/70 text-slate-500"
-            : "border-gray-200 bg-white text-slate-400";
+            ? "border-amber-800/60 bg-amber-900/20 text-amber-200/80"
+            : "border-amber-200 bg-amber-50 text-amber-700/70";
+    };
+
+    const labelTone = (state) => {
+        if (state === "done" || state === "current")
+            return isDark ? "text-emerald-300" : "text-emerald-700";
+        if (state === "pending")
+            return isDark ? "text-amber-200" : "text-amber-700";
+        return strongText;
     };
 
     const formatDateTime = (step) => {
@@ -84,9 +88,9 @@ export default function OrderTimeline({ order, isDark }) {
     };
 
     const getDateStyle = (step) => {
-        if (step.actualTimestamp) return strongText;
+        if (step.actualTimestamp) return labelTone(step.state);
         if (step.estimatedTimestamp)
-            return isDark ? "text-slate-500" : "text-slate-400";
+            return isDark ? "text-amber-200/90" : "text-amber-700";
         return muted;
     };
 
@@ -126,7 +130,7 @@ export default function OrderTimeline({ order, isDark }) {
 
                         {/* Right Column: Labels */}
                         <div className="pt-1">
-                            <p className={`font-semibold ${strongText}`}>
+                            <p className={`font-semibold ${labelTone(step.state)}`}>
                                 {t(step.label)}
                                 {step.isEstimated && (
                                     <span className={`ml-2 text-xs ${muted}`}>

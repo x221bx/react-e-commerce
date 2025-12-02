@@ -70,7 +70,7 @@ useEffect(() => {
     
     <div
       className={`h-[calc(100svh-var(--nav-h))] font-inter ${
-        isDark ? "bg-slate-950 text-slate-100" : "bg-[#F9FAF9] text-slate-900"
+        isDark ? "bg-slate-950 text-slate-100" : "bg-slate-50 text-slate-900"
       }`}
     >
       <div className="flex h-full min-h-0 isolate">
@@ -82,7 +82,7 @@ useEffect(() => {
             "motion-reduce:transition-none motion-reduce:duration-0",
             "lg:block",
             collapsed ? "w-[72px]" : "w-[260px]",
-            isDark ? "border-slate-800 bg-slate-900" : "border-[#C8E6C9] bg-[#E8F5E9]",
+            isDark ? "border-slate-800 bg-slate-900" : "border-slate-200 bg-white",
           ].join(" ")}
         >
           <div className="flex h-full flex-col">
@@ -107,7 +107,7 @@ useEffect(() => {
         <section className="flex-1 overflow-hidden">
           <div
             className={`sticky top-0 z-10 border-b backdrop-blur shadow-sm ${
-              isDark ? "border-slate-800 bg-slate-900/90" : "border-[#C8E6C9] bg-white/90"
+              isDark ? "border-slate-800 bg-slate-900/90" : "border-slate-200 bg-white/90"
             }`}
           >
             <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-3 sm:px-6 lg:px-8">
@@ -120,7 +120,7 @@ useEffect(() => {
                 <FiMenu className="icon-primary" />
               </button>
 
-              <h1 className="text-lg font-semibold text-[#2E7D32] dark:text-[#4ade80] tracking-wide">
+              <h1 className="text-lg font-semibold text-emerald-600 dark:text-emerald-300 tracking-wide">
                 Vet Clinic Admin Panel
               </h1>
               <div className="flex-1" />
@@ -138,7 +138,7 @@ useEffect(() => {
           <div className="mx-auto h-full max-w-7xl overflow-y-auto px-4 py-6 sm:px-6 lg:px-8">
             <div
               className={`rounded-2xl shadow-sm border p-6 ${
-                isDark ? "bg-slate-900 border-slate-800 text-slate-100" : "bg-white border-[#E1F3E6] text-slate-900"
+                isDark ? "bg-slate-900 border-slate-800 text-slate-100" : "bg-white border-slate-200 text-slate-900"
               }`}
             >
               <Suspense fallback={<p>Loading page...</p>}>
@@ -149,7 +149,7 @@ useEffect(() => {
             {/* Footer */}
             <footer
               className={`mt-6 text-center text-sm pt-3 border-t ${
-                isDark ? "text-slate-400 border-slate-800" : "text-gray-500 border-[#C8E6C9]"
+                isDark ? "text-slate-400 border-slate-800" : "text-gray-500 border-slate-200"
               }`}
             >
               {t("admin.footer_note", { year: new Date().getFullYear() })}
@@ -190,17 +190,17 @@ function MobileDrawer({ open, onClose, children }) {
       />
       <div
         ref={panelRef}
-        className="fixed inset-y-0 left-0 z-50 w-72 bg-[#E8F5E9] shadow-xl rounded-r-2xl overflow-hidden ring-1 ring-[#C8E6C9]/50 transition-transform duration-300"
+        className="fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-xl rounded-r-2xl overflow-hidden ring-1 ring-slate-200 transition-transform duration-300 dark:bg-slate-900 dark:ring-slate-800"
         role="dialog"
         aria-modal="true"
       >
-        <div className="flex items-center justify-between border-b border-[#C8E6C9] bg-[#E8F5E9] dark:border-slate-700 dark:bg-slate-800 px-3 py-3">
-          <span className="text-sm font-semibold text-[#2E7D32] dark:text-[#4ade80]">
+        <div className="flex items-center justify-between border-b border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800 px-3 py-3">
+          <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-300">
             Vet Clinic
           </span>
           <button
             onClick={onClose}
-            className="rounded-md p-2 text-[#2E7D32] dark:text-[#4ade80] hover:bg-[#F1F8F3] dark:hover:bg-slate-700"
+            className="rounded-md p-2 text-emerald-600 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-slate-700"
           >
             <FiX className="icon-primary" />
           </button>

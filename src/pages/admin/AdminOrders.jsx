@@ -72,7 +72,8 @@ export default function AdminOrders() {
   };
 
   const statusColorClass = (order) => {
-    const status = (order.status || "").toLowerCase();
+    const normalize = (val = "") => val.toLowerCase().replace(/[_-]+/g, " ");
+    const status = normalize(order.status);
     const lastHistory = order.statusHistory?.[order.statusHistory.length - 1];
     const isCustomerConfirmed = lastHistory?.confirmedBy === "customer";
 
@@ -83,6 +84,8 @@ export default function AdminOrders() {
         return "bg-blue-100 text-blue-800";
       case "shipped":
         return "bg-purple-100 text-purple-800";
+      case "out for delivery":
+        return "bg-amber-100 text-amber-800";
       case "delivered":
         return isCustomerConfirmed
           ? "bg-emerald-100 text-emerald-800 border-2 border-emerald-300"
@@ -212,7 +215,7 @@ export default function AdminOrders() {
                   <div className="flex gap-2 mt-3 md:mt-0 items-center flex-wrap">
                     {/* الزرار ده هيوديك لصفحة التفاصيل */}
                     <button
-                      onClick={() => navigate(`/admin/AdminOrders/${order.id}`)}
+                      onClick={() => navigate(`/admin/orders/${order.id}`)}
                       className="px-3 py-2 rounded-md bg-white border hover:bg-green-50 text-sm font-semibold"
                     >
                       View
@@ -224,9 +227,9 @@ export default function AdminOrders() {
                         const val = e.target.value;
                         if (
                           val === "Canceled" &&
-                          ["Shipped", "Delivered"].includes(order.status)
+                          ["Shipped", "Delivered", "Out for delivery"].includes(order.status)
                         ) {
-                          alert("Cannot cancel shipped/delivered order");
+                          alert("Cannot cancel shipped/delivered/out-for-delivery order");
                           return;
                         }
                         try {

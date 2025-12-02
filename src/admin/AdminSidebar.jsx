@@ -39,9 +39,7 @@ function PortalTooltip({ open, label, x, y, onClose }) {
 }
 
 const linkBase =
-  "relative group flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#49BBBD]/40";
-const linkActive = "bg-[#49BBBD]/10 text-[#2F7E80] ring-1 ring-[#49BBBD]/30";
-const linkIdle = "text-gray-700 hover:bg-[#49BBBD]/5";
+  "relative group flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium transition focus-visible:outline-none";
 
 export default function AdminSidebar({ onNavigate, collapsed = false }) {
   const [tip, setTip] = useState({ open: false, label: "", x: 0, y: 0 });
@@ -59,6 +57,7 @@ export default function AdminSidebar({ onNavigate, collapsed = false }) {
   }, [hideTip]);
 
  const { theme, toggle } = UseTheme();
+ const isDark = theme === "dark";
 
 const links = useMemo(
   () => [
@@ -84,17 +83,17 @@ const links = useMemo(
 
 
   return (
-    <div className="flex h-full flex-col">
+    <div className={`flex h-full flex-col ${isDark ? "text-slate-100" : "text-slate-900"}`}>
       <div className="flex items-center gap-2 px-3 py-3">
-        <div className="grid h-8 w-8 place-items-center rounded-md bg-[#42604b] font-extrabold text-white">
+        <div className="grid h-8 w-8 place-items-center rounded-md bg-emerald-600 font-extrabold text-white">
           <FiAperture className="text-white" />
         </div>
         {!collapsed && (
           <div className="min-w-0">
-            <div className="truncate text-sm font-semibold text-gray-900">
+            <div className="truncate text-sm font-semibold">
               Admin Dashboard
             </div>
-            <div className="truncate text-[11px] text-gray-500">
+            <div className="truncate text-[11px] text-slate-500 dark:text-slate-400">
               AgriTech Panel
             </div>
           </div>
@@ -114,7 +113,7 @@ const links = useMemo(
         ))}
       </nav>
 
-      <div className="mt-auto border-t border-gray-200 px-3 py-3 text-xs text-gray-500">
+      <div className="mt-auto border-t border-slate-200 px-3 py-3 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
         {!collapsed ? (
           <div>
             Height: <code>calc(100svh - var(--nav-h))</code>
@@ -148,7 +147,7 @@ function SideLink({
   isThemeToggle = false,
 }) {
   const ref = useRef(null);
-  const { toggle } = UseTheme();
+  const { theme, toggle } = UseTheme();
 
   const handleEnter = () => {
     if (!collapsed || !ref.current) return;
@@ -182,18 +181,28 @@ function SideLink({
       onMouseLeave={handleLeave}
       onFocus={handleEnter}
       onBlur={handleLeave}
-      className={({ isActive }) =>
-        [
+      className={({ isActive }) => {
+        const activeClasses = theme === "dark"
+          ? "bg-emerald-900/30 text-emerald-200 ring-1 ring-emerald-800"
+          : "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200";
+        const idleClasses = theme === "dark"
+          ? "text-slate-300 hover:bg-slate-800/70"
+          : "text-slate-700 hover:bg-slate-100";
+        const toggleClasses = theme === "dark"
+          ? "text-slate-200 hover:bg-slate-800/70"
+          : "text-slate-700 hover:bg-slate-100";
+
+        return [
           linkBase,
           isThemeToggle
-            ? linkIdle // زر لا يتلوّن كباقي الروابط
+            ? toggleClasses
             : isActive
-            ? "pl-3 before:absolute before:left-0 before:top-1/2 before:h-5 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:bg-[#018218] " +
-              linkActive
-            : linkIdle,
+            ? "pl-3 before:absolute before:left-0 before:top-1/2 before:h-5 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:bg-emerald-500 " +
+              activeClasses
+            : idleClasses,
           collapsed ? "justify-center pl-0" : "",
-        ].join(" ")
-      }
+        ].join(" ");
+      }}
       aria-label={collapsed ? label : undefined}
     >
       <span className="text-[18px]">{icon}</span>

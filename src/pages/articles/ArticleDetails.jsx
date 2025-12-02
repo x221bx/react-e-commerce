@@ -14,7 +14,6 @@ import { FiShare2, FiUser, FiBookmark, FiThumbsUp, FiThumbsDown } from "react-ic
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import ErrorMessage from "../../components/ui/ErrorMessage";
 import Footer from "../../components/layout/Footer";
-import CommentForm from "../../components/articles/CommentForm";
 
 const ArticleDetails = () => {
     const { articleId } = useParams();
@@ -217,15 +216,6 @@ const ArticleDetails = () => {
                         </div>
                     )}
                 </div>
-
-                {/* Comment Form */}
-                <CommentForm
-                  articleId={localizedArticle?.id}
-                  user={user}
-                  onCommentAdded={() => {
-                    // Could refresh comments or show success message
-                  }}
-                />
 
                 {/* Related Articles Section */}
                 <div className="bg-gradient-to-r from-emerald-50 to-blue-50 dark:from-slate-800 dark:to-slate-700 rounded-2xl p-8 shadow-lg border border-emerald-200 dark:border-slate-600 mb-16">

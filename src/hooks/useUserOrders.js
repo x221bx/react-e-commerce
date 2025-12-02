@@ -15,7 +15,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../services/firebase";
 
-const STATUS_FLOW = ["Pending", "Processing", "Shipped", "Delivered"];
+const STATUS_FLOW = ["Pending", "Processing", "Shipped", "Out for delivery", "Delivered"];
 
 export default function useOrders(uid = null, isAdmin = false) {
   const [orders, setOrders] = useState([]);

@@ -1,3 +1,5 @@
+import { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import Hero from "./homeCom/hero";
 import CategoriesSection from "./homeCom/CategoriesSection";
 import Articles from "./homeCom/Articles";
@@ -8,9 +10,11 @@ import { useCategoriesSorted } from "../hooks/useCategoriesSorted";
 import { localizeArticleRecord } from "../data/articles";
 import useArticles from "../hooks/useArticles";
 import { useTranslation } from "react-i18next";
+import { useCategoryRepresentativeImages } from "../hooks/useCategoryRepresentativeImages";
 
 export default function Home() {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const { data: catData = [] } = useCategoriesSorted({ dir: "desc" });
   const { articles: allFeaturedArticles } = useArticles({ featureHome: true });
   const featuredArticles = allFeaturedArticles.filter(
@@ -22,14 +26,35 @@ export default function Home() {
     localizeArticleRecord(article, locale)
   );
 
-  const categories = catData.map((category) => ({
-    id: category.id,
-    title: category.name || t("home.categoryFallback"),
-    note: category.note || t("home.categoryNoteFallback"),
-    img:
-      category.img ||
-      "https://dummyimage.com/300x300/eeeeee/000000&text=No+Image",
-  }));
+  const categoryIds = useMemo(
+    () => catData.map((category) => category.id).filter(Boolean),
+    [catData]
+  );
+  const { data: categoryImages = {} } =
+    useCategoryRepresentativeImages(categoryIds);
+
+  const categories = catData.map((category) => {
+    const productImages =
+      categoryImages[category.id] || [];
+    const uniqueSources = [
+      ...new Set([
+        ...productImages,
+        ...(category.img ? [category.img] : []),
+      ]),
+    ].filter(Boolean);
+
+    return {
+      id: category.id,
+      title: category.name || t("home.categoryFallback"),
+      note: category.note || t("home.categoryNoteFallback"),
+      imageSources: uniqueSources,
+      onClick: () => {
+        if (category.id) {
+          navigate(`/category/${category.id}`);
+        }
+      },
+    };
+  });
 
   const articles = localizedFeatured.map((article) => ({
     title: article.title,

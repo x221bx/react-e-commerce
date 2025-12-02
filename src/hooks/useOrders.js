@@ -17,7 +17,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../services/firebase";
 
-const STATUS_FLOW = ["Pending", "Processing", "Shipped", "Delivered"];
+const STATUS_FLOW = ["Pending", "Processing", "Shipped", "Out for delivery", "Delivered"];
 
 /**
  * useOrders hook (admin or user)
