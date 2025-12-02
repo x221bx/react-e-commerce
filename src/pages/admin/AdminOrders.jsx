@@ -3,10 +3,12 @@ import React, { useState, useMemo } from "react";
 import { FiRefreshCw, FiClock, FiTrash2 } from "react-icons/fi";
 import { MdHistory, MdNotifications } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
-// import useOrders from "../../hooks/useOrders";
 import useOrders from "../../hooks/useOrders";
+import { UseTheme } from "../../theme/ThemeProvider";
 
 export default function AdminOrders() {
+  const { theme } = UseTheme();
+  const isDark = theme === "dark";
   const {
     orders,
     loading,
@@ -79,41 +81,65 @@ export default function AdminOrders() {
 
     switch (status) {
       case "pending":
-        return "bg-yellow-100 text-yellow-800";
+        return isDark
+          ? "bg-amber-500/15 text-amber-200 ring-1 ring-amber-500/40"
+          : "bg-yellow-100 text-yellow-800";
       case "processing":
-        return "bg-blue-100 text-blue-800";
+        return isDark
+          ? "bg-blue-500/15 text-blue-200 ring-1 ring-blue-500/40"
+          : "bg-blue-100 text-blue-800";
       case "shipped":
-        return "bg-purple-100 text-purple-800";
+        return isDark
+          ? "bg-purple-500/15 text-purple-200 ring-1 ring-purple-500/40"
+          : "bg-purple-100 text-purple-800";
       case "out for delivery":
-        return "bg-amber-100 text-amber-800";
+        return isDark
+          ? "bg-amber-500/15 text-amber-200 ring-1 ring-amber-500/40"
+          : "bg-amber-100 text-amber-800";
       case "delivered":
         return isCustomerConfirmed
-          ? "bg-emerald-100 text-emerald-800 border-2 border-emerald-300"
-          : "bg-green-100 text-green-800";
+          ? isDark
+            ? "bg-emerald-500/15 text-emerald-200 ring-1 ring-emerald-400/60"
+            : "bg-emerald-100 text-emerald-800 border-2 border-emerald-300"
+          : isDark
+            ? "bg-green-500/15 text-green-200 ring-1 ring-green-500/40"
+            : "bg-green-100 text-green-800";
       case "canceled":
-        return "bg-red-100 text-red-800";
+        return isDark
+          ? "bg-rose-500/15 text-rose-200 ring-1 ring-rose-500/40"
+          : "bg-red-100 text-red-800";
       default:
-        return "bg-gray-100 text-gray-700";
+        return isDark
+          ? "bg-slate-700/40 text-slate-200 ring-1 ring-slate-600/60"
+          : "bg-gray-100 text-gray-700";
     }
   };
 
   return (
-    <div>
+    <div className={isDark ? "text-slate-100" : "text-gray-900"}>
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-          <h1 className="text-3xl font-bold text-green-800">
+          <h1 className="text-3xl font-bold text-emerald-600 dark:text-emerald-300">
             Orders Dashboard
           </h1>
           <div className="flex items-center gap-3 flex-wrap">
             <button
               onClick={handleRefresh}
-              className="px-3 py-2 rounded bg-white border flex items-center gap-2"
+              className={`px-3 py-2 rounded-md border flex items-center gap-2 shadow-sm transition ${
+                isDark
+                  ? "bg-slate-900 border-slate-700 text-slate-100 hover:bg-slate-800"
+                  : "bg-white border-gray-300 text-gray-800 hover:bg-gray-50"
+              }`}
             >
               <FiRefreshCw /> {refreshing ? "Refreshing..." : "Refresh"}
             </button>
             <button
               onClick={() => setSortDesc((s) => !s)}
-              className="px-3 py-2 rounded bg-white border flex items-center gap-2"
+              className={`px-3 py-2 rounded-md border flex items-center gap-2 shadow-sm transition ${
+                isDark
+                  ? "bg-slate-900 border-slate-700 text-slate-100 hover:bg-slate-800"
+                  : "bg-white border-gray-300 text-gray-800 hover:bg-gray-50"
+              }`}
             >
               <FiClock /> {sortDesc ? "Desc" : "Asc"}
             </button>
@@ -126,25 +152,39 @@ export default function AdminOrders() {
             placeholder="Search by customer, order, or product..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-4 py-2 rounded-lg border border-green-300 focus:outline-none focus:border-green-600"
+            className={`w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-emerald-500/40 ${
+              isDark
+                ? "bg-slate-900 border-slate-700 text-slate-100 placeholder:text-slate-400"
+                : "bg-white border-gray-300 text-gray-800 placeholder:text-gray-500"
+            }`}
           />
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-6 gap-3 mb-6">
           {filters.map((status) => {
             const isActive = activeFilter === status;
-            const bg = isActive
-              ? "bg-green-800 text-white"
-              : "bg-white text-green-800";
-            const border = isActive ? "border-green-800" : "border-green-300";
+            const base = isDark
+              ? "bg-slate-900 border-slate-700 text-slate-100"
+              : "bg-white border-gray-300 text-gray-800";
+            const active = isDark
+              ? "bg-emerald-600 text-slate-50 border-emerald-500"
+              : "bg-emerald-600 text-white border-emerald-600";
             return (
               <button
                 key={status}
                 onClick={() => setActiveFilter(status)}
-                className={`flex justify-between items-center gap-2 p-3 rounded-lg border ${border} ${bg}`}
+                className={`flex justify-between items-center gap-2 p-3 rounded-lg border shadow-sm transition ${
+                  isActive ? active : base
+                }`}
               >
                 <span className="font-medium">{status}</span>
-                <span className="bg-green-100 text-green-800 px-2 py-1 rounded-lg text-sm font-semibold">
+                <span
+                  className={`px-2 py-1 rounded-lg text-sm font-semibold ${
+                    isDark
+                      ? "bg-emerald-500/20 text-emerald-100"
+                      : "bg-emerald-100 text-emerald-800"
+                  }`}
+                >
                   {counts[status]}
                 </span>
               </button>
@@ -156,25 +196,37 @@ export default function AdminOrders() {
           {loading ? (
             <div>Loading...</div>
           ) : filteredOrders.length === 0 ? (
-            <div className="text-center py-10 text-red-600 font-semibold">
+            <div className="text-center py-10 text-rose-600 dark:text-rose-300 font-semibold">
               No orders found.
             </div>
           ) : (
             filteredOrders.map((order) => (
               <div
                 key={order.id}
-                className="bg-white rounded-2xl shadow-md p-5 border border-green-100"
+                className={`rounded-2xl shadow-md p-5 border ${
+                  isDark
+                    ? "bg-slate-900 border-slate-800"
+                    : "bg-white border-emerald-100"
+                }`}
               >
                 <div className="flex flex-col md:flex-row justify-between gap-4">
                   <div className="flex-1">
-                    <h3 className="text-lg font-bold text-green-900">
+                    <h3
+                      className={`text-lg font-bold ${
+                        isDark ? "text-emerald-200" : "text-green-900"
+                      }`}
+                    >
                       #{order.orderNumber} - {order.fullName}
                     </h3>
                     <div className="mt-2 space-y-2">
                       {order.items?.map((item) => (
                         <div
                           key={item.productId}
-                          className="flex items-center gap-3 border p-2 rounded-md bg-green-50"
+                          className={`flex items-center gap-3 border p-2 rounded-md ${
+                            isDark
+                              ? "bg-slate-900 border-slate-700"
+                              : "bg-green-50 border-emerald-100"
+                          }`}
                         >
                           <img
                             src={item.imageUrl || item.image || item.thumbnailUrl || item.img || "/placeholder.png"}
@@ -182,13 +234,27 @@ export default function AdminOrders() {
                             className="w-12 h-12 object-cover rounded"
                           />
                           <div className="flex-1">
-                            <p className="font-semibold text-green-800">
+                            <p
+                              className={`font-semibold ${
+                                isDark ? "text-emerald-200" : "text-green-800"
+                              }`}
+                            >
                               {item.name}{" "}
-                              <span className="text-sm text-gray-600">
-                                ({item.category || "—"})
+                              <span
+                                className={`text-sm ${
+                                  isDark ? "text-slate-300" : "text-gray-600"
+                                }`}
+                              >
+                                ({item.category || "-"})
                               </span>
                             </p>
-                            <p className="text-green-700 text-sm">
+                            <p
+                              className={
+                                isDark
+                                  ? "text-sm text-emerald-200"
+                                  : "text-sm text-green-700"
+                              }
+                            >
                               Qty: {item.quantity} • Price: {item.price} EGP
                             </p>
                           </div>
@@ -206,7 +272,11 @@ export default function AdminOrders() {
                           <span className="ml-1 text-xs">✓</span>
                         )}
                       </span>
-                      <span className="text-green-900 font-semibold">
+                      <span
+                        className={`font-semibold ${
+                          isDark ? "text-emerald-200" : "text-green-900"
+                        }`}
+                      >
                         Total: {order.total} EGP
                       </span>
                     </div>
@@ -216,7 +286,11 @@ export default function AdminOrders() {
                     {/* الزرار ده هيوديك لصفحة التفاصيل */}
                     <button
                       onClick={() => navigate(`/admin/orders/${order.id}`)}
-                      className="px-3 py-2 rounded-md bg-white border hover:bg-green-50 text-sm font-semibold"
+                      className={`px-3 py-2 rounded-md text-sm font-semibold border transition ${
+                        isDark
+                          ? "bg-slate-900 border-slate-700 text-slate-100 hover:bg-slate-800"
+                          : "bg-white border-gray-300 text-gray-800 hover:bg-emerald-50"
+                      }`}
                     >
                       View
                     </button>
@@ -242,7 +316,11 @@ export default function AdminOrders() {
                           alert(err.message || "Failed");
                         }
                       }}
-                      className="p-2 border rounded-md"
+                      className={`p-2 border rounded-md ${
+                        isDark
+                          ? "bg-slate-900 border-slate-700 text-slate-100"
+                          : "bg-white border-gray-300 text-gray-800"
+                      }`}
                     >
                       {filters
                         .filter((f) => f !== "All")
@@ -259,7 +337,11 @@ export default function AdminOrders() {
                           selectedOrderId === order.id ? null : order.id
                         )
                       }
-                      className="p-2 rounded-md bg-white border hover:bg-green-50 flex items-center gap-1"
+                      className={`p-2 rounded-md flex items-center gap-1 border shadow-sm transition ${
+                        isDark
+                          ? "bg-slate-800 border-slate-600 text-slate-100 hover:bg-slate-700"
+                          : "bg-white border-gray-300 text-gray-800 hover:bg-gray-100"
+                      }`}
                     >
                       <MdHistory /> History
                     </button>
@@ -274,7 +356,11 @@ export default function AdminOrders() {
                           }
                         }
                       }}
-                      className="p-2 rounded-md bg-red-500 text-white hover:bg-red-600"
+                      className={`p-2 rounded-md text-white transition ${
+                        isDark
+                          ? "bg-rose-600 hover:bg-rose-700"
+                          : "bg-red-500 hover:bg-red-600"
+                      }`}
                       title="Delete"
                     >
                       <FiTrash2 />
@@ -284,11 +370,25 @@ export default function AdminOrders() {
 
                 {selectedOrderId === order.id &&
                   order.statusHistory?.length > 0 && (
-                    <div className="mt-3 p-3 border-t border-green-200 rounded-lg bg-green-50">
-                      <h4 className="font-semibold text-green-800 mb-2">
+                    <div
+                      className={`mt-3 p-3 border-t rounded-lg ${
+                        isDark
+                          ? "bg-slate-900 border-slate-700"
+                          : "bg-green-50 border-green-200"
+                      }`}
+                    >
+                      <h4
+                        className={`font-semibold mb-2 ${
+                          isDark ? "text-emerald-200" : "text-green-800"
+                        }`}
+                      >
                         History:
                       </h4>
-                      <ul className="text-sm text-green-700 space-y-1">
+                      <ul
+                        className={`text-sm space-y-1 ${
+                          isDark ? "text-emerald-200" : "text-green-700"
+                        }`}
+                      >
                         {order.statusHistory.map((h, idx) => (
                           <li key={idx}>
                             <span className="font-medium">{h.status}</span> -{" "}

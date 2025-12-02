@@ -19,6 +19,7 @@ import Pager from "../../admin/Pager";
 import ConfirmDialog from "../../admin/ConfirmDialog";
 import { useTranslation } from "react-i18next";
 import { localizeProduct, localizeCategory } from "../../utils/localizeContent";
+import { UseTheme } from "../../theme/ThemeProvider";
 
 /* ------------------------ constants ------------------------ */
 const SORT_FIELDS = [
@@ -31,6 +32,8 @@ const VALID_STATUS = new Set(["all", "available", "unavailable"]);
 /* ------------------------- component ------------------------ */
 export default function AdminProducts() {
   const { t } = useTranslation();
+  const { theme } = UseTheme();
+  const isDark = theme === "dark";
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
 
@@ -64,6 +67,25 @@ export default function AdminProducts() {
     for (const c of categories) m[c.id] = localizeCategory(c, t);
     return m;
   }, [categories, t]);
+
+  const surfaceClass = isDark
+    ? "border border-slate-800 bg-slate-900 text-slate-100"
+    : "border border-slate-200 bg-white text-slate-900";
+  const mutedSurfaceClass = isDark
+    ? "border border-slate-700 bg-slate-800/70 text-slate-100"
+    : "border border-slate-200 bg-slate-50 text-slate-800";
+  const inputSurfaceClass = isDark
+    ? "border border-slate-700 bg-slate-900 text-slate-100 placeholder:text-slate-400"
+    : "border border-slate-200 bg-white text-slate-900 placeholder:text-gray-500";
+  const cellTone = isDark ? "text-slate-100" : "text-gray-900";
+  const mutedTone = isDark ? "text-slate-300" : "text-gray-600";
+  const titleTone = isDark ? "text-slate-50" : "text-gray-900";
+  const actionBtnClass = isDark
+    ? "rounded-md border border-slate-700 bg-slate-900 p-2 text-slate-100 shadow-sm transition hover:bg-slate-800"
+    : "rounded-md border border-gray-300 bg-white p-2 text-gray-700 shadow-sm transition hover:bg-gray-50";
+  const actionDeleteClass = isDark
+    ? "rounded-md border border-rose-800 bg-slate-900 p-2 text-rose-300 shadow-sm transition hover:bg-rose-950/40 disabled:opacity-50"
+    : "rounded-md border border-rose-200 bg-white p-2 text-rose-600 shadow-sm transition hover:bg-rose-50 disabled:opacity-50";
 
   const {
     paginatedData,
@@ -129,7 +151,7 @@ export default function AdminProducts() {
               placeholder={t("search.product_placeholder", {
                 defaultValue: "Search products…",
               })}
-              className="w-full rounded-lg border border-gray-200 bg-white py-2.5 pr-3 pl-9 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-[#2B7A0B] focus:outline-none focus:ring-2 focus:ring-[#2B7A0B]/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-400"
+              className={`w-full rounded-lg py-2.5 pr-3 pl-9 text-sm shadow-sm focus:border-[#2B7A0B] focus:outline-none focus:ring-2 focus:ring-[#2B7A0B]/20 ${inputSurfaceClass}`}
             />
           </div>
         </div>
@@ -138,7 +160,7 @@ export default function AdminProducts() {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-sm shadow-sm focus:border-[#203232] focus:outline-none focus:ring-2 focus:ring-[#2B7A0B]/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+            className={`rounded-lg px-2.5 py-2 text-sm shadow-sm focus:border-[#203232] focus:outline-none focus:ring-2 focus:ring-[#2B7A0B]/20 ${inputSurfaceClass}`}
           >
             {SORT_FIELDS.map((s) => (
               <option key={s.value} value={s.value}>
@@ -150,7 +172,9 @@ export default function AdminProducts() {
           <button
             type="button"
             onClick={() => setDir((d) => (d === "asc" ? "desc" : "asc"))}
-            className="inline-flex h-9 items-center gap-1 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700 shadow-sm transition hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+            className={`inline-flex h-9 items-center gap-1 rounded-lg px-3 text-sm shadow-sm transition ${mutedSurfaceClass} ${
+              isDark ? "hover:bg-slate-800" : "hover:bg-white"
+            }`}
             title={`Direction: ${dir.toUpperCase()}`}
           >
             {dir === "asc" ? <FiArrowUp /> : <FiArrowDown />}
@@ -159,7 +183,7 @@ export default function AdminProducts() {
           <select
             value={pageSize}
             onChange={(e) => setPageSize(Number(e.target.value))}
-            className="rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-sm shadow-sm focus:border-[#2B7A0B] focus:outline-none focus:ring-2 focus:ring-[#2B7A0B]/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+            className={`rounded-lg px-2.5 py-2 text-sm shadow-sm focus:border-[#2B7A0B] focus:outline-none focus:ring-2 focus:ring-[#2B7A0B]/20 ${inputSurfaceClass}`}
           >
             {[10, 20, 50].map((n) => (
               <option key={n} value={n}>
@@ -218,10 +242,10 @@ export default function AdminProducts() {
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-semibold text-gray-900 dark:text-slate-50">
+                  <div className={`truncate text-sm font-semibold ${titleTone}`}>
                     {localizeProduct(p, t).title}
                   </div>
-                  <div className="mt-1 text-xs text-gray-500 dark:text-slate-400">
+                  <div className={`mt-1 text-xs ${mutedTone}`}>
                     Stock: {p.stock ?? 0}
                   </div>
                   <div className="mt-2 flex flex-wrap items-center gap-1.5">
@@ -230,23 +254,21 @@ export default function AdminProducts() {
                     </span>
                     <StatusBadge available={!!p.isAvailable} small />
                   </div>
-                  <div className="mt-1 text-xs text-gray-500 dark:text-slate-400">
+                  <div className={`mt-1 text-xs ${mutedTone}`}>
                     {formatDate(p.createdAt)}
                   </div>
                 </div>
               </div>
 
               <div className="mt-3 flex items-center justify-between">
-                <span className="text-sm font-semibold text-gray-900 dark:text-slate-50">
+                <span className={`text-sm font-semibold ${titleTone}`}>
                   {Number(p.price || 0).toLocaleString()}{" "}
-                  <span className="text-gray-500 dark:text-slate-300">
-                    {p.currency || "USD"}
-                  </span>
+                  <span className={mutedTone}>{p.currency || "USD"}</span>
                 </span>
                 <div className="inline-flex items-center gap-2">
                   <button
                     onClick={() => navigate(`/admin/products/${p.id}/edit`)}
-                    className="rounded-md border border-gray-200 bg-white p-2 text-gray-700 shadow-sm transition hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+                    className={actionBtnClass}
                     title="Edit"
                   >
                     <FiEdit2 />
@@ -254,7 +276,7 @@ export default function AdminProducts() {
                   <button
                     disabled={deleting}
                     onClick={() => setToDelete({ id: p.id, name: p.name })}
-                    className="rounded-md border border-gray-200 bg-white p-2 text-rose-600 shadow-sm transition hover:bg-rose-50 disabled:opacity-50 dark:border-rose-800 dark:bg-slate-900 dark:text-rose-300 dark:hover:bg-rose-950/40"
+                    className={actionDeleteClass}
                     title="Delete"
                   >
                     <FiTrash2 />
@@ -269,10 +291,18 @@ export default function AdminProducts() {
       {/* Desktop Table */}
       {!isLoading && !isError && all.length > 0 && (
         <div className="hidden md:block">
-          <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div
+            className={`overflow-x-auto rounded-xl shadow-sm ${surfaceClass}`}
+          >
             <table className="w-full border-separate border-spacing-0">
               <thead className="sticky top-0 z-10">
-                <tr className="bg-gray-50 text-left text-sm text-gray-600 dark:bg-slate-800 dark:text-slate-200">
+                <tr
+                  className={`text-left text-sm ${
+                    isDark
+                      ? "bg-slate-800 text-slate-200"
+                      : "bg-slate-100 text-slate-700"
+                  }`}
+                >
                   <Th>{t("admin.products", { defaultValue: "Products" })}</Th>
                   <Th>{t("sort.price", { defaultValue: "Price" })}</Th>
                   <Th>Stock</Th>
@@ -294,11 +324,15 @@ export default function AdminProducts() {
                   <Th className="w-28 text-right">Actions</Th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className={isDark ? "text-slate-100" : "text-gray-900"}>
                 {paginatedData.map((p) => (
                   <tr
                     key={p.id}
-                    className="group hover:bg-gray-50 dark:hover:bg-slate-800/70"
+                    className={`group transition-colors ${
+                      isDark
+                        ? "odd:bg-slate-900/40 even:bg-slate-900/50 hover:bg-slate-800"
+                        : "odd:bg-white even:bg-slate-50 hover:bg-slate-100"
+                    }`}
                   >
                     <Td>
                       <div className="flex items-centered gap-3">
@@ -313,48 +347,44 @@ export default function AdminProducts() {
                             N/A
                           </div>
                         )}
-                        <div className="font-medium text-gray-900 dark:text-slate-50">
+                        <div className={`font-medium ${titleTone}`}>
                           {localizeProduct(p, t).title}
                         </div>
                       </div>
                     </Td>
-                    <Td className="text-gray-900 dark:text-slate-50">
+                    <Td className={cellTone}>
                       {Number(p.price || 0).toLocaleString()}{" "}
                       {p.currency || "USD"}
                     </Td>
-                    <Td className="text-gray-800 dark:text-slate-100">
-                      {p.stock ?? 0}
-                    </Td>
-                    <Td className="text-gray-700 dark:text-slate-200">
+                    <Td className={cellTone}>{p.stock ?? 0}</Td>
+                    <Td className={mutedTone}>
                       {catMap[p.categoryId] || "—"}
                     </Td>
                     <Td>
                       <StatusBadge available={!!p.isAvailable} />
                     </Td>
-                    <Td className="text-gray-600 dark:text-slate-300">
-                      {formatDate(p.createdAt)}
-                    </Td>
-                    <Td className="text-right">
-                      <div className="inline-flex items-center gap-2">
-                        <button
-                          onClick={() =>
-                            navigate(`/admin/products/${p.id}/edit`)
-                          }
-                          className="rounded-md border border-gray-200 bg-white p-2 text-gray-700 shadow-sm transition hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
-                        >
-                          <FiEdit2 />
-                        </button>
-                        <button
-                          disabled={deleting}
-                          onClick={() =>
-                            setToDelete({ id: p.id, name: p.name })
-                          }
-                          className="rounded-md border border-gray-200 bg-white p-2 text-rose-600 shadow-sm transition hover:bg-rose-50 disabled:opacity-50 dark:border-rose-800 dark:bg-slate-900 dark:text-rose-300 dark:hover:bg-rose-950/40"
-                        >
-                          <FiTrash2 />
-                        </button>
-                      </div>
-                    </Td>
+                  <Td className={mutedTone}>{formatDate(p.createdAt)}</Td>
+                  <Td className="text-right">
+                    <div className="inline-flex items-center gap-2">
+                      <button
+                        onClick={() =>
+                          navigate(`/admin/products/${p.id}/edit`)
+                        }
+                        className={actionBtnClass}
+                      >
+                        <FiEdit2 />
+                      </button>
+                      <button
+                        disabled={deleting}
+                        onClick={() =>
+                          setToDelete({ id: p.id, name: p.name })
+                        }
+                        className={actionDeleteClass}
+                      >
+                        <FiTrash2 />
+                      </button>
+                    </div>
+                  </Td>
                   </tr>
                 ))}
               </tbody>
