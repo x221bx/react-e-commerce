@@ -24,6 +24,12 @@ export default function AdminLayout() {
     }
   });
 
+useEffect(() => {
+  if (isDark) document.documentElement.classList.add("dark");
+  else document.documentElement.classList.remove("dark");
+}, [isDark]);
+
+
   const [mobileOpen, setMobileOpen] = useState(false);
   const firstFocusableRef = useRef(null);
 
@@ -61,6 +67,7 @@ export default function AdminLayout() {
   };
 
   return (
+    
     <div
       className={`h-[calc(100svh-var(--nav-h))] font-inter ${
         isDark ? "bg-slate-950 text-slate-100" : "bg-[#F9FAF9] text-slate-900"
@@ -203,5 +210,3 @@ function MobileDrawer({ open, onClose, children }) {
     </div>
   );
 }
-
-

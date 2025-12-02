@@ -285,24 +285,28 @@ export default function Navbar() {
             dir={isRTL ? "rtl" : "ltr"}
           >
             <div
-              className={`px-6 py-4 flex flex-col gap-4 ${
-                isRTL ? "text-right items-end" : ""
-              }`}
-            >
-              <SearchBar placeholder={t("navbar.search_placeholder")} />
+  className={`px-6 py-4 flex flex-col gap-4 ${
+    isRTL ? "text-right items-end" : ""
+  }`}
+>
+  <SearchBar placeholder={t("navbar.search_placeholder")} />
 
-              <button
-                onClick={() => {
-                  toggleLanguage();
-                  setMobileOpen(false);
-                }}
-                className="flex items-center gap-3 py-2"
-              >
-                <FiGlobe className="w-4 h-4" />
-                {currentLang === "en"
-                  ? t("languages.switch_to_ar")
-                  : t("languages.switch_to_en")}
-              </button>
+  {/* 🔥 زر Home الجديد */}
+  <button
+    onClick={() => {
+      setMobileOpen(false);
+      navigate("/");
+    }}
+    className="flex items-center gap-3 py-2"
+  >
+    <FiFeather className="w-4 h-4" />
+    {t("nav.home", "Home")}
+  </button>
+
+  {/* ❌ حذف زر تغيير اللغة من هنا
+  <button ...toggleLanguage> ... </button>
+  */}
+
 
               <button
                 onClick={(e) => {
