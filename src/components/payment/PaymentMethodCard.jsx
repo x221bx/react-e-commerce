@@ -1,3 +1,4 @@
+// src/components/payment/PaymentMethodCard.jsx
 import React from "react";
 import { CreditCard, WalletCards, Star, Trash2 } from "lucide-react";
 
@@ -25,17 +26,22 @@ export default function PaymentMethodCard({
         ? brandCopy[method.brand]
         : { label: walletLabels[method.provider] || "Wallet" };
 
+    // ✅ الخلفية الجديدة فقط
     const surface = isDark
-        ? "border-slate-800/70 bg-gradient-to-br from-slate-900/60 to-slate-900/30"
-        : "border-slate-100 bg-white/90";
+        ? "border-emerald-900/20 bg-[#0f1d1d]/70 backdrop-blur"
+        : "border-emerald-200 bg-emerald-50/70 backdrop-blur";
+
     const headingColor = isDark ? "text-white" : "text-slate-900";
     const muted = isDark ? "text-slate-400" : "text-slate-500";
+
     const defaultBadge = isDark
         ? "bg-emerald-900/30 text-emerald-200"
         : "bg-emerald-50 text-emerald-700";
+
     const outlineButton = isDark
         ? "border-slate-700 text-slate-200 hover:bg-slate-800/70"
         : "border-slate-200 text-slate-700 hover:bg-slate-50";
+
     const destructiveButton = isDark
         ? "border-red-900/40 text-red-200 hover:bg-red-900/30"
         : "border-red-200 text-red-600 hover:bg-red-50";
@@ -65,10 +71,11 @@ export default function PaymentMethodCard({
                         <p className={`text-xs ${muted}`}>
                             {isCard
                                 ? `${badge.label} ${t("payments.endingIn", "ending in")} ${method.last4}`
-                                : `${badge.label} ${t("payments.separator", "-")} ${method.email}`}
+                                : `${badge.label} - ${method.email}`}
                         </p>
                     </div>
                 </div>
+
                 {method.isDefault && (
                     <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${defaultBadge}`}>
                         <Star className="h-3 w-3" />

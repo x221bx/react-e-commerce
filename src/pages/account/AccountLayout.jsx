@@ -1,3 +1,4 @@
+// src/pages/account/AccountLayout.jsx
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
@@ -90,43 +91,54 @@ export default function AccountLayout() {
     navigate("/");
   };
 
-  const mainBackground = isDark
-    ? "bg-slate-950 text-slate-100"
-    : "bg-gradient-to-b from-slate-50 via-white to-emerald-50/40 text-slate-900";
-  const asideSurface = isDark
-    ? "bg-slate-900 ring-slate-800"
-    : "bg-white/95 ring-slate-100";
-  const avatarSurface = isDark
-    ? "bg-slate-800 text-emerald-200 ring-slate-700"
-    : "bg-emerald-50 text-emerald-700 ring-emerald-100";
-  const helperCard = isDark
-    ? "border-slate-700 bg-slate-800/70 text-slate-300"
-    : "border-slate-100 bg-white text-slate-600";
+  // Unified with Products theme
+  const containerBg = isDark
+    ? "bg-gradient-to-b from-transparent to-slate-800/30 text-white"
+    : "bg-gradient-to-b from-transparent to-gray-50/50 text-slate-900";
+
+  const asideBg = isDark
+    ? "bg-[#0f1d1d]/70 border border-white/10 shadow-md"
+    : "bg-white border border-gray-200 shadow-md";
+
+  const sectionBg = isDark
+    ? "bg-[#0f1d1d]/70 border border-white/10 shadow-md"
+    : "bg-white border border-gray-200 shadow-md";
+
+  const avatarBg = isDark
+    ? "bg-slate-800 text-white ring-white/20"
+    : "bg-emerald-50 text-emerald-700 ring-emerald-200";
+
   const navActive = isDark
     ? "border-emerald-900/40 bg-emerald-900/30 text-emerald-200 shadow-sm"
     : "border-emerald-200 bg-emerald-50 text-emerald-700 shadow-sm";
+
   const navIdle = isDark
-    ? "border-transparent text-slate-300 hover:border-slate-700 hover:bg-slate-800/70"
-    : "border-transparent text-slate-600 hover:border-slate-200 hover:bg-white";
-  const navDescription = isDark ? "text-slate-300" : "text-slate-500";
-  const logoutButton = isDark
-    ? "border-red-900/40 text-red-200 hover:bg-red-900/30"
+    ? "border-transparent text-white/70 hover:border-white/20 hover:bg-white/10"
+    : "border-transparent text-slate-600 hover:border-gray-200 hover:bg-gray-50";
+
+  const helperCard = isDark
+    ? "bg-slate-800/50 border border-white/10 text-white/70"
+    : "bg-gray-50 border border-gray-200 text-slate-600";
+
+  const navDescription = isDark ? "text-white/60" : "text-slate-500";
+
+  const logoutBtn = isDark
+    ? "border-red-900/40 text-red-300 hover:bg-red-900/30"
     : "border-red-200 text-red-600 hover:bg-red-50";
-  const sectionSurface = isDark ? "bg-slate-900" : "bg-white";
-  const sectionRing = isDark ? "ring-slate-800" : "ring-slate-100";
 
   return (
-    <div
-      className={`min-h-screen transition-colors ${mainBackground} flex flex-col`}
-    >
+    <div className={`min-h-screen flex flex-col transition-colors ${containerBg}`}>
       <div className="flex-1 pt-10 pb-6">
         <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 sm:px-6 lg:flex-row lg:gap-8 lg:px-8">
+
+          {/* Aside panel */}
           <aside
-            className={`w-full shrink-0 rounded-3xl p-6 shadow-lg ring-1 lg:w-72 ${asideSurface} text-slate-900 dark:text-slate-100`}
+            className={`w-full shrink-0 rounded-3xl p-6 ${asideBg} backdrop-blur-md lg:w-72`}
           >
+            {/* Avatar */}
             <div className="flex items-center gap-4">
               <div
-                className={`flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl text-lg font-semibold ring-1 ${avatarSurface}`}
+                className={`flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl text-lg font-semibold ring-1 ${avatarBg}`}
               >
                 {user?.photoURL || user?.photoUrl ? (
                   <img
@@ -138,44 +150,35 @@ export default function AccountLayout() {
                   initials
                 )}
               </div>
+
               <div>
-                <p
-                  className={`text-lg font-semibold ${
-                    isDark ? "text-white" : "text-slate-900"
-                  }`}
-                >
+                <p className={`text-lg font-semibold ${isDark ? "text-white" : "text-slate-900"}`}>
                   {user?.name || "Your Account"}
                 </p>
-                <p
-                  className={`text-sm ${
-                    isDark ? "text-slate-400" : "text-slate-500"
-                  }`}
-                >
+                <p className={`text-sm ${isDark ? "text-white/60" : "text-slate-500"}`}>
                   {user?.email}
                 </p>
               </div>
             </div>
 
-            <div
-              className={`mt-6 rounded-2xl border p-4 text-xs ${helperCard}`}
-            >
+            {/* Helper note */}
+            <div className={`mt-6 rounded-2xl p-4 text-xs ${helperCard}`}>
               {t("account.helper_text")}
             </div>
 
+            {/* Navigation */}
             <nav className="mt-6 space-y-2" aria-label="Account menu">
               {navItems.map((item) => {
-                const IconComponent = item.icon;
+                const Icon = item.icon;
                 return (
                   <NavLink
                     key={item.to}
                     to={item.to}
                     className={({ isActive }) =>
-                      `flex items-start gap-3 rounded-2xl border px-4 py-3 text-sm transition ${
-                        isActive ? navActive : navIdle
-                      }`
+                      `flex items-start gap-3 rounded-2xl border px-4 py-3 text-sm transition ${isActive ? navActive : navIdle}`
                     }
                   >
-                    <IconComponent className="h-5 w-5 flex-shrink-0" />
+                    <Icon className="h-5 w-5 flex-shrink-0" />
                     <div>
                       <p className="font-semibold">{t(item.labelKey)}</p>
                       <p className={`text-xs ${navDescription}`}>
@@ -186,22 +189,26 @@ export default function AccountLayout() {
                 );
               })}
             </nav>
+
+            {/* Logout */}
             <button
               onClick={handleLogout}
-              className={`mt-6 flex w-full items-center justify-center gap-2 rounded-2xl border px-4 py-2 text-sm font-semibold transition ${logoutButton}`}
+              className={`mt-6 flex w-full items-center justify-center gap-2 rounded-2xl border px-4 py-2 text-sm font-semibold transition ${logoutBtn}`}
             >
               <LogOut className="h-4 w-4" />
               {t("account.logout")}
             </button>
           </aside>
 
+          {/* Main Content */}
           <section
-            className={`flex-1 rounded-3xl p-6 shadow-lg ring-1 transition-colors ${sectionRing} ${sectionSurface} text-slate-900 dark:text-slate-100`}
+            className={`flex-1 rounded-3xl p-6 backdrop-blur-md ${sectionBg} transition-colors`}
           >
             <Outlet />
           </section>
         </div>
       </div>
+
       <Footer />
     </div>
   );

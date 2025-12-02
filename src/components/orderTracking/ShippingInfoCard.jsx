@@ -1,3 +1,4 @@
+// src/components/orderTracking/ShippingInfoCard.jsx
 import React from "react";
 import { useTranslation } from "react-i18next";
 
@@ -8,32 +9,43 @@ export default function ShippingInfoCard({
 }) {
     const { t } = useTranslation();
 
-    const muted = isDark ? "text-slate-400" : "text-slate-500";
+    // Neutral + Green palette
+    const muted = isDark ? "text-white/60" : "text-slate-600";
     const strongText = isDark ? "text-white" : "text-slate-900";
+
+    // 🟩 خلفية وبوردر متنسقة مع الأخضر
     const infoSurface = isDark
-        ? "border-slate-800 bg-slate-900"
-        : "border-slate-100 bg-white";
-    const linkColor = isDark ? "text-emerald-300" : "text-emerald-600";
+        ? "bg-[#0b1b17]/70 border-emerald-900/30 backdrop-blur"
+        : "bg-emerald-50/40 border-emerald-200";
+
+    const divider = isDark ? "border-emerald-900/30" : "border-emerald-200";
+
+    const linkColor = isDark ? "text-emerald-300" : "text-emerald-700";
 
     return (
-        <section className={`rounded-2xl border p-6 ${infoSurface}`}>
-            <h2 className={`text-lg font-semibold ${strongText}`}>
+        <section
+            className={`rounded-2xl border p-6 shadow-sm ${infoSurface}`}
+        >
+            <h2 className={`text-xl font-semibold ${strongText}`}>
                 {t("tracking.shippingInfo", "Shipping Information")}
             </h2>
-            <dl className="mt-6 space-y-5">
+
+            <dl className="mt-6 space-y-6">
                 {/* Recipient */}
-                <div className="border-b border-slate-200 dark:border-slate-700 pb-4">
+                <div className={`pb-5 border-b ${divider}`}>
                     <dt className={`text-xs font-semibold uppercase tracking-widest ${muted}`}>
                         {t("tracking.shippingTo", "Shipping To")}
                     </dt>
                     <dd className={`mt-2 text-sm font-semibold ${strongText}`}>
                         {shippingInfo.recipient}
                     </dd>
-                    <dd className={`text-sm ${muted}`}>{shippingInfo.address}</dd>
+                    <dd className={`text-sm ${muted}`}>
+                        {shippingInfo.address}
+                    </dd>
                 </div>
 
                 {/* Carrier */}
-                <div className="border-b border-slate-200 dark:border-slate-700 pb-4">
+                <div className={`pb-5 border-b ${divider}`}>
                     <dt className={`text-xs font-semibold uppercase tracking-widest ${muted}`}>
                         {t("tracking.carrier", "Carrier")}
                     </dt>
@@ -51,6 +63,7 @@ export default function ShippingInfoCard({
                         {shippingInfo.trackingNumber ||
                             t("tracking.awaitingUpdate", "Awaiting update")}
                     </dd>
+
                     {trackingUrl && (
                         <dd className="mt-3">
                             <a

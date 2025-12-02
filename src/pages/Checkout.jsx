@@ -1,8 +1,10 @@
+// src/pages/Checkout.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
+
 import CheckoutContactForm from "../components/checkout/CheckoutContactForm";
 import CheckoutShippingForm from "../components/checkout/CheckoutShippingForm";
 import CheckoutPaymentSection from "../components/checkout/CheckoutPaymentSection";
@@ -11,15 +13,18 @@ import CheckoutSavedCards, {
 } from "../components/checkout/CheckoutSavedCards";
 import CheckoutCardModal from "../components/checkout/CheckoutCardModal";
 import CheckoutSummary from "../components/checkout/CheckoutSummary";
+
 import { clearCart } from "../features/cart/cartSlice";
 import { selectCurrentUser } from "../features/auth/authSlice";
 import { createOrder } from "../services/ordersService";
 import { auth } from "../services/firebase";
+
 import { useCheckoutForm } from "../hooks/useCheckoutForm";
 import { usePaymentMethods } from "../hooks/usePaymentMethods";
 import { useUserProfile } from "../hooks/useUserProfile";
 import { useOrderSummary } from "../hooks/useOrderSummary";
 import { useCardValidation } from "../hooks/useCardValidation";
+import { UseTheme } from "../theme/ThemeProvider";
 
 const formatSavedMethod = (method) => {
   if (!method) return "";
@@ -42,6 +47,10 @@ export default function Checkout() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { t } = useTranslation();
+
+  const { theme } = UseTheme();
+  const isDark = theme === "dark";
+
   const cartItems = useSelector((state) => state.cart.items || []);
   const storeUser = useSelector(selectCurrentUser);
   const firebaseUser = auth.currentUser;
@@ -50,7 +59,7 @@ export default function Checkout() {
   const userName =
     user?.name || user?.displayName || user?.username || userEmail || "";
 
-  // ...custom hooks...
+  // form hooks
   const { form, setForm, errors, formErrors, validate } = useCheckoutForm(user);
 
   const {
@@ -265,13 +274,35 @@ export default function Checkout() {
     });
   };
 
+  // unified page background like Products
+  const pageBg = isDark
+    ? "bg-gradient-to-b from-transparent to-slate-800/30"
+    : "bg-gradient-to-b from-transparent to-gray-50/50";
+
+  const shellSurface = isDark
+    ? "bg-[#0f1d1d]/60 border-white/10 shadow-lg"
+    : "bg-white/95 border-slate-200 shadow-md";
+
+  const summarySurface = isDark
+    ? "bg-[#0f1d1d]/60 border-white/10 shadow-lg"
+    : "bg-white/95 border-slate-200 shadow-md";
+
+  const headingColor = isDark ? "text-white" : "text-slate-900";
+  const muted = isDark ? "text-slate-300" : "text-slate-500";
+
   if (!cartItems.length) {
     return (
-      <section className="mx-auto mt-20 max-w-2xl rounded-3xl border border-dashed border-emerald-200 bg-white/80 p-10 text-center shadow-sm">
-        <p className="text-xl font-semibold text-slate-800">
+      <section
+        className={`mx-auto mt-20 max-w-2xl rounded-3xl border border-dashed p-10 text-center shadow-sm ${
+          isDark
+            ? "border-emerald-900/40 bg-[#0f1d1d]/50 text-slate-100"
+            : "border-emerald-200 bg-emerald-50/70 text-slate-800"
+        }`}
+      >
+        <p className="text-xl font-semibold">
           {t("checkout.empty.title", "Your cart is empty")}
         </p>
-        <p className="mt-2 text-sm text-slate-500">
+        <p className={`mt-2 text-sm ${muted}`}>
           {t("checkout.empty.subtitle", "Please add some products first.")}
         </p>
         <div className="mt-6 flex justify-center gap-3">
@@ -288,11 +319,17 @@ export default function Checkout() {
 
   if (!user) {
     return (
-      <section className="mx-auto mt-20 max-w-2xl rounded-3xl border border-amber-200 bg-amber-50/80 p-10 text-center shadow-sm">
-        <p className="text-lg font-semibold text-amber-900">
+      <section
+        className={`mx-auto mt-20 max-w-2xl rounded-3xl border p-10 text-center shadow-sm ${
+          isDark
+            ? "border-amber-900/40 bg-[#0f1d1d]/60 text-amber-100"
+            : "border-amber-200 bg-amber-50/80 text-amber-900"
+        }`}
+      >
+        <p className="text-lg font-semibold">
           {t("checkout.loginRequired.title", "You need to login")}
         </p>
-        <p className="mt-2 text-sm text-amber-800">
+        <p className="mt-2 text-sm">
           {t("checkout.loginRequired.subtitle", "Please login to continue.")}
         </p>
         <div className="mt-6 flex justify-center gap-3">
@@ -308,70 +345,102 @@ export default function Checkout() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-10">
-      <div className="mx-auto grid max-w-6xl gap-8 px-4 sm:px-6 lg:grid-cols-[2fr,1fr]">
-        <form
-          className="rounded-3xl border bg-white p-6 shadow-sm space-y-6"
-          onSubmit={handleSubmit}
-        >
-          <header>
-            <h1 className="text-2xl font-semibold">
-              {t("checkout.header.title", "Review and confirm")}
-            </h1>
-          </header>
-          {formErrors && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-              {formErrors}
+    <div className={`min-h-screen ${pageBg} py-10`}>
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        {/* Page header */}
+        <header className="mb-6">
+          <p
+            className={`text-xs font-semibold uppercase tracking-[0.18em] ${
+              isDark ? "text-emerald-300" : "text-emerald-600"
+            }`}
+          >
+            {t("checkout.header.eyebrow", "Checkout")}
+          </p>
+          <h1 className={`mt-2 text-3xl font-semibold ${headingColor}`}>
+            {t("checkout.header.title", "Review and confirm")}
+          </h1>
+          <p className={`mt-1 text-sm ${muted}`}>
+            {t(
+              "checkout.header.subtitle",
+              "Confirm your contact info, address, and payment method to place your order."
+            )}
+          </p>
+        </header>
+
+        <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
+          {/* Left column - form */}
+          <form
+            className={`rounded-3xl border p-6 space-y-6 ${shellSurface}`}
+            onSubmit={handleSubmit}
+          >
+            {formErrors && (
+              <div
+                className={`rounded-2xl border px-4 py-3 text-sm ${
+                  isDark
+                    ? "border-red-900/50 bg-red-950/60 text-red-200"
+                    : "border-red-200 bg-red-50 text-red-700"
+                }`}
+              >
+                {formErrors}
+              </div>
+            )}
+
+            <CheckoutContactForm form={form} setForm={setForm} errors={errors} />
+            <CheckoutShippingForm form={form} setForm={setForm} errors={errors} />
+
+            <CheckoutPaymentSection
+              paymentMethod={paymentMethod}
+              handlePaymentSelection={handlePaymentSelection}
+              paymentOptions={paymentOptions}
+              savedCards={savedCards}
+            />
+
+            <CheckoutSavedCards
+              paymentMethod={paymentMethod}
+              savedCards={savedCards}
+              selectedSavedCardId={selectedSavedCardId}
+              setSelectedSavedCardId={setSelectedSavedCardId}
+              savedPaymentLoading={savedPaymentLoading}
+            />
+
+            <div className="flex flex-wrap gap-3 pt-3">
+              <Link
+                to="/cart"
+                className={`rounded-2xl border px-5 py-2 text-sm font-semibold transition ${
+                  isDark
+                    ? "border-slate-700 text-slate-200 hover:bg-slate-800/70"
+                    : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                {t("checkout.actions.backToCart", "Back to Cart")}
+              </Link>
+              <button
+                type="submit"
+                disabled={loading}
+                className="inline-flex items-center rounded-2xl bg-emerald-500 px-6 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-600 disabled:opacity-70"
+              >
+                {loading
+                  ? t("checkout.actions.processing", "Processing...")
+                  : t("checkout.actions.confirmOrder", "Confirm Order")}
+              </button>
             </div>
-          )}
+          </form>
 
-          <CheckoutContactForm form={form} setForm={setForm} errors={errors} />
-          <CheckoutShippingForm form={form} setForm={setForm} errors={errors} />
-
-          <CheckoutPaymentSection
-            paymentMethod={paymentMethod}
-            handlePaymentSelection={handlePaymentSelection}
-            paymentOptions={paymentOptions}
-            savedCards={savedCards}
-          />
-
-          <CheckoutSavedCards
-            paymentMethod={paymentMethod}
-            savedCards={savedCards}
-            selectedSavedCardId={selectedSavedCardId}
-            setSelectedSavedCardId={setSelectedSavedCardId}
-            savedPaymentLoading={savedPaymentLoading}
-          />
-
-          <div className="flex flex-wrap gap-3 pt-2">
-            <Link
-              to="/cart"
-              className="rounded-2xl border border-slate-200 px-5 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50"
-            >
-              {t("checkout.actions.backToCart", "Back to Cart")}
-            </Link>
-            <button
-              type="submit"
-              disabled={loading}
-              className="inline-flex items-center rounded-2xl bg-emerald-500 px-6 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-600 disabled:opacity-70"
-            >
-              {loading
-                ? t("checkout.actions.processing", "Processing...")
-                : t("checkout.actions.confirmOrder", "Confirm Order")}
-            </button>
+          {/* Right column - summary */}
+          <div className={`rounded-3xl border p-6 h-fit ${summarySurface}`}>
+            <CheckoutSummary cartItems={cartItems} summary={summary} />
           </div>
-        </form>
 
-        <CheckoutSummary cartItems={cartItems} summary={summary} />
-
-        <CheckoutCardModal
-          isOpen={showCardModal}
-          onClose={() => setShowCardModal(false)}
-          cardForm={cardForm}
-          setCardForm={setCardForm}
-          cardErrors={cardErrors}
-          onSubmit={handleCardSubmit}
-        />
+          {/* Card modal */}
+          <CheckoutCardModal
+            isOpen={showCardModal}
+            onClose={() => setShowCardModal(false)}
+            cardForm={cardForm}
+            setCardForm={setCardForm}
+            cardErrors={cardErrors}
+            onSubmit={handleCardSubmit}
+          />
+        </div>
       </div>
     </div>
   );

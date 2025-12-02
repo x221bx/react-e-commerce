@@ -102,9 +102,19 @@ const SecuritySection = ({
         />
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
-        {t("settings.passwordTip", "Tip: combine at least 12 characters with numbers and symbols. Avoid reusing passwords from other services.")}
-      </div>
+      <div 
+  className="
+    rounded-2xl border px-4 py-3 text-sm
+    border-emerald-200 bg-emerald-50 text-emerald-900
+    dark:border-emerald-900/40 dark:bg-[#0f1d1d]/70 dark:text-emerald-200
+  "
+>
+  {t(
+    "settings.passwordTip",
+    "Tip: combine at least 12 characters with numbers and symbols. Avoid reusing passwords from other services."
+  )}
+</div>
+
 
       <button
         type="submit"

@@ -9,9 +9,12 @@ const ProfileAvatar = ({ photo, initials, onError, size = "lg", className = "", 
 
   return (
     <figure
-      className={`relative overflow-hidden rounded-2xl bg-slate-100 shadow-inner ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-700 ${
-        sizeClasses[size] || sizeClasses.md
-      } ${className}`}
+      className={`relative overflow-hidden rounded-2xl 
+        bg-slate-100 ring-1 ring-slate-200 
+        dark:bg-[#0f1d1d] dark:ring-white/10 
+        shadow-inner
+        ${sizeClasses[size] || sizeClasses.md} 
+        ${className}`}
     >
       {photo ? (
         <img
@@ -23,11 +26,14 @@ const ProfileAvatar = ({ photo, initials, onError, size = "lg", className = "", 
           onError={onError}
         />
       ) : (
-        <div className="flex h-full w-full items-center justify-center text-2xl font-semibold text-emerald-600 dark:text-emerald-300">
+        <div className="flex h-full w-full items-center justify-center 
+            text-2xl font-semibold text-emerald-600 dark:text-emerald-300">
           {initials || "A"}
         </div>
       )}
-      <span className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-black/5 dark:ring-white/10" />
+
+      <span className="pointer-events-none absolute inset-0 rounded-2xl 
+        ring-1 ring-black/5 dark:ring-white/10" />
     </figure>
   );
 };

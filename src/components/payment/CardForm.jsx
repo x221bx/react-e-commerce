@@ -1,12 +1,13 @@
+// src/components/payment/CardForm.jsx
 import React, { useRef, useEffect, useState } from "react";
 import { CreditCard, Plus } from "lucide-react";
 import Input from "../ui/Input";
 import { useTranslation } from "react-i18next";
 
 const brandCopy = {
-    visa: { color: "text-sky-600" },
-    mastercard: { color: "text-orange-600" },
-    amex: { color: "text-emerald-600" },
+    visa: { color: "text-emerald-600 dark:text-emerald-300" },
+    mastercard: { color: "text-emerald-600 dark:text-emerald-300" },
+    amex: { color: "text-emerald-600 dark:text-emerald-300" },
 };
 
 export default function CardForm({
@@ -42,9 +43,8 @@ export default function CardForm({
         event.preventDefault();
 
         const now = Date.now();
-        if (now - lastAddAttempt < 2000) {
-            return;
-        }
+        if (now - lastAddAttempt < 2000) return;
+
         setLastAddAttempt(now);
 
         if (!validateCard(t)) return;
@@ -52,32 +52,40 @@ export default function CardForm({
     };
 
     const detectedBrand = detectBrand(cardForm.number);
-    const brandColor = brandCopy[detectedBrand]?.color || "text-slate-500";
+    const brandColor = brandCopy[detectedBrand]?.color || "text-emerald-500";
+
     const quietButton = isDark
-        ? "border-slate-700/70 text-slate-100 hover:bg-slate-800/70"
-        : "border-slate-200 text-slate-700 hover:bg-slate-50";
+        ? "border-emerald-900/40 text-emerald-200 hover:bg-emerald-900/20"
+        : "border-emerald-300 text-emerald-700 hover:bg-emerald-50";
+
     const panelSurface = isDark
-        ? "border-slate-800/80 bg-gradient-to-b from-slate-900/70 to-slate-900/40"
-        : "border-slate-100 bg-white/95";
+        ? "border-emerald-900/40 bg-emerald-900/10 backdrop-blur"
+        : "border-emerald-200 bg-white";
+
     const headingColor = isDark ? "text-white" : "text-slate-900";
+    const hintColor = isDark ? "text-emerald-300/70" : "text-emerald-700/70";
 
     return (
-        <div className={`rounded-3xl border p-5 shadow-lg ${panelSurface}`}>
+        <div className={`rounded-3xl border p-5 shadow-sm ${panelSurface}`}>
             <div className={`mb-4 flex items-center gap-2 ${headingColor}`}>
                 <CreditCard className="h-4 w-4" />
                 <p className="text-sm font-semibold">
                     {t("payments.form.cardTitle", "Add new card")}
                 </p>
             </div>
+
             <form onSubmit={handleSubmit} className="space-y-4">
                 <Input
                     ref={cardHolderRef}
                     label={t("payments.form.cardHolder", "Card holder name")}
                     value={cardForm.holder}
-                    onChange={(e) => handleCardFormChange("holder", formatHolderName(e.target.value))}
+                    onChange={(e) =>
+                        handleCardFormChange("holder", formatHolderName(e.target.value))
+                    }
                     error={cardErrors.holder}
                     autoFocus
                 />
+
                 <Input
                     label={t("payments.form.cardNumber", "Card number")}
                     value={formatCardNumber(cardForm.number)}
@@ -89,56 +97,91 @@ export default function CardForm({
                     maxLength={23}
                     error={cardErrors.number}
                 />
+
+                {/* Brand Detection Line */}
                 <div className="flex items-center justify-between text-xs">
-                    <span className={`font-semibold ${brandColor} flex items-center gap-1`}>
-                        {detectedBrand && <span className="text-green-500">✓</span>}
-                        {detectedBrand || t("payments.brandUnknown", "Card type not recognized yet")}
-                        {cardValid && <span className="text-green-600 ml-1">({t("common.valid", "Valid")})</span>}
+                    <span className={`font-semibold flex items-center gap-1 ${brandColor}`}>
+                        {detectedBrand && (
+                            <span className="text-emerald-500 dark:text-emerald-300">✓</span>
+                        )}
+                        {detectedBrand ||
+                            t("payments.brandUnknown", "Card type not recognized yet")}
+                        {cardValid && (
+                            <span className="text-emerald-600 dark:text-emerald-300 ml-1">
+                                ({t("common.valid", "Valid")})
+                            </span>
+                        )}
                     </span>
-                    <span className="text-slate-500 dark:text-slate-400">
-                        {t("payments.securityHint", "We only store last 4; full number and CVV never saved.")}
+
+                    <span className={hintColor}>
+                        {t(
+                            "payments.securityHint",
+                            "We only store last 4; full number and CVV never saved."
+                        )}
                     </span>
                 </div>
+
                 <div className="grid gap-3 sm:grid-cols-2">
                     <Input
                         label={t("payments.form.expiry", "Expiry (MM/YY)")}
                         value={formatExpiry(cardForm.exp)}
-                        onChange={(e) => handleCardFormChange("exp", formatExpiry(e.target.value))}
+                        onChange={(e) =>
+                            handleCardFormChange("exp", formatExpiry(e.target.value))
+                        }
                         placeholder="04/27"
                         error={cardErrors.exp}
                     />
+
                     <Input
                         label={t("payments.form.cvv", "CVV")}
                         value={cardForm.cvv}
                         onChange={(e) => {
                             const brand = detectBrand(cardForm.number);
                             const max = brand === "amex" ? 4 : 3;
-                            handleCardFormChange("cvv", e.target.value.replace(/\D/g, "").slice(0, max));
+                            handleCardFormChange(
+                                "cvv",
+                                e.target.value.replace(/\D/g, "").slice(0, max)
+                            );
                         }}
                         placeholder="123"
                         maxLength={4}
                         error={cardErrors.cvv}
                     />
                 </div>
+
                 <Input
                     label={t("payments.form.nickname", "Nickname (optional)")}
                     value={cardForm.nickname}
-                    onChange={(e) => handleCardFormChange("nickname", e.target.value)}
-                    placeholder={t("payments.form.nicknamePlaceholder", "Farm purchases")}
+                    onChange={(e) =>
+                        handleCardFormChange("nickname", e.target.value)
+                    }
+                    placeholder={t(
+                        "payments.form.nicknamePlaceholder",
+                        "Farm purchases"
+                    )}
                 />
+
+                {/* Buttons */}
                 <div className="flex gap-3">
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className={`inline-flex flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold transition disabled:opacity-70 ${quietButton}`}
+                        className={`
+                            inline-flex flex-1 items-center justify-center gap-2 
+                            rounded-xl border px-4 py-2 text-sm font-semibold 
+                            transition disabled:opacity-70 ${quietButton}
+                        `}
                     >
                         <Plus className="h-4 w-4" />
-                        {isLoading ? t("payments.form.saving", "Saving...") : t("payments.form.saveCard", "Save card")}
+                        {isLoading
+                            ? t("payments.form.saving", "Saving...")
+                            : t("payments.form.saveCard", "Save card")}
                     </button>
+
                     <button
                         type="button"
                         onClick={resetCard}
-                        className="text-sm font-semibold text-emerald-500 hover:underline"
+                        className="text-sm font-semibold text-emerald-600 dark:text-emerald-300 hover:underline"
                     >
                         {t("payments.form.reset", "Reset")}
                     </button>

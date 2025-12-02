@@ -1,3 +1,4 @@
+// src/pages/UserSettings/UserSettings.jsx
 import React, { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
@@ -17,13 +18,16 @@ import AccountSection from "./components/sections/AccountSection";
 
 // Import utilities and hooks
 import { emptySecurityForm } from "./utils/constants";
-import { validateSecurityField, calculatePasswordStrength } from "./utils/validation";
+import {
+  validateSecurityField,
+  calculatePasswordStrength,
+} from "./utils/validation";
 import { getSettingsMessage } from "./utils/translations";
 import { useProfileForm } from "./hooks/useProfileForm";
 import { useSettingsNavigation } from "./hooks/useSettingsNavigation";
 import {
   updateUserPassword,
-  deleteUserAccount
+  deleteUserAccount,
 } from "./services/userSettingsService";
 
 export default function UserSettings({ variant = "standalone" }) {
@@ -44,8 +48,14 @@ export default function UserSettings({ variant = "standalone" }) {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [confirmDialog, setConfirmDialog] = useState({ open: false, intent: null });
-  const [passwordStrength, setPasswordStrength] = useState({ score: 0, feedback: [] });
+  const [confirmDialog, setConfirmDialog] = useState({
+    open: false,
+    intent: null,
+  });
+  const [passwordStrength, setPasswordStrength] = useState({
+    score: 0,
+    feedback: [],
+  });
   const [securityErrors, setSecurityErrors] = useState({});
 
   // Refs for sections
@@ -85,10 +95,8 @@ export default function UserSettings({ variant = "standalone" }) {
         });
       },
       {
-        // Trigger intersection when section is 55% from top and 35% from bottom of viewport
         rootMargin: "-55% 0px -35% 0px",
-        // Require 25% of the section to be visible
-        threshold: 0.25
+        threshold: 0.25,
       }
     );
 
@@ -103,7 +111,10 @@ export default function UserSettings({ variant = "standalone" }) {
   const handleSecurityChange = (field, value) => {
     setSecurityForm((prev) => ({ ...prev, [field]: value }));
 
-    const error = validateSecurityField(field, value, { ...securityForm, [field]: value });
+    const error = validateSecurityField(field, value, {
+      ...securityForm,
+      [field]: value,
+    });
     setSecurityErrors((prev) => ({ ...prev, [field]: error }));
 
     if (field === "newPassword") {
@@ -116,22 +127,26 @@ export default function UserSettings({ variant = "standalone" }) {
   const handlePasswordSubmit = async (event) => {
     event.preventDefault();
     if (!securityForm.currentPassword || !securityForm.newPassword) {
-      toast.error(getSettingsMessage('currentPasswordRequired'));
+      toast.error(getSettingsMessage("currentPasswordRequired"));
       return;
     }
     if (securityForm.newPassword !== securityForm.confirmPassword) {
-      toast.error(getSettingsMessage('passwordsNotMatch'));
+      toast.error(getSettingsMessage("passwordsNotMatch"));
       return;
     }
 
     setIsUpdatingPassword(true);
     try {
-      await updateUserPassword(securityForm.currentPassword, securityForm.newPassword);
+      await updateUserPassword(
+        securityForm.currentPassword,
+        securityForm.newPassword
+      );
       clearSensitiveData();
-      toast.success(getSettingsMessage('updatePasswordSuccess'));
+      toast.success(getSettingsMessage("updatePasswordSuccess"));
     } catch (error) {
-      console.error('Password update error:', error);
-      const errorMessage = error.message || getSettingsMessage('updatePasswordFailed');
+      console.error("Password update error:", error);
+      const errorMessage =
+        error.message || getSettingsMessage("updatePasswordFailed");
       toast.error(errorMessage);
     } finally {
       setIsUpdatingPassword(false);
@@ -145,16 +160,19 @@ export default function UserSettings({ variant = "standalone" }) {
       const result = await deleteUserAccount(user);
       toast.success(result.message);
     } catch (error) {
-      console.error('Account action error:', error);
-      const errorMessage = error.message || getSettingsMessage('accountActionFailed');
+      console.error("Account action error:", error);
+      const errorMessage =
+        error.message || getSettingsMessage("accountActionFailed");
       toast.error(errorMessage);
     } finally {
       setPendingAccountAction(null);
     }
   };
 
-  const openConfirmDialog = (intent = "delete") => setConfirmDialog({ open: true, intent });
-  const closeConfirmDialog = () => setConfirmDialog({ open: false, intent: null });
+  const openConfirmDialog = (intent = "delete") =>
+    setConfirmDialog({ open: true, intent });
+  const closeConfirmDialog = () =>
+    setConfirmDialog({ open: false, intent: null });
   const handleConfirmedAccountAction = () => {
     handleAccountDelete();
     closeConfirmDialog();
@@ -168,26 +186,31 @@ export default function UserSettings({ variant = "standalone" }) {
     setShowConfirmPassword(false);
   };
 
+  // ───────────────── LOADING STATE ─────────────────
   if (!user || isLoadingUserData) {
     return (
-      <div className="min-h-screen bg-white py-10 transition-colors dark:bg-slate-950">
+      <div className="min-h-screen bg-white py-10 transition-colors dark:bg-[#020f0f]">
         <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 sm:px-6 lg:flex-row lg:gap-10 lg:px-8">
           {/* Sidebar skeleton */}
           <aside className="space-y-4 lg:w-64">
-            <div className="rounded-3xl bg-white/90 backdrop-blur-sm p-6 shadow-xl ring-1 ring-white/20 dark:bg-slate-900/80 dark:ring-slate-800">
+            <div className="rounded-3xl bg-white/90 backdrop-blur-sm p-6 shadow-xl ring-1 ring-emerald-100/60 dark:bg-[#0f1d1d]/80 dark:ring-emerald-900/40">
               <div className="flex items-center gap-4">
-                <div className="h-12 w-12 animate-pulse rounded-full bg-slate-200 dark:bg-slate-700" />
+                <div className="h-12 w-12 animate-pulse rounded-full bg-slate-200 dark:bg-emerald-950/60" />
                 <div className="space-y-2">
-                  <div className="h-4 w-24 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
-                  <div className="h-3 w-32 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
+                  <div className="h-4 w-24 animate-pulse rounded bg-slate-200 dark:bg-emerald-950/60" />
+                  <div className="h-3 w-32 animate-pulse rounded bg-slate-200 dark:bg-emerald-950/60" />
                 </div>
               </div>
-              <div className="mt-4 h-3 w-full animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
+              <div className="mt-4 h-3 w-full animate-pulse rounded bg-slate-200 dark:bg-emerald-950/60" />
             </div>
-            <div className="rounded-3xl bg-white/90 backdrop-blur-sm p-4 shadow-xl ring-1 ring-white/20 dark:bg-slate-900/80 dark:ring-slate-800">
+
+            <div className="rounded-3xl bg-white/90 backdrop-blur-sm p-4 shadow-xl ring-1 ring-emerald-100/60 dark:bg-[#0f1d1d]/80 dark:ring-emerald-900/40">
               <div className="space-y-3">
                 {[...Array(3)].map((_, i) => (
-                  <div key={i} className="h-10 w-full animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-700" />
+                  <div
+                    key={i}
+                    className="h-10 w-full animate-pulse rounded-2xl bg-slate-200 dark:bg-emerald-950/60"
+                  />
                 ))}
               </div>
             </div>
@@ -195,18 +218,21 @@ export default function UserSettings({ variant = "standalone" }) {
 
           {/* Main content skeleton */}
           <div className="flex-1 space-y-6">
-            <div className="rounded-3xl bg-white/80 backdrop-blur-sm p-6 shadow-xl ring-1 ring-white/20 dark:bg-slate-900/80 dark:ring-slate-800">
+            <div className="rounded-3xl bg-white/80 backdrop-blur-sm p-6 shadow-xl ring-1 ring-emerald-100/60 dark:bg-[#0f1d1d]/80 dark:ring-emerald-900/40">
               <div className="space-y-4">
-                <div className="h-6 w-48 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
-                <div className="h-4 w-96 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
+                <div className="h-6 w-48 animate-pulse rounded bg-slate-200 dark:bg-emerald-950/60" />
+                <div className="h-4 w-96 animate-pulse rounded bg-slate-200 dark:bg-emerald-950/60" />
               </div>
             </div>
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="rounded-3xl bg-white/80 backdrop-blur-sm p-6 shadow-xl ring-1 ring-white/20 dark:bg-slate-900/80 dark:ring-slate-800">
+              <div
+                key={i}
+                className="rounded-3xl bg-white/80 backdrop-blur-sm p-6 shadow-xl ring-1 ring-emerald-100/60 dark:bg-[#0f1d1d]/80 dark:ring-emerald-900/40"
+              >
                 <div className="space-y-4">
-                  <div className="h-5 w-32 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
-                  <div className="h-4 w-full animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
-                  <div className="h-10 w-full animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
+                  <div className="h-5 w-32 animate-pulse rounded bg-slate-200 dark:bg-emerald-950/60" />
+                  <div className="h-4 w-full animate-pulse rounded bg-slate-200 dark:bg-emerald-950/60" />
+                  <div className="h-10 w-full animate-pulse rounded bg-slate-200 dark:bg-emerald-950/60" />
                 </div>
               </div>
             ))}
@@ -260,13 +286,13 @@ export default function UserSettings({ variant = "standalone" }) {
     </>
   );
 
-
+  // ───────────────── EMBEDDED (inside AccountLayout) ─────────────────
   const content = isEmbedded ? (
     <div
       className={`settings-shell space-y-6 rounded-3xl p-4 transition-colors ${
         isDarkMode
-          ? "bg-slate-900/80 ring-1 ring-slate-800 text-slate-200"
-          : "bg-white/80 ring-1 ring-white/20 text-slate-900"
+          ? "bg-[#0f1d1d]/80 ring-emerald-900/40 text-slate-200"
+          : "bg-white/95 ring-emerald-100 text-slate-900"
       }`}
     >
       <Navigation
@@ -283,7 +309,8 @@ export default function UserSettings({ variant = "standalone" }) {
       {settingsSections}
     </div>
   ) : (
-    <div className="min-h-screen bg-white py-10 transition-colors dark:bg-slate-950">
+    // ───────────────── STANDALONE VARIANT ─────────────────
+    <div className="min-h-screen bg-white py-10 transition-colors dark:bg-[#020f0f]">
       <div className="settings-shell mx-auto flex max-w-6xl flex-col gap-6 px-4 sm:px-6 lg:flex-row lg:gap-10 lg:px-8">
         <aside className="space-y-4 lg:w-64">
           <Navigation
@@ -315,4 +342,3 @@ export default function UserSettings({ variant = "standalone" }) {
     </>
   );
 }
-

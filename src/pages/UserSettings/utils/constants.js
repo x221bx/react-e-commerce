@@ -154,15 +154,19 @@ export const accountActionCopy = {
 
 export const sectionToneStyles = {
   neutral: {
-    light: "border border-green-200/30 bg-white/90 backdrop-blur-sm",
-    dark: "border border-slate-700 bg-slate-900/90",
+    light: "border border-green-200/40 bg-white/95 backdrop-blur-sm",
+    dark: "border border-green-900/40 bg-[#0f1d1d]/80 backdrop-blur-sm",
   },
+
   highlight: {
-    light: "border border-green-300/60 bg-gradient-to-b from-white/95 to-green-50/80 backdrop-blur-sm",
-    dark: "border border-green-800/40 bg-gradient-to-b from-slate-900/90 to-green-950/40",
+    light: "border border-green-300/60 bg-gradient-to-b from-white/90 to-green-50/80 backdrop-blur-sm",
+    dark: "border border-green-800/50 bg-gradient-to-b from-[#0f1d1d]/90 to-emerald-950/40 backdrop-blur",
   },
+
   danger: {
-    light: "border border-red-200/50 bg-red-50/90 backdrop-blur-sm",
-    dark: "border border-red-900/40 bg-red-950/30",
+    light: "border border-red-300/50 bg-red-50/90 backdrop-blur-sm",
+    dark: "border border-red-900/50 bg-red-950/40 backdrop-blur-sm",
   },
 };
+
+

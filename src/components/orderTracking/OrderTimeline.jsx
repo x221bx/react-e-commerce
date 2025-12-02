@@ -1,3 +1,4 @@
+// src/components/orderTracking/OrderTimeline.jsx
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -18,7 +19,6 @@ export default function OrderTimeline({ order, isDark }) {
             ? statusOrder.indexOf(order.status?.toLowerCase() || "pending")
             : 0;
 
-        // Get the actual timestamp for each status from statusHistory
         const statusTimestamps = {};
         if (order?.statusHistory) {
             order.statusHistory.forEach(history => {
@@ -31,14 +31,12 @@ export default function OrderTimeline({ order, isDark }) {
             if (index < currentStatusIndex) state = "done";
             if (index === currentStatusIndex) state = "current";
 
-            // Get actual timestamp if available, otherwise estimate
             let actualTimestamp = null;
             let estimatedTimestamp = null;
 
             if (statusTimestamps[step.key]) {
                 actualTimestamp = statusTimestamps[step.key];
             } else if (index > currentStatusIndex) {
-                // Estimate future dates based on order creation
                 const orderCreated = new Date(order?.createdAt || Date.now());
                 const estimatedDate = new Date(orderCreated);
                 estimatedDate.setDate(orderCreated.getDate() + step.estimatedDays);
@@ -55,18 +53,25 @@ export default function OrderTimeline({ order, isDark }) {
         });
     }, [order]);
 
+    // 🎨 Colors from Products.jsx
+    const strongText = isDark ? "text-white" : "text-slate-900";
+    const muted = isDark ? "text-white/60" : "text-slate-500";
+
+    const connectorColor = isDark ? "bg-slate-700" : "bg-slate-200";
+
+    // 🎨 Indicator styling adapted visually to match Product cards
     const timelineIndicator = (state) => {
         if (state === "done") {
-            return "border-emerald-500 bg-emerald-500 text-white";
+            return "border-emerald-500 bg-emerald-500 text-white shadow-md";
         }
         if (state === "current") {
             return isDark
-                ? "border-amber-400 bg-amber-900/40 text-amber-200"
-                : "border-amber-400 bg-amber-50 text-amber-600";
+                ? "border-amber-400 bg-amber-900/40 text-amber-200 shadow"
+                : "border-amber-400 bg-amber-50 text-amber-600 shadow";
         }
         return isDark
-            ? "border-slate-700 bg-slate-900 text-slate-500"
-            : "border-slate-200 bg-white text-slate-400";
+            ? "border-white/10 bg-[#0f1d1d]/70 text-slate-500"
+            : "border-gray-200 bg-white text-slate-400";
     };
 
     const formatDateTime = (step) => {
@@ -74,54 +79,62 @@ export default function OrderTimeline({ order, isDark }) {
             return new Date(step.actualTimestamp).toLocaleString();
         } else if (step.estimatedTimestamp) {
             return `Est. ${new Date(step.estimatedTimestamp).toLocaleDateString()}`;
-        } else {
-            return t("tracking.awaitingUpdate", "Awaiting update");
         }
+        return t("tracking.awaitingUpdate", "Awaiting update");
     };
 
     const getDateStyle = (step) => {
-        if (step.actualTimestamp) {
-            return strongText;
-        } else if (step.estimatedTimestamp) {
+        if (step.actualTimestamp) return strongText;
+        if (step.estimatedTimestamp)
             return isDark ? "text-slate-500" : "text-slate-400";
-        } else {
-            return muted;
-        }
+        return muted;
     };
-
-    const connectorColor = isDark ? "bg-slate-700" : "bg-slate-200";
-    const muted = isDark ? "text-slate-400" : "text-slate-500";
-    const strongText = isDark ? "text-white" : "text-slate-900";
 
     return (
         <section>
             <h2 className={`text-sm font-semibold uppercase tracking-wide ${muted}`}>
                 {t("tracking.trackingStatus", "Tracking Status")}
             </h2>
+
             <ol className="mt-6 space-y-6">
                 {timelineSteps.map((step, index) => (
-                    <li key={step.key} className="flex gap-4 animate-in slide-in-from-left-4 duration-500" style={{ animationDelay: `${index * 100}ms` }}>
+                    <li
+                        key={step.key}
+                        className="flex gap-4 transition-all animate-in slide-in-from-left-4 duration-500"
+                        style={{ animationDelay: `${index * 100}ms` }}
+                    >
+                        {/* Left Column: Indicator */}
                         <div className="flex flex-col items-center">
-                            {/* Circle Indicator */}
                             <div
-                                className={`flex h-10 w-10 items-center justify-center rounded-full border-2 font-semibold transition-all duration-300 hover:scale-110 ${timelineIndicator(
-                                    step.state
-                                )}`}
+                                className={`
+                                    flex h-10 w-10 items-center justify-center rounded-full border-2 
+                                    font-semibold transition-all duration-300 hover:scale-110
+                                    ${timelineIndicator(step.state)}
+                                `}
                             >
-                                {step.state === "done" ? "✓" : step.isEstimated ? "~" : index + 1}
+                                {step.state === "done"
+                                    ? "✓"
+                                    : step.isEstimated
+                                    ? "~"
+                                    : index + 1}
                             </div>
-                            {/* Connector Line */}
+
                             {index !== timelineSteps.length - 1 && (
                                 <div className={`mt-2 h-14 w-0.5 ${connectorColor}`} />
                             )}
                         </div>
+
+                        {/* Right Column: Labels */}
                         <div className="pt-1">
                             <p className={`font-semibold ${strongText}`}>
                                 {t(step.label)}
                                 {step.isEstimated && (
-                                    <span className={`ml-2 text-xs ${muted}`}>Estimated</span>
+                                    <span className={`ml-2 text-xs ${muted}`}>
+                                        Estimated
+                                    </span>
                                 )}
                             </p>
+
                             <p className={`text-sm ${getDateStyle(step)}`}>
                                 {formatDateTime(step)}
                             </p>
