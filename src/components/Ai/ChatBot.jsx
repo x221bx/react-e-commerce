@@ -55,7 +55,7 @@ export default function ChatBot() {
 
   // ----------------------- RESIZING LOGIC -----------------------
   const chatRef = useRef(null);
-  const [size, setSize] = useState({ width: 460, height: 380 });
+  const [size, setSize] = useState({ width: 520, height: 500 });
 
   const startResize = (e) => {
     e.preventDefault();
@@ -67,10 +67,10 @@ export default function ChatBot() {
 
     const doDrag = (ev) => {
       setSize({
-        width: Math.min(700, Math.max(320, startWidth + (ev.clientX - startX))),
+        width: Math.min(760, Math.max(360, startWidth + (ev.clientX - startX))),
         height: Math.min(
-          700,
-          Math.max(250, startHeight + (ev.clientY - startY))
+          760,
+          Math.max(320, startHeight + (ev.clientY - startY))
         ),
       });
     };
@@ -141,6 +141,12 @@ export default function ChatBot() {
       localStorage.setItem("chatSoundEnabled", String(next));
       return next;
     });
+  };
+
+  const handleClearChat = () => {
+    setMessages([]);
+    setMessageMeta([]);
+    localStorage.removeItem("chatHistory");
   };
 
   const ProductCardMini = ({ id }) => {
@@ -293,14 +299,20 @@ export default function ChatBot() {
             className={`
               fixed z-50 
               rounded-2xl shadow-2xl overflow-hidden flex flex-col border backdrop-blur-xl
-              ${isDark ? "bg-[#071010]/80 border-white/10" : "bg-white/90 border-gray-200"}
+              ${
+                isDark
+                  ? "bg-[#0a1616]/85 border-white/10"
+                  : "bg-white/95 border-gray-200"
+              }
             `}
             style={{
               width: size.width,
               height: size.height,
-              bottom: "110px",
-              right: "50px",
+              bottom: "8vh",
+              right: "4vw",
               position: "fixed",
+              maxWidth: "95vw",
+              maxHeight: "80vh",
             }}
             initial={{ opacity: 0, scale: 0.85 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -313,7 +325,7 @@ export default function ChatBot() {
             ></div>
 
             {/* HEADER */}
-            <div className="flex items-center justify-between bg-teal-600/90 text-white px-4 py-2 cursor-move">
+            <div className="flex items-center justify-between bg-teal-600 text-white px-4 py-3 cursor-move shadow">
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 bg-white/20 rounded-full text-xs flex items-center justify-center">
                   AI
@@ -323,22 +335,31 @@ export default function ChatBot() {
 
               <div className="flex items-center gap-2">
                 <button
+                  onClick={handleClearChat}
+                  className="p-1 hover:bg-white/10 rounded-full"
+                  title="Clear chat"
+                >
+                  <FiTrash2 size={16} />
+                </button>
+                <button
                   onClick={toggleSound}
                   className="p-1 hover:bg-white/10 rounded-full"
                 >
                   {soundEnabled ? <FiVolume2 size={16} /> : <FiVolumeX size={16} />}
                 </button>
 
-                <FiX
-                  size={20}
-                  className="cursor-pointer hover:scale-110"
+                <button
                   onClick={() => setOpen(false)}
-                />
+                  className="p-1 hover:bg-white/10 rounded-full"
+                  title="Close"
+                >
+                  <FiX size={18} />
+                </button>
               </div>
             </div>
 
             {/* MESSAGES */}
-            <div className="flex-1 overflow-y-auto p-3 space-y-3">
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {messages.map((m, i) => (
                 <Motion.div
                   key={m.id || i}
@@ -380,7 +401,7 @@ export default function ChatBot() {
             </div>
 
             {/* INPUT */}
-            <div className="p-2 flex gap-2 border-t">
+            <div className="p-3 flex gap-2 border-t bg-white/40 backdrop-blur-md dark:bg-[#0a1616]/60">
               <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -391,9 +412,11 @@ export default function ChatBot() {
                   }
                 }}
                 className={`flex-1 rounded-xl px-3 py-2 text-sm resize-none outline-none ${
-                  isDark ? "bg-[#071414] text-white" : "bg-white border"
+                  isDark
+                    ? "bg-[#0b1a1a] text-white border border-white/10"
+                    : "bg-white border border-gray-200 shadow-inner"
                 }`}
-                placeholder="اكتب رسالتك..."
+                placeholder="Type your message..."
               />
 
               <button
@@ -401,8 +424,8 @@ export default function ChatBot() {
                 disabled={!input.trim()}
                 className={`px-3 rounded-xl ${
                   input.trim()
-                    ? "bg-teal-600 text-white"
-                    : "bg-gray-300 text-gray-500"
+                    ? "bg-teal-600 text-white shadow"
+                    : "bg-gray-200 text-gray-500"
                 }`}
               >
                 <FiSend size={18} />
