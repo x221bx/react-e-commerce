@@ -13,6 +13,9 @@ import {
 import { createPortal } from "react-dom";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import MessageBadge from "../pages/admin/MessagesBadge";
+import { FiSun, FiMoon } from "react-icons/fi";
+import { UseTheme } from "../../src/theme/ThemeProvider";
+
 
 function PortalTooltip({ open, label, x, y, onClose }) {
   useEffect(() => {
@@ -55,37 +58,30 @@ export default function AdminSidebar({ onNavigate, collapsed = false }) {
     return () => window.removeEventListener("scroll", onScroll);
   }, [hideTip]);
 
-  const links = useMemo(
-    () => [
-      { to: "/admin", end: true, label: "Dashboard", icon: <FiHome /> },
-      { to: "/admin/products", label: "Products", icon: <FiPackage /> },
-      {
-        to: "/admin/products/new",
-        label: "Add Product",
-        icon: <FiPlusCircle />,
-      },
-      {
-        to: "/admin/orders",
-        end: true,
-        label: "Orders",
-        icon: <FiShoppingCart />,
-      },
-      {
-        to: "/admin/messages",
-        label: "Messages",
-        icon: <FiMail />,
-        badge: true,
-      },
-      { to: "/admin/categories", label: "Categories", icon: <FiTag /> },
-      { to: "/admin/articles", label: "Articles", icon: <FiFileText /> },
-      {
-        to: "/admin/complaints",
-        label: "Complaints",
-        icon: <FiMessageSquare />,
-      },
-    ],
-    []
-  );
+ const { theme, toggle } = UseTheme();
+
+const links = useMemo(
+  () => [
+    { to: "/admin", end: true, label: "Dashboard", icon: <FiHome /> },
+    { to: "/admin/products", label: "Products", icon: <FiPackage /> },
+    { to: "/admin/products/new", label: "Add Product", icon: <FiPlusCircle /> },
+    { to: "/admin/orders", end: true, label: "Orders", icon: <FiShoppingCart /> },
+    { to: "/admin/messages", label: "Messages", icon: <FiMail />, badge: true },
+    { to: "/admin/categories", label: "Categories", icon: <FiTag /> },
+    { to: "/admin/articles", label: "Articles", icon: <FiFileText /> },
+    { to: "/admin/complaints", label: "Complaints", icon: <FiMessageSquare /> },
+
+    // 🌙 NEW TOGGLE BUTTON
+    {
+      to: null,
+      label: theme === "dark" ? "Light Mode" : "Dark Mode",
+      icon: theme === "dark" ? <FiSun /> : <FiMoon />,
+      isThemeToggle: true,
+    },
+  ],
+  [theme]
+);
+
 
   return (
     <div className="flex h-full flex-col">
@@ -149,8 +145,10 @@ function SideLink({
   badge,
   onShowTip,
   onHideTip,
+  isThemeToggle = false,
 }) {
   const ref = useRef(null);
+  const { toggle } = UseTheme();
 
   const handleEnter = () => {
     if (!collapsed || !ref.current) return;
@@ -163,14 +161,22 @@ function SideLink({
     onHideTip();
   };
 
+  const handleClick = (e) => {
+    if (isThemeToggle) {
+      e.preventDefault();
+      toggle(); // 👈 تشغيل dark/light
+      return;
+    }
+
+    onNavigate?.(e);
+    onHideTip?.();
+  };
+
   return (
     <NavLink
-      to={to}
+      to={to || "#"}
       end={end}
-      onClick={(e) => {
-        onNavigate?.(e);
-        onHideTip?.();
-      }}
+      onClick={handleClick}
       ref={ref}
       onMouseEnter={handleEnter}
       onMouseLeave={handleLeave}
@@ -179,7 +185,9 @@ function SideLink({
       className={({ isActive }) =>
         [
           linkBase,
-          isActive
+          isThemeToggle
+            ? linkIdle // زر لا يتلوّن كباقي الروابط
+            : isActive
             ? "pl-3 before:absolute before:left-0 before:top-1/2 before:h-5 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:bg-[#018218] " +
               linkActive
             : linkIdle,
@@ -188,14 +196,7 @@ function SideLink({
       }
       aria-label={collapsed ? label : undefined}
     >
-      <span className="relative text-[18px]">
-        {icon}
-        {badge && (
-          <span className="absolute -top-1 -right-1">
-            <MessageBadge />
-          </span>
-        )}
-      </span>
+      <span className="text-[18px]">{icon}</span>
       {!collapsed && <span className="truncate">{label}</span>}
     </NavLink>
   );
