@@ -1,989 +1,196 @@
-// src/hooks/useAIChat.js
+//src/hooks/useAIChat.js
+// ------------------------------------------------------
+//  useAIChat.js — FINAL FIXED PROFESSIONAL VERSION
+// ------------------------------------------------------
 
 import { useState } from "react";
-
 import { aiSearchProducts } from "./useAIProductSearch";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "../services/firebase";
 
-
-
-const MAX_CONTEXT_MESSAGES = 20;
-
-
-
-/* ------------------------------ Normalization ------------------------------ */
-
-function normalize(text = "") {
-
-  return text
-
-    .toLowerCase()
-
-    .replace(/[أإآا]/g, "ا")
-
-    .replace(/ى/g, "ي")
-
-    .replace(/ة/g, "ه")
-
-    .replace(/[\u0610-\u061A\u064B-\u065F\u06D6-\u06ED]/g, "")
-
-    .replace(/[^a-z\u0600-\u06FF0-9\s]/g, " ")
-
-    .replace(/\s+/g, " ")
-
-    .trim();
-
+/* Normalization */
+function normalize(t = "") {
+    return t
+        .toLowerCase()
+        .replace(/[أإآا]/g, "ا")
+        .replace(/ة/g, "ه")
+        .replace(/ى/g, "ي")
+        .replace(/[^a-z0-9\u0600-\u06FF\s]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
 }
 
+/* Detect price range */
+function extractPriceRange(text) {
+    const t = normalize(text);
+    const nums = t.match(/\d+/g);
 
+    if (!nums) return null;
 
-/* ------------------------------ Toxic Filter ------------------------------ */
+    if (nums.length === 1) {
+        if (t.includes("اقل") || t.includes("تحت"))
+            return { min: 0, max: Number(nums[0]) };
 
-const TOXIC = [
+        if (t.includes("اكبر") || t.includes("اعلي"))
+            return { min: Number(nums[0]), max: Infinity };
+    }
 
-  "انتحار",
+    if (nums.length >= 2) {
+        const a = Number(nums[0]);
+        const b = Number(nums[1]);
+        return { min: Math.min(a, b), max: Math.max(a, b) };
+    }
 
-  "اقتل",
-
-  "قتل نفسي",
-
-  "قتل",
-
-  "مخدرات",
-
-  "تفجير",
-
-  "قنبله",
-
-  "سلاح",
-
-  "كراهية",
-
-  "عنصريه",
-
-  "fuck",
-
-  "shit",
-
-  "suicide",
-
-  "kill myself",
-
-];
-
-
-
-function isToxic(text = "") {
-
-  const t = normalize(text);
-
-  return TOXIC.some((w) => t.includes(w));
-
+    return null;
 }
 
+/* Detect intent */
+function detectIntent(msg) {
+    const t = normalize(msg);
 
+    const greet = ["عامل", "ازيك", "اخبارك", "سلام", "hello", "hi", "هاي"];
+    if (greet.some((x) => t.includes(x))) return { type: "chat" };
 
-function safeJson(str, fallback = {}) {
+    if (t.includes("سعر") || (t.includes("من") && t.includes("ل")))
+        return { type: "priceRange" };
 
-  try {
+    const rec = ["رشح", "اقترح", "حاجه كويسه", "منتج كويس", "عندك ايه"];
+    if (rec.some((w) => t.includes(w))) return { type: "recommend" };
 
-    return JSON.parse(str);
+    const items = ["سماد", "مبيد", "دواء", "علاج", "مخصب", "nutrient"];
+    if (items.some((w) => t.includes(w))) return { type: "search" };
 
-  } catch {
-
-    return fallback;
-
-  }
-
+    return { type: "chat" };
 }
 
-
-
-/* -------------------------- هل المستخدم طلب بدائل؟ ------------------------- */
-
-function wantsAlternatives(message = "") {
-
-  const norm = normalize(message);
-
-  const altWords = [
-
-    "بدائل",
-
-    "اختيارات",
-
-    "اختيارين",
-
-    "اختيارين",
-
-    "اختيار تاني",
-
-    "منتجات تانيه",
-
-    "منتج تاني",
-
-    "اكثر من",
-
-    "بديل",
-
-    "ثلاثه",
-
-    "ثلاثة",
-
-    "٣ منتجات",
-
-    "3 منتجات",
-
-    "كم اختيار",
-
-    "كذا اختيار",
-
-  ];
-
-
-
-  return altWords.some((w) => norm.includes(normalize(w)));
-
+/* Load ALL products once */
+async function loadAllProducts() {
+    const snap = await getDocs(collection(db, "products"));
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
-
-
-
-/* -------------------------------------------------------------------------- */
-
-/*                          ⭐ useAIChat — Main Hook ⭐                         */
-
-/* -------------------------------------------------------------------------- */
-
-
 
 export function useAIChat() {
+    const [messages, setMessages] = useState([]);
+    const API_KEY = import.meta.env.VITE_OPENAI_KEY;
 
-  const [messages, setMessages] = useState([]);
+    /* Replace assistant msg */
+    function update(id, content) {
+        setMessages((p) => p.map((m) => (m.id === id ? { ...m, content } : m)));
+    }
 
-  const API_KEY = import.meta.env.VITE_OPENAI_KEY;
+    /* Core sendMessage */
+    async function sendMessage(text) {
+        const msg = text.trim();
+        if (!msg) return;
 
+        setMessages((p) => [...p, { role: "user", content: msg }]);
 
+        const id = Date.now();
+        setMessages((p) => [...p, { id, role: "assistant", content: "..." }]);
 
-  /* ------------------------- 1) فهم نية المستخدم -------------------------- */
+        const intent = detectIntent(msg);
 
-  async function understandIntent(message) {
+        /* AI reply */
+        async function aiReply() {
+            try {
+                const r = await fetch("https://api.openai.com/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${API_KEY}`,
+                    },
+                    body: JSON.stringify({
+                        model: "gpt-4o-mini",
+                        messages: [
+                            {
+                                role: "system",
+                                content: `
+انت مساعد ذكي باللهجة المصرية.
+لو السؤال معلومه → رد عادي بدون منتجات.
+ممنوع تذكر اسم منتج في النص. 
+لو هتعرض منتجات استخدم productCard فقط.`,
+                            },
+                            { role: "user", content: msg },
+                        ],
+                    }),
+                });
 
-    if (!API_KEY) return {};
+                const data = await r.json();
+                return data.choices?.[0]?.message?.content || "تمام تحت أمرك 🌿";
+            } catch {
+                return "حصل خطأ، حاول تاني.";
+            }
+        }
 
+        /* Search products by keywords */
+        async function searchByKeywords(msg) {
+            const words = normalize(msg).split(" ").filter((w) => w.length > 2);
+            const all = [];
 
+            for (const w of words) {
+                const r = await aiSearchProducts({ keyword: w });
+                r.forEach((p) => {
+                    if (!all.find((x) => x.id === p.id)) all.push(p);
+                });
+            }
+            return all;
+        }
 
-    try {
+        /* Search by PRICE ONLY */
+        async function searchByPrice(min, max) {
+            const all = await loadAllProducts();
+            return all.filter((p) => p.price >= min && p.price <= max);
+        }
 
-      const res = await fetch("https://api.openai.com/v1/responses", {
+        /* CASE 1 — chat only */
+        if (intent.type === "chat") {
+            update(id, await aiReply());
+            return;
+        }
 
-        method: "POST",
+        /* CASE 2 — PRICE RANGE */
+        if (intent.type === "priceRange") {
+            const reply = await aiReply();
+            const range = extractPriceRange(msg);
+            const results = await searchByPrice(range.min, range.max);
 
-        headers: {
+            const top3 = results.slice(0, 3);
 
-          "Content-Type": "application/json",
+            const cards = top3
+                .map((p) => `<productCard id="${p.id}"></productCard>`)
+                .join("\n");
 
-          Authorization: `Bearer ${API_KEY}`,
+            update(id, reply + "\n\n" + cards);
+            return;
+        }
 
-        },
+        /* CASE 3 — recommendation → ALWAYS 3 */
+        if (intent.type === "recommend") {
+            const reply = await aiReply();
+            const results = await searchByKeywords(msg);
 
-        body: JSON.stringify({
+            const top3 = results.slice(0, 3);
+            const cards = top3
+                .map((p) => `<productCard id="${p.id}"></productCard>`)
+                .join("\n");
 
-          model: "gpt-4o-mini",
+            update(id, reply + "\n\n" + cards);
+            return;
+        }
 
-          input: `
+        /* CASE 4 — specific product → ONLY ONE */
+        if (intent.type === "search") {
+            const reply = await aiReply();
+            const results = await searchByKeywords(msg);
 
-حلّل الجملة التالية واستخرج نية المستخدم بالتفصيل.
+            if (results.length > 0) {
+                update(id, reply + `\n\n<productCard id="${results[0].id}"></productCard>`);
+            } else {
+                update(id, reply);
+            }
+            return;
+        }
+    }
 
-
-
-اخرج JSON فقط بدون أي شرح إضافي:
-
-
-
-{
-
-  "crop": "",
-
-  "problem": "",
-
-  "product_type": "",
-
-  "budget": "",
-
-  "goal": "",
-
-  "search_query": "",
-
-  "should_recommend_product": "",
-
-  "area_value": "",
-
-  "area_unit": "",
-
-  "trees_count": "",
-
-  "wants_alternatives": ""
-
+    return { messages, sendMessage, setMessages };
 }
-
-
-
-/*
-
-- crop: المحصول إن وجد (قمح، ذره، بطاطس، طماطم...)
-
-- problem: المشكلة (اصفرار، حشائش، حشرات، مرض فطري، ضعف نمو...)
-
-- product_type: استنتج نوع المنتج (سماد، سماد ورقي، مغذي نباتي، مبيد حشري، مبيد حشائش، منظم نمو، منشط جذور...)
-
-- budget: استخرج رقم الميزانية فقط بالجنيه (بدون كلمة جنيه)
-
-- goal: الهدف (زيادة الإنتاج، علاج الاصفرار، تقوية الجذور...)
-
-- search_query: كوييري عربي قصير يمثل أفضل وصف لما يحتاجه المستخدم
-
-- should_recommend_product: "yes" لو الهدف شراء منتج أو ترشيح، "no" لو السؤال نظري بحت
-
-- area_value: لو المستخدم ذكر مساحة (1 فدان، 5 قيراط، 200 متر...) استخرج الرقم فقط
-
-- area_unit: "فدان" أو "قيراط" أو "متر" أو "شجرة" أو "خط" أو "سطور" حسب ما تفهم من الجملة
-
-- trees_count: لو تكلم عن عدد أشجار (مثلاً 20 شجرة مانجا) استخرج العدد هنا
-
-- wants_alternatives: "yes" لو الجملة فيها معنى "بدائل" أو "اختيارات" أو "أكتر من منتج"، وإلا "no"
-
-*/
-
-
-
-الجملة:
-
-"${message}"
-
-`,
-
-        }),
-
-      });
-
-
-
-      const data = await res.json();
-
-
-
-      const raw =
-
-        data.output_text ||
-
-        data.output?.[0]?.content?.[0]?.text?.value ||
-
-        "{}";
-
-
-
-      return safeJson(raw, {});
-
-    } catch (err) {
-
-      console.log("Intent Error:", err);
-
-      return {};
-
-    }
-
-  }
-
-
-
-  /* ------------------------- 2) Streaming للرد -------------------------- */
-
-  async function streamAIReply({ userMessage, context, intent, onToken }) {
-
-    if (!API_KEY) {
-
-      const msg = "⚠️ مفتاح OpenAI (VITE_OPENAI_KEY) غير موجود.";
-
-      onToken(msg);
-
-      return msg;
-
-    }
-
-
-
-    const res = await fetch("https://api.openai.com/v1/chat/completions", {
-
-      method: "POST",
-
-      headers: {
-
-        "Content-Type": "application/json",
-
-        Authorization: `Bearer ${API_KEY}`,
-
-      },
-
-      body: JSON.stringify({
-
-        model: "gpt-4o-mini",
-
-        stream: true,
-
-        messages: [
-
-          {
-
-            role: "system",
-
-            content: `
-Always reply in the same language the user writes in: if the user writes in Arabic (has Arabic letters) reply in Arabic; otherwise reply in English. Avoid static/boilerplate replies and keep answers concise. Do not invent external products; only reference products returned from our catalog/cards.
-
-أنت مستشار زراعي محترف + مساعد عام مثل ChatGPT.
-
-
-
-قدراتك:
-
-- تفهم تفاصيل المحصول، المشكلة، المرحلة، الميزانية، الهدف.
-
-- تفهم المساحات: فدان، قيراط، متر، عدد الأشجار... وتقدّر الجرعات تقريبياً.
-
-- تقترح برامج تسميد وري ورش مناسبة لكل حالة.
-
-- تذكر الجرعات بصيغة آمنة إرشادية (مثلاً: من 200-300 سم لكل 100 لتر، أو 1 لتر للفدان تقريباً).
-
-- تضيف تحذيرات السلامة (لبس واقي، تجنب الرش في الحر الشديد...).
-
-- في الأسئلة العامة (غير زراعية) ترد بشكل عادي مثل ChatGPT.
-
-
-
-مهم جداً:
-
-- لا تذكر أسماء منتجات بعينها (المنتجات ستُضاف لاحقاً تلقائياً).
-
-- لا تكتب أي كود HTML أو React أو productCard.
-
-- ركّز على الشرح العلمي + الخلاصة العملية.
-
-- استخدم عربية بسيطة (فصحى سهلة أو لهجة مصرية خفيفة).
-
-- لو ذكر المستخدم مساحة أو فدان أو عدد أشجار، حاول تقدير جرعات تقريبية بوضوح.
-
-- أكّد دائماً أن الجرعات استرشادية وأن يراعي نشرات المنتج على العبوة.
-
-`,
-
-          },
-
-          ...context,
-
-          {
-
-            role: "user",
-
-            content: `
-
-سؤال المستخدم:
-
-${userMessage}
-
-
-
-فهم نية المستخدم (intent):
-
-${JSON.stringify(intent || {}, null, 2)}
-
-`,
-
-          },
-
-        ],
-
-      }),
-
-    });
-
-
-
-    if (!res.ok || !res.body) {
-
-      const text = await res.text().catch(() => "");
-
-      const msg = text || "⚠️ خطأ في الاتصال بالمساعد الذكي.";
-
-      onToken(msg);
-
-      return msg;
-
-    }
-
-
-
-    const reader = res.body.getReader();
-
-    const decoder = new TextDecoder("utf-8");
-
-
-
-    let done = false;
-
-    let fullText = "";
-
-
-
-    while (!done) {
-
-      const { value, done: doneReading } = await reader.read();
-
-      done = doneReading;
-
-      if (done || !value) break;
-
-
-
-      const chunk = decoder.decode(value, { stream: true });
-
-      const lines = chunk
-
-        .split("\n")
-
-        .filter((l) => l.trim().startsWith("data:"));
-
-
-
-      for (const line of lines) {
-
-        const txt = line.replace("data:", "").trim();
-
-        if (!txt || txt === "[DONE]") continue;
-
-
-
-        try {
-
-          const json = JSON.parse(txt);
-
-          const delta = json.choices?.[0]?.delta?.content;
-
-          if (delta) {
-
-            fullText += delta;
-
-            onToken(delta);
-
-          }
-
-        } catch {
-
-          // ignore malformed chunks
-
-        }
-
-      }
-
-    }
-
-
-
-    if (!fullText) {
-
-      const msg = "⚠️ لم أستطع توليد رد مناسب الآن.";
-
-      onToken(msg);
-
-      return msg;
-
-    }
-
-
-
-    return fullText;
-
-  }
-
-
-
-  /* ------------------------- بناء كوييريات البحث ------------------------- */
-
-  function buildQueries(message, intent = {}) {
-
-    const q = new Set();
-
-
-
-    const normMsg = normalize(message);
-
-    if (normMsg) q.add(normMsg);
-
-
-
-    if (intent.crop) q.add(normalize(intent.crop));
-
-    if (intent.product_type) q.add(normalize(intent.product_type));
-
-    if (intent.problem) q.add(normalize(intent.problem));
-
-    if (intent.goal) q.add(normalize(intent.goal));
-
-    if (intent.search_query) q.add(normalize(intent.search_query));
-
-
-
-    normMsg
-
-      .split(" ")
-
-      .filter((w) => w.length > 2)
-
-      .forEach((w) => q.add(w));
-
-
-
-    return Array.from(q);
-
-  }
-
-
-
-  /* ---------------------- البحث عن منتجات + Ranking ---------------------- */
-
-  async function findProductsForMessage(message, intent, maxCount) {
-
-    if (intent?.should_recommend_product === "no") return [];
-
-
-
-    const queries = buildQueries(message, intent);
-
-
-
-    const collected = [];
-
-    for (const q of queries) {
-
-      const found = await aiSearchProducts({ keyword: q, intent });
-
-      if (found.length) {
-
-        for (const p of found) {
-
-          if (!collected.find((x) => x.id === p.id)) {
-
-            collected.push(p);
-
-          }
-
-        }
-
-      }
-
-      if (collected.length >= maxCount * 3) break;
-
-    }
-
-
-
-    if (!collected.length) return [];
-
-
-
-    // فلترة بالميزانية
-
-    if (intent?.budget) {
-
-      const b = Number(intent.budget);
-
-      if (!isNaN(b) && b > 0) {
-
-        const within = collected.filter((p) => Number(p.price) <= b);
-
-
-
-        if (within.length > 0) {
-
-          return {
-
-            type: "normal",
-
-            items: within.slice(0, maxCount),
-
-          };
-
-        }
-
-
-
-        // مفيش منتج في الميزانية → أقرب حاجات
-
-        return {
-
-          type: "lowBudget",
-
-          items: collected.slice(0, maxCount),
-
-        };
-
-      }
-
-    }
-
-
-
-    // الوضع العادي
-
-    return {
-
-      type: "normal",
-
-      items: collected.slice(0, maxCount),
-
-    };
-
-  }
-
-
-
-  /* ------------------------------ sendMessage ------------------------------ */
-
-  async function sendMessage(userMessage) {
-
-    const trimmed = userMessage.trim();
-
-    if (!trimmed) return;
-
-
-
-    // فلتر محتوى مسيء/خطير
-
-    if (isToxic(trimmed)) {
-
-      setMessages((prev) => [
-
-        ...prev,
-
-        { role: "user", content: trimmed },
-
-        {
-
-          role: "assistant",
-
-          content:
-            "I’m here to help with farming questions, products, or orders. Please keep it friendly and on-topic.",
-
-        },
-
-      ]);
-
-      return;
-
-    }
-
-
-
-    // أضف رسالة المستخدم
-
-    setMessages((prev) => [...prev, { role: "user", content: trimmed }]);
-
-
-
-    // سياق المحادثة
-
-    const baseContext = [...messages, { role: "user", content: trimmed }];
-
-    const contextSnapshot = baseContext.slice(-MAX_CONTEXT_MESSAGES);
-
-
-
-    // هنضيف رسالة فاضية للمساعد علشان الـ streaming
-
-    const assistantId = Date.now() + Math.random();
-
-    setMessages((prev) => [
-
-      ...prev,
-
-      { id: assistantId, role: "assistant", content: "" },
-
-    ]);
-
-
-
-    // نفهم النية بالتوازي
-
-    const intentPromise = understandIntent(trimmed);
-
-
-
-    // نعرف هل المستخدم طلب بدائل ولا لأ (من نصه + intent)
-
-    const localAlt = wantsAlternatives(trimmed);
-
-    let intent = {};
-
-    try {
-
-      intent = await intentPromise;
-
-    } catch {
-
-      intent = {};
-
-    }
-
-
-
-    const wantsAltFromIntent = intent?.wants_alternatives === "yes";
-    const maxProducts = localAlt || wantsAltFromIntent ? 3 : 1;
-
-
-
-    // نبدأ Streaming للرد مع تمرير intent للسياق
-
-    let finalAIText = "";
-
-    try {
-
-      finalAIText = await streamAIReply({
-
-        userMessage: trimmed,
-
-        context: contextSnapshot,
-
-        intent,
-
-        onToken: (token) => {
-
-          setMessages((prev) => {
-
-            const updated = [...prev];
-
-            const index = updated.findIndex((m) => m.id === assistantId);
-
-            if (index === -1) return prev;
-
-
-
-            updated[index] = {
-
-              ...updated[index],
-
-              content: (updated[index].content || "") + token,
-
-            };
-
-            return updated;
-
-          });
-
-        },
-
-      });
-
-    } catch (err) {
-
-      console.error("Streaming error:", err);
-
-      finalAIText =
-
-        "⚠️ حصل خطأ أثناء الاتصال بالمساعد الذكي، حاول مرة تانية بعد شوية.";
-
-      setMessages((prev) => {
-
-        const updated = [...prev];
-
-        const index = updated.findIndex((m) => m.id === assistantId);
-
-        if (index === -1)
-
-          return [...prev, { role: "assistant", content: finalAIText }];
-
-
-
-        updated[index] = {
-
-          ...updated[index],
-
-          content: finalAIText,
-
-        };
-
-        return updated;
-
-      });
-
-      return;
-
-    }
-
-
-
-    // إذا لم تكن هناك نية لترشيح منتجات، أنهِ بالرد النصي فقط
-    const wantsProducts =
-      (intent?.should_recommend_product || "").toLowerCase() === "yes" ||
-      !!intent?.product_type ||
-      !!intent?.search_query ||
-      localAlt ||
-      wantsAltFromIntent;
-
-    if (!wantsProducts) {
-      setMessages((prev) => {
-        const updated = [...prev];
-        const index = updated.findIndex((m) => m.id === assistantId);
-        if (index === -1) {
-          return [...prev, { role: "assistant", content: finalAIText }];
-        }
-        updated[index] = { ...updated[index], content: finalAIText };
-        return updated;
-      });
-      return;
-    }
-
-    // بحث عن منتجات مناسبة
-
-    const productResult = await findProductsForMessage(
-
-      trimmed,
-
-      intent,
-
-      maxProducts
-
-    );
-
-
-
-    // مفيش منتجات خالص
-
-    if (
-      wantsProducts &&
-      (!productResult || !productResult.items || productResult.items.length === 0)
-    ) {
-      const isArabic = /[\u0600-\u06FF]/.test(trimmed);
-      const extra = isArabic
-        ? "\n\nلم أجد منتجات مناسبة لسؤالك في الكتالوج حالياً. ستتوفر قريباً."
-        : "\n\nI didn't find matching products in our catalog right now. They should be available soon.";
-
-
-
-      setMessages((prev) => {
-
-        const updated = [...prev];
-
-        const index = updated.findIndex((m) => m.id === assistantId);
-
-        if (index === -1) {
-
-          return [
-
-            ...prev,
-
-            { role: "assistant", content: (finalAIText || "") + extra },
-
-          ];
-
-        }
-
-        updated[index] = {
-
-          ...updated[index],
-
-          content: (updated[index].content || finalAIText || "") + extra,
-
-        };
-
-        return updated;
-
-      });
-
-
-
-      return;
-
-    }
-
-
-
-    const { type, items } = productResult;
-
-
-
-    let extra = "";
-
-
-
-    if (type === "lowBudget") {
-
-      extra +=
-
-        "\n\n⚠️ الميزانية أقل من سعر أي منتج متاح لنفس الاستخدام.\n" +
-
-        "دي أقرب منتجات ممكن تناسبك حاليًا:\n\n";
-
-    } else {
-
-      if (items.length === 1) {
-
-        extra += "\n\n🛒 أنسب منتج لحالتك من متجرنا:\n\n";
-
-      } else {
-
-        extra += "\n\n🛒 ترشيحات مناسبة لحالتك (أكثر من اختيار):\n\n";
-
-      }
-
-    }
-
-
-
-    items.forEach((p) => {
-
-      extra += `<productCard id="${p.id}"></productCard>\n\n`;
-
-    });
-
-
-
-    // دمج الكروت مع الرد
-
-    setMessages((prev) => {
-
-      const updated = [...prev];
-
-      const index = updated.findIndex((m) => m.id === assistantId);
-
-
-
-      if (index === -1) {
-
-        return [
-
-          ...prev,
-
-          { role: "assistant", content: (finalAIText || "") + extra },
-
-        ];
-
-      }
-
-
-
-      updated[index] = {
-
-        ...updated[index],
-
-        content: (updated[index].content || finalAIText || "") + extra,
-
-      };
-
-      return updated;
-
-    });
-
-  }
-
-
-
-  return { messages, sendMessage, setMessages };
-
-}
-
