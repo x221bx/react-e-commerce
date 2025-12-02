@@ -1,4 +1,4 @@
-// src/components/AdminDashboard.jsx
+// src/pages/admin/AdminDashboard.jsx
 import { useState, useEffect, useMemo } from "react";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { db } from "../../services/firebase";
@@ -8,9 +8,6 @@ import {
   Line,
   BarChart,
   Bar,
-  PieChart,
-  Pie,
-  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -24,20 +21,21 @@ import {
   DollarSign,
   RefreshCw,
   Sparkles,
-  PackageCheck,
 } from "lucide-react";
 import { format } from "date-fns";
+import { UseTheme } from "../../theme/ThemeProvider";
 
 export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
-  const [analysis, setAnalysis] = useState("جاري تحليل البيانات...");
+  const [analysis, setAnalysis] = useState("Loading insights...");
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [users, setUsers] = useState([]);
   const [orders, setOrders] = useState([]);
   const [userNameMap, setUserNameMap] = useState({});
+  const { theme } = UseTheme();
+  const isDark = theme === "dark";
 
-  // الحسابات الديناميكية
   const stats = useMemo(() => {
     const totalProducts = products.length;
     const availableProducts = products.filter((p) => (p.stock || 0) > 0).length;
@@ -84,7 +82,6 @@ export default function AdminDashboard() {
     };
   }, [products, users, orders]);
 
-  // Charts Data
   const charts = useMemo(() => {
     const dailySalesMap = {};
     orders.forEach((o) => {
@@ -99,7 +96,7 @@ export default function AdminDashboard() {
     const productSalesMap = {};
     orders.forEach((order) => {
       (order.items || []).forEach((item) => {
-        const name = item.name || item.productName || "غير معروف";
+        const name = item.name || item.productName || "Unnamed product";
         const revenue = (item.price || 0) * (item.quantity || 1);
         productSalesMap[name] = (productSalesMap[name] || 0) + revenue;
       });
@@ -111,13 +108,12 @@ export default function AdminDashboard() {
 
     const topCustomers = Object.entries(stats.customerMap)
       .map(([uid, info]) => ({
-        customer: userNameMap[uid] || "مستخدم",
+        customer: userNameMap[uid] || "Customer",
         revenue: info.revenue,
       }))
       .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 6);
 
-    // Low stock products
     const lowStockProducts = products.filter(
       (p) => p.stock > 0 && p.stock <= 5
     );
@@ -140,7 +136,6 @@ export default function AdminDashboard() {
           query(collection(db, "products"), orderBy("createdAt", "desc"))
         ),
         getDocs(collection(db, "categories")),
-
         getDocs(query(collection(db, "orders"), orderBy("createdAt", "desc"))),
       ]);
 
@@ -155,8 +150,8 @@ export default function AdminDashboard() {
 
         return {
           id: doc.id,
-          fullName: data.fullName || data.name || "مستخدم",
-          email: data.email || "غير متوفر",
+          fullName: data.fullName || data.name || "Customer",
+          email: data.email || "unknown@email",
           createdAt: data.createdAt?.toDate
             ? data.createdAt.toDate()
             : new Date(data.createdAt || Date.now()),
@@ -189,7 +184,7 @@ export default function AdminDashboard() {
       setAnalysis(aiText);
     } catch (err) {
       console.error(err);
-      setAnalysis("فشل جلب البيانات");
+      setAnalysis("Unable to load analysis right now.");
     } finally {
       setLoading(false);
     }
@@ -200,69 +195,90 @@ export default function AdminDashboard() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-green-950 to-blue-950 text-white">
+    <div
+      className={`min-h-screen ${
+        isDark
+          ? "bg-gradient-to-br from-slate-900 via-green-950 to-blue-950 text-white"
+          : "bg-white text-slate-900"
+      }`}
+    >
       <div className="max-w-full mx-auto p-6 lg:p-10">
         <div className="flex justify-between items-center mb-10">
-          <h1 className="text-4xl lg:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-400 via-blue-500 to-cyan-500">
+          <h1
+            className={`text-4xl lg:text-5xl font-bold ${
+              isDark
+                ? "bg-clip-text text-transparent bg-gradient-to-r from-green-400 via-blue-500 to-cyan-500"
+                : "text-emerald-700"
+            }`}
+          >
             Admin Dashboard
           </h1>
           <button
             onClick={fetchAllData}
-            className="flex items-center gap-3 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 px-6 py-3 rounded-xl shadow-xl transition"
+            className={`flex items-center gap-3 px-6 py-3 rounded-xl shadow ${
+              isDark
+                ? "bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
+                : "bg-emerald-500 text-white hover:bg-emerald-600"
+            } transition`}
           >
             <RefreshCw className={loading ? "animate-spin" : ""} size={22} />{" "}
-            تحديث الكل
+            Refresh data
           </button>
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center h-96">
-            <div className="text-2xl animate-pulse">جارٍ تحميل البيانات...</div>
+            <div className="text-2xl animate-pulse">Loading data...</div>
           </div>
         ) : (
           <>
-            {/* KPIs */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10">
               <KPICard
                 icon={Package}
-                label="المنتجات"
+                label="Total products"
                 value={stats.totalProducts}
                 gradient="from-green-500 to-blue-500"
+                isDark={isDark}
               />
-
               <KPICard
                 icon={ShoppingCart}
-                label="الطلبات"
+                label="Total orders"
                 value={stats.totalOrders}
                 gradient="from-blue-500 to-indigo-600"
+                isDark={isDark}
               />
               <KPICard
                 icon={DollarSign}
-                label="إجمالي المبيعات"
-                value={`${stats.totalSales.toLocaleString()} ج.م`}
+                label="Total sales"
+                value={`${stats.totalSales.toLocaleString()} EGP`}
                 gradient="from-green-600 to-blue-700"
+                isDark={isDark}
               />
               <KPICard
                 icon={Users}
-                label="عدد المستخدمين"
+                label="Total users"
                 value={stats.totalUsers}
                 gradient="from-indigo-500 to-purple-600"
+                isDark={isDark}
               />
             </div>
 
-            {/* Main Charts */}
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-10">
-              <ChartCard title="تريند المبيعات اليومي">
+              <ChartCard title="Daily sales trend" isDark={isDark}>
                 <ResponsiveContainer width="100%" height={400}>
                   <LineChart data={charts.dailySales}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                    <XAxis dataKey="date" stroke="#94a3b8" />
-                    <YAxis stroke="#94a3b8" />
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke={isDark ? "#334155" : "#e2e8f0"}
+                    />
+                    <XAxis dataKey="date" stroke={isDark ? "#94a3b8" : "#475569"} />
+                    <YAxis stroke={isDark ? "#94a3b8" : "#475569"} />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: "#1e293b",
+                        backgroundColor: isDark ? "#1e293b" : "#ffffff",
                         border: "none",
                         borderRadius: "12px",
+                        color: isDark ? "#e2e8f0" : "#0f172a",
                       }}
                     />
                     <Line
@@ -276,80 +292,87 @@ export default function AdminDashboard() {
                 </ResponsiveContainer>
               </ChartCard>
 
-              <ChartCard title="أفضل المنتجات مبيعًا">
+              <ChartCard title="Top products by revenue" isDark={isDark}>
                 <ResponsiveContainer width="100%" height={380}>
                   <BarChart data={charts.productSales} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                    <XAxis type="number" stroke="#94a3b8" />
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke={isDark ? "#334155" : "#e2e8f0"}
+                    />
+                    <XAxis type="number" stroke={isDark ? "#94a3b8" : "#475569"} />
                     <YAxis
                       dataKey="name"
                       type="category"
-                      stroke="#FFFFFF"
+                      stroke={isDark ? "#FFFFFF" : "#0f172a"}
                       width={110}
                     />
                     <Tooltip />
-                    <Bar
-                      dataKey="amount"
-                      fill="#f97316"
-                      radius={[0, 12, 12, 0]}
-                    />
+                    <Bar dataKey="amount" fill="#10b981" radius={[0, 12, 12, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </ChartCard>
 
-              <ChartCard title="أقوى العملاء">
+              <ChartCard title="Top customers by revenue" isDark={isDark}>
                 <ResponsiveContainer width="100%" height={380}>
                   <BarChart data={charts.topCustomers}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke={isDark ? "#334155" : "#e2e8f0"}
+                    />
                     <XAxis
                       dataKey="customer"
-                      stroke="#F9FAF9"
+                      stroke={isDark ? "#F9FAF9" : "#0f172a"}
                       angle={-15}
                       textAnchor="end"
                     />
-                    <YAxis stroke="#94a3b8" />
+                    <YAxis stroke={isDark ? "#94a3b8" : "#475569"} />
                     <Tooltip />
-                    <Bar
-                      dataKey="revenue"
-                      fill="#22c55e"
-                      radius={[12, 12, 0, 0]}
-                    />
+                    <Bar dataKey="revenue" fill="#22c55e" radius={[12, 12, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </ChartCard>
             </div>
 
-            {/* Low Stock Highlight + AI Analysis */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <ChartCard title="المنتجات منخفضة المخزون">
+              <ChartCard title="Low stock products" isDark={isDark}>
                 <div className="grid grid-cols-1 gap-4 max-h-96 overflow-y-auto">
                   {charts.lowStockProducts.map((p) => (
                     <div
                       key={p.id}
-                      className="bg-red-900/40 p-3 rounded-lg border border-red-500"
+                      className={`p-3 rounded-lg border ${
+                        isDark
+                          ? "bg-red-900/40 border-red-500 text-red-100"
+                          : "bg-red-50 border-red-200 text-red-800"
+                      }`}
                     >
                       <p className="text-sm font-semibold">{p.title}</p>
-                      <p className="text-xs text-gray-300">
-                        المخزون: {p.stock}
-                      </p>
+                      <p className="text-xs">Stock: {p.stock}</p>
                     </div>
                   ))}
                   {charts.lowStockProducts.length === 0 && (
-                    <p className="text-gray-400">
-                      لا توجد منتجات منخفضة المخزون
+                    <p className={isDark ? "text-gray-400" : "text-slate-500"}>
+                      No low-stock products right now.
                     </p>
                   )}
                 </div>
               </ChartCard>
 
-              <div className="bg-gradient-to-br from-green-900/50 to-blue-900/50 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-green-500/30 col-span-2">
+              <div
+                className={`col-span-2 rounded-3xl p-8 shadow-2xl border ${
+                  isDark
+                    ? "bg-gradient-to-br from-green-900/50 to-blue-900/50 backdrop-blur-xl border-green-500/30"
+                    : "bg-white border-slate-200"
+                }`}
+              >
                 <div className="flex items-center gap-3 mb-6">
-                  <Sparkles className="text-yellow-400" size={32} />
-                  <h2 className="text-2xl font-bold">
-                    تحليل الذكاء الاصطناعي اللحظي
-                  </h2>
+                  <Sparkles className={isDark ? "text-yellow-400" : "text-amber-500"} size={32} />
+                  <h2 className="text-2xl font-bold">AI insights on recent orders</h2>
                 </div>
-                <div className="text-sm leading-relaxed text-gray-200 max-h-96 overflow-y-auto prose prose-invert text-sm">
+                <div
+                  className={`text-sm leading-relaxed max-h-96 overflow-y-auto ${
+                    isDark ? "text-gray-200 prose prose-invert" : "text-slate-700"
+                  }`}
+                >
                   {analysis}
                 </div>
               </div>
@@ -361,24 +384,44 @@ export default function AdminDashboard() {
   );
 }
 
-function KPICard({ icon: Icon, label, value, gradient }) {
+function KPICard({ icon: Icon, label, value, gradient, isDark }) {
   return (
     <div
-      className={`bg-gradient-to-br ${gradient} p-6 rounded-2xl shadow-2xl hover:scale-105 transition-all duration-300`}
+      className={`p-6 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 ${
+        isDark
+          ? `bg-gradient-to-br ${gradient}`
+          : "bg-white border border-slate-200"
+      }`}
     >
       <div className="flex items-center justify-between mb-3">
-        <p className="text-white/80 text-sm">{label}</p>
-        <Icon size={36} className="opacity-80" />
+        <p className={isDark ? "text-white/80 text-sm" : "text-slate-500 text-sm"}>
+          {label}
+        </p>
+        <Icon size={36} className={isDark ? "opacity-80 text-white" : "text-emerald-500"} />
       </div>
-      <p className="text-3xl font-bold">{value}</p>
+      <p className={isDark ? "text-3xl font-bold text-white" : "text-3xl font-bold text-slate-900"}>
+        {value}
+      </p>
     </div>
   );
 }
 
-function ChartCard({ title, children }) {
+function ChartCard({ title, children, isDark }) {
   return (
-    <div className="bg-slate-900/70 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-green-500/20">
-      <h2 className="text-2xl font-bold mb-6 text-center bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-500">
+    <div
+      className={`p-8 rounded-3xl ${
+        isDark
+          ? "bg-slate-900/70 backdrop-blur-xl border border-green-500/20 shadow-2xl"
+          : "bg-white border border-slate-200 shadow-md"
+      }`}
+    >
+      <h2
+        className={`text-2xl font-bold mb-6 text-center ${
+          isDark
+            ? "bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-500"
+            : "text-slate-800"
+        }`}
+      >
         {title}
       </h2>
       {children}
