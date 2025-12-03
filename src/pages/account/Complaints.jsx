@@ -261,11 +261,12 @@ export default function Complaints() {
               </p>
             </div>
             <Button
-              text={t("account.submit_new_complaint", "Submit New Inquiry")}
               onClick={() => navigate("/account/support")}
-              className="px-8 py-3 text-lg font-semibold min-w-[200px]"
+              className="inline-flex items-center justify-center px-8 py-3 text-lg font-semibold min-w-[200px]"
               aria-label={t("account.submit_new_complaint", "Submit New Inquiry")}
-            />
+            >
+              {t("account.submit_new_complaint", "Submit New Inquiry")}
+            </Button>
           </div>
         </div>
 
@@ -439,6 +440,7 @@ export default function Complaints() {
             })}
           </div>
         )}
+
       </div>
 
       {/* Confirmation Dialog for Closing Complaints */}

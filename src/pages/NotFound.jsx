@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { FiAlertTriangle, FiHome } from "react-icons/fi";
 import { useTranslation } from "react-i18next";
+import Footer from "../Authcomponents/Footer";
 
 export default function NotFound() {
   const { t } = useTranslation();
@@ -57,6 +58,8 @@ export default function NotFound() {
           </div>
         </div>
       </div>
+
+      <Footer />
     </section>
   );
 }

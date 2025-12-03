@@ -273,6 +273,26 @@ textarea::placeholder {
   left: 0;
 }
 
+[dir="rtl"] .rtl-left-3 {
+  left: auto;
+  right: 0.75rem;
+}
+
+[dir="rtl"] .rtl-right-3 {
+  right: auto;
+  left: 0.75rem;
+}
+
+[dir="rtl"] .rtl-left-4 {
+  left: auto;
+  right: 1rem;
+}
+
+[dir="rtl"] .rtl-right-4 {
+  right: auto;
+  left: 1rem;
+}
+
 /* Icon flipping for RTL */
 [dir="rtl"] .rtl-flip-icon {
   transform: scaleX(-1);

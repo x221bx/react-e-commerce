@@ -1,4 +1,6 @@
 // src/Authcomponents/AuthLayout.jsx
+import Footer from "./Footer";
+
 export default function AuthLayout({ title, subtitle, children }) {
   return (
     <div className="relative min-h-screen flex items-center justify-center pt-28 overflow-hidden">
@@ -28,6 +30,8 @@ export default function AuthLayout({ title, subtitle, children }) {
           {children}
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 }

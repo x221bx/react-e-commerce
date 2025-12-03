@@ -75,6 +75,7 @@ export default function CheckoutCardModal({
                         onChange={(e) =>
                             handleCardFormChange("holder", formatHolderName(e.target.value))
                         }
+                        aria-invalid={!!cardErrors.holder}
                         className={`w-full rounded-xl px-4 py-3 shadow-sm border ${inputSurface}
                             ${cardErrors.holder ? "!border-red-500" : ""}`}
                     />
@@ -95,6 +96,7 @@ export default function CheckoutCardModal({
                             const digits = e.target.value.replace(/\D/g, "").slice(0, 19);
                             handleCardFormChange("number", digits);
                         }}
+                        aria-invalid={!!cardErrors.number}
                         className={`w-full rounded-xl px-4 py-3 shadow-sm border ${inputSurface}
                             ${cardErrors.number ? "!border-red-500" : ""}`}
                     />
@@ -117,6 +119,7 @@ export default function CheckoutCardModal({
                                 handleCardFormChange("exp", formatExpiry(e.target.value))
                             }
                             placeholder="MM/YY"
+                            aria-invalid={!!cardErrors.exp}
                             className={`w-full rounded-xl px-4 py-3 shadow-sm border ${inputSurface}
                                 ${cardErrors.exp ? "!border-red-500" : ""}`}
                         />
@@ -142,6 +145,7 @@ export default function CheckoutCardModal({
                                 );
                             }}
                             placeholder="123"
+                            aria-invalid={!!cardErrors.cvv}
                             className={`w-full rounded-xl px-4 py-3 shadow-sm border ${inputSurface}
                                 ${cardErrors.cvv ? "!border-red-500" : ""}`}
                         />

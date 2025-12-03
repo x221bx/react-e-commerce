@@ -18,7 +18,7 @@ import {
   signOut as signOutThunk,
 } from "../../features/auth/authSlice";
 import { UseTheme } from "../../theme/ThemeProvider";
-import Footer from "../../components/layout/Footer";
+import Footer from "../../Authcomponents/Footer";
 
 const navItems = [
   {

@@ -2,6 +2,7 @@
 import { useMemo } from "react";
 import { UseTheme } from "../../theme/ThemeProvider";
 import { MessageSquare, Bot, Clock, Sparkles } from "lucide-react";
+import Footer from "../../Authcomponents/Footer";
 
 const mockThreads = [
   {
@@ -111,6 +112,8 @@ export default function AiConversations() {
             ))}
           </div>
         )}
+
+        <Footer />
       </div>
     </section>
   );

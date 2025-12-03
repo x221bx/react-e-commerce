@@ -33,6 +33,7 @@ import {
     Calendar,
 } from "lucide-react";
 import { format } from "date-fns";
+import Footer from "../Authcomponents/Footer";
 
 const COLORS = [
     "#6366F1",
@@ -493,6 +494,8 @@ export default function AdminDashboard() {
                         </div>
                     </>
                 )}
+
+                <Footer />
             </div>
         </div>
     );

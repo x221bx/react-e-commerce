@@ -2,16 +2,36 @@
 import React, { useMemo, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
+import { useTranslation } from "react-i18next";
 import { toggleFavourite } from "../features/favorites/favoritesSlice";
 import { addToCart } from "../features/cart/cartSlice";
-import { BsHeart, BsHeartFill, BsArrowLeft, BsStarFill } from "react-icons/bs";
+import { BsHeart, BsHeartFill, BsArrowLeft } from "react-icons/bs";
+import { FiCheckCircle, FiAlertTriangle, FiTag, FiBox } from "react-icons/fi";
 import { useProduct } from "../hooks/useProduct";
-import Footer from "../components/layout/Footer";
+import Footer from "../Authcomponents/Footer";
+
+const cleanDescription = (raw = "") => {
+  let text = raw || "";
+  text = text.replace(/!\[[^\]]*]\([^)]+\)/g, " ");
+  text = text.replace(/https?:\/\/\S+\.(?:png|jpe?g|gif|webp|svg)\S*/gi, " ");
+  text = text.replace(/https?:\/\/\S+/gi, " ");
+  text = text.replace(/\s+/g, " ").trim();
+  return text;
+};
+
+const pickLocalized = (product = {}, key, isAr) => {
+  const ar = product?.[`${key}Ar`];
+  const base = product?.[key];
+  if (isAr) return ar || base || "";
+  return base || ar || "";
+};
 
 export default function ProductDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { t, i18n } = useTranslation();
+  const isAr = (i18n.language || "en").startsWith("ar");
 
   const [activeTab, setActiveTab] = useState("description");
 
@@ -34,11 +54,40 @@ export default function ProductDetails() {
   const handleAddToCart = () =>
     product && !inCart && dispatch(addToCart({ ...product, quantity: 1 }));
 
+  const handleAskAi = () => {
+    if (!product) return;
+    const title = pickLocalized(product, "title", isAr) || product.name || "";
+    const prompt = isAr
+      ? `أريد نصيحة حول المنتج: ${title}، مناسبته واستخدامه الآمن؟`
+      : `Advice about the product: ${title}, suitability and safe usage?`;
+    window.dispatchEvent(
+      new CustomEvent("chatbot:open", {
+        detail: { message: prompt },
+      })
+    );
+  };
+
+  const imageSrc = product?.thumbnailUrl || product?.img || product?.image;
+  const displayTitle =
+    pickLocalized(product, "title", isAr) || product?.name || "";
+  const displayDescription = cleanDescription(
+    pickLocalized(product, "description", isAr) || product?.summary || ""
+  );
+  const skuValue =
+    product?.sku && product?.sku !== product?.id ? product.sku : null;
+  const displayCategory =
+    pickLocalized(product, "category", isAr) ||
+    product?.category ||
+    product?.categoryName;
+  const specs = [];
+
   /* Loading */
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F5F7FA]">
-        <p className="text-gray-500 text-base">جاري تحميل المنتج...</p>
+      <div className="min-h-screen flex items-center justify-center bg-[var(--bg-card)] dark:bg-[var(--bg-card)]">
+        <p className="text-gray-500 dark:text-gray-200 text-base">
+          {t("products.details.loading", "Loading product...")}
+        </p>
       </div>
     );
   }
@@ -46,160 +95,199 @@ export default function ProductDetails() {
   /* Error */
   if (isError || !product) {
     return (
-      <div className="min-h-screen bg-[#F5F7FA] flex items-center justify-center p-8">
+      <div className="min-h-screen bg-[var(--bg-card)] dark:bg-[var(--bg-card)] flex items-center justify-center p-8">
         <div className="text-center">
-          <div className="text-7xl mb-4">🔍</div>
-          <h1 className="text-2xl font-semibold text-gray-800">
-            المنتج غير موجود
+          <div className="text-7xl mb-4 text-emerald-500">😕</div>
+          <h1 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">
+            {t("products.details.errorTitle", "Product not found")}
           </h1>
-          <p className="text-gray-500 text-sm mb-4">
-            تحقق من الرابط أو حاول لاحقًا.
+          <p className="text-gray-500 dark:text-gray-300 text-sm mb-4">
+            {t(
+              "products.details.errorMessage",
+              "We couldn't find this product. Try browsing the catalog."
+            )}
           </p>
           <button
             onClick={() => navigate("/products")}
-            className="px-8 py-2 text-sm bg-[#2E7D32] text-white rounded-lg hover:bg-green-700 transition"
+            className="px-8 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition"
           >
-            العودة للمنتجات
+            {t("products.details.backToProducts", "Back to products")}
           </button>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-[#F5F7FA] pt-24 pb-14">
-      <div className="max-w-6xl mx-auto px-4">
-        {/* Breadcrumb */}
-        <Link
-          to="/products"
-          className="inline-flex items-center gap-2 text-[#0288D1] text-sm font-medium mb-6 hover:underline"
-        >
-          <BsArrowLeft /> العودة للمنتجات
-        </Link>
+  const inStock = Number(product?.stock ?? product?.quantity ?? 0) > 0;
+  const price =
+    product?.price != null
+      ? `${Number(product.price).toLocaleString()} ${t(
+          "products.details.currency",
+          "EGP"
+        )}`
+      : t("products.details.contactForPrice", "Contact for price");
+  const hasDescription = Boolean(displayDescription);
+  const hasSpecs = false;
+  const showTabs = hasDescription;
 
+  return (
+    <div className="min-h-screen bg-[var(--bg-main)] dark:bg-[var(--bg-main)] pt-20 pb-14">
+      <div className="max-w-6xl mx-auto px-4">
         {/* Product Card */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="bg-[var(--bg-card)] dark:bg-[var(--bg-card)] rounded-2xl shadow-sm border border-gray-200 dark:border-gray-200 overflow-hidden">
           <div className="grid lg:grid-cols-2">
             {/* Image */}
-            <div className="flex items-center justify-center bg-gray-100 p-6">
-              <img
-                src={product.thumbnailUrl}
-                className="max-h-[420px] object-contain"
-              />
+            <div className="flex items-center justify-center bg-[var(--bg-main)] dark:bg-[var(--bg-main)] p-8">
+              {imageSrc ? (
+                <img
+                  src={imageSrc}
+                  alt={displayTitle}
+                  className="max-h-[460px] w-full object-contain rounded-xl shadow-sm"
+                />
+              ) : (
+                <div className="h-[320px] w-full grid place-items-center text-gray-400">
+                  {t("products.details.noImage", "No image available")}
+                </div>
+              )}
             </div>
 
             {/* Info */}
-            <div className="p-6 space-y-4 text-sm">
+            <div className="p-8 space-y-4 text-sm bg-[var(--bg-main)] dark:bg-[var(--bg-main)]">
               {/* Title */}
-              <h1 className="text-xl font-semibold text-gray-800">
-                {product.title || product.name}
+              <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
+                {displayTitle}
               </h1>
 
-              {/* Medical Verified */}
-              <div className="flex items-center gap-2 text-[#2E7D32] mt-1">
-                <span className="text-xs font-medium bg-green-100 text-green-700 px-2 py-1 rounded-md">
-                  ✔ منتج طبي موثوق
-                </span>
+              {/* Availability */}
+              <div className="flex items-center gap-2">
+                {inStock ? (
+                  <span className="inline-flex items-center gap-2 text-xs font-medium bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full">
+                    <FiCheckCircle /> {t("products.details.inStock", "In Stock")}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-2 text-xs font-medium bg-amber-100 text-amber-700 px-3 py-1 rounded-full">
+                    <FiAlertTriangle />{" "}
+                    {t("products.details.outOfStock", "Out of Stock")}
+                  </span>
+                )}
               </div>
 
               {/* Price */}
-              <div className="pt-2">
-                <span className="text-gray-500">السعر:</span>
-                <span className="text-xl font-bold text-[#2E7D32] ml-1">
-                  {Number(product.price).toLocaleString()} ج.م
-                </span>
+              <div className="pt-1">
+                <p className="text-gray-500 dark:text-gray-300 text-sm">
+                  {t("products.details.price", "Price")}
+                </p>
+                <p className="text-3xl font-bold text-emerald-600">{price}</p>
               </div>
 
-              {/* Rating */}
-              <div className="flex items-center gap-1 text-yellow-500">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <BsStarFill key={i} className="w-4 h-4" />
-                ))}
-                <span className="text-gray-500 text-xs">(124 تقييم)</span>
-              </div>
-
-              {/* Supplier & Info */}
-              <div className="grid grid-cols-2 gap-3 text-xs mt-2">
-                <div>
-                  <p className="text-gray-500">المورد:</p>
-                  <p className="font-medium">{product.supplier}</p>
-                </div>
-                <div>
-                  <p className="text-gray-500">الفئة:</p>
-                  <p className="font-medium">{product.category}</p>
-                </div>
-              </div>
-
+              {/* Specs quick view */}
               {/* Buttons */}
-              <div className="flex gap-3 pt-4">
+              <div className="flex flex-wrap gap-3 pt-2">
                 <button
                   onClick={handleAddToCart}
                   disabled={inCart}
-                  className={`flex-1 py-2 rounded-lg text-white text-sm font-medium ${
-                    inCart ? "bg-gray-400" : "bg-[#2E7D32] hover:bg-green-700"
+                  className={`flex-1 min-w-[180px] py-3 rounded-xl text-white text-sm font-semibold transition ${
+                    inCart
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-emerald-600 hover:bg-emerald-700"
                   }`}
                 >
-                  {inCart ? "موجود في السلة" : "أضف للسلة"}
+                  {inCart
+                    ? t("products.details.inCart", "Already in cart")
+                    : t("products.details.addToCart", "Add to Cart")}
                 </button>
 
                 <button
                   onClick={handleToggleFavorite}
-                  className={`px-5 py-2 rounded-lg border text-sm font-medium ${
+                  className={`flex items-center justify-center gap-2 px-5 py-3 rounded-xl border text-sm font-semibold transition ${
                     isFavorite
                       ? "bg-red-500 text-white border-red-500"
-                      : "border-[#0288D1] text-[#0288D1]"
+                      : "border-emerald-600 text-emerald-700 hover:bg-emerald-50"
                   }`}
                 >
-                  {isFavorite ? "في المفضلة" : "أضف للمفضلة"}
+                  {isFavorite ? <BsHeartFill /> : <BsHeart />}
+                  {isFavorite
+                    ? t("products.details.removeFav", "Remove Favorite")
+                    : t("products.details.addFav", "Add to Favorites")}
                 </button>
               </div>
 
-              {/* Free Shipping */}
-              <div className="bg-blue-50 text-[#0288D1] text-xs px-3 py-2 rounded-md mt-3">
-                🚚 شحن مجاني للطلبات فوق 500 ج.م
+              {/* AI CTA */}
+              <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 text-sm text-emerald-800 dark:text-emerald-100 px-4 py-3 rounded-xl flex items-center justify-between gap-3 mt-2">
+                <div className="flex-1">
+                  {t(
+                    "products.details.askAiCta",
+                    "Have a question about this product? Ask AI now"
+                  )}
+                </div>
+                <button
+                  onClick={handleAskAi}
+                  className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition"
+                >
+                  {t("products.details.askAiButton", "Ask AI")}
+                </button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="mt-6 bg-white border rounded-xl shadow-sm p-4 text-sm">
-          <div className="flex gap-4 border-b pb-2 text-gray-600">
-            {["description", "usage", "warnings", "ingredients"].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`pb-2 ${
-                  activeTab === tab
-                    ? "text-[#0288D1] font-semibold border-b-2 border-[#0288D1]"
-                    : ""
-                }`}
-              >
-                {tab === "description" && "الوصف"}
-                {tab === "usage" && "طريقة الاستخدام"}
-                {tab === "warnings" && "التحذيرات"}
-                {tab === "ingredients" && "المكونات"}
-              </button>
-            ))}
-          </div>
+        {showTabs && (
+          <div className="mt-6 bg-[var(--bg-card)] dark:bg-[var(--bg-card)] border border-gray-200 dark:border-gray-200 rounded-2xl shadow-sm p-4 text-sm">
+            <div className="flex flex-wrap gap-4 border-b border-gray-200 dark:border-gray-200 pb-3 text-gray-600 dark:text-gray-600">
+              {[hasDescription && { key: "description", label: t("products.details.tabDescription", "Description") },
+                hasSpecs && { key: "specs", label: t("products.details.tabSpecs", "Specifications") }].filter(Boolean).map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`pb-2 ${
+                    activeTab === tab.key
+                      ? "text-emerald-600 font-semibold border-b-2 border-emerald-600"
+                      : ""
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
 
-          <div className="pt-4 text-gray-700 leading-relaxed">
-            {activeTab === "description" &&
-              (product.description || "لا يوجد وصف.")}
-            {activeTab === "usage" && "يستخدم حسب إرشادات المختص."}
-            {activeTab === "warnings" &&
-              "تجنب الاستخدام المفرط. يحفظ بعيدًا عن متناول الأطفال."}
-            {activeTab === "ingredients" && "مكونات المنتج غير متاحة."}
-          </div>
-        </div>
+            <div className="pt-4 text-gray-800 dark:text-gray-200 leading-relaxed min-h-[140px]">
+              {activeTab === "description" && hasDescription && (
+                <p>
+                  {displayDescription ||
+                    t(
+                      "products.details.noDescription",
+                      "No description available."
+                    )}
+                </p>
+              )}
 
-        {/* Ask Pharmacist */}
-        <div className="mt-4 bg-green-50 border border-green-200 p-4 rounded-xl text-sm text-green-800">
-          💬 هل لديك سؤال حول المنتج؟
-          <button className="ml-2 underline font-medium text-[#2E7D32]">
-            اسأل ال AI الآن
-          </button>
-        </div>
+              {activeTab === "specs" && hasSpecs && (
+                <div className="grid sm:grid-cols-2 gap-3">
+                  {specs.length > 0 ? (
+                    specs.map((item) => (
+                      <div
+                        key={item.label}
+                        className="rounded-xl border border-gray-200 dark:border-white/10 px-3 py-2"
+                      >
+                        <p className="text-xs text-gray-500 dark:text-gray-300">
+                          {item.label}
+                        </p>
+                        <p className="font-semibold">{item.value}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {t(
+                        "products.details.noSpecs",
+                        "No specifications provided."
+                      )}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       <Footer />

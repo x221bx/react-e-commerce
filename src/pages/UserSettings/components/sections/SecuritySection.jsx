@@ -51,7 +51,7 @@ const SecuritySection = ({
       description={t("settings.securityDescription", "Use a unique password and refresh it frequently.")}
       tone="highlight"
     >
-    <form onSubmit={handlePasswordSubmit} className="space-y-4">
+    <form onSubmit={handlePasswordSubmit} className="space-y-4" noValidate>
       <PasswordInput
         label={t("settings.currentPassword", "Current Password")}
         name="currentPassword"
@@ -60,7 +60,6 @@ const SecuritySection = ({
         showPassword={showCurrentPassword}
         onToggleVisibility={() => setShowCurrentPassword(!showCurrentPassword)}
         error={securityErrors.currentPassword}
-        required
       />
       <div className="flex justify-end">
         <button
@@ -84,7 +83,6 @@ const SecuritySection = ({
             showPassword={showNewPassword}
             onToggleVisibility={() => setShowNewPassword(!showNewPassword)}
             error={securityErrors.newPassword}
-            required
           />
           {securityForm.newPassword && (
             <PasswordStrengthIndicator strength={passwordStrength} />
@@ -98,7 +96,6 @@ const SecuritySection = ({
           showPassword={showConfirmPassword}
           onToggleVisibility={() => setShowConfirmPassword(!showConfirmPassword)}
           error={securityErrors.confirmPassword}
-          required
         />
       </div>
 

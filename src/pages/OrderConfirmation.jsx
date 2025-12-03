@@ -3,6 +3,7 @@ import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { getOrderById } from "../services/ordersService";
 import { UseTheme } from "../theme/ThemeProvider";
 import { useTranslation } from "react-i18next";
+import Footer from "../Authcomponents/Footer";
 
 const OrderConfirmation = () => {
   const { t } = useTranslation();
@@ -326,6 +327,8 @@ const OrderConfirmation = () => {
           </>
         )}
       </div>
+
+      <Footer />
     </div>
   );
 };

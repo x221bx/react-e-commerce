@@ -95,7 +95,7 @@ export default function Login() {
             <div className="flex justify-end">
               <Link
                 to="/reset"
-                className="text-sm font-medium text-[#2F7E80] hover:underline"
+                className="text-sm font-medium text-accent-teal hover:underline"
               >
                 Forgot password?
               </Link>

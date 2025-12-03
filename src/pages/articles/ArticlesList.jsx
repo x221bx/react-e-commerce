@@ -8,7 +8,7 @@ import { saveArticleFavorite, removeArticleFavorite } from "../../services/artic
 import { getFallbackArticles, localizeArticleRecord, generateSlug } from "../../data/articles";
 import { FiFilter, FiBookOpen, FiTrendingUp } from "react-icons/fi";
 import toast from "react-hot-toast";
-import Footer from "../../components/layout/Footer";
+import Footer from "../../Authcomponents/Footer";
 import ArticleCard from "../../components/articles/ArticleCard";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import ErrorMessage from "../../components/ui/ErrorMessage";

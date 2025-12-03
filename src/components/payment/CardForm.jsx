@@ -83,6 +83,7 @@ export default function CardForm({
                         handleCardFormChange("holder", formatHolderName(e.target.value))
                     }
                     error={cardErrors.holder}
+                    aria-invalid={!!cardErrors.holder}
                     autoFocus
                 />
 
@@ -96,6 +97,7 @@ export default function CardForm({
                     placeholder="4242 4242 4242 4242"
                     maxLength={23}
                     error={cardErrors.number}
+                    aria-invalid={!!cardErrors.number}
                 />
 
                 {/* Brand Detection Line */}
@@ -130,6 +132,7 @@ export default function CardForm({
                         }
                         placeholder="04/27"
                         error={cardErrors.exp}
+                        aria-invalid={!!cardErrors.exp}
                     />
 
                     <Input
@@ -146,6 +149,7 @@ export default function CardForm({
                         placeholder="123"
                         maxLength={4}
                         error={cardErrors.cvv}
+                        aria-invalid={!!cardErrors.cvv}
                     />
                 </div>
 

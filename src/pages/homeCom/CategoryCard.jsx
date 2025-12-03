@@ -70,8 +70,8 @@ export default function CategoryCard({
       className={`text-left w-full rounded-xl overflow-hidden shadow-lg transition-all duration-500
         ${
           theme === "dark"
-            ? "bg-[#0e1b1b] text-[#B8E4E6] shadow-[0_4px_20px_rgba(184,228,230,0.08)] hover:shadow-[0_6px_25px_rgba(184,228,230,0.15)]"
-            : "bg-white text-[#1a1a1a] shadow-[0_3px_15px_rgba(0,0,0,0.1)] hover:shadow-[0_5px_20px_rgba(0,0,0,0.15)]"
+            ? "bg-[var(--bg-input)] text-[#B8E4E6] shadow-[0_4px_20px_rgba(184,228,230,0.08)] hover:shadow-[0_6px_25px_rgba(184,228,230,0.15)]"
+            : "bg-[var(--bg-card)] text-[#1a1a1a] shadow-[0_3px_15px_rgba(0,0,0,0.1)] hover:shadow-[0_5px_20px_rgba(0,0,0,0.15)]"
         }`}
       aria-label={`Explore ${title || "category"}`}
     >
