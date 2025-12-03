@@ -1,10 +1,6 @@
-// src/utils/localizeContent.js
 
 import i18n from "../i18n";
 
-/**
- * ترجع اسم الفئة مترجمًا بناءً على المفتاح أو الاسم
- */
 export function localizeCategory(category, t = i18n?.t?.bind(i18n)) {
   if (!category) return "—";
   const key = category.key;
@@ -14,14 +10,10 @@ export function localizeCategory(category, t = i18n?.t?.bind(i18n)) {
   return category.name || "—";
 }
 
-/**
- * ترجع بيانات الكورس مترجمة (العنوان والوصف)
- */
 export function localizeProduct(product, t = i18n?.t?.bind(i18n)) {
   if (!product) return { title: "—", description: "—" };
   const m = product.meta;
 
-  // في حال ما فيش meta أو ترجمة
   if (!m || typeof t !== "function") {
     return {
       title: product.title || "",
@@ -29,7 +21,6 @@ export function localizeProduct(product, t = i18n?.t?.bind(i18n)) {
     };
   }
 
-  // تركيب العنوان والوصف من أجزاء مترجمة
   const title = [
     t(`tokens.adj.${m.adj}`, { defaultValue: "" }),
     t(`tokens.subj.${m.subj}`, { defaultValue: "" }),

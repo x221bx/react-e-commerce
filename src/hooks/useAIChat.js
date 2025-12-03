@@ -1,18 +1,21 @@
-﻿// src/hooks/useAIChat.js
-// Product-focused assistant (OpenRouter + product RAG)
+/**
+ * AI chat hook for product-focused assistant using OpenRouter + product RAG
+ */
 
 import { useState } from "react";
 import { aiSearchProducts } from "./useAIProductSearch";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../services/firebase";
 
-// Normalize text for intent detection (Arabic + English)
+/**
+ * Normalize text for intent detection (Arabic + English)
+ */
 function normalize(t = "") {
   return t
     .toLowerCase()
-    .replace(/[أإآا]/g, "ا")
-    .replace(/ة/g, "ه")
-    .replace(/ى/g, "ي")
+    .replace(/[????]/g, "?")
+    .replace(/\?\?/g, "?")
+    .replace(/\?\?/g, "?")
     .replace(/[^a-z0-9\u0600-\u06FF\s]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
@@ -25,8 +28,8 @@ function extractPriceRange(text) {
   const nums = t.match(/\d+/g);
   if (!nums) return null;
   if (nums.length === 1) {
-    if (t.includes("اقل") || t.includes("تحت")) return { min: 0, max: Number(nums[0]) };
-    if (t.includes("اكبر") || t.includes("اعلى") || t.includes("اعلي")) return { min: Number(nums[0]), max: Infinity };
+    if (t.includes("???") || t.includes("???")) return { min: 0, max: Number(nums[0]) };
+    if (t.includes("????") || t.includes("????") || t.includes("????")) return { min: Number(nums[0]), max: Infinity };
   }
   if (nums.length >= 2) {
     const a = Number(nums[0]);
@@ -38,30 +41,30 @@ function extractPriceRange(text) {
 
 function detectIntent(msg) {
   const t = normalize(msg);
-  const greet = ["ازيك", "عامل", "اخبارك", "سلام", "hello", "hi", "hey"];
+  const greet = ["????", "????", "??????", "????", "hello", "hi", "hey"];
   if (greet.some((x) => t.includes(x))) return { type: "chat" };
 
-  if (t.includes("سعر") || ((t.includes("من") || t.includes("بين")) && t.includes("ل"))) return { type: "priceRange" };
+  if (t.includes("???") || ((t.includes("??") || t.includes("???")) && t.includes("?"))) return { type: "priceRange" };
 
-  const rec = ["رشح", "اقترح", "حاجه كويسه", "منتج كويس", "عندك ايه", "recommend", "suggest", "بذور"];
+  const rec = ["???", "?????", "???? ?????", "???? ????", "???? ???", "recommend", "suggest", "????"];
   if (rec.some((w) => t.includes(w))) return { type: "recommend" };
 
   const items = [
-    "سماد",
-    "مبيد",
-    "دواء",
-    "علاج",
-    "مخصب",
+    "????",
+    "????",
+    "????",
+    "????",
+    "????",
     "fertilizer",
     "pesticide",
     "seed",
     "seeds",
-    "بذور",
-    "شتلات",
+    "????",
+    "?????",
     "product",
     "item",
-    "علف",
-    "لقاح",
+    "???",
+    "????",
   ];
   if (items.some((w) => t.includes(w))) return { type: "search" };
 
@@ -103,7 +106,7 @@ export function useAIChat() {
     };
 
     if (!API_KEY) {
-      return userLang === "ar" ? "مفتاح OpenRouter غير موجود." : "Missing OpenRouter key.";
+      return userLang === "ar" ? "????? OpenRouter ??? ?????." : "Missing OpenRouter key.";
     }
 
     try {
@@ -122,10 +125,10 @@ export function useAIChat() {
       const data = await res.json();
       return (
         data.choices?.[0]?.message?.content ||
-        (userLang === "ar" ? "الخدمة غير متاحة حالياً." : "AI is unavailable now.")
+        (userLang === "ar" ? "?????? ??? ????? ??????." : "AI is unavailable now.")
       );
     } catch {
-      return userLang === "ar" ? "الخدمة غير متاحة حالياً." : "AI is unavailable now.";
+      return userLang === "ar" ? "?????? ??? ????? ??????." : "AI is unavailable now.";
     }
   }
 
@@ -169,7 +172,7 @@ export function useAIChat() {
       const results = await searchByPrice(range.min, range.max);
       const top = results.slice(0, 3);
       if (!top.length) {
-        update(id, userLang === "ar" ? "لم أجد منتجات في هذا النطاق السعري." : "No products found in that price range.");
+        update(id, userLang === "ar" ? "?? ??? ?????? ?? ??? ?????? ??????." : "No products found in that price range.");
         return;
       }
       const reply = await aiCall({ userLang, msg, productContext: top });
@@ -183,7 +186,7 @@ export function useAIChat() {
       const results = await searchByKeywords(msg);
       const top = results.slice(0, 3);
       if (!top.length) {
-        update(id, userLang === "ar" ? "لم أجد منتجات مرتبطة بما طلبت." : "No products found for that request.");
+        update(id, userLang === "ar" ? "?? ??? ?????? ?????? ??? ????." : "No products found for that request.");
         return;
       }
       const reply = await aiCall({ userLang, msg, productContext: top });
@@ -196,7 +199,7 @@ export function useAIChat() {
     if (intent.type === "search") {
       const results = await searchByKeywords(msg);
       if (!results.length) {
-        update(id, userLang === "ar" ? "لم أجد منتجاً مطابقاً." : "No matching product found.");
+        update(id, userLang === "ar" ? "?? ??? ?????? ???????." : "No matching product found.");
         return;
       }
       const top = results.slice(0, 3);

@@ -1,4 +1,3 @@
-// src/components/NotificationToast.jsx
 import React, { useEffect } from "react";
 
 export default function NotificationToast({ notif, onClose, navigate }) {

@@ -1,4 +1,3 @@
-// src/pages/ProductDetails.jsx
 import React, { useMemo, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";

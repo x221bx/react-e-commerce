@@ -1,4 +1,3 @@
-// src/pages/AdminOrders.jsx
 import React, { useState, useMemo } from "react";
 import { FiRefreshCw, FiClock, FiTrash2 } from "react-icons/fi";
 import { MdHistory, MdNotifications } from "react-icons/md";

@@ -1,4 +1,3 @@
-// src/components/payment/PaymentMethodCard.jsx
 import React from "react";
 import { CreditCard, WalletCards, Star, Trash2 } from "lucide-react";
 

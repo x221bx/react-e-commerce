@@ -1,4 +1,3 @@
-// src/components/checkout/CheckoutContactForm.jsx
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { UseTheme } from "../../theme/ThemeProvider";

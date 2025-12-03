@@ -1,4 +1,3 @@
-// src/pages/admin/MessagesBadge.jsx
 import { useEffect, useState } from "react";
 import { db } from "../../services/firebase";
 import { collection, onSnapshot, query, where } from "firebase/firestore";

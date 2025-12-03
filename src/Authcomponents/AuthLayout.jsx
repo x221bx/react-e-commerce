@@ -1,4 +1,3 @@
-// src/Authcomponents/AuthLayout.jsx
 import Footer from "./Footer";
 
 export default function AuthLayout({ title, subtitle, children }) {

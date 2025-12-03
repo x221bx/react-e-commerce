@@ -1,4 +1,3 @@
-﻿// src/pages/Products.jsx
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";

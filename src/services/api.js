@@ -1,10 +1,15 @@
-// src/services/api.js
-const WORKER_URL = "http://127.0.0.1:8787/"; // رابط Worker محلي أو Production
+/**
+ * API service for analysis requests
+ * Handles communication with the analysis worker
+ */
+
+const WORKER_URL = "http://127.0.0.1:8787/";
 
 /**
- * runAnalysis
- * دالة لإرسال طلب تحليل للـ Worker
- * @param {Object} payload { prompt: "..." }
+ * Send analysis request to the worker
+ * @param {Object} payload - Request payload with prompt
+ * @param {string} payload.prompt - The analysis prompt
+ * @returns {Promise<Object>} Analysis response data
  */
 export async function runAnalysis(payload = {}) {
   try {

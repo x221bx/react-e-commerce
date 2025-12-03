@@ -1,4 +1,3 @@
-// src/pages/account/AccountLayout.jsx
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";

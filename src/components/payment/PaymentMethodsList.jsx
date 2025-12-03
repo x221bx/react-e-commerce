@@ -1,4 +1,3 @@
-// src/components/payment/PaymentMethodsList.jsx
 import React from "react";
 import { ShieldCheck } from "lucide-react";
 import PaymentMethodCard from "./PaymentMethodCard";

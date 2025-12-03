@@ -1,4 +1,3 @@
-// src/pages/account/AiConversations.jsx
 import { useMemo } from "react";
 import { UseTheme } from "../../theme/ThemeProvider";
 import { MessageSquare, Bot, Clock, Sparkles } from "lucide-react";

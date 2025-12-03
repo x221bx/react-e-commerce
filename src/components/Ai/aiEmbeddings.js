@@ -1,4 +1,3 @@
-// src/ai/aiEmbeddings.js
 
 export async function getEmbeddings(items) {
   try {

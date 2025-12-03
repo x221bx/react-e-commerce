@@ -1,10 +1,9 @@
-// src/utils/gemini.js
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI("REDACTED");
 
 const model = genAI.getGenerativeModel({
-  model: "gemini-2.5-flash", // غيّر لـ "gemini-1.5-pro-latest" لو عايز قوة أكبر (لسه مجاني)
+  model: "gemini-2.5-flash",
   generationConfig: {
     temperature: 0.7,
     topP: 0.95,
@@ -44,6 +43,3 @@ ${JSON.stringify(firebaseData, null, 2)}
     return `عذراً، حصل مشكلة في الاتصال بالذكاء الاصطناعي.\nالتفاصيل: ${error.message}\n\nجرب تاني بعد شوية أو تأكد إن النت شغال كويس.`;
   }
 };
-
-// اختبار سريع (اختياري - امسح السطر ده لو مش عايزه)
-// console.log("Gemini جاهز للتحليل يا وحش!");

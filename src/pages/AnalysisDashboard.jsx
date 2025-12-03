@@ -1,4 +1,3 @@
-// src/pages/AnalysisDashboard.jsx
 // Dashboard uses Firebase collections (products, categories, users, orders).
 
 import { useState, useEffect, useMemo } from "react";

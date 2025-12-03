@@ -1,4 +1,3 @@
-// src/components/payment/CardForm.jsx
 import React, { useRef, useEffect, useState } from "react";
 import { CreditCard, Plus } from "lucide-react";
 import Input from "../ui/Input";

@@ -1,4 +1,3 @@
-// src/components/CartFooter.jsx
 import React from "react";
 
 export default function CartFooter({

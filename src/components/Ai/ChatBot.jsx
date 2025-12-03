@@ -1,4 +1,3 @@
-// src/components/Ai/ChatBot.jsx
 // Fresh, minimal chatbot UI (OpenRouter + product suggestions)
 
 import { useEffect, useRef, useState } from "react";

@@ -1,4 +1,3 @@
-// src/theme/useThemeSetup.js
 import { useEffect } from 'react';
 
 export function useThemeSetup(theme) {

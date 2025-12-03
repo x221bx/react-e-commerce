@@ -1,4 +1,3 @@
-// src/pages/contactus.jsx
 import { useState } from "react";
 import { db, auth } from "../services/firebase";
 import { doc, collection, addDoc } from "firebase/firestore";

@@ -1,4 +1,3 @@
-// src/pages/UserSettings/UserSettings.jsx
 import React, { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";

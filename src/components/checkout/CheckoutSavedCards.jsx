@@ -1,4 +1,3 @@
-// src/components/checkout/CheckoutSavedCards.jsx
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { UseTheme } from "../../theme/ThemeProvider";

@@ -1,4 +1,3 @@
-// src/components/Pager.jsx
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 
 export default function Pager({

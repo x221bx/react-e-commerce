@@ -1,3 +1,7 @@
+/**
+ * Custom hooks for fetching various counts and statistics from Firestore
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import {
   collection,
@@ -8,9 +12,10 @@ import {
 } from "firebase/firestore";
 import { db } from "../services/firebase.js";
 
-/* ----------------------------------------
- 🛍️ عدد كل المنتجات
----------------------------------------- */
+/**
+ * Hook to get total products count
+ * @returns {Object} React Query object with count data
+ */
 export function useProductsCount() {
   return useQuery({
     queryKey: ["count", "products", "total"],
@@ -23,9 +28,10 @@ export function useProductsCount() {
   });
 }
 
-/* ----------------------------------------
- ✅ عدد المنتجات المتوفرة فقط
----------------------------------------- */
+/**
+ * Hook to get count of available products only
+ * @returns {Object} React Query object with count data
+ */
 export function useProductsAvailableCount() {
   return useQuery({
     queryKey: ["count", "products", "available"],
@@ -41,9 +47,10 @@ export function useProductsAvailableCount() {
   });
 }
 
-/* ----------------------------------------
- 🏷️ عدد التصنيفات (زراعية / بيطرية)
----------------------------------------- */
+/**
+ * Hook to get total categories count
+ * @returns {Object} React Query object with count data
+ */
 export function useCategoriesCount() {
   return useQuery({
     queryKey: ["count", "categories", "total"],
@@ -56,9 +63,10 @@ export function useCategoriesCount() {
   });
 }
 
-/* ----------------------------------------
- 👥 عدد المستخدمين الكلي
----------------------------------------- */
+/**
+ * Hook to get total users count
+ * @returns {Object} React Query object with count data
+ */
 export function useUsersCount() {
   return useQuery({
     queryKey: ["count", "users", "total"],
@@ -71,9 +79,10 @@ export function useUsersCount() {
   });
 }
 
-/* ----------------------------------------
- 📈 إحصائيات المستخدمين (Daily & Monthly)
----------------------------------------- */
+/**
+ * Hook to get user registration statistics by date
+ * @returns {Object} React Query object with stats data
+ */
 export function useUsersStats() {
   return useQuery({
     queryKey: ["users-stats"],
@@ -81,22 +90,20 @@ export function useUsersStats() {
       const snap = await getDocs(collection(db, "users"));
       const users = snap.docs.map((d) => d.data());
 
-      // 🗓️ تجميع حسب التاريخ (اليوم)
       const daily = {};
       users.forEach((u) => {
         const date = new Date(
           u.createdAt?.seconds ? u.createdAt.seconds * 1000 : Date.now()
         )
           .toISOString()
-          .split("T")[0]; // YYYY-MM-DD
+          .split("T")[0];
         daily[date] = (daily[date] || 0) + 1;
       });
 
-      // 📅 تحويل البيانات لتنسيق الرسم البياني
       const data = Object.entries(daily).map(([date, count]) => ({
         date,
         daily: count,
-        monthly: count * 30, // تمثيل تقريبي للزيادة الشهرية
+        monthly: count * 30,
       }));
 
       return data.sort((a, b) => new Date(a.date) - new Date(b.date));

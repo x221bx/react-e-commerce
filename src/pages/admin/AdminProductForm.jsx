@@ -1,4 +1,3 @@
-// src/pages/AdminProductForm.jsx
 import { useParams, useNavigate } from "react-router-dom";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";

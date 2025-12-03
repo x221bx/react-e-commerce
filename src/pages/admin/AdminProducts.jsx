@@ -1,4 +1,3 @@
-// src/pages/admin/AdminProducts.jsx
 import { useEffect, useMemo, useState } from "react";
 import { NavLink, useNavigate, useSearchParams } from "react-router-dom";
 import {

@@ -1,4 +1,3 @@
-// src/components/payment/CardPreview.jsx
 import React from "react";
 import { ShieldCheck } from "lucide-react";
 import { useTranslation } from "react-i18next";

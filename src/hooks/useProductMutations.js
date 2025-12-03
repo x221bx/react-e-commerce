@@ -1,4 +1,3 @@
-// src/hooks/useProductMutations.js
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   collection,

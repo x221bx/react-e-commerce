@@ -1,4 +1,3 @@
-// src/admin/AlertsPanel.jsx
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { useLowStockProducts } from "../hooks/useLowStockProducts";

@@ -1,3 +1,16 @@
+/**
+ * Reusable Button component with theme support and animations
+ * @param {Object} props - Component props
+ * @param {string} props.text - Button text (alternative to children)
+ * @param {ReactNode} props.children - Button content
+ * @param {Function} props.onClick - Click handler
+ * @param {string} props.className - Additional CSS classes
+ * @param {boolean} props.full - Whether button should be full width
+ * @param {string} props.size - Button size: 'sm', 'md', 'lg'
+ * @param {string} props.type - Button type attribute
+ * @param {boolean} props.disabled - Whether button is disabled
+ * @param {string} props.ariaLabel - Accessibility label
+ */
 import { motion as Motion } from "framer-motion";
 import { UseTheme } from "../../theme/ThemeProvider";
 
@@ -6,8 +19,8 @@ export default function Button({
   children,
   onClick = () => {},
   className = "",
-  full = false, // ✅ لو عايز الزرار ياخد عرض كامل
-  size = "md", // sm / md / lg
+  full = false,
+  size = "md",
   type = "button",
   disabled = false,
   ariaLabel,

@@ -1,4 +1,3 @@
-// src/pages/admin/AdminCategories.jsx
 import { useEffect, useState } from "react";
 import { FiEdit2, FiTrash2, FiCheck, FiX, FiPlus } from "react-icons/fi";
 import { useSearchParams } from "react-router-dom";
