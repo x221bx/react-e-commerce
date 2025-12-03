@@ -1,3 +1,4 @@
+//src/hooks/useAIChat.js
 // ------------------------------------------------------
 //  useAIChat.js — FINAL FIXED PROFESSIONAL VERSION
 // ------------------------------------------------------
