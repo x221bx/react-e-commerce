@@ -29,6 +29,7 @@ const ArticleForm = ({
   seoSuggestions,
   handleGenerateSEO,
   generatingSEO,
+  aiDrafting,
   aiReview,
   handleAiReview,
   reviewing,
@@ -74,6 +75,15 @@ const ArticleForm = ({
   useEffect(() => {
     setSeoSynced(Boolean(seoSuggestions));
   }, [seoSuggestions]);
+
+  const hasQualityScore = typeof aiReview?.score === "number";
+  const hasSeoScore = typeof aiReview?.seo_score === "number";
+  const hasContentScore = typeof aiReview?.content_score === "number";
+  const hasAnyScores = hasQualityScore || hasSeoScore || hasContentScore;
+  const reviewSuggestions = Array.isArray(aiReview?.suggestions)
+    ? aiReview.suggestions
+    : [];
+  const reviewIssues = Array.isArray(aiReview?.issues) ? aiReview.issues : [];
   const handleTranslateToArabic = async () => {
     if (!hasTranslatableSource) {
       toast.error("Add English content before translating");
@@ -139,6 +149,7 @@ const ArticleForm = ({
               nowIso={nowIso}
               uploadingImage={uploadingImage}
               setUploadingImage={setUploadingImage}
+              aiDrafting={aiDrafting}
             />
           )}
           {activeTab === "ai" && (
@@ -151,7 +162,6 @@ const ArticleForm = ({
                   <select
                     value={aiTopic}
                     onChange={(e) => setAiTopic(e.target.value)}
-                    required
                     className="rounded-lg border border-muted bg-surface px-2 py-2 text-sm"
                   >
                     <option value="" disabled>
@@ -174,7 +184,6 @@ const ArticleForm = ({
                     max={12}
                     value={aiLines}
                     onChange={(e) => setAiLines(Number(e.target.value) || 5)}
-                    required
                     className="rounded-lg border border-muted bg-surface px-2 py-2 text-sm"
                   />
                 </label>
@@ -193,7 +202,6 @@ const ArticleForm = ({
                       "articles.admin.productPlaceholder",
                       "Enter the product or crop name",
                     )}
-                    required
                     className="w-full rounded-lg border border-muted bg-surface px-3 py-2 text-sm"
                   />
                 </label>
@@ -208,9 +216,11 @@ const ArticleForm = ({
                 <button
                   type="button"
                   onClick={handleGenerate}
-                  className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600"
+                  disabled={aiDrafting}
+                  className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600 disabled:opacity-60"
                 >
-                  ⚡ {t("articles.admin.generate", "Generate with AI")}
+                  {aiDrafting ? "..." : "AI"}{" "}
+                  {t("articles.admin.generate", "Generate with AI")}
                 </button>
                 <button
                   type="button"
@@ -311,65 +321,78 @@ const ArticleForm = ({
             <div className="space-y-4">
               {aiReview ? (
                 <div className="space-y-4">
-                  <div className="grid gap-4 md:grid-cols-3">
-                    <div className="p-4 bg-blue-50 rounded-lg">
-                      <h4 className="font-semibold text-blue-800">
-                        Quality Score
-                      </h4>
-                      <div className="text-2xl font-bold text-blue-600">
-                        {aiReview.score}/100
-                      </div>
+                  {aiReview.error && (
+                    <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                      {aiReview.message ||
+                        "AI review unavailable. Please try again with a valid OpenRouter key and network connection."}
                     </div>
-                    <div className="p-4 bg-green-50 rounded-lg">
-                      <h4 className="font-semibold text-green-800">
-                        SEO Score
-                      </h4>
-                      <div className="text-2xl font-bold text-green-600">
-                        {aiReview.seo_score}/100
-                      </div>
+                  )}
+
+                  {hasAnyScores ? (
+                    <div className="grid gap-4 md:grid-cols-3">
+                      {hasQualityScore && (
+                        <div className="p-4 bg-blue-50 rounded-lg">
+                          <h4 className="font-semibold text-blue-800">
+                            Quality Score
+                          </h4>
+                          <div className="text-2xl font-bold text-blue-600">
+                            {aiReview.score}/100
+                          </div>
+                        </div>
+                      )}
+                      {hasSeoScore && (
+                        <div className="p-4 bg-green-50 rounded-lg">
+                          <h4 className="font-semibold text-green-800">
+                            SEO Score
+                          </h4>
+                          <div className="text-2xl font-bold text-green-600">
+                            {aiReview.seo_score}/100
+                          </div>
+                        </div>
+                      )}
+                      {hasContentScore && (
+                        <div className="p-4 bg-purple-50 rounded-lg">
+                          <h4 className="font-semibold text-purple-800">
+                            Content Score
+                          </h4>
+                          <div className="text-2xl font-bold text-purple-600">
+                            {aiReview.content_score}/100
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <div className="p-4 bg-purple-50 rounded-lg">
-                      <h4 className="font-semibold text-purple-800">
-                        Content Score
-                      </h4>
-                      <div className="text-2xl font-bold text-purple-600">
-                        {Math.min(
-                          100,
-                          Math.floor(
-                            form.content.split(/\s+/).filter(Boolean).length /
-                              10 +
-                            form.summary.split(/\s+/).filter(Boolean).length /
-                              2 +
-                            form.keywords.split(",").filter(Boolean).length *
-                              5,
-                          ),
-                        )}
-                        /100
+                  ) : (
+                    !aiReview.error && (
+                      <div className="rounded-lg border border-muted bg-panel p-3 text-sm text-[var(--text-muted)]">
+                        No numeric scores returned. Rerun AI review after checking the article length and API key.
                       </div>
+                    )
+                  )}
+
+                  {reviewSuggestions.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold mb-2">Suggestions</h4>
+                      <ul className="space-y-1">
+                        {reviewSuggestions.map((suggestion, i) => (
+                          <li
+                            key={i}
+                            className="text-sm text-[var(--text-muted)]"
+                          >
+                            - {suggestion}
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold mb-2">Suggestions</h4>
-                    <ul className="space-y-1">
-                      {aiReview.suggestions?.map((suggestion, i) => (
-                        <li
-                          key={i}
-                          className="text-sm text-[var(--text-muted)]"
-                        >
-                          • {suggestion}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  {aiReview.issues?.length > 0 && (
+                  )}
+                  {reviewIssues.length > 0 && (
                     <div>
                       <h4 className="font-semibold mb-2 text-red-600">
                         Issues Found
                       </h4>
                       <ul className="space-y-1">
-                        {aiReview.issues.map((issue, i) => (
+                        {reviewIssues.map((issue, i) => (
                           <li key={i} className="text-sm text-red-600">
-                            • {issue}
+                            - {issue}
                           </li>
                         ))}
                       </ul>

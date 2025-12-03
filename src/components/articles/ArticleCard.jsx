@@ -1,3 +1,4 @@
+// src/components/articles/ArticleCard.jsx
 import React from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -44,8 +45,8 @@ const ArticleCard = ({
       className={`relative flex flex-col gap-3 p-4 rounded-xl transition-all duration-500 overflow-hidden
         ${
           theme === "dark"
-            ? "bg-[#0e1b1b]/95 text-[#B8E4E6] shadow-[0_4px_20px_rgba(184,228,230,0.08)] hover:shadow-[0_6px_25px_rgba(184,228,230,0.15)]"
-            : "bg-white text-[#1a1a1a] shadow-[0_3px_15px_rgba(0,0,0,0.1)] hover:shadow-[0_5px_20px_rgba(0,0,0,0.15)]"
+            ? "bg-[var(--bg-input)]/95 text-[#B8E4E6] shadow-[0_4px_20px_rgba(184,228,230,0.08)] hover:shadow-[0_6px_25px_rgba(184,228,230,0.15)]"
+            : "bg-[var(--bg-card)] text-[#1a1a1a] shadow-[0_3px_15px_rgba(0,0,0,0.1)] hover:shadow-[0_5px_20px_rgba(0,0,0,0.15)]"
         } ${className}`}
     >
       {/* Image */}
@@ -66,7 +67,7 @@ const ArticleCard = ({
           whileTap={{ scale: 0.9 }}
           onClick={handleFavoriteClick}
           aria-label="favorite"
-          className="absolute top-3 right-3 z-20 p-2 rounded-full shadow-md border backdrop-blur-md bg-white/70 border-gray-200 hover:bg-gray-100 transition"
+          className="absolute top-3 rtl:left-3 ltr:right-3 z-20 p-2 rounded-full shadow-md border backdrop-blur-md bg-white/70 border-gray-200 hover:bg-gray-100 transition"
         >
           <FiHeart size={20} className={favoriteIds.includes(article.id) ? "text-red-600" : "icon-muted"} />
         </Motion.button>
@@ -136,7 +137,7 @@ const ArticleCard = ({
             to={`/articles/${article.id}`}
             className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-500"
           >
-            Continue reading →
+            {t("articles.list.readMore", "Continue reading →")}
           </Link>
         </Motion.div>
       </div>

@@ -154,8 +154,7 @@
                 "currencyRequired": "Currency is required",
                 "categoryRequired": "Category is required"
             }
-        }
-        ,
+        },
         "footer_note": "© {{year}} Vet Clinic Dashboard — Crafted with care"
     },
     "layout": {
@@ -247,21 +246,21 @@
         "auto_saving": "Auto-saving in 3 seconds...",
         "all_changes_saved": "All changes saved",
         "save_profile": "Save profile",
-    "profile_helper_text": "Keep your profile updated for personalized recommendations.",
-    "securitySection": "Security",
-    "securityTitle": "Keep your account protected",
-    "securityDescription": "Use a unique password and refresh it frequently.",
-    "currentPassword": "Current Password",
-    "newPassword": "New Password",
-    "confirmNewPassword": "Confirm New Password",
-    "passwordTip": "Tip: combine at least 12 characters with numbers and symbols. Avoid reusing passwords from other services.",
-    "updatingPassword": "Updating...",
-    "updatePassword": "Update password",
-    "forgotPassword": "Forgot password?",
-    "forgotPasswordSuccess": "Password reset email sent! Check your inbox.",
-    "forgotPasswordError": "Failed to send reset email. Please try again.",
-    "forgotPasswordNoEmail": "No email address found for your account.",
-    "sendingReset": "Sending...",
+        "profile_helper_text": "Keep your profile updated for personalized recommendations.",
+        "securitySection": "Security",
+        "securityTitle": "Keep your account protected",
+        "securityDescription": "Use a unique password and refresh it frequently.",
+        "currentPassword": "Current Password",
+        "newPassword": "New Password",
+        "confirmNewPassword": "Confirm New Password",
+        "passwordTip": "Tip: combine at least 12 characters with numbers and symbols. Avoid reusing passwords from other services.",
+        "updatingPassword": "Updating...",
+        "updatePassword": "Update password",
+        "forgotPassword": "Forgot password?",
+        "forgotPasswordSuccess": "Password reset email sent! Check your inbox.",
+        "forgotPasswordError": "Failed to send reset email. Please try again.",
+        "forgotPasswordNoEmail": "No email address found for your account.",
+        "sendingReset": "Sending...",
         "navigation": {
             "focus_area": "Focus area",
             "aria_label": "Profile settings sections",
@@ -282,32 +281,32 @@
                     "helper": "Take action on your profile status and data requests."
                 }
             },
-            "items":  {
-                          "personal":  {
-                                          "label":  "Personal info",
-                                          "description":  "Update your farming profile"
-                                      },
-                          "security":  {
-                                          "label":  "Security",
-                                          "description":  "Secure your farm account"
-                                      },
-                          "notifications":  {
-                                                "label":  "Notifications",
-                                                "description":  "Farm alerts and updates"
-                                            },
-                          "preferences":  {
-                                              "label":  "Preferences",
-                                              "description":  "Customize your experience"
-                                          },
-                          "account":  {
-                                          "label":  "Account",
-                                          "description":  "Farm account management"
-                                      },
-                          "support":  {
-                                          "label":  "Support",
-                                          "description":  "Get help and support"
-                                      }
-                      }
+            "items": {
+                "personal": {
+                    "label": "Personal info",
+                    "description": "Update your farming profile"
+                },
+                "security": {
+                    "label": "Security",
+                    "description": "Secure your farm account"
+                },
+                "notifications": {
+                    "label": "Notifications",
+                    "description": "Farm alerts and updates"
+                },
+                "preferences": {
+                    "label": "Preferences",
+                    "description": "Customize your experience"
+                },
+                "account": {
+                    "label": "Account",
+                    "description": "Farm account management"
+                },
+                "support": {
+                    "label": "Support",
+                    "description": "Get help and support"
+                }
+            }
         },
         "notificationOptions": {
             "productUpdates": {
@@ -341,25 +340,25 @@
             "contactSupport": "Contact support"
         },
         "confirmDialog": {
-          "title": "Confirmation required",
-          "deleteTitle": "Delete your account now?",
-          "deleteBody": "We will erase your saved profile and cancel any pending orders. You will need to create a new account to return.",
-          "keepAccount": "Keep my account",
-          "deleteAction": "Yes, delete everything"
+            "title": "Confirmation required",
+            "deleteTitle": "Delete your account now?",
+            "deleteBody": "We will erase your saved profile and cancel any pending orders. You will need to create a new account to return.",
+            "keepAccount": "Keep my account",
+            "deleteAction": "Yes, delete everything"
         },
         "support": {
-          "section": "Support",
-          "title": "Need help or have feedback?",
-          "description": "Get in touch with our support team or browse our help resources.",
-          "feedback": "Send Feedback",
-          "feedbackDesc": "Share your thoughts about our products and services",
-          "help": "Get Help",
-          "helpDesc": "Find answers to common questions",
-          "helpComing": "Help center coming soon!",
-          "call": "Call Support",
-          "callDesc": "Speak with our support team",
-          "email": "Email Support",
-          "emailDesc": "Send us an email for detailed assistance"
+            "section": "Support",
+            "title": "Need help or have feedback?",
+            "description": "Get in touch with our support team or browse our help resources.",
+            "feedback": "Send Feedback",
+            "feedbackDesc": "Share your thoughts about our products and services",
+            "help": "Get Help",
+            "helpDesc": "Find answers to common questions",
+            "helpComing": "Help center coming soon!",
+            "call": "Call Support",
+            "callDesc": "Speak with our support team",
+            "email": "Email Support",
+            "emailDesc": "Send us an email for detailed assistance"
         }
     },
     "account": {
@@ -391,7 +390,7 @@
             "waitingResponse": "Waiting for assistant response...",
             "justNow": "Just now"
         },
-        "feedback_support": "Feedback & support",
+        "feedback_support": "Feedback & Support",
         "support_description": "Share your opinion or get help",
         "complaints_topic_fallback": "General support",
         "complaints_topics": {
@@ -434,7 +433,7 @@
         "admin_response": "Support Response",
         "user_follow_up": "Your Follow-up",
         "confirm_close_message": "Are you sure you want to close this inquiry? This action cannot be undone.",
-        "helper_text": "One central hub for all your account needs: profile settings, payments, orders, and support. Consistent design across all pages for a seamless experience.",
+        "helper_text": "",
         "savedProducts": {
             "eyebrow": "Favorites",
             "title": "Saved Products",
@@ -550,6 +549,35 @@
             "total": "Total",
             "note": "You will receive an email confirmation with tracking information."
         }
+    },
+    "notifications": {
+        "center_label": "Notifications Center",
+        "title": "Stay updated with every action",
+        "subtitle": "Track order progress, support replies, and important system updates in one place.",
+        "unread_count": "{{count}} unread",
+        "all_caught_up": "All caught up",
+        "mark_all_read": "Mark all read",
+        "groups": {
+            "orders": "Orders",
+            "support": "Support",
+            "system": "System"
+        },
+        "group_count": "{{count}} updates",
+        "new_badge": "New",
+        "marked": "Read",
+        "mark_read": "Mark read",
+        "view_details": "View details",
+        "empty_title": "No notifications yet",
+        "empty_description": "Important updates about your orders and inquiries will appear here."
+    },
+    "pagination": {
+        "prev": "Previous",
+        "next": "Next",
+        "showing": "Showing",
+        "to": "to",
+        "of": "of",
+        "results": "results",
+        "noResults": "No results found"
     },
     "orders": {
         "loading": "Loading your orders...",
@@ -689,19 +717,19 @@
             "comingSoonSubtitle": "We are preparing bilingual resources for this space. Check back shortly."
         },
         "detail": {
-          "loading": "Loading article...",
-          "notFound": "Article not found",
-          "back": "Back to articles",
-          "authNeeded": "Sign in to save articles",
-          "saved": "Saved",
-          "savedButton": "Saved",
-          "saveButton": "Save for later",
-          "removed": "Removed from favorites",
-          "error": "Unable to update favorites",
-          "byline": "Written by {{author}}",
-          "emptyContent": "Content coming soon.",
-          "share": "Share",
-          "save": "Save"
+            "loading": "Loading article...",
+            "notFound": "Article not found",
+            "back": "Back to articles",
+            "authNeeded": "Sign in to save articles",
+            "saved": "Saved",
+            "savedButton": "Saved",
+            "saveButton": "Save for later",
+            "removed": "Removed from favorites",
+            "error": "Unable to update favorites",
+            "byline": "Written by {{author}}",
+            "emptyContent": "Content coming soon.",
+            "share": "Share",
+            "save": "Save"
         },
         "admin": {
             "eyebrow": "Knowledge center",
@@ -822,7 +850,36 @@
         "noResults": "No products found.",
         "noImage": "No image",
         "addToCart": "Add to Cart",
-        "inCart": "In Cart"
+        "inCart": "In Cart",
+        "details": {
+            "loading": "Loading product...",
+            "errorTitle": "Product not found",
+            "errorMessage": "We couldn't find this product. Try browsing the catalog.",
+            "backToProducts": "Back to products",
+            "back": "Back to products",
+            "price": "Price",
+            "currency": "EGP",
+            "contactForPrice": "Contact for price",
+            "inStock": "In Stock",
+            "outOfStock": "Out of Stock",
+            "inCart": "Already in cart",
+            "addToCart": "Add to Cart",
+            "addFav": "Add to Favorites",
+            "removeFav": "Remove Favorite",
+            "category": "Category",
+            "sku": "SKU",
+            "stock": "In Stock",
+            "units": "units",
+            "tabDescription": "Description",
+            "tabSpecs": "Specifications",
+            "tabFaq": "FAQ",
+            "noDescription": "No description available.",
+            "noSpecs": "No specifications provided.",
+            "noFaq": "No FAQs yet.",
+            "askAiCta": "Have a question about this product? Ask AI now",
+            "askAiButton": "Ask AI",
+            "noImage": "No image available"
+        }
     },
     "home": {
         "heroTitle": "Smarter Farming Starts Here",
@@ -855,4 +912,3 @@
         "copyright": "© {{year}} Farm Vet Shop. All rights reserved."
     }
 }
-

@@ -1,3 +1,4 @@
+// src/pages/homeCom/Articles.jsx
 import { motion as Motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";

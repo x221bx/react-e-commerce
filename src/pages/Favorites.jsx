@@ -1,3 +1,4 @@
+// src/pages/Favorites.jsx
 import React from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
@@ -7,6 +8,7 @@ import {
 import { addToCart } from "../features/cart/cartSlice";
 import { Link, useNavigate } from "react-router-dom";
 import { FiTrash2, FiArrowLeft, FiShoppingCart, FiHeart } from "react-icons/fi";
+import Footer from "../Authcomponents/Footer";
 
 export default function Favorites() {
   const favorites = useSelector((state) => state.favorites.items ?? []);
@@ -23,11 +25,11 @@ export default function Favorites() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f5fff5] text-[#203232]">
+    <div className="min-h-screen bg-[var(--bg-main)] text-[var(--text-main)]">
       <div className="mx-auto max-w-6xl px-4 py-10">
         <header className="mb-8 flex items-center justify-between">
           <h1 className="text-3xl font-bold flex items-center gap-2">
-            <FiHeart className="text-[#52b788]" /> My Favorites
+            <FiHeart className="text-secondary" /> My Favorites
           </h1>
 
           {favorites.length > 0 && (
@@ -45,7 +47,7 @@ export default function Favorites() {
             <p className="mb-4 text-gray-500 text-lg">No favorites yet.</p>
             <Link
               to="/products"
-              className="inline-flex items-center gap-2 rounded-xl bg-[#52b788] px-4 py-2 text-sm font-semibold text-white shadow hover:bg-[#40916c] transition"
+              className="inline-flex items-center gap-2 rounded-xl bg-secondary px-4 py-2 text-sm font-semibold text-white shadow hover:bg-primary-dark transition"
             >
               <FiArrowLeft /> Browse Products
             </Link>
@@ -69,7 +71,7 @@ export default function Favorites() {
                   </h2>
 
                   <div className="mt-3 flex items-center justify-between">
-                    <span className="text-sm font-medium text-[#2d6a4f]">
+                    <span className="text-sm font-medium text-price-green">
                       {Number(item.price).toLocaleString()} EGP
                     </span>
 
@@ -85,7 +87,7 @@ export default function Favorites() {
 
                       <button
                         onClick={() => handleBuyNow(item)}
-                        className="flex items-center gap-1 rounded-xl bg-[#52b788] px-3 py-1 text-sm font-semibold text-white hover:bg-[#40916c] transition"
+                        className="flex items-center gap-1 rounded-xl bg-secondary px-3 py-1 text-sm font-semibold text-white hover:bg-primary-dark transition"
                         title="Buy Now"
                       >
                         <FiShoppingCart size={16} /> Buy
@@ -98,6 +100,8 @@ export default function Favorites() {
           </ul>
         )}
       </div>
+
+      <Footer />
     </div>
   );
 }

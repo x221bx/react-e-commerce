@@ -1,3 +1,4 @@
+// src/hooks/useCardValidation.js
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -82,9 +83,67 @@ export const useCardValidation = () => {
         return `${digits.slice(0, 2)}/${digits.slice(2)}`;
     };
 
+    const validateCardField = (field, nextForm = cardForm, { strict = false } = {}) => {
+        switch (field) {
+            case "holder": {
+                const holder = (nextForm.holder || "").trim();
+                if (!holder) return strict ? t("payments.errors.holder", "Please enter the card holder name.") : "";
+                if (!/^[A-Z\s]+$/.test(holder)) return t("payments.errors.holder", "Use letters only (A-Z).");
+                return "";
+            }
+            case "number": {
+                const sanitizedNumber = (nextForm.number || "").replace(/\s+/g, "");
+                if (!sanitizedNumber) return strict ? t("payments.errors.number", "Enter a valid card number.") : "";
+                if (!strict && sanitizedNumber.length < 13) return "";
+
+                const brand = detectBrand(sanitizedNumber);
+                const expectedLengths = getExpectedLength(brand);
+                const isValidLength = Array.isArray(expectedLengths)
+                    ? expectedLengths.includes(sanitizedNumber.length)
+                    : sanitizedNumber.length === expectedLengths;
+
+                const passesLuhn = luhnCheck(sanitizedNumber);
+                if (!brand || !isValidLength || !passesLuhn) {
+                    return t("payments.errors.number", "Enter a valid card number.");
+                }
+                return "";
+            }
+            case "exp": {
+                const expiry = nextForm.exp || "";
+                if (!expiry) return strict ? t("payments.errors.expiry", "Expiry must be MM/YY and in the future.") : "";
+                if (!strict && expiry.length < 4) return "";
+                return validateExpiry(expiry)
+                    ? ""
+                    : t("payments.errors.expiry", "Expiry must be MM/YY and in the future.");
+            }
+            case "cvv": {
+                const digits = (nextForm.cvv || "").replace(/\D/g, "");
+                const brand = detectBrand((nextForm.number || "").replace(/\s+/g, ""));
+                const expected = brand === "amex" ? 4 : 3;
+                if (!digits) return strict ? t("payments.errors.cvv", "Enter the 3 or 4 digit CVV.") : "";
+                if (!strict && digits.length < expected) return "";
+                if (digits.length !== expected) {
+                    return t("payments.errors.cvv", "Enter the 3 or 4 digit CVV.");
+                }
+                return "";
+            }
+            default:
+                return "";
+        }
+    };
+
     const handleCardFormChange = (field, value) => {
-        setCardForm((prev) => ({ ...prev, [field]: value }));
-        setCardErrors((prev) => ({ ...prev, [field]: undefined }));
+        setCardForm((prev) => {
+            const next = { ...prev, [field]: value };
+            const fieldError = validateCardField(field, next, { strict: false });
+            setCardErrors((prevErrors) => {
+                const nextErrors = { ...prevErrors };
+                if (fieldError) nextErrors[field] = fieldError;
+                else delete nextErrors[field];
+                return nextErrors;
+            });
+            return next;
+        });
     };
 
     // Real-time card validation
@@ -102,39 +161,15 @@ export const useCardValidation = () => {
 
     const validateCard = () => {
         const errors = {};
-        const holder = cardForm.holder.trim();
-        const sanitizedNumber = cardForm.number.replace(/\s+/g, "");
-        const cvvTrimmed = cardForm.cvv.trim();
-        const brand = detectBrand(sanitizedNumber);
+        const holderError = validateCardField("holder", cardForm, { strict: true });
+        const numberError = validateCardField("number", cardForm, { strict: true });
+        const expError = validateCardField("exp", cardForm, { strict: true });
+        const cvvError = validateCardField("cvv", cardForm, { strict: true });
 
-        if (!holder) {
-            errors.holder = t("payments.errors.holder", "Please enter the card holder name.");
-        } else if (!/^[A-Z\s]+$/.test(holder)) {
-            errors.holder = t("payments.errors.holder", "Use letters only (A-Z).");
-        }
-
-        const numberTooShort = sanitizedNumber.length < 13;
-        const numberTooLong = sanitizedNumber.length > 19;
-        const invalidLuhn = !luhnCheck(sanitizedNumber);
-
-        const brandLengthOk =
-            (brand === "visa" &&
-                (sanitizedNumber.length === 13 ||
-                    sanitizedNumber.length === 16 ||
-                    sanitizedNumber.length === 19)) ||
-            (brand === "mastercard" && sanitizedNumber.length === 16) ||
-            (brand === "amex" && sanitizedNumber.length === 15);
-
-        if (!brand || numberTooShort || numberTooLong || invalidLuhn || !brandLengthOk) {
-            errors.number = t("payments.errors.number", "Enter a valid card number.");
-        }
-        if (!validateExpiry(cardForm.exp)) {
-            errors.exp = t("payments.errors.expiry", "Expiry must be MM/YY and in the future.");
-        }
-        const expectedCvvLen = brand === "amex" ? 4 : 3;
-        if (cvvTrimmed.length !== expectedCvvLen || /\D/.test(cvvTrimmed)) {
-            errors.cvv = t("payments.errors.cvv", "Enter the 3 or 4 digit CVV.");
-        }
+        if (holderError) errors.holder = holderError;
+        if (numberError) errors.number = numberError;
+        if (expError) errors.exp = expError;
+        if (cvvError) errors.cvv = cvvError;
 
         setCardErrors(errors);
         return Object.keys(errors).length === 0;
@@ -153,6 +188,7 @@ export const useCardValidation = () => {
         cardValid,
         handleCardFormChange,
         validateCard,
+        validateCardField,
         resetCard,
         detectBrand,
         formatCardNumber,

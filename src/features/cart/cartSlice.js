@@ -1,3 +1,4 @@
+// src/features/cart/cartSlice.js
 import { createSlice } from "@reduxjs/toolkit";
 
 const savedCart = JSON.parse(localStorage.getItem("cartItems") || "[]");

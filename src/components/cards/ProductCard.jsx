@@ -1,3 +1,4 @@
+// src/components/cards/ProductCard.jsx
 import { useDispatch, useSelector } from "react-redux";
 import { toggleFavourite } from "../../features/favorites/favoritesSlice";
 import { addToCart } from "../../features/cart/cartSlice";
@@ -63,15 +64,15 @@ export default function ProductCard({ product, index = 0 }) {
       className={`relative flex flex-col gap-3 p-4 rounded-xl transition-all duration-500 overflow-hidden
         ${
           theme === "dark"
-            ? "bg-[#0e1b1b]/95 text-[#B8E4E6] shadow-[0_4px_20px_rgba(184,228,230,0.08)] hover:shadow-[0_6px_25px_rgba(184,228,230,0.15)]"
-            : "bg-white text-[#1a1a1a] shadow-[0_3px_15px_rgba(0,0,0,0.1)] hover:shadow-[0_5px_20px_rgba(0,0,0,0.15)]"
+            ? "bg-[var(--bg-input)]/95 text-[#B8E4E6] shadow-[0_4px_20px_rgba(184,228,230,0.08)] hover:shadow-[0_6px_25px_rgba(184,228,230,0.15)]"
+            : "bg-[var(--bg-card)] text-[#1a1a1a] shadow-[0_3px_15px_rgba(0,0,0,0.1)] hover:shadow-[0_5px_20px_rgba(0,0,0,0.15)]"
         }`}
     >
       <Motion.button
         whileTap={{ scale: 0.9 }}
         onClick={() => dispatch(toggleFavourite(safeProduct(product)))}
         aria-label="favorite"
-        className="absolute top-3 right-3 z-20 p-2 rounded-full shadow-md border backdrop-blur-md bg-white/70 border-gray-200 hover:bg-gray-100 transition"
+        className="absolute top-3 rtl:left-3 ltr:right-3 z-20 p-2 rounded-full shadow-md border backdrop-blur-md bg-white/70 border-gray-200 hover:bg-gray-100 transition"
       >
         <Heart size={20} className={isFav ? "text-red-600" : "icon-muted"} />
       </Motion.button>
@@ -90,7 +91,7 @@ export default function ProductCard({ product, index = 0 }) {
           {product.name || product.title}
         </Motion.p>
 
-        <Motion.p variants={fadeUp} custom={0.3} className="text-lg font-bold text-[#2F7E80]">
+        <Motion.p variants={fadeUp} custom={0.3} className="text-lg font-bold text-accent-teal">
           {Number(product.price).toLocaleString()} EGP
         </Motion.p>
 

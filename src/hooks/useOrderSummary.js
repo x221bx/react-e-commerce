@@ -1,3 +1,4 @@
+// src/hooks/useOrderSummary.js
 import { useMemo } from "react";
 
 export const useOrderSummary = (cartItems) => {

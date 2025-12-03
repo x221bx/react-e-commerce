@@ -1,4 +1,4 @@
-// useProduct.js
+// src/hooks/useProduct.js
 import { useQuery } from "@tanstack/react-query";
 import { db } from "../services/firebase";
 import { doc, getDoc } from "firebase/firestore";

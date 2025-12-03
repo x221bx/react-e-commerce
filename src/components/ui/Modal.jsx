@@ -1,3 +1,4 @@
+// src/components/ui/Modal.jsx
 import { createPortal } from "react-dom";
 
 export default function Modal({

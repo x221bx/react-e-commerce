@@ -35,7 +35,7 @@ export default function AlertsPanel() {
         )}
         <NavLink
           to="/admin/products?filter=outofstock"
-          className="mt-2 inline-block text-xs font-medium text-[#2A9D8F] hover:underline"
+          className="mt-2 inline-block text-xs font-medium text-admin-teal hover:underline"
         >
           Manage Products →
         </NavLink>
@@ -62,7 +62,7 @@ export default function AlertsPanel() {
         )}
         <NavLink
           to="/admin/orders"
-          className="mt-2 inline-block text-xs font-medium text-[#2A9D8F] hover:underline"
+          className="mt-2 inline-block text-xs font-medium text-admin-teal hover:underline"
         >
           View All Orders →
         </NavLink>

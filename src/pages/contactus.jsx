@@ -3,7 +3,7 @@ import { useState } from "react";
 import { db, auth } from "../services/firebase";
 import { doc, collection, addDoc } from "firebase/firestore";
 import toast from "react-hot-toast";
-import Footer from "../components/layout/Footer";
+import Footer from "../Authcomponents/Footer";
 import { UseTheme } from "../theme/ThemeProvider";
 import { FiPhone, FiMail, FiUser, FiMessageCircle } from "react-icons/fi";
 import { motion as Motion } from "framer-motion";

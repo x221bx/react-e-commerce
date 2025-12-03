@@ -1,3 +1,4 @@
+// src/components/articles/CommentForm.jsx
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FiMessageCircle } from "react-icons/fi";

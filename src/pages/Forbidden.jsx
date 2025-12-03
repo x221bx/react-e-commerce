@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { FiAlertTriangle, FiLock } from "react-icons/fi";
 import { useTranslation } from "react-i18next";
+import Footer from "../Authcomponents/Footer";
 
 export default function Forbidden() {
   const { t } = useTranslation();
@@ -59,6 +60,8 @@ export default function Forbidden() {
           </div>
         </div>
       </div>
+
+      <Footer />
     </section>
   );
 }

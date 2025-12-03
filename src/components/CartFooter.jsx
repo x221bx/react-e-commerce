@@ -22,7 +22,7 @@ export default function CartFooter({
       </div>
       <button
         onClick={onCheckout}
-        className="bg-[#52b788] hover:bg-[#40916c] text-white font-semibold py-2 px-6 rounded-lg transition"
+        className="bg-secondary hover:bg-primary-dark text-white font-semibold py-2 px-6 rounded-lg transition"
       >
         {title}
       </button>

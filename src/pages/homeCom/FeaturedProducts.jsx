@@ -1,3 +1,4 @@
+// src/pages/homeCom/FeaturedProducts.jsx
 import React from "react";
 import ProductCard from "../../components/cards/ProductCard";
 import { useProductsSorted } from "../../hooks/useProductsSorted";

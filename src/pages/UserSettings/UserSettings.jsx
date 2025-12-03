@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 
 import { selectCurrentUser } from "../../features/auth/authSlice";
 import { UseTheme } from "../../theme/ThemeProvider";
-import Footer from "../../components/layout/Footer";
+import Footer from "../../Authcomponents/Footer";
 
 // Import modular components
 import Navigation from "./components/Navigation";
@@ -120,18 +120,46 @@ export default function UserSettings({ variant = "standalone" }) {
     if (field === "newPassword") {
       const strength = calculatePasswordStrength(value);
       setPasswordStrength(strength);
+      if (securityForm.confirmPassword) {
+        const confirmError = validateSecurityField(
+          "confirmPassword",
+          securityForm.confirmPassword,
+          { ...securityForm, newPassword: value }
+        );
+        setSecurityErrors((prev) => ({ ...prev, confirmPassword: confirmError }));
+      }
     }
   };
 
   // Form submission handlers
   const handlePasswordSubmit = async (event) => {
     event.preventDefault();
-    if (!securityForm.currentPassword || !securityForm.newPassword) {
-      toast.error(getSettingsMessage("currentPasswordRequired"));
-      return;
-    }
-    if (securityForm.newPassword !== securityForm.confirmPassword) {
-      toast.error(getSettingsMessage("passwordsNotMatch"));
+    const nextErrors = {};
+    const currentError = validateSecurityField(
+      "currentPassword",
+      securityForm.currentPassword,
+      securityForm
+    );
+    const newError = validateSecurityField(
+      "newPassword",
+      securityForm.newPassword,
+      securityForm
+    );
+    const confirmError = validateSecurityField(
+      "confirmPassword",
+      securityForm.confirmPassword,
+      securityForm
+    );
+
+    if (currentError) nextErrors.currentPassword = currentError;
+    if (newError) nextErrors.newPassword = newError;
+    if (confirmError) nextErrors.confirmPassword = confirmError;
+
+    setSecurityErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length) {
+      const firstError = Object.values(nextErrors)[0];
+      if (firstError) toast.error(firstError);
       return;
     }
 
@@ -257,6 +285,7 @@ export default function UserSettings({ variant = "standalone" }) {
         isSavingProfile={profile.isSavingProfile}
         hasUnsavedChanges={profile.hasUnsavedChanges}
         errors={profile.profileErrors}
+        handlePhoneChange={profile.handlePhoneChange}
       />
 
       <SecuritySection

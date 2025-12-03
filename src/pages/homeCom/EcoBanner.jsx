@@ -1,3 +1,4 @@
+// src/pages/homeCom/EcoBanner.jsx
 import { motion as Motion } from "framer-motion";
 import { UseTheme } from "../../theme/ThemeProvider";
 import { useNavigate } from "react-router-dom";
@@ -28,7 +29,7 @@ export default function HelpBanner() {
           viewport={{ once: true, amount: 0.3 }}
           className={`flex flex-col md:flex-row items-center justify-between gap-8 rounded-2xl overflow-hidden p-8 md:p-12 text-center md:text-left shadow-xl transition-all duration-500 ${
             theme === "dark"
-              ? "bg-[#0e1b1b] text-[#B8E4E6]"
+              ? "bg-[var(--bg-input)] text-[#B8E4E6]"
               : "bg-[#2f804e] text-white"
           }`}
           style={{

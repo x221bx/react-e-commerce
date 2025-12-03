@@ -1,3 +1,4 @@
+// src/components/search/SearchBar.jsx
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { UseTheme } from "../../theme/ThemeProvider";
@@ -103,8 +104,8 @@ export default function SearchBar({
                     className={`absolute mt-2 w-full rounded-lg shadow-lg border max-h-56 overflow-y-auto z-50 transition-all
             ${
                         theme === "dark"
-                            ? "bg-[#0e1b1b] border-[#B8E4E6]/30"
-                            : "bg-white border-[#B8E4E6]/30"
+                            ? "bg-[var(--bg-input)] border-[#B8E4E6]/30"
+                            : "bg-[var(--bg-card)] border-[#B8E4E6]/30"
                     }`}
                 >
                     {results.map((item) => (
@@ -133,8 +134,8 @@ export default function SearchBar({
                     className={`absolute mt-2 w-full rounded-lg shadow-md border px-4 py-2 text-sm text-center z-50
             ${
                         theme === "dark"
-                            ? "bg-[#0e1b1b] border-[#B8E4E6]/30 text-[#B8E4E6]/80"
-                            : "bg-white border-[#B8E4E6]/30 text-[#142727]/80"
+                            ? "bg-[var(--bg-input)] border-[#B8E4E6]/30 text-[#B8E4E6]/80"
+                            : "bg-[var(--bg-card)] border-[#B8E4E6]/30 text-[#142727]/80"
                     }`}
                 >
                     No results found

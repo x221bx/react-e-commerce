@@ -1,3 +1,4 @@
+// src/redux/store.js
 import { configureStore } from "@reduxjs/toolkit";
 import auth from "../features/auth/authSlice";
 import cart from "../features/cart/cartSlice";

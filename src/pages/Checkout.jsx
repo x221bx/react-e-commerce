@@ -25,6 +25,7 @@ import { useUserProfile } from "../hooks/useUserProfile";
 import { useOrderSummary } from "../hooks/useOrderSummary";
 import { useCardValidation } from "../hooks/useCardValidation";
 import { UseTheme } from "../theme/ThemeProvider";
+import Footer from "../Authcomponents/Footer";
 
 const formatSavedMethod = (method) => {
   if (!method) return "";
@@ -41,6 +42,13 @@ const formatSavedMethod = (method) => {
     return `${provider} (${method.email})`;
   }
   return method.nickname || "Saved method";
+};
+
+const generatePaymentMethodId = () => {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `payment-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 };
 
 export default function Checkout() {
@@ -60,12 +68,20 @@ export default function Checkout() {
     user?.name || user?.displayName || user?.username || userEmail || "";
 
   // form hooks
-  const { form, setForm, errors, formErrors, validate } = useCheckoutForm(user);
+  const {
+    form,
+    setForm,
+    errors,
+    formErrors,
+    validate,
+    handlePhoneChange,
+  } = useCheckoutForm(user);
 
   const {
     methods,
     loading: savedPaymentLoading,
     defaultMethod,
+    addCard,
   } = usePaymentMethods(user?.uid);
 
   const savedCards = useMemo(
@@ -102,12 +118,18 @@ export default function Checkout() {
 
   const summary = useOrderSummary(cartItems);
 
-  const { cardForm, setCardForm, cardErrors, validateCard, resetCard } =
-    useCardValidation();
+  const cardValidation = useCardValidation();
+  const {
+    cardForm,
+    validateCard,
+    resetCard,
+    detectBrand,
+  } = cardValidation;
 
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [showCardModal, setShowCardModal] = useState(false);
+  const [saveCardForLater, setSaveCardForLater] = useState(false);
 
   const paymentOptions = useMemo(
     () => [
@@ -132,7 +154,7 @@ export default function Checkout() {
     [savedCards.length, t]
   );
 
-  const buildPaymentDetails = () => {
+  const buildPaymentDetails = (cardDetailsOverride) => {
     if (
       paymentMethod === "card" &&
       selectedSavedCardId &&
@@ -153,11 +175,12 @@ export default function Checkout() {
       }
     }
     if (paymentMethod === "card") {
-      const digits = cardForm.number.replace(/\D/g, "");
+      const cardDetails = cardDetailsOverride || cardForm || {};
+      const digits = (cardDetails.number || "").replace(/\D/g, "");
       return {
         type: "card",
         label: t("checkout.payment.card.title"),
-        holder: cardForm.holder.trim(),
+        holder: (cardDetails.holder || "").trim(),
         last4: digits.slice(-4),
       };
     }
@@ -167,7 +190,7 @@ export default function Checkout() {
     };
   };
 
-  const placeOrder = async () => {
+  const placeOrder = async (cardDetailsOverride) => {
     if (!user?.uid && !firebaseUser?.uid) {
       toast.error(t("checkout.messages.loginRequired"));
       return;
@@ -189,7 +212,7 @@ export default function Checkout() {
 
     setLoading(true);
     try {
-      const paymentDetails = buildPaymentDetails();
+      const paymentDetails = buildPaymentDetails(cardDetailsOverride);
       const shipping = {
         fullName: form.fullName.trim(),
         addressLine1: form.address.trim(),
@@ -216,9 +239,8 @@ export default function Checkout() {
       dispatch(clearCart());
       resetCard();
       toast.success(t("checkout.messages.success"));
-      navigate(`/order-confirmation?orderId=${id}`, {
-        state: { orderId: id },
-      });
+      setSaveCardForLater(false);
+      navigate(`/account/invoice/${id}`, { state: { orderId: id } });
     } catch (err) {
       console.error("Checkout error:", err);
       toast.error(
@@ -252,11 +274,22 @@ export default function Checkout() {
     await placeOrder();
   };
 
-  const handleCardSubmit = async (event) => {
-    event.preventDefault();
+  const handleCardSubmit = async (cardData, shouldSave) => {
+    if (!cardData) return;
     if (!validateCard()) return;
     setShowCardModal(false);
-    await placeOrder();
+
+    if (shouldSave && user?.uid) {
+      try {
+        await addCard(cardData, detectBrand, generatePaymentMethodId);
+        toast.success(t("payments.form.saveCard", "Card saved to your payment methods"));
+      } catch (err) {
+        console.error("Failed to save card from checkout", err);
+        toast.error(t("payments.form.saveFailed", "Card used for this order but not saved."));
+      }
+    }
+
+    await placeOrder(cardData);
   };
 
   const handlePaymentSelection = (value) => {
@@ -385,7 +418,12 @@ export default function Checkout() {
               </div>
             )}
 
-            <CheckoutContactForm form={form} setForm={setForm} errors={errors} />
+            <CheckoutContactForm
+              form={form}
+              setForm={setForm}
+              errors={errors}
+              handlePhoneChange={handlePhoneChange}
+            />
             <CheckoutShippingForm form={form} setForm={setForm} errors={errors} />
 
             <CheckoutPaymentSection
@@ -435,13 +473,15 @@ export default function Checkout() {
           <CheckoutCardModal
             isOpen={showCardModal}
             onClose={() => setShowCardModal(false)}
-            cardForm={cardForm}
-            setCardForm={setCardForm}
-            cardErrors={cardErrors}
             onSubmit={handleCardSubmit}
+            cardValidation={cardValidation}
+            saveCardForLater={saveCardForLater}
+            onSaveCardToggle={setSaveCardForLater}
           />
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 }

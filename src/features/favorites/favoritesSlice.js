@@ -1,3 +1,4 @@
+// src/features/favorites/favoritesSlice.js
 import { createSlice } from "@reduxjs/toolkit";
 import { saveUserFavorites } from "../../services/userDataService";
 

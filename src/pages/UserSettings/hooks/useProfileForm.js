@@ -27,7 +27,12 @@ const loadUserProfile = async (userId) => {
 
 export const useProfileForm = (user) => {
   const dispatch = useDispatch();
-  const [profileForm, setProfileForm] = useState(getProfileState(user));
+  const normalizePhoneInput = (value = "") => value.replace(/\D/g, "").slice(0, 11);
+
+  const [profileForm, setProfileForm] = useState(() => {
+    const initial = getProfileState(user);
+    return { ...initial, phone: normalizePhoneInput(initial.phone) };
+  });
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [profileErrors, setProfileErrors] = useState({});
@@ -36,10 +41,28 @@ export const useProfileForm = (user) => {
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
 
+  const setProfileFieldError = (field, message) => {
+    setProfileErrors((prev) => {
+      const next = { ...prev };
+      if (message) next[field] = message;
+      else delete next[field];
+      return next;
+    });
+  };
+
+  const validatePhoneInline = (value = "", { strict = false } = {}) => {
+    const digits = normalizePhoneInput(value);
+    if (!digits) return strict ? getSettingsMessage("phoneRequiredGeneric") : "";
+    const isValid = digits.startsWith("01") && digits.length === 11;
+    return isValid ? "" : getSettingsMessage("invalidEgyptPhone");
+  };
+
   useEffect(() => {
     const loadProfile = async () => {
       if (!user?.uid) {
-        setProfileForm(getProfileState(user));
+        const resetState = getProfileState(user);
+        const normalizedPhone = normalizePhoneInput(resetState.phone);
+        setProfileForm({ ...resetState, phone: normalizedPhone });
         setAvatarError(false);
         setHasUnsavedChanges(false);
         setUploadedAvatarName("");
@@ -53,13 +76,19 @@ export const useProfileForm = (user) => {
         if (userProfile) {
           // Merge Firebase data with Redux user data
           const mergedUser = { ...user, ...userProfile };
-          setProfileForm(getProfileState(mergedUser));
+          const mergedState = getProfileState(mergedUser);
+          const normalizedPhone = normalizePhoneInput(mergedState.phone);
+          setProfileForm({ ...mergedState, phone: normalizedPhone });
         } else {
-          setProfileForm(getProfileState(user));
+          const baseState = getProfileState(user);
+          const normalizedPhone = normalizePhoneInput(baseState.phone);
+          setProfileForm({ ...baseState, phone: normalizedPhone });
         }
       } catch (error) {
         console.error("Error loading profile:", error);
-        setProfileForm(getProfileState(user));
+        const fallbackState = getProfileState(user);
+        const normalizedPhone = normalizePhoneInput(fallbackState.phone);
+        setProfileForm({ ...fallbackState, phone: normalizedPhone });
       } finally {
         setIsLoadingProfile(false);
       }
@@ -77,9 +106,19 @@ export const useProfileForm = (user) => {
   }, [profileForm.photoURL]);
 
   const handleProfileChange = (field, value) => {
+    if (field === "phone") {
+      const normalized = normalizePhoneInput(value);
+      setProfileForm((prev) => ({ ...prev, phone: normalized }));
+      setHasUnsavedChanges(true);
+      setProfileFieldError("phone", validatePhoneInline(normalized));
+      return;
+    }
+
     setProfileForm((prev) => ({ ...prev, [field]: value }));
     setHasUnsavedChanges(true);
   };
+
+  const handlePhoneChange = (value = "") => handleProfileChange("phone", value);
 
   // Debounced validation to avoid excessive re-renders
   const debouncedProfileForm = useDebounce(profileForm, 300);
@@ -237,7 +276,9 @@ export const useProfileForm = (user) => {
   };
 
   const resetProfileForm = () => {
-    setProfileForm(getProfileState(user));
+    const resetState = getProfileState(user);
+    const normalizedPhone = normalizePhoneInput(resetState.phone);
+    setProfileForm({ ...resetState, phone: normalizedPhone });
     setHasUnsavedChanges(false);
     setProfileErrors({});
     setUploadedAvatarName("");
@@ -246,12 +287,13 @@ export const useProfileForm = (user) => {
   // Helper function to check if there are actual changes
 const hasProfileChanges = () => {
   const original = getProfileState(user);
+  const normalizedOriginalPhone = normalizePhoneInput(original.phone);
   return (
     profileForm.firstName !== original.firstName ||
     profileForm.lastName !== original.lastName ||
     profileForm.email !== original.email ||
     profileForm.username !== original.username ||
-    profileForm.phone !== original.phone ||
+    profileForm.phone !== normalizedOriginalPhone ||
     profileForm.location !== original.location ||
     profileForm.photoURL !== original.photoURL
   );
@@ -276,7 +318,7 @@ const hasProfileChanges = () => {
       const displayName = `${trimmedFirst} ${trimmedLast}`.trim() || user.name;
       const sanitizedPhoto = profileForm.photoURL?.trim?.() || profileForm.photoURL || "";
       const trimmedEmail = profileForm.email?.trim?.() || user.email || "";
-      const normalizedPhone = profileForm.phone.replace(/\D/g, "");
+      const normalizedPhone = normalizePhoneInput(profileForm.phone);
       const trimmedLocation = profileForm.location.trim();
       const normalizedUsername = profileForm.username?.trim?.().toLowerCase() || "";
       const originalProfile = getProfileState(user);
@@ -413,5 +455,8 @@ const hasProfileChanges = () => {
     resetProfileForm,
     handleProfileSubmit,
     setAvatarError,
+    handlePhoneChange,
+    normalizePhoneInput,
+    validatePhoneInline,
   };
 };

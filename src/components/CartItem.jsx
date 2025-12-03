@@ -18,7 +18,7 @@ export default function CartItem({ item }) {
           <p className="text-sm text-gray-500 mt-1">{item.description}</p>
         )}
 
-        <p className="text-[#2d6a4f] font-bold mt-2">
+        <p className="text-price-green font-bold mt-2">
           {Number(item.price).toLocaleString()} EGP
         </p>
 

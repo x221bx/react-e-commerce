@@ -1,8 +1,56 @@
+const AI_ERROR = { error: true, message: "AI unavailable" };
+
 const stripHeadingHashes = (value = "") =>
   value.replace(/^#{1,6}\s*/gm, "").replace(/#{1,6}/g, "");
 
 const normalizeParagraphs = (value = "") =>
   stripHeadingHashes(value).replace(/\n{3,}/g, "\n\n").trim();
+
+const getApiKey = () => {
+  const key = import.meta.env.VITE_OR_KEY || "";
+  if (!key) throw new Error("Missing OpenRouter API key");
+  return key;
+};
+
+const buildHeaders = () => {
+  const apiKey = getApiKey();
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${apiKey}`,
+    "X-Title": "Farm-Vet AI",
+  };
+  if (typeof window !== "undefined" && window.location?.origin) {
+    headers["HTTP-Referer"] = window.location.origin;
+  }
+  return headers;
+};
+
+export const callOpenRouter = async ({
+  messages,
+  model = "openai/gpt-4o-mini",
+  temperature = 0.35,
+  maxTokens = 800,
+}) => {
+  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: buildHeaders(),
+    body: JSON.stringify({
+      model,
+      messages,
+      temperature,
+      max_tokens: maxTokens,
+    }),
+  });
+
+  if (!response.ok) throw new Error(`OpenRouter request failed (${response.status})`);
+
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content;
+  if (Array.isArray(content)) {
+    return content.map((part) => part?.text || part).join(" ");
+  }
+  return content || "";
+};
 
 export const translateText = async ({
   text,
@@ -27,160 +75,190 @@ export const translateText = async ({
   }
 };
 
-// AI Text Generation Function
-export const generateAiDraft = ({ topicKey, productContext, lineCount, content, style, type, text, direction }) => {
-  // Handle rewriting content
-  if (style && content) {
-    // Mock rewriting - in real app, this would call AI API
-    const words = content.split(/\s+/);
-    if (style === 'shorter') {
-      return words.slice(0, Math.max(10, words.length * 0.7)).join(' ') + '...';
-    } else if (style === 'longer') {
-      return content + '\n\nAdditional information: This expanded version includes more context and examples to help readers better understand the topic.';
-    } else if (style === 'simpler') {
-      return content.replace(/technical/gi, 'simple').replace(/complex/gi, 'easy');
-    } else if (style === 'professional') {
-      return content.replace(/you should/gi, 'it is recommended to').replace(/don't/gi, 'do not');
+const sanitize = (value = "", max = 600) =>
+  (value || "")
+    .toString()
+    .replace(/\s+/g, " ")
+    .replace(/[#*`>]/g, "")
+    .slice(0, max)
+    .trim();
+
+export const buildArticleRagContext = (articles = [], limit = 8) => {
+  if (!Array.isArray(articles) || articles.length === 0) return "";
+  const scored = [...articles]
+    .map((a) => ({
+      ...a,
+      _score:
+        (a.likes || 0) * 3 +
+        (a.views || 0) * 0.5 +
+        (Array.isArray(a.comments) ? a.comments.length : 0) * 2,
+    }))
+    .sort((a, b) => (b._score || 0) - (a._score || 0))
+    .slice(0, limit);
+
+  return scored
+    .map(
+      (a, idx) =>
+        `[${idx + 1}] Title: ${sanitize(a.title, 160)} | Tag: ${
+          a.tag || "General"
+        } | Likes: ${a.likes || 0} | Views: ${a.views || 0} | Summary: ${sanitize(
+          a.summary,
+          260
+        )} | Content: ${sanitize(a.content, 700)}`
+    )
+    .join("\n");
+};
+
+const parseJsonSafe = (text, fallback = {}) => {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return fallback;
+  }
+};
+
+const extractJsonObject = (rawText, fallback = {}) => {
+  if (!rawText) return fallback;
+  const direct = parseJsonSafe(rawText, null);
+  if (direct && typeof direct === "object") return direct;
+  const first = rawText.indexOf("{");
+  const last = rawText.lastIndexOf("}");
+  if (first !== -1 && last !== -1 && last > first) {
+    const candidate = rawText.slice(first, last + 1);
+    const parsed = parseJsonSafe(candidate, null);
+    if (parsed && typeof parsed === "object") return parsed;
+  }
+  return fallback;
+};
+
+// AI Text Generation Function (RAG-powered)
+export const generateAiDraft = async ({
+  topicKey,
+  productContext,
+  lineCount,
+  content,
+  style,
+  type,
+  ragContext = "",
+}) => {
+  const apiKey = getApiKey();
+
+  // Fallback: deterministic transformations if no key
+  if (!apiKey) {
+    if (style && content) {
+      const words = content.split(/\s+/);
+      if (style === "shorter") {
+        return words.slice(0, Math.max(10, Math.floor(words.length * 0.7))).join(" ") + "...";
+      } else if (style === "longer") {
+        return (
+          content +
+          "\n\nAdditional information: This expanded version includes more context and examples to help readers better understand the topic."
+        );
+      } else if (style === "simpler") {
+        return content.replace(/technical/gi, "simple").replace(/complex/gi, "easy");
+      } else if (style === "professional") {
+        return content.replace(/you should/gi, "it is recommended to").replace(/don't/gi, "do not");
+      }
+      return content;
     }
-    return content;
+
+    if (type === "title" && content) {
+      return {
+        title: `Guide: ${content.split(" ").slice(0, 5).join(" ")}...`,
+        titleAr: `O_U,USU,: ${content.split(" ").slice(0, 5).join(" ")}...`,
+      };
+    }
+
+    if (type === "summary" && content) {
+      const sentences = content.split(/[.!?]+/).filter((s) => s.trim().length > 10);
+      return {
+        summary: sentences.slice(0, 2).join(". ").trim() + ".",
+        summaryAr: sentences.slice(0, 2).join(". ").trim() + ".",
+      };
+    }
   }
 
-  // Handle title generation
-  if (type === 'title' && content) {
-    return {
-      title: `Guide: ${content.split(' ').slice(0, 5).join(' ')}...`,
-      titleAr: `دليل: ${content.split(' ').slice(0, 5).join(' ')}...`
-    };
-  }
+  const topicLookup = {
+    usage: "Product Usage",
+    combo: "Product Combo",
+    troubleshoot: "Troubleshooting",
+  };
+  const tag = topicLookup[topicKey] || "Knowledge";
+  const userPrompt = (() => {
+    if (style && content) {
+      return `Rewrite the article below in a ${style} style. Preserve accuracy and avoid hallucinations.\n\nArticle:\n${content}`;
+    }
+    if (type === "title" && content) {
+      return `Generate an engaging, concise title for this article. Return JSON with { "title": string } only.\n\nArticle:\n${content}`;
+    }
+    if (type === "summary" && content) {
+      return `Generate a crisp summary (2-3 sentences) for the article. Return JSON with { "summary": string } only.\n\nArticle:\n${content}`;
+    }
+    return `Create an agriculture article draft grounded in the provided knowledge base.\nTopic: ${topicKey || "general"}\nProduct/context: ${
+      productContext || "N/A"
+    }\nLine budget: ${lineCount || 5}\nReturn JSON with: title, summary, content (markdown), tag, heroImage (placeholder ok), readTime (e.g., "5 min").`;
+  })();
 
-  // Handle summary generation
-  if (type === 'summary' && content) {
-    const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 10);
-    return {
-      summary: sentences.slice(0, 2).join('. ').trim() + '.',
-      summaryAr: sentences.slice(0, 2).join('. ').trim() + '.'
-    };
-  }
-
-  // Translation flag retained for backwards compatibility.
-  // Use translateText helper for actual translations.
-
-  const aiTopics = [
+  const messages = [
     {
-      value: "usage",
-      label: "Product usage guide",
-      tag: "Product Usage",
-      prompt: "Explain how to use the selected product step by step.",
-      sampleHero: "https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=900&q=80",
+      role: "system",
+      content: `You are an agriculture content strategist. Be factual, concise, and base your answers on the knowledge base when relevant. If you use the knowledge base, cite article titles inline. Knowledge base:\n${ragContext || "No prior articles available."}`,
     },
-    {
-      value: "combo",
-      label: "Combine two products",
-      tag: "Product Combo",
-      prompt: "Show how to combine two products safely with a clear sequence.",
-      sampleHero: "https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=900&q=80",
-    },
-    {
-      value: "troubleshoot",
-      label: "Fix a recurring issue",
-      tag: "Troubleshooting",
-      prompt: "Describe how this product fixes a common farm issue.",
-      sampleHero: "https://images.unsplash.com/photo-1523475472560-d2df97ec485c?auto=format&fit=crop&w=900&q=80",
-    },
+    { role: "user", content: userPrompt },
   ];
 
-  const topic = aiTopics.find((t) => t.value === topicKey) || aiTopics[0];
-  const productName = productContext?.trim() || "the product";
-  const maxLines = Math.max(3, Math.min(lineCount || 5, 12));
+  try {
+    const completion = await callOpenRouter({
+      messages,
+      maxTokens: 900,
+      temperature: 0.4,
+    });
 
-  // English content
-  const summaryLinesEn = [
-    `How to use ${productName} step by step.`,
-    "What the product does and how it saves time or money.",
-    "Prep checklist before you start.",
-    "Correct application to avoid waste or errors.",
-    "Track results and measure improvement.",
-    "Safety and storage tips after use.",
-  ].slice(0, maxLines);
+    const parsed = parseJsonSafe(completion, {});
+    if (parsed.title || parsed.summary || parsed.content) {
+      return {
+        title: parsed.title || "",
+        summary: parsed.summary || "",
+        content: parsed.content ? normalizeParagraphs(parsed.content) : "",
+        tag: parsed.tag || tag,
+        heroImage: parsed.heroImage || "",
+        readTime: parsed.readTime || "",
+      };
+    }
 
-  const contentEn = [
-    `## Why ${productName}?`,
-    `${topic.prompt} with a focus on ${productName}.`,
-    "",
-    "## Steps",
-    "- Prepare the area and tools first.",
-    "- Apply only the recommended amount.",
-    "- Monitor results and log notes.",
-    "",
-    "## Combine with other products",
-    "Pair it safely with compatible inputs for better results.",
-    "",
-    "## Quick tips",
-    "- Wear safety gear.",
-    "- Store in a cool dry place.",
-    "- Re-check the label before each use.",
-  ].join("\n");
-
-  // Arabic content (basic translation - in real app, use proper translation service)
-  const summaryLinesAr = [
-    `كيفية استخدام ${productName} خطوة بخطوة.`,
-    "ما يفعله المنتج وكيف يوفر الوقت والمال.",
-    "قائمة التحضير قبل البدء.",
-    "التطبيق الصحيح لتجنب الهدر والأخطاء.",
-    "تتبع النتائج وقياس التحسن.",
-    "نصائح السلامة والتخزين بعد الاستخدام.",
-  ].slice(0, maxLines);
-
-  const contentAr = [
-    `## لماذا ${productName}؟`,
-    `${topic.prompt} مع التركيز على ${productName}.`,
-    "",
-    "## الخطوات",
-    "- تحضير المنطقة والأدوات أولاً.",
-    "- استخدم الكمية الموصى بها فقط.",
-    "- راقب النتائج وسجل الملاحظات.",
-    "",
-    "## الجمع مع منتجات أخرى",
-    "اقرنها بأمان مع المدخلات المتوافقة للحصول على نتائج أفضل.",
-    "",
-    "## نصائح سريعة",
-    "- ارتدِ معدات السلامة.",
-    "- خزن في مكان بارد وجاف.",
-    "- أعد التحقق من الملصق قبل كل استخدام.",
-  ].join("\n");
-
-  return {
-    title: `${topic.tag}: Using ${productName}`,
-    titleAr: `${topic.tag}: استخدام ${productName}`,
-    summary: summaryLinesEn.join(" "),
-    summaryAr: summaryLinesAr.join(" "),
-    content: normalizeParagraphs(contentEn),
-    contentAr: normalizeParagraphs(contentAr),
-    tag: topic.tag,
-    heroImage: topic.sampleHero,
-    readTime: `${Math.max(3, Math.ceil(contentEn.length / 400))} min`,
-  };
+    return {
+      title: `Draft: ${sanitize(completion, 60)}`,
+      summary: sanitize(completion, 220),
+      content: normalizeParagraphs(completion),
+      tag,
+      heroImage: "",
+      readTime: "",
+    };
+  } catch (error) {
+    console.error("generateAiDraft error:", error);
+    return {
+      title: `Draft: ${productContext || "Article"}`,
+      summary: "AI unavailable. Please refine manually.",
+      content: content || "",
+      tag,
+      heroImage: "",
+      readTime: "",
+    };
+  }
 };
 
 // AI Text Review Function
-export const reviewArticleWithAI = async (articleData) => {
+export const reviewArticleWithAI = async (articleData, ragContext = "") => {
   try {
-    const API_KEY = import.meta.env.VITE_OPENAI_KEY;
-    if (!API_KEY) {
-      return {
-        score: 75,
-        suggestions: ["OpenAI API key not configured"],
-        issues: [],
-        improvements: ["Add API key for AI review"]
-      };
-    }
+    const API_KEY = getApiKey();
+    if (!API_KEY) return { error: true, message: "Missing OpenRouter API key" };
 
     const prompt = `
 Review this agricultural article for quality, accuracy, and engagement:
 
 Title: ${articleData.title}
 Summary: ${articleData.summary}
-Content: ${articleData.content?.substring(0, 1000)}...
+Content: ${articleData.content?.substring(0, 1200)}...
 
 Provide a JSON response with:
 - score: number 0-100
@@ -190,66 +268,60 @@ Provide a JSON response with:
 - seo_score: SEO optimization score 0-100
     `;
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [{ role: "user", content: prompt }],
-        max_tokens: 800,
-      }),
+    const reviewText = await callOpenRouter({
+      messages: [
+        {
+          role: "system",
+          content: `You are a meticulous agriculture content editor. Reference the knowledge base when relevant and avoid hallucinations.\nKnowledge base:\n${ragContext ||
+            "No KB available."}`,
+        },
+        { role: "user", content: prompt },
+      ],
+      maxTokens: 900,
+      temperature: 0.3,
     });
 
-    if (!response.ok) throw new Error("AI review failed");
-
-    const data = await response.json();
-    const reviewText = data.choices[0]?.message?.content || "{}";
+    if (!reviewText || typeof reviewText !== "string") {
+      return { error: true, message: "Empty AI review response" };
+    }
 
     try {
-      const parsed = JSON.parse(reviewText);
-      // Ensure suggestions array exists and has content
+      const parsed = extractJsonObject(reviewText, {});
+      if (
+        typeof parsed.score !== "number" ||
+        typeof parsed.seo_score !== "number" ||
+        !Array.isArray(parsed.suggestions || [])
+      ) {
+        return { error: true, message: "Invalid AI review response" };
+      }
       return {
-        score: parsed.score || 70,
-        suggestions: Array.isArray(parsed.suggestions) && parsed.suggestions.length > 0
-          ? parsed.suggestions
-          : ["Consider adding more specific details about the topic"],
+        score: parsed.score,
+        suggestions: Array.isArray(parsed.suggestions) ? parsed.suggestions : [],
         issues: Array.isArray(parsed.issues) ? parsed.issues : [],
-        improvements: Array.isArray(parsed.improvements) ? parsed.improvements : ["AI review completed with basic analysis"],
-        seo_score: parsed.seo_score || 65
+        improvements: Array.isArray(parsed.improvements)
+          ? parsed.improvements
+          : [],
+        seo_score: parsed.seo_score,
+        content_score: parsed.content_score,
       };
     } catch {
-      return {
-        score: 70,
-        suggestions: ["Consider adding more specific details about the topic"],
-        issues: [],
-        improvements: ["AI review completed with basic analysis"],
-        seo_score: 65
-      };
+      return { error: true, message: "Invalid AI review response" };
     }
   } catch (error) {
     console.error("AI review error:", error);
-    return {
-      score: 60,
-      suggestions: ["Manual review recommended"],
-      issues: ["AI review service unavailable"],
-      improvements: ["Check internet connection"],
-      seo_score: 50
-    };
+    return { error: true, message: error?.message || "AI review failed" };
   }
 };
 
 // AI SEO Suggestions Function
-export const generateSEOWithAI = async (articleData) => {
+export const generateSEOWithAI = async (articleData, ragContext = "") => {
   try {
-    const API_KEY = import.meta.env.VITE_OPENAI_KEY;
+    const API_KEY = getApiKey();
     if (!API_KEY) {
       return {
         metaDescription: "Default meta description for agricultural content.",
         keywords: "agriculture, farming, livestock, crops",
-        suggestions: ["Configure OpenAI API for better SEO suggestions"]
+        suggestions: ["Configure OpenRouter API for better SEO suggestions"],
       };
     }
 
@@ -258,7 +330,7 @@ Generate SEO optimization suggestions for this agricultural article:
 
 Title: ${articleData.title}
 Summary: ${articleData.summary}
-Content: ${articleData.content?.substring(0, 500)}...
+Content: ${articleData.content?.substring(0, 700)}...
 Tag: ${articleData.tag}
 
 Provide a JSON response with:
@@ -268,41 +340,69 @@ Provide a JSON response with:
 - titleSuggestions: array of alternative title suggestions
     `;
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${API_KEY}`,
+    const messages = [
+      {
+        role: "system",
+        content: `You are an SEO expert for agriculture content. Use the knowledge base to ground keyword choices.\nKnowledge base:\n${ragContext ||
+          "No KB available."}`,
       },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [{ role: "user", content: prompt }],
-        max_tokens: 600,
-      }),
+      { role: "user", content: prompt },
+    ];
+
+    const seoText = await callOpenRouter({
+      messages,
+      maxTokens: 700,
+      temperature: 0.35,
     });
-
-    if (!response.ok) throw new Error("AI SEO generation failed");
-
-    const data = await response.json();
-    const seoText = data.choices[0]?.message?.content || "{}";
 
     try {
       return JSON.parse(seoText);
     } catch {
       return {
-        metaDescription: `Learn about ${articleData.title.toLowerCase()} in this comprehensive agricultural guide.`,
-        keywords: `${articleData.tag}, agriculture, farming, guide`,
+        metaDescription: `Learn about ${articleData.title?.toLowerCase?.() || "this topic"} in this comprehensive agricultural guide.`,
+        keywords: `${articleData.tag || "agriculture"}, farming, guide`,
         suggestions: ["Add location-specific keywords", "Include target audience in title"],
-        titleSuggestions: [`${articleData.title} - Complete Guide`, `${articleData.title} Tips & Techniques`]
+        titleSuggestions: [
+          `${articleData.title} - Complete Guide`,
+          `${articleData.title} Tips & Techniques`,
+        ],
       };
     }
   } catch (error) {
     console.error("AI SEO error:", error);
     return {
-      metaDescription: `Comprehensive guide about ${articleData.title.toLowerCase()}.`,
+      metaDescription: `Comprehensive guide about ${articleData.title?.toLowerCase?.() || "this topic"}.`,
       keywords: "agriculture, farming, livestock, crops",
       suggestions: ["Manual SEO optimization recommended"],
-      titleSuggestions: [`${articleData.title} Guide`, `${articleData.title} Tips`]
+      titleSuggestions: [`${articleData.title} Guide`, `${articleData.title} Tips`],
     };
+  }
+};
+
+export const askArticlesRag = async ({ question, ragContext = "" }) => {
+  if (!question?.trim()) return "";
+  try {
+    const apiKey = getApiKey();
+    if (!apiKey) {
+      return "AI unavailable. Please configure VITE_OR_KEY.";
+    }
+
+    const isArabic = /[\u0600-\u06FF]/.test(question);
+    const messages = [
+      {
+        role: "system",
+        content: `You are an assistant that answers using the provided article knowledge base. Always respond in ${
+          isArabic ? "Arabic" : "the user's language"
+        }, quote article titles when relevant, and avoid inventing data.\nKnowledge base:\n${ragContext ||
+          "No knowledge base available."}`,
+      },
+      { role: "user", content: question },
+    ];
+    return await callOpenRouter({ messages, maxTokens: 700, temperature: 0.35 });
+  } catch (error) {
+    console.error("askArticlesRag error:", error);
+    return /[\u0600-\u06FF]/.test(question)
+      ? "لم أتمكن من الحصول على إجابة الآن. تأكد من الاتصال بالمفتاح VITE_OR_KEY وحاول مرة أخرى."
+      : "AI unavailable right now. Check your VITE_OR_KEY and network.";
   }
 };

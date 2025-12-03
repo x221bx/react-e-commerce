@@ -1,3 +1,4 @@
+// src/pages/homeCom/hero.jsx
 import { motion as Motion } from "framer-motion";
 import { UseTheme } from "../../theme/ThemeProvider";
 import { useNavigate } from "react-router-dom";

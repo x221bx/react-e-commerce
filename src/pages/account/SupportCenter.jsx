@@ -9,6 +9,8 @@ import { XCircle, CheckCircle2, AlertCircle } from "lucide-react";
 
 const extractResponseText = (payload) => {
   if (!payload) return "";
+
+  // OpenAI "responses" API shape
   if (typeof payload.output_text === "string") return payload.output_text;
   if (Array.isArray(payload.output)) {
     for (const item of payload.output) {
@@ -19,23 +21,61 @@ const extractResponseText = (payload) => {
       if (typeof textValue === "string") return textValue;
     }
   }
-  if (Array.isArray(payload.choices) && payload.choices[0]?.text) {
-    return payload.choices[0].text;
+
+  // Chat completions shape (OpenRouter/OpenAI compatible)
+  if (Array.isArray(payload.choices)) {
+    const choice = payload.choices[0];
+    if (typeof choice?.message?.content === "string")
+      return choice.message.content;
+    if (Array.isArray(choice?.message?.content))
+      return choice.message.content.map((part) => part?.text || part).join(" ");
+    if (typeof choice?.text === "string") return choice.text;
   }
+
   return "";
 };
 
 export default function SupportCenter() {
   const { theme } = UseTheme();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const user = useSelector(selectCurrentUser);
   const isDark = theme === "dark";
+  const isRtl = ((i18n?.dir && i18n.dir()) || (typeof document !== "undefined" ? document.documentElement.dir : "ltr")) === "rtl";
+
+  const normalizePhoneInput = (value = "") =>
+    value.replace(/\D/g, "").slice(0, 11);
+
+  const validatePhoneNumber = (value = "") => {
+    const digits = normalizePhoneInput(value);
+    if (!digits) {
+      return t(
+        "support.phoneRequired",
+        "Please provide your phone number for contact purposes"
+      );
+    }
+    if (digits.length < 11) {
+      return t(
+        "support.phoneInvalid",
+        "Please enter a valid Egyptian mobile (11 digits starting 010/011/012/015)"
+      );
+    }
+    if (!/^01(0|1|2|5)\d{8}$/.test(digits)) {
+      return t(
+        "support.phoneInvalid",
+        "Please enter a valid Egyptian mobile (11 digits starting 010/011/012/015)"
+      );
+    }
+    return "";
+  };
 
   const [message, setMessage] = useState("");
   const [topic, setTopic] = useState("orders");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState(user?.phone || "");
-  const API_KEY = import.meta.env.VITE_OPENAI_KEY;
+  const [phoneNumber, setPhoneNumber] = useState(
+    normalizePhoneInput(user?.phone || "")
+  );
+  const [phoneError, setPhoneError] = useState("");
+  const API_KEY = import.meta.env.VITE_OR_KEY || import.meta.env.VITE_OPENAI_KEY;
 
   const toastMessage = (message, tone = "info", id = undefined) => {
     const toneClasses = {
@@ -83,17 +123,28 @@ Message:
 """${text}"""
 `;
     try {
-      const response = await fetch("https://api.openai.com/v1/responses", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: "gpt-4o-mini",
-          input: prompt,
-        }),
-      });
+      const headers = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${API_KEY}`,
+        "X-Title": "Farm-Vet E-Shop Support",
+      };
+
+      if (typeof window !== "undefined" && window.location?.origin) {
+        headers["HTTP-Referer"] = window.location.origin;
+      }
+
+      const response = await fetch(
+        "https://openrouter.ai/api/v1/chat/completions",
+        {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            model: "gpt-4o-mini",
+            messages: [{ role: "user", content: prompt }],
+            max_tokens: 200,
+          }),
+        }
+      );
 
       if (!response.ok) throw new Error("Moderation request failed");
 
@@ -116,9 +167,10 @@ Message:
     }
   };
 
-  const validatePhoneNumber = (phone) => {
-    const digits = phone.replace(/\D/g, "");
-    return /^01(0|1|2|5)\d{8}$/.test(digits);
+  const handlePhoneChange = (value) => {
+    const sanitized = normalizePhoneInput(value);
+    setPhoneNumber(sanitized);
+    setPhoneError(validatePhoneNumber(sanitized));
   };
 
   const handleSubmit = async (e) => {
@@ -130,24 +182,12 @@ Message:
       );
       return;
     }
-    if (!phoneNumber.trim()) {
-      toastMessage(
-        t(
-          "support.phoneRequired",
-          "Please provide your phone number for contact purposes"
-        ),
-        "error"
-      );
-      return;
-    }
-    if (!validatePhoneNumber(phoneNumber.trim())) {
-      toastMessage(
-        t(
-          "support.phoneInvalid",
-          "Please enter a valid Egyptian mobile (11 digits starting 010/011/012/015)"
-        ),
-        "error"
-      );
+    const sanitizedPhone = normalizePhoneInput(phoneNumber);
+    const phoneValidationMessage = validatePhoneNumber(sanitizedPhone);
+    setPhoneNumber(sanitizedPhone);
+    setPhoneError(phoneValidationMessage);
+    if (phoneValidationMessage) {
+      toastMessage(phoneValidationMessage, "error");
       return;
     }
     if (!user) {
@@ -166,7 +206,7 @@ Message:
       await sendSupportMessage(user, {
         topic,
         message,
-        phoneNumber: phoneNumber.trim(),
+        phoneNumber: sanitizedPhone,
       });
       toastMessage(
         t(
@@ -177,7 +217,9 @@ Message:
       );
       setMessage("");
       setTopic("orders");
-      setPhoneNumber(user?.phone || "");
+      const resetPhone = normalizePhoneInput(user?.phone || "");
+      setPhoneNumber(resetPhone);
+      setPhoneError(validatePhoneNumber(resetPhone));
     } catch (error) {
       toastMessage(
         error.message ||
@@ -213,17 +255,12 @@ Message:
           className={`rounded-3xl border shadow-lg ring-1 ${cardSurface} px-6 py-8 sm:px-8 sm:py-10`}
         >
           {/* Header */}
-          <div className="mb-8 space-y-4 text-center sm:text-left">
+          <div className={`mb-8 space-y-4 text-center ${isRtl ? "sm:text-right" : "sm:text-left"}`}>
             <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-200 shadow-sm">
               <span className="text-2xl">✉</span>
             </div>
 
             <div className="space-y-1">
-              <p
-                className={`text-xs font-semibold uppercase tracking-[0.2em] ${accent}`}
-              >
-                {t("support.eyebrow", "Feedback & Support")}
-              </p>
               <h1 className="text-3xl font-semibold">
                 {t("support.title", "Feedback & Support")}
               </h1>
@@ -280,9 +317,17 @@ Message:
               </label>
               <input
                 type="tel"
+                inputMode="numeric"
+                maxLength={11}
+                aria-invalid={!!phoneError}
                 value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                className={`w-full rounded-2xl border px-4 py-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 ${
+                onChange={(e) => handlePhoneChange(e.target.value)}
+                onBlur={() => setPhoneError(validatePhoneNumber(phoneNumber))}
+                className={`w-full rounded-2xl border px-4 py-3 text-sm shadow-sm focus:outline-none ${
+                  phoneError
+                    ? "border-red-500 focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    : "focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                } ${
                   isDark
                     ? "border-slate-700 bg-slate-900/70 text-white placeholder-slate-500"
                     : "border-slate-200 bg-white text-slate-900 placeholder-slate-400"
@@ -292,12 +337,16 @@ Message:
                   "Enter your phone number for contact purposes"
                 )}
               />
-              <p className={`text-xs ${mutedText}`}>
-                {t(
-                  "support.phoneRequired",
-                  "Required for us to contact you regarding your support request"
-                )}
-              </p>
+              {phoneError ? (
+                <p className="text-xs text-red-500">{phoneError}</p>
+              ) : (
+                <p className={`text-xs ${mutedText}`}>
+                  {t(
+                    "support.phoneRequired",
+                    "Required for us to contact you regarding your support request"
+                  )}
+                </p>
+              )}
             </div>
 
             {/* Message */}

@@ -1,3 +1,4 @@
+// src/hooks/useCheckoutForm.js
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -28,6 +29,15 @@ export const useCheckoutForm = (user) => {
     const [errors, setErrors] = useState({});
     const [formErrors, setFormErrors] = useState("");
 
+    const setFieldError = (key, message) => {
+        setErrors((prev) => {
+            const next = { ...prev };
+            if (message) next[key] = message;
+            else delete next[key];
+            return next;
+        });
+    };
+
     const validate = () => {
         const nextErrors = {};
         if (!form.fullName.trim())
@@ -50,6 +60,16 @@ export const useCheckoutForm = (user) => {
         setForm((prev) => ({ ...prev, [key]: value }));
     };
 
+    const handlePhoneChange = (value = "") => {
+        const normalized = normalizePhone(value);
+        setForm((prev) => ({ ...prev, phone: normalized }));
+        if (normalized && !phoneRegex.test(normalized)) {
+            setFieldError("phone", t("checkout.errors.phone"));
+        } else {
+            setFieldError("phone", "");
+        }
+    };
+
     const resetForm = () => {
         setForm(buildInitialForm(user));
         setErrors({});
@@ -65,5 +85,6 @@ export const useCheckoutForm = (user) => {
         updateForm,
         resetForm,
         normalizePhone,
+        handlePhoneChange,
     };
 };
