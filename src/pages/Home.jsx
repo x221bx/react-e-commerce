@@ -4,7 +4,7 @@ import Hero from "./homeCom/hero";
 import CategoriesSection from "./homeCom/CategoriesSection";
 import Articles from "./homeCom/Articles";
 import EcoBanner from "./homeCom/EcoBanner";
-import Footer from "../components/layout/Footer";
+import Footer from "../Authcomponents/Footer";
 import FeaturedProducts from "./homeCom/FeaturedProducts";
 import { useCategoriesSorted } from "../hooks/useCategoriesSorted";
 import { localizeArticleRecord } from "../data/articles";

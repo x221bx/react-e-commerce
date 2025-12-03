@@ -13,7 +13,7 @@ import { localizeArticleRecord } from "../../data/articles";
 import { FiShare2, FiUser, FiBookmark, FiThumbsUp, FiThumbsDown } from "react-icons/fi";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import ErrorMessage from "../../components/ui/ErrorMessage";
-import Footer from "../../components/layout/Footer";
+import Footer from "../../Authcomponents/Footer";
 
 const ArticleDetails = () => {
     const { articleId } = useParams();

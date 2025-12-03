@@ -1,4 +1,4 @@
-import Footer from "../components/layout/Footer";
+import Footer from "../Authcomponents/Footer";
 import { UseTheme } from "../theme/ThemeProvider";
 import { motion as Motion } from "framer-motion";
 

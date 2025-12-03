@@ -14,6 +14,7 @@ import {
   FiLayers,
 } from "react-icons/fi";
 import { RiChatSmileLine } from "react-icons/ri";
+import Footer from "../Authcomponents/Footer";
 
 export default function OrderDetails() {
   const { id } = useParams();
@@ -289,6 +290,8 @@ export default function OrderDetails() {
           <RiChatSmileLine size={24} />
         </button>
       </div>
+
+      <Footer />
     </div>
   );
 }

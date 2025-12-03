@@ -3,7 +3,12 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { UseTheme } from "../../theme/ThemeProvider";
 
-export default function CheckoutContactForm({ form, setForm, errors }) {
+export default function CheckoutContactForm({
+    form,
+    setForm,
+    errors,
+    handlePhoneChange,
+}) {
     const { t } = useTranslation();
     const { theme } = UseTheme();
     const isDark = theme === "dark";
@@ -66,9 +71,17 @@ export default function CheckoutContactForm({ form, setForm, errors }) {
                         inputMode="numeric"
                         maxLength={11}
                         value={form.phone}
+                        aria-invalid={!!errors.phone}
                         onChange={(e) => {
-                            const digitsOnly = e.target.value.replace(/\D/g, "").slice(0, 11);
-                            setForm((prev) => ({ ...prev, phone: digitsOnly }));
+                            if (handlePhoneChange) {
+                                handlePhoneChange(e.target.value);
+                            } else {
+                                const digitsOnly = e.target.value.replace(/\D/g, "").slice(0, 11);
+                                setForm((prev) => ({ ...prev, phone: digitsOnly }));
+                            }
+                        }}
+                        onBlur={(e) => {
+                            if (handlePhoneChange) handlePhoneChange(e.target.value);
                         }}
                         className={`
                             ${inputBase} ${inputSurface}

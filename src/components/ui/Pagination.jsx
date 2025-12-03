@@ -1,5 +1,6 @@
 import React from 'react';
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { useTranslation } from 'react-i18next';
 
 const Pagination = ({
   currentPage,
@@ -12,6 +13,7 @@ const Pagination = ({
   hideOnSinglePage = true,
   showInfo = true,
 }) => {
+  const { t } = useTranslation?.() || { t: undefined };
   if (hideOnSinglePage && totalPages <= 1) return null;
 
   const getVisiblePages = () => {
@@ -49,12 +51,10 @@ const Pagination = ({
         <div className="text-sm text-[var(--text-muted)] order-2 sm:order-1">
           {totalItems > 0 ? (
             <>
-              Showing <span className="font-medium text-[var(--text-main)]">{rangeStart}</span> to{' '}
-              <span className="font-medium text-[var(--text-main)]">{rangeEnd}</span> of{' '}
-              <span className="font-medium text-[var(--text-main)]">{totalItems}</span> results
+              {t ? t("pagination.showing", "Showing") : "Showing"} <span className="font-medium text-[var(--text-main)]">{rangeStart}</span> {t ? t("pagination.to", "to") : "to"} <span className="font-medium text-[var(--text-main)]">{rangeEnd}</span> {t ? t("pagination.of", "of") : "of"} <span className="font-medium text-[var(--text-main)]">{totalItems}</span> {t ? t("pagination.results", "results") : "results"}
             </>
           ) : (
-            'No results found'
+            t ? t("pagination.noResults", "No results found") : 'No results found'
           )}
         </div>
       )}
@@ -69,7 +69,7 @@ const Pagination = ({
           aria-label="Previous page"
         >
           <FiChevronLeft className="w-4 h-4" />
-          <span className="hidden sm:inline">Previous</span>
+          <span className="hidden sm:inline">{t ? t("pagination.prev", "Previous") : "Previous"}</span>
         </button>
 
         {/* Page numbers */}
@@ -103,7 +103,7 @@ const Pagination = ({
           className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-[var(--text-main)] bg-white border border-[var(--border)] rounded-lg hover:bg-[var(--hover-bg)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           aria-label="Next page"
         >
-          <span className="hidden sm:inline">Next</span>
+          <span className="hidden sm:inline">{t ? t("pagination.next", "Next") : "Next"}</span>
           <FiChevronRight className="w-4 h-4" />
         </button>
       </div>

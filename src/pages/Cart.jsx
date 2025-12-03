@@ -11,11 +11,14 @@ import { FiTrash2, FiShoppingCart, FiPlus, FiMinus } from "react-icons/fi";
 import { db } from "../services/firebase";
 import { getDocs, collection } from "firebase/firestore";
 import CartFooter from "../components/CartFooter";
+import Footer from "../Authcomponents/Footer";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export default function Cart() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { items = [] } = useSelector((state) => state.cart || {});
   const [toast, setToast] = useState("");
 
@@ -78,7 +81,7 @@ export default function Cart() {
 
   const handleGoToCheckout = () => {
     if (!items.length) {
-      showToast("Cart is empty");
+      showToast(t("checkout.messages.emptyCart", "Your cart is empty."));
       return;
     }
 
@@ -86,7 +89,7 @@ export default function Cart() {
       (i) => Number(i.quantity || 0) > Number(i.stock || 0)
     );
     if (invalid) {
-      showToast("Some items exceed available stock. Please update quantities.");
+      showToast(t("checkout.messages.stockIssue", "Some items exceed stock. Please update quantities."));
       return;
     }
 
@@ -94,22 +97,22 @@ export default function Cart() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f5fff5] font-inter">
+    <div className="min-h-screen bg-[var(--bg-main)] font-inter">
       <div className="mx-auto max-w-6xl p-6">
         {toast && (
-          <div className="fixed top-4 right-4 bg-yellow-100 p-3 rounded shadow z-50">
+          <div className="fixed top-4 rtl:left-4 ltr:right-4 bg-yellow-100 p-3 rounded shadow z-50">
             {toast}
           </div>
         )}
 
         <div className="bg-white p-6 md:p-8 rounded-2xl shadow-lg">
-          <h1 className="text-3xl font-bold flex items-center gap-2 mb-6 text-[#2a4435]">
-            <FiShoppingCart className="text-[#52b788]" /> Cart
+          <h1 className="text-3xl font-bold flex items-center gap-2 mb-6 text-text-dark">
+            <FiShoppingCart className="text-secondary" /> {t("nav.cart", "Cart")}
           </h1>
 
           {!items.length ? (
             <p className="text-gray-500 text-center text-lg">
-              Your cart is empty.
+              {t("checkout.empty.title", "Your cart is empty")}
             </p>
           ) : (
             <>
@@ -141,7 +144,7 @@ export default function Cart() {
 
                       <div className="flex-1 flex flex-col justify-between">
                         <div>
-                          <h3 className="text-lg font-semibold text-[#2a4435]">
+                          <h3 className="text-lg font-semibold text-text-dark">
                             {item.name || item.title}
                           </h3>
                           <p className="text-green-700 font-medium mt-1">
@@ -167,10 +170,7 @@ export default function Cart() {
                           </button>
                         </div>
 
-                        <p className="text-sm text-gray-500 mt-2">
-                          Stock remaining: {stockRem}
-                        </p>
-                      </div>
+                                              </div>
 
                       <button
                         onClick={() => dispatch(removeFromCart(item.id))}
@@ -184,17 +184,19 @@ export default function Cart() {
               </ul>
 
               <CartFooter
-                title="Checkout"
+                title={t("checkout.header.eyebrow", "Checkout")}
                 total={total}
-                totaltext="Total"
+                totaltext={t("checkout.summary.total", "Total")}
                 onCheckout={handleGoToCheckout}
                 itemCount={items.length}
-                textitem="items"
+                textitem={t("checkout.summary.quantity_plural", "items")}
               />
             </>
           )}
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 }

@@ -73,8 +73,8 @@ export default function Navbar() {
     scrolled ? "shadow-xl border-b border-white/20" : ""
   }`;
   const mobileMenuBg = isDark
-    ? "bg-[#0e1b1b]/95 backdrop-blur-xl text-[#B8E4E6]"
-    : "bg-[#142727]/95 backdrop-blur-xl text-[#B8E4E6]";
+    ? "bg-[var(--bg-input)]/95 backdrop-blur-xl text-[#B8E4E6]"
+    : "bg-[var(--bg-card)]/95 backdrop-blur-xl text-[#B8E4E6]";
   const subtleControlBg = "bg-white/20 hover:bg-white/30 text-white transition";
   const navLinkBase = "text-sm font-semibold tracking-tight transition-colors";
   const navLinkActive = "text-white";
@@ -243,7 +243,7 @@ export default function Navbar() {
                   e.preventDefault();
                   navigate("/login");
                 }}
-                className="hidden md:block px-3 py-1 text-sm bg-[#2F7E80] text-white hover:bg-[#236a6c]"
+                className="hidden md:block px-3 py-1 text-sm bg-accent-teal text-white hover:bg-hover-teal"
               />
               <button
                 onClick={(e) => {

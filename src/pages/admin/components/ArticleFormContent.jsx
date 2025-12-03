@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { uploadImage } from "../../../services/firebase";
 import toast from "react-hot-toast";
 
@@ -13,8 +13,8 @@ const ArticleFormContent = ({
   nowIso,
   uploadingImage,
   setUploadingImage,
+  aiDrafting,
 }) => {
-
   return (
     <div className="space-y-6">
       {/* Status */}
@@ -26,23 +26,21 @@ const ArticleFormContent = ({
           onChange={handleChange}
           className="w-full rounded-lg border border-muted bg-panel px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
         >
-          <option value="draft">📝 Draft</option>
-          <option value="scheduled">⏰ Scheduled</option>
-          <option value="published">✅ Published</option>
+          <option value="draft">Draft</option>
+          <option value="scheduled">Scheduled</option>
+          <option value="published">Published</option>
         </select>
       </div>
+
       {showScheduler && (
         <div className="rounded-2xl border border-dashed border-emerald-200 bg-emerald-50/40 p-4 space-y-2">
-          <label className="block text-sm font-semibold">
-            Publish Date & Time
-          </label>
+          <label className="block text-sm font-semibold">Publish Date & Time</label>
           <input
             type="datetime-local"
             name="publishDate"
             value={form.publishDate || ""}
             min={nowIso}
             onChange={handleChange}
-            required
             className="w-full rounded-lg border border-emerald-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
           />
           <p className="text-xs text-emerald-800">
@@ -50,13 +48,12 @@ const ArticleFormContent = ({
           </p>
         </div>
       )}
+
       {/* Basic Fields */}
       <div className="space-y-4">
         <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <label className="block text-sm font-semibold mb-2">
-              English Title
-            </label>
+            <label className="block text-sm font-semibold mb-2">English Title</label>
             <div className="flex gap-2">
               <input
                 type="text"
@@ -65,38 +62,35 @@ const ArticleFormContent = ({
                 onChange={handleChange}
                 placeholder="Article title (English)"
                 className="flex-1 rounded-lg border border-muted bg-panel px-4 py-3 text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                required
               />
               <button
                 type="button"
                 onClick={handleGenerateTitle}
-                className="px-3 py-3 rounded-lg bg-blue-500 text-white text-sm hover:bg-blue-600"
+                disabled={aiDrafting}
+                className="px-3 py-3 rounded-lg bg-blue-500 text-white text-sm hover:bg-blue-600 disabled:opacity-50"
                 title="Generate AI Title"
               >
-                🤖
+                {aiDrafting ? "..." : "AI"}
               </button>
             </div>
           </div>
           <div>
-            <label className="block text-sm font-semibold mb-2">
-              Arabic Title (العنوان بالعربية)
-            </label>
+            <label className="block text-sm font-semibold mb-2">Arabic Title</label>
             <input
               type="text"
               name="titleAr"
               value={form.titleAr}
               onChange={handleChange}
-              placeholder="العنوان بالعربية"
+              placeholder="Arabic title"
               className="w-full rounded-lg border border-muted bg-panel px-4 py-3 text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-emerald-400"
               dir="rtl"
             />
           </div>
         </div>
+
         <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <label className="block text-sm font-semibold mb-2">
-              English Summary
-            </label>
+            <label className="block text-sm font-semibold mb-2">English Summary</label>
             <div className="flex gap-2">
               <textarea
                 name="summary"
@@ -105,33 +99,32 @@ const ArticleFormContent = ({
                 placeholder="Brief summary (appears in previews)"
                 rows={3}
                 className="flex-1 rounded-lg border border-muted bg-panel px-4 py-3 text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                required
               />
               <button
                 type="button"
                 onClick={handleGenerateSummary}
-                className="px-3 py-3 rounded-lg bg-blue-500 text-white text-sm hover:bg-blue-600 self-start"
+                disabled={aiDrafting}
+                className="px-3 py-3 rounded-lg bg-blue-500 text-white text-sm hover:bg-blue-600 self-start disabled:opacity-50"
                 title="Generate AI Summary"
               >
-                🤖
+                {aiDrafting ? "..." : "AI"}
               </button>
             </div>
           </div>
           <div>
-            <label className="block text-sm font-semibold mb-2">
-              Arabic Summary (الملخص بالعربية)
-            </label>
+            <label className="block text-sm font-semibold mb-2">Arabic Summary</label>
             <textarea
               name="summaryAr"
               value={form.summaryAr}
               onChange={handleChange}
-              placeholder="الملخص بالعربية"
+              placeholder="Arabic summary"
               rows={3}
               className="w-full rounded-lg border border-muted bg-panel px-4 py-3 text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-emerald-400"
               dir="rtl"
             />
           </div>
         </div>
+
         <div className="grid gap-4 md:grid-cols-2">
           <input
             type="text"
@@ -140,7 +133,6 @@ const ArticleFormContent = ({
             onChange={handleChange}
             placeholder="Author name"
             className="rounded-lg border border-muted bg-panel px-4 py-3 text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-emerald-400"
-            required
           />
           <input
             type="text"
@@ -151,6 +143,7 @@ const ArticleFormContent = ({
             className="rounded-lg border border-muted bg-panel px-4 py-3 text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-emerald-400"
           />
         </div>
+
         <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--text-muted)]">
           <label className="inline-flex items-center gap-2 rounded-lg border border-muted bg-surface px-3 py-2 text-[var(--text-main)] hover:bg-panel cursor-pointer disabled:opacity-50">
             <input
@@ -161,17 +154,14 @@ const ArticleFormContent = ({
               onChange={async (e) => {
                 const file = e.target.files?.[0];
                 if (!file) return;
-                // التحقق من حجم الصورة (حد أقصى 5MB)
+                // Limit image size to 5MB
                 if (file.size > 5 * 1024 * 1024) {
                   toast.error("Image size must be less than 5MB");
                   return;
                 }
                 setUploadingImage(true);
                 try {
-                  const downloadURL = await uploadImage(
-                    file,
-                    "articles/",
-                  );
+                  const downloadURL = await uploadImage(file, "articles/");
                   handleChange({
                     target: { name: "heroImage", value: downloadURL },
                   });
@@ -184,15 +174,13 @@ const ArticleFormContent = ({
                 }
               }}
             />
-            {uploadingImage ? "⏳" : "📷"}{" "}
-            {uploadingImage ? "Uploading..." : "Upload image"}
+            {uploadingImage ? "..." : "Upload"} {uploadingImage ? "Uploading..." : "Upload image"}
           </label>
           {form.heroImage && (
-            <span className="truncate text-[var(--text-main)]">
-              ✅ Image uploaded
-            </span>
+            <span className="truncate text-[var(--text-main)]">Image uploaded</span>
           )}
         </div>
+
         <select
           name="tag"
           value={form.tag}
@@ -211,11 +199,10 @@ const ArticleFormContent = ({
           <option value="Implements">Implements</option>
           <option value="Monitoring">Monitoring</option>
         </select>
+
         <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <label className="block text-sm font-semibold mb-2">
-              English Content
-            </label>
+            <label className="block text-sm font-semibold mb-2">English Content</label>
             <textarea
               name="content"
               value={form.content}
@@ -230,34 +217,35 @@ const ArticleFormContent = ({
               <button
                 type="button"
                 onClick={() => handleRewrite("shorter")}
-                className="px-3 py-1 rounded bg-blue-500 text-white text-xs hover:bg-blue-600"
+                disabled={aiDrafting}
+                className="px-3 py-1 rounded bg-blue-500 text-white text-xs hover:bg-blue-600 disabled:opacity-50"
               >
-                Shorter
+                {aiDrafting ? "..." : "Shorter"}
               </button>
               <button
                 type="button"
                 onClick={() => handleRewrite("longer")}
-                className="px-3 py-1 rounded bg-blue-500 text-white text-xs hover:bg-blue-600"
+                disabled={aiDrafting}
+                className="px-3 py-1 rounded bg-blue-500 text-white text-xs hover:bg-blue-600 disabled:opacity-50"
               >
-                Longer
+                {aiDrafting ? "..." : "Longer"}
               </button>
             </div>
           </div>
           <div>
-            <label className="block text-sm font-semibold mb-2">
-              Arabic Content (المحتوى بالعربية)
-            </label>
+            <label className="block text-sm font-semibold mb-2">Arabic Content</label>
             <textarea
               name="contentAr"
               value={form.contentAr}
               onChange={handleChange}
-              placeholder="المحتوى بالعربية"
+              placeholder="Arabic content"
               rows={12}
               className="w-full rounded-lg border border-muted bg-panel px-4 py-3 text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-emerald-400 font-mono text-sm"
               dir="rtl"
             />
           </div>
         </div>
+
         {/* Features */}
         <div className="flex flex-wrap gap-4 text-sm">
           <label className="inline-flex items-center gap-2">
@@ -267,7 +255,7 @@ const ArticleFormContent = ({
               checked={form.featureHome}
               onChange={handleChange}
             />
-            🏠 Feature on home page
+            Feature on home page
           </label>
         </div>
       </div>

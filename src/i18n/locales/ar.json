@@ -1,856 +1,913 @@
-﻿{
-  "brand": {
-    "name": "متجر فارم فيت",
-    "store": "متجر فارم فيت"
-  },
-  "payments": {
-    "eyebrow": "الفوترة والمحافظ",
-    "title": "طرق الدفع",
-    "subtitle": "إدارة البطاقات والمحافظ لعمليات دفع أسرع.",
-    "fastCheckout": "دفع سريع",
-    "defaultLabel": "الدفع الافتراضي",
-    "noDefault": "لا يوجد افتراضي محدد",
-    "defaultCaption": "يُستخدم تلقائياً للاشتراكات والدفع السريع.",
-    "cardsHeader": "البطاقات المحفوظة",
-    "noCards": "لا توجد بطاقات محفوظة بعد.",
-    "walletsHeader": "المحافظ المرتبطة",
-    "noWallets": "لا توجد محافظ مرتبطة بعد.",
-    "status": {
-      "defaultBadge": "افتراضي"
+{
+    "brand": {
+        "name": "متجر فارم فيت",
+        "store": "متجر فارم فيت"
     },
-    "actions": {
-      "makeDefault": "تعيين كافتراضي",
-      "delete": "حذف"
-    },
-    "form": {
-      "cardTitle": "إضافة بطاقة جديدة",
-      "cardPreview": "معاينة البطاقة",
-      "cardHolder": "اسم حامل البطاقة",
-      "cardNumber": "رقم البطاقة",
-      "expiry": "تاريخ الانتهاء (شهر/سنة)",
-      "cvv": "CVV",
-      "nickname": "اسم مستعار (اختياري)",
-      "nicknamePlaceholder": "مشتريات المزرعة",
-      "saving": "جارٍ الحفظ...",
-      "saveCard": "حفظ البطاقة",
-      "reset": "إعادة ضبط",
-      "walletTitle": "ربط محفظة",
-      "walletProvider": "المزوّد",
-      "walletEmail": "بريد الحساب",
-      "linking": "جارٍ الربط...",
-      "linkWallet": "ربط المحفظة"
-    },
-    "errors": {
-      "holder": "أدخل اسم حامل البطاقة.",
-      "number": "أدخل رقماً صحيحاً للبطاقة.",
-      "expiry": "يجب أن يكون التنسيق شهر/سنة وفي المستقبل.",
-      "cvv": "أدخل رمز CVV مكوّن من 3 أو 4 أرقام.",
-      "email": "أدخل بريداً إلكترونياً صالحاً."
-    },
-    "securityHint": "نحفظ آخر 4 أرقام فقط؛ الرقم الكامل ورمز CVV لا يُحفظان أبداً.",
-    "brandUnknown": "نوع البطاقة غير معروف بعد",
-    "noMethods": "لا توجد طرق دفع محفوظة بعد. استخدم النماذج على اليمين لإضافة واحدة.",
-    "cardLabel": "بطاقة",
-    "nameLabel": "الاسم",
-    "expLabel": "انتهاء",
-    "expPlaceholder": "شهر/سنة",
-    "endingIn": "تنتهي بـ",
-    "separator": "-",
-    "confirmDeleteTitle": "حذف طريقة الدفع",
-    "confirmDeleteMessage": "هل أنت متأكد من حذف طريقة الدفع هذه؟ هذا الإجراء لا يمكن التراجع عنه."
-  },
-  "languages": {
-    "en": "الإنجليزية",
-    "ar": "العربية",
-    "switch_to_ar": "العربية",
-    "switch_to_en": "English"
-  },
-  "navbar": {
-      "logout_success": "تم تسجيل الخروج بنجاح",
-      "language_changed": "تم تغيير اللغة إلى {{language}}",
-      "language_error": "فشل تغيير اللغة",
-      "search_placeholder": "ابحث عن المنتجات...",
-      "language_toggle": "تبديل اللغة",
-      "toggle_language": "تبديل اللغة",
-      "toggle_theme": "تبديل المظهر",
-      "toggle_menu": "تبديل القائمة",
-      "menu_toggle": "تبديل القائمة",
-      "notifications": "الإشعارات",
-      "notification_error": "الإشعارات الحية محجوبة. الرجاء تعطيل مانع الإعلانات لهذا الموقع.",
-      "favorites": "المفضلة",
-      "cart": "السلة",
-      "account": "الحساب",
-      "logout": "تسجيل الخروج",
-      "login": "تسجيل الدخول",
-      "register": "إنشاء حساب"
-  },
-  "nav": {
-    "home": "الرئيسية",
-    "courses": "الدورات",
-    "products": "المنتجات",
-    "articles": "المقالات",
-    "careers": "الوظائف",
-    "blog": "المدونة",
-    "about": "من نحن",
-    "admin": "الإدارة",
-    "account": "الحساب",
-    "account_settings": "الحساب والإعدادات",
-    "favorites": "المفضلة",
-    "cart": "السلة"
-  },
-  "auth": {
-    "login": "تسجيل الدخول",
-    "register": "إنشاء حساب",
-    "logout": "تسجيل الخروج",
-    "email_username": "البريد أو اسم المستخدم",
-    "password": "كلمة المرور",
-    "forgot": "نسيت؟",
-    "create_account": "إنشاء حساب"
-  },
-  "admin": {
-    "dashboard": "لوحة التحكم",
-    "courses": "الدورات",
-    "new_course": "دورة جديدة",
-    "categories": "الفئات",
-    "category_name": "اسم الفئة",
-    "create": "إنشاء",
-    "new_category": "فئة جديدة",
-    "status": {
-      "published": "منشور",
-      "draft": "مسودة"
-    },
-    "productForm": {
-      "editTitle": "تعديل المنتج",
-      "newTitle": "منتج جديد",
-      "saveChanges": "حفظ التغييرات",
-      "addProduct": "إضافة المنتج",
-      "cancel": "إلغاء",
-      "loading": "جارٍ التحميل...",
-      "productName": "اسم المنتج",
-      "description": "الوصف",
-      "imageUrl": "رابط الصورة",
-      "category": "الفئة",
-      "selectCategory": "اختر الفئة.",
-      "price": "السعر",
-      "stock": "المخزون",
-      "stockHelp": "تحديد كمية المخزون (الوحدات المتاحة).",
-      "currency": "العملة",
-      "available": "متاح",
-      "preview": "معاينة",
-      "validation": {
-        "titleMin": "اسم المنتج قصير جداً",
-        "titleRequired": "اسم المنتج مطلوب",
-        "descriptionMin": "الوصف قصير جداً",
-        "descriptionRequired": "الوصف مطلوب",
-        "thumbnailUrl": "أدخل رابط صورة صالحاً",
-        "thumbnailUrlRequired": "رابط الصورة مطلوب",
-        "priceNumber": "السعر يجب أن يكون رقماً",
-        "pricePositive": "السعر يجب أن يكون أكبر من 0",
-        "priceRequired": "السعر مطلوب",
-        "stockNumber": "المخزون يجب أن يكون رقماً",
-        "stockInteger": "المخزون يجب أن يكون عدداً صحيحاً",
-        "stockMin": "المخزون لا يمكن أن يكون سلبياً",
-        "stockRequired": "المخزون مطلوب",
-        "currencyRequired": "العملة مطلوبة",
-        "categoryRequired": "الفئة مطلوبة"
-      }
-    }
-  ,
-    "footer_note": "© {{year}} لوحة تحكم العيادة البيطرية — مصممة بعناية"
-  },
-  "layout": {
-    "sidebar_height_hint": "الارتفاع: {{value}}"
-  },
-  "format": {
-    "price": "{{value, number}} {{currency}}",
-    "created": "{{value, datetime}}"
-  },
-  "sort": {
-    "createdAt": "تاريخ الإنشاء",
-    "price": "السعر",
-    "title": "أبجدي"
-  },
-  "filter": {
-    "all": "الكل"
-  },
-  "empty": {
-    "courses_title": "لا توجد دورات",
-    "categories_title": "لا توجد فئات بعد",
-    "try_clear": "جرّب مسح البحث أو تغيير الفلاتر.",
-    "create_first_course": "ابدأ بإنشاء أول دورة.",
-    "create_first_category": "أنشئ أول فئة."
-  },
-  "errors": {
-    "courses_load_failed": "فشل تحميل الدورات",
-    "categories_load_failed": "فشل تحميل الفئات",
-    "404_code": "404",
-    "404_title": "الصفحة غير موجودة",
-    "404_message": "الصفحة التي تبحث عنها ربما أُزيلت.",
-    "403_code": "403",
-    "403_title": "ممنوع",
-    "403_message": "ليست لديك صلاحية الوصول لهذه الصفحة."
-  },
-  "common": {
-      "go_home": "الانتقال للرئيسية",
-      "signing_in": "جارٍ تسجيل الدخول...",
-      "creating": "جارٍ الإنشاء...",
-      "sending": "جارٍ الإرسال...",
-      "delete": "حذف",
-      "cancel": "إلغاء",
-      "working": "جارٍ العمل...",
-      "light_mode": "وضع النهار",
-      "dark_mode": "الوضع الليلي",
-      "retry": "إعادة المحاولة",
-      "error": "خطأ",
-      "rateLimitExceeded": "محاولات كثيرة. الرجاء الانتظار {{seconds}} ثانية.",
-      "valid": "صالح",
-      "total": "الإجمالي",
-      "customer": "العميل",
-      "admin": "الإدارة"
-  },
-  "settings": {
-    "language_display": "اللغة والعرض",
-    "personalize_info": "خصص تجربتك",
-    "units_language_notes": "اختر اللغة المفضلة، الوحدات، وأضف ملاحظات التوصيل.",
-    "interface_language": "اللغة",
-    "measurements": "الوحدات",
-    "metric_units": "متري (كجم، كم)",
-    "imperial_units": "إنجليزي (رطل، ميل)",
-    "delivery_notes": "تعليمات التوصيل",
-    "reset_defaults": "إعادة الضبط للإعدادات الافتراضية",
-    "save_display_settings": "حفظ التفضيلات",
-    "personal_info": "المعلومات الشخصية",
-    "keep_contact_accurate": "تحديث بيانات التواصل",
-    "info_on_invoices": "ستظهر هذه المعلومات على الفواتير ووثائق التوصيل.",
-    "upload_profile_photo": "إضافة صورة الملف الشخصي",
-    "photo_formats": "PNG, JPG, WebP - حد أقصى 2 ميجابايت - محسنة لكل الأجهزة",
-    "choose_file": "اختر ملفاً",
-    "photo_link_label": "أدخل رابط الصورة",
-    "photo_link_placeholder": "ضع رابط تخزين Firebase أو أي رابط صورة",
-    "photo_link_helper": "استخدم رابط صورة مباشر (يعمل مع Firebase المجاني).",
-    "first_name": "الاسم الأول",
-    "first_name_placeholder": "محمد",
-    "last_name": "اسم العائلة",
-    "last_name_placeholder": "أحمد",
-    "gender": "النوع",
-    "select": "اختر",
-    "male": "ذكر",
-    "female": "أنثى",
-    "birth_date": "تاريخ الميلاد",
-    "profession_role": "المهنة",
-    "profession_placeholder": "مثال: متخصص تغذية ماشية",
-    "phone_number": "رقم الموبايل",
-    "phone_placeholder": "01XXXXXXXXX",
-    "farm_city": "موقع المزرعة",
-    "location_placeholder": "أضف مدينتك أو علامة توصيل",
-    "unsaved_changes": "لديك تغييرات غير محفوظة",
-    "auto_saving": "سيتم الحفظ تلقائياً خلال 3 ثوانٍ...",
-    "all_changes_saved": "تم حفظ كل التغييرات",
-    "save_profile": "حفظ الملف الشخصي",
-    "profile_helper_text": "حافظ على تحديث ملفك الشخصي لتوصيات مخصصة.",
-    "securitySection": "الأمان",
-    "securityTitle": "حماية حسابك",
-    "securityDescription": "استخدم كلمة مرور قوية وغيّرها بانتظام.",
-    "currentPassword": "كلمة المرور الحالية",
-    "newPassword": "كلمة المرور الجديدة",
-    "confirmNewPassword": "تأكيد كلمة المرور الجديدة",
-    "passwordTip": "نصيحة: اجمع 12 حرفاً على الأقل مع الأرقام والرموز. تجنب إعادة استخدام كلمات المرور من خدمات أخرى.",
-    "updatingPassword": "جارٍ التحديث...",
-    "updatePassword": "تحديث كلمة المرور",
-    "forgotPassword": "نسيت كلمة المرور؟",
-    "forgotPasswordSuccess": "تم إرسال بريد إعادة التعيين! تحقق من بريدك.",
-    "forgotPasswordError": "فشل إرسال بريد إعادة التعيين. حاول مرة أخرى.",
-    "forgotPasswordNoEmail": "لا يوجد بريد مرتبط بحسابك.",
-    "sendingReset": "جارٍ الإرسال...",
-    "navigation": {
-      "focus_area": "منطقة التركيز",
-      "aria_label": "أقسام إعدادات الملف الشخصي",
-      "categories": {
-        "profile": {
-          "label": "الملف الشخصي",
-          "description": "البيانات الشخصية والأمان",
-          "helper": "حافظ على بياناتك الشخصية والأمنية دقيقة."
+    "payments": {
+        "eyebrow": "الفوترة والمحافظ",
+        "title": "طرق الدفع",
+        "subtitle": "إدارة البطاقات والمحافظ لعمليات دفع أسرع.",
+        "fastCheckout": "دفع سريع",
+        "defaultLabel": "الدفع الافتراضي",
+        "noDefault": "لا يوجد افتراضي محدد",
+        "defaultCaption": "يُستخدم تلقائياً للاشتراكات والدفع السريع.",
+        "cardsHeader": "البطاقات المحفوظة",
+        "noCards": "لا توجد بطاقات محفوظة بعد.",
+        "walletsHeader": "المحافظ المرتبطة",
+        "noWallets": "لا توجد محافظ مرتبطة بعد.",
+        "status": {
+            "defaultBadge": "افتراضي"
         },
-        "preferences": {
-          "label": "إعدادات المزرعة",
-          "description": "خصص تجربة المزرعة",
-          "helper": "اضبط لغة الواجهة وتفضيلات الموقع."
+        "actions": {
+            "makeDefault": "تعيين كافتراضي",
+            "delete": "حذف"
         },
-        "account": {
-          "label": "حساب المزرعة",
-          "description": "إدارة الحساب",
-          "helper": "اتخذ إجراءات على حالة حسابك وطلبات البيانات."
-        }
-      },
-      "items": {
-        "personal": {
-          "label": "البيانات الشخصية",
-          "description": "تحديث ملفك الزراعي"
+        "form": {
+            "cardTitle": "إضافة بطاقة جديدة",
+            "cardPreview": "معاينة البطاقة",
+            "cardHolder": "اسم حامل البطاقة",
+            "cardNumber": "رقم البطاقة",
+            "expiry": "تاريخ الانتهاء (شهر/سنة)",
+            "cvv": "CVV",
+            "nickname": "اسم مستعار (اختياري)",
+            "nicknamePlaceholder": "مشتريات المزرعة",
+            "saving": "جارٍ الحفظ...",
+            "saveCard": "حفظ البطاقة",
+            "reset": "إعادة ضبط",
+            "walletTitle": "ربط محفظة",
+            "walletProvider": "المزوّد",
+            "walletEmail": "بريد الحساب",
+            "linking": "جارٍ الربط...",
+            "linkWallet": "ربط المحفظة"
         },
-        "security": {
-          "label": "الأمان",
-          "description": "حماية حسابك"
+        "errors": {
+            "holder": "أدخل اسم حامل البطاقة.",
+            "number": "أدخل رقماً صحيحاً للبطاقة.",
+            "expiry": "يجب أن يكون التنسيق شهر/سنة وفي المستقبل.",
+            "cvv": "أدخل رمز CVV مكوّن من 3 أو 4 أرقام.",
+            "email": "أدخل بريداً إلكترونياً صالحاً."
         },
-        "notifications": {
-          "label": "الإشعارات",
-          "description": "تنبيهات وتحديثات المزرعة"
-        },
-        "preferences": {
-          "label": "التفضيلات",
-          "description": "تخصيص تجربتك"
-        },
-        "account": {
-          "label": "الحساب",
-          "description": "إدارة حساب المزرعة"
-        },
-        "support": {
-          "label": "الدعم",
-          "description": "الحصول على المساعدة"
-        }
-      }
+        "securityHint": "نحفظ آخر 4 أرقام فقط؛ الرقم الكامل ورمز CVV لا يُحفظان أبداً.",
+        "brandUnknown": "نوع البطاقة غير معروف بعد",
+        "noMethods": "لا توجد طرق دفع محفوظة بعد. استخدم النماذج على اليمين لإضافة واحدة.",
+        "cardLabel": "بطاقة",
+        "nameLabel": "الاسم",
+        "expLabel": "انتهاء",
+        "expPlaceholder": "شهر/سنة",
+        "endingIn": "تنتهي بـ",
+        "separator": "-",
+        "confirmDeleteTitle": "حذف طريقة الدفع",
+        "confirmDeleteMessage": "هل أنت متأكد من حذف طريقة الدفع هذه؟ هذا الإجراء لا يمكن التراجع عنه."
     },
-    "notificationOptions": {
-      "productUpdates": {
-        "label": "تحديثات المنتجات",
-        "description": "أبرز المنتجات والعروض الأسبوعية."
-      },
-      "orderUpdates": {
-        "label": "تحديثات الطلب",
-        "description": "تتبع الشحن والتنبيهات الخاصة بالفواتير لكل عملية شراء."
-      },
-      "securityAlerts": {
-        "label": "تنبيهات الأمان",
-        "description": "تنبيهات تسجيل الدخول والنشاط غير المعتاد."
-      },
-      "marketingEmails": {
-        "label": "رسائل تسويقية",
-        "description": "عروض موسمية ومحتوى تعليمي."
-      }
+    "languages": {
+        "en": "الإنجليزية",
+        "ar": "العربية",
+        "switch_to_ar": "العربية",
+        "switch_to_en": "English"
     },
-    "dangerZone": {
-      "eyebrow": "حذف الحساب",
-      "title": "حذف هذا الحساب نهائياً",
-      "description": "إزالة ملفك وإلغاء أي طلبات نشطة مرتبطة به.",
-      "readBefore": "قبل الحذف",
-      "deleteDataNotice": "سيتم مسح كل البيانات (الاسم، البريد، الهاتف، العناوين، والتفضيلات).",
-      "orderCancelNotice": "أي طلبات مفتوحة أو قيد الانتظار سيتم إلغاؤها تلقائياً.",
-      "irreversible": "هذا الإجراء فوري ولا يمكن التراجع عنه.",
-      "delete": "حذف الحساب الآن",
-      "requesting": "جارٍ الحذف...",
-      "needHelp": "تحتاج مساعدة أولاً؟",
-      "contactSupport": "تواصل مع الدعم"
+    "navbar": {
+        "logout_success": "تم تسجيل الخروج بنجاح",
+        "language_changed": "تم تغيير اللغة إلى {{language}}",
+        "language_error": "فشل تغيير اللغة",
+        "search_placeholder": "ابحث عن المنتجات...",
+        "language_toggle": "تبديل اللغة",
+        "toggle_language": "تبديل اللغة",
+        "toggle_theme": "تبديل المظهر",
+        "toggle_menu": "تبديل القائمة",
+        "menu_toggle": "تبديل القائمة",
+        "notifications": "الإشعارات",
+        "notification_error": "الإشعارات الحية محجوبة. الرجاء تعطيل مانع الإعلانات لهذا الموقع.",
+        "favorites": "المفضلة",
+        "cart": "السلة",
+        "account": "الحساب",
+        "logout": "تسجيل الخروج",
+        "login": "تسجيل الدخول",
+        "register": "إنشاء حساب"
     },
-    "confirmDialog": {
-      "title": "تأكيد مطلوب",
-      "deleteTitle": "حذف الحساب الآن؟",
-      "deleteBody": "سنحذف ملفك ونلغي أي طلبات معلقة. ستحتاج إلى إنشاء حساب جديد للعودة.",
-      "keepAccount": "إبقاء الحساب",
-      "deleteAction": "نعم، احذف كل شيء"
+    "nav": {
+        "home": "الرئيسية",
+        "courses": "الدورات",
+        "products": "المنتجات",
+        "articles": "المقالات",
+        "careers": "الوظائف",
+        "blog": "المدونة",
+        "about": "من نحن",
+        "admin": "الإدارة",
+        "account": "الحساب",
+        "account_settings": "الحساب والإعدادات",
+        "favorites": "المفضلة",
+        "cart": "السلة"
     },
-    "support": {
-      "section": "الدعم",
-      "title": "تحتاج مساعدة أو لديك ملاحظات؟",
-      "description": "تواصل مع فريق الدعم أو تصفح مصادر المساعدة.",
-      "feedback": "إرسال ملاحظات",
-      "feedbackDesc": "شارك رأيك حول منتجاتنا وخدماتنا",
-      "help": "الحصول على مساعدة",
-      "helpDesc": "اعثر على إجابات للأسئلة الشائعة",
-      "helpComing": "مركز المساعدة قادم قريباً!",
-      "call": "اتصال بالدعم",
-      "callDesc": "تحدث مع فريق الدعم",
-      "email": "بريد الدعم",
-      "emailDesc": "أرسل لنا بريداً لمساعدة مفصلة"
-    }
-  },
-  "account": {
-    "profile_preferences": "الملف الشخصي والتفضيلات",
-    "profile_description": "الاسم، اللغة، والأمان",
-    "payment_methods": "طرق الدفع",
-    "payment_description": "البطاقات، المحافظ، الفوترة",
-    "order_history": "طلباتي",
-    "order_description": "الفواتير والإيصالات",
-    "order_tracking": "تتبع الطلب",
-    "tracking_description": "حالة التوصيل مباشرة",
-    "saved_products": "المنتجات المحفوظة",
-    "saved_description": "القوائم والتنبيهات",
-    "favorite_articles": "المقالات المفضلة",
-    "articles_description": "إرشادات ومصادر",
-    "ai_conversations": "محادثات الذكاء الاصطناعي",
-    "ai_description": "سجل المحادثة",
-    "aiConversations": {
-      "eyebrow": "مساعد الإرشاد",
-      "title": "محادثات الذكاء الاصطناعي",
-      "subtitleWithEntries": "راجع المحادثات السابقة مع المساعد الزراعي وأكمل من حيث توقفت.",
-      "subtitleWithoutEntries": "لم تبدأ أي محادثة بعد. ابدأ مع المساعد الآن.",
-      "emptyTitle": "لا توجد نصوص محفوظة بعد",
-      "emptySubtitle": "أي طلب ترسله للمساعد العائم سيظهر هنا للرجوع السريع.",
-      "startChat": "بدء محادثة جديدة",
-      "exportTranscript": "تصدير المحادثة",
-      "reopenChat": "إعادة فتح المحادثة",
-      "untitledPrompt": "طلب بلا عنوان",
-      "waitingResponse": "بانتظار رد المساعد...",
-      "justNow": "الآن"
-    },
-    "feedback_support": "الملاحظات والدعم",
-    "support_description": "شارك رأيك أو احصل على مساعدة",
-    "complaints_topic_fallback": "دعم عام",
-    "complaints_topics": {
-      "orders": "الطلبات واللوجستيات",
-      "billing": "الفوترة والمدفوعات",
-      "product": "ملاحظات المنتج",
-      "ai": "مساعد الذكاء الاصطناعي",
-      "technical": "مشكلة تقنية",
-      "other": "أخرى"
-    },
-    "complaints_status": {
-      "pending": "قيد المراجعة",
-      "in-progress": "قيد التنفيذ",
-      "resolved": "تم الحل",
-      "closed": "مغلق"
-    },
-    "logout": "تسجيل الخروج",
-    "complaints": "استفساراتي",
-    "complaints_description": "قدّم وتتبع استفساراتك",
-    "complaints_title": "مركز الدعم",
-    "complaints_subtitle": "تابع طلبات الدعم الخاصة بك ومراحل حلها.",
-    "complaints_helper": "شاهد تحديثات الحالة وتفاصيل الاتصال وأولوية الرد بنظرة سريعة.",
-    "submit_new_complaint": "تقديم استفسار جديد",
-    "no_complaints_title": "لا توجد استفسارات بعد",
-    "no_complaints_subtitle": "لم تقدّم أي استفسار بعد. اضغط الزر بالأعلى لتقديم استفسارك الأول.",
-    "login_required_title": "الرجاء تسجيل الدخول لرؤية الاستفسارات",
-    "login_required_subtitle": "يجب تسجيل الدخول للوصول إلى سجل الاستفسارات.",
-    "complaints_actions": {
-      "close_complaint": "إغلاق الاستفسار",
-      "closing": "جارٍ الإغلاق...",
-      "no_response_yet": "لا يوجد رد بعد",
-      "awaiting_response": "نراجع استفسارك وسنرد قريباً.",
-      "complaint_closed": "تم إغلاق الاستفسار بنجاح",
-      "add_follow_up": "إضافة متابعة",
-      "send_follow_up": "إرسال المتابعة",
-      "follow_up_placeholder": "أضف تفاصيل أو رقم طلب أو رابط صور لتوضيح المشكلة.",
-      "follow_up_saved": "تم إرسال المتابعة"
-    },
-    "admin_response": "رد الإدارة",
-    "user_follow_up": "متابعتك",
-    "confirm_close_message": "هل أنت متأكد من إغلاق هذا الاستفسار؟ لا يمكن التراجع عن هذا الإجراء.",
-    "helper_text": "مركز واحد لكل احتياجات حسابك: الإعدادات الشخصية، الدفع، الطلبات، والدعم. تصميم متناسق عبر كل الصفحات لتجربة سلسة.",
-    "savedProducts": {
-      "eyebrow": "المفضلة",
-      "title": "المنتجات المحفوظة",
-      "subtitle": "هذه العناصر متزامنة مع المخزون الحقيقي المُدار من لوحة الإدارة.",
-      "emptyTitle": "لا توجد منتجات محفوظة بعد",
-      "emptySubtitle": "استكشف الكتالوج واضغط على القلب للحفظ.",
-      "browse": "تصفح المنتجات",
-      "view": "عرض",
-      "addToCart": "أضف إلى السلة",
-      "remove": "إزالة",
-      "inStock": "متوفر",
-      "unavailable": "غير متوفر حالياً",
-      "priceUnknown": "السعر غير متاح",
-      "noImage": "لا توجد صورة"
-    },
-    "favoriteArticles": {
-      "loading": "جارٍ تحميل قائمة القراءة...",
-      "emptyTitle": "لا توجد مقالات محفوظة بعد",
-      "emptySubtitle": "احفظ المقالات من الكتالوج وستظهر هنا تلقائياً.",
-      "browse": "تصفح المقالات",
-      "eyebrow": "تيار المعرفة",
-      "title": "المقالات المفضلة",
-      "subtitle": "قائمة قراءة مخصصة لفريقك. العناصر المحفوظة تتجاوز اختياراتنا القياسية.",
-      "readMore": "متابعة القراءة →"
-    },
-    "orderHistory": {
-      "title": "تاريخ الطلبات",
-      "subtitle": "تتبع جميع طلباتك وحالة كل منها الحالية",
-      "noOrders": "لا توجد طلبات بعد",
-      "noOrdersDesc": "سيظهر تاريخ طلباتك هنا بمجرد إجراء أول عملية شراء.",
-      "orderNumber": "الطلب رقم",
-      "total": "المجموع",
-      "invoice": "الفاتورة",
-      "track": "تتبع",
-      "orderItems": "عناصر الطلب",
-      "shippingInfo": "معلومات الشحن",
-      "paymentInfo": "معلومات الدفع",
-      "orderTimeline": "جدول زمني للطلب",
-      "customerConfirmed": "تم التأكيد من العميل",
-      "by": "بواسطة"
-    }
-  },
-  "checkout": {
-    "errors": {
-      "fullName": "أدخل الاسم الكامل.",
-      "email": "أدخل بريداً إلكترونياً صالحاً.",
-      "phone": "أدخل رقماً صحيحاً.",
-      "address": "العنوان مطلوب.",
-      "city": "المدينة مطلوبة.",
-      "postalCode": "الرمز البريدي مطلوب.",
-      "country": "الدولة مطلوبة."
-    },
-    "messages": {
-      "loginRequired": "الرجاء تسجيل الدخول للمتابعة.",
-      "emptyCart": "سلة التسوق فارغة.",
-      "success": "تم تقديم الطلب بنجاح!",
-      "failure": "تعذر تقديم الطلب. حاول مرة أخرى."
-    },
-    "empty": {
-      "title": "السلة فارغة",
-      "subtitle": "أضف بعض المستلزمات للمتابعة.",
-      "cta": "تصفح المنتجات"
-    },
-    "authRequired": {
-      "title": "مطلوب تسجيل الدخول",
-      "subtitle": "سجل الدخول لإتمام الشراء.",
-      "cta": "الانتقال لتسجيل الدخول"
-    },
-    "header": {
-      "eyebrow": "دفع آمن",
-      "title": "مراجعة وتأكيد",
-      "subtitle": "أدخل بيانات الاتصال والشحن، ثم اختر طريقة الدفع."
-    },
-    "sections": {
-      "contact": "بيانات الاتصال",
-      "shipping": "عنوان الشحن",
-      "payment": "طريقة الدفع"
-    },
-    "fields": {
-      "fullName": "الاسم الكامل",
-      "email": "البريد الإلكتروني",
-      "phone": "رقم الهاتف",
-      "addressLine1": "العنوان الأول",
-      "addressLine2": "العنوان الثاني",
-      "optional": "اختياري",
-      "city": "المدينة",
-      "state": "المحافظة / الولاية",
-      "postalCode": "الرمز البريدي",
-      "country": "الدولة"
-    },
-    "payment": {
-      "cod": {
-        "title": "الدفع عند الاستلام",
-        "subtitle": "ادفع عند وصول الطلب."
-      },
-      "card": {
-        "title": "الدفع بالبطاقة",
-        "subtitle": "ادفع بأمان عبر الإنترنت."
-      }
-    },
-    "actions": {
-      "backToCart": "العودة للسلة",
-      "processing": "جارٍ المعالجة...",
-      "completeOrder": "إتمام الطلب"
-    },
-    "summary": {
-      "title": "ملخص الطلب",
-      "subtitle": "المنتجات في سلتك",
-      "quantity": "{{count}} منتج",
-      "quantity_plural": "{{count}} منتجات",
-      "subtotal": "الإجمالي الفرعي",
-      "shipping": "الشحن",
-      "total": "الإجمالي",
-      "note": "ستصلك رسالة تأكيد بالبريد مع معلومات التتبع."
-    }
-  },
-  "orders": {
-    "loading": "جارٍ تحميل طلباتك...",
-    "empty": {
-      "title": "لا توجد طلبات بعد",
-      "subtitle": "عند الشراء ستظهر الطلبات هنا.",
-      "cta": "تسوق المنتجات"
-    },
-    "overview": {
-      "eyebrow": "نظرة عامة",
-      "title": "طلباتي",
-      "subtitle": "عرض مشترياتك الأخيرة وتتبع حالتها."
-    },
-    "table": {
-      "order": "الطلب",
-      "date": "التاريخ",
-      "items": "العناصر",
-      "itemsCount": "{{count}} عنصر",
-      "itemsCount_plural": "{{count}} عناصر",
-      "total": "الإجمالي",
-      "status": "الحالة",
-      "actions": "الإجراءات",
-      "view": "عرض التفاصيل",
-      "pending": "جاري المعالجة"
-    },
-    "status": {
-      "processing": "جاري المعالجة",
-      "shipped": "تم الشحن",
-      "delivered": "تم التوصيل"
-    }
-  },
-  "tracking": {
-    "eyebrow": "تتبع مشترياتك الأخيرة",
-    "title": "تتبع الطلب",
-    "subtitle": "نحدّث خط سير الطلب في الوقت الفعلي.",
-    "viewAllOrders": "عرض كل الطلبات",
-    "order": "الطلب",
-    "total": "الإجمالي",
-    "placedOn": "تم في",
-    "awaitingUpdate": "بانتظار التحديث",
-    "selectOrder": "اختر طلباً لعرض التحديثات المباشرة.",
-    "noOrders": {
-      "title": "لا توجد طلبات متتبعة بعد",
-      "subtitle": "عند تقديم طلب سيظهر التتبع هنا.",
-      "cta": "تسوق الآن"
-    },
-    "trackingStatus": "حالة التتبع",
-    "shippingInfo": "معلومات الشحن",
-    "shippingTo": "الشحن إلى",
-    "carrier": "شركة الشحن",
-    "trackingNumber": "رقم التتبع",
-    "trackOnCarrierSite": "تتبع على موقع الشاحن",
-    "trackCarrier": "تتبع على موقع الشاحن",
-    "steps": {
-      "orderPlaced": "تم تقديم الطلب",
-      "processing": "جارٍ التجهيز",
-      "shipped": "تم الشحن",
-      "outForDelivery": "خارج للتسليم",
-      "delivered": "تم التوصيل"
-    }
-  },
-  "confirmation": {
-    "messages": {
-      "noOrder": "لا توجد معلومات عن الطلب.",
-      "notFound": "لم نعثر على هذا الطلب.",
-      "loading": "جارٍ جلب تفاصيل الطلب..."
-    },
-    "actions": {
-      "goShopping": "الذهاب للتسوق",
-      "viewOrders": "عرض الطلبات",
-      "continueShopping": "متابعة التسوق"
-    },
-    "header": {
-      "eyebrow": "شكراً لك",
-      "title": "تم تأكيد الطلب",
-      "subtitle": "أرسلنا الإيصال بالبريد وسنحدثك بحالة الشحن."
-    },
-    "meta": {
-      "reference": "مرجع الطلب",
-      "date": "تم في",
-      "status": "الحالة",
-      "shippingTo": "الشحن إلى",
-      "contact": "بيانات الاتصال",
-      "pending": "قيد الانتظار"
-    },
-    "items": {
-      "title": "عناصر هذا الطلب",
-      "quantity": "{{count}} قطعة",
-      "quantity_plural": "{{count}} قطع"
-    },
-    "summary": {
-      "subtotal": "الإجمالي الفرعي",
-      "shipping": "الشحن",
-      "total": "الإجمالي"
-    }
-  },
-  "support": {
-    "title": "الملاحظات والدعم",
-    "subtitle": "نحن هنا لمساعدتك! شارك ملاحظاتك، أبلغ عن مشكلة، أو اطلب مساعدة من فريق الخبراء.",
-    "topic": "الموضوع",
-    "topics": {
-      "orders": "الطلبات واللوجستيات",
-      "billing": "الفوترة والمدفوعات",
-      "product": "ملاحظات المنتج",
-      "ai": "مساعد الذكاء الاصطناعي",
-      "technical": "مشكلات تقنية",
-      "other": "أخرى"
-    },
-    "phoneNumber": "رقم الموبايل",
-    "phonePlaceholder": "أدخل رقم الموبايل للتواصل",
-    "phoneRequired": "مطلوب للتواصل معك (بالإنجليزية أو العربية) بخصوص طلب الدعم",
-    "phoneInvalid": "أدخل موبايل مصري يبدأ بـ 010/011/012/015 ويتكون من 11 رقماً",
-    "message": "الرسالة",
-    "placeholder": "اشرح المشكلة أو الملاحظة أو الاستفسار بتفصيل...",
-    "messageRequired": "أدخل رسالة من فضلك",
-    "sending": "جارٍ الإرسال...",
-    "sendMessage": "إرسال الرسالة",
-    "messageSent": "تم إرسال رسالتك بنجاح!",
-    "messageError": "فشل إرسال الرسالة. حاول مرة أخرى.",
-    "messageInappropriate": "يرجى إزالة العبارات غير اللائقة قبل إرسال الرسالة.",
-    "moderationFailed": "تعذر التحقق من الرسالة. حاول مرة أخرى."
-  },
-  "articles": {
-    "list": {
-      "eyebrow": "قاعدة المعرفة",
-      "title": "المقالات والملاحظات الميدانية",
-      "subtitle": "نصائح زراعية حديثة، جداول بيطرية، ورؤى مدعومة بالذكاء الاصطناعي.",
-      "search": "ابحث في المقالات...",
-      "allTags": "كل المواضيع",
-      "manage": "إدارة المقالات",
-      "loading": "جارٍ تحميل المقالات...",
-      "readMore": "متابعة القراءة →",
-      "emptyTitle": "لا توجد مقالات تطابق البحث",
-      "emptySubtitle": "جرّب مصطلح بحث آخر أو استعرض كل المواضيع.",
-      "fallbackNotice": "فريق التحرير ما زال ينشر المقالات الحية. نعرض أدلة موثوقة حتى تصل.",
-      "comingSoonTitle": "المقالات قادمة قريباً",
-      "comingSoonSubtitle": "نجهز مصادر ثنائية اللغة لهذا القسم. عد قريباً."
-    },
-    "detail": {
-      "loading": "جارٍ تحميل المقال...",
-      "notFound": "المقال غير موجود",
-      "back": "عودة للمقالات",
-      "authNeeded": "سجّل الدخول لحفظ المقالات",
-      "saved": "محفوظ",
-      "savedButton": "محفوظ",
-      "saveButton": "حفظ لوقت لاحق",
-      "removed": "أزيل من المفضلة",
-      "error": "تعذر تحديث المفضلة",
-      "byline": "كتبه {{author}}",
-      "emptyContent": "المحتوى قادم قريباً.",
-      "share": "مشاركة",
-      "save": "حفظ"
+    "auth": {
+        "login": "تسجيل الدخول",
+        "register": "إنشاء حساب",
+        "logout": "تسجيل الخروج",
+        "email_username": "البريد أو اسم المستخدم",
+        "password": "كلمة المرور",
+        "forgot": "نسيت؟",
+        "create_account": "إنشاء حساب"
     },
     "admin": {
-      "eyebrow": "مركز المعرفة",
-      "title": "إدارة المقالات",
-      "subtitle": "انشر التحديثات أو استخدم مساعد الصياغة بالذكاء الاصطناعي.",
-      "generate": "إنشاء بالذكاء الاصطناعي",
-      "featureHome": "إبراز في الصفحة الرئيسية",
-      "featureAccount": "اقتراح داخل مركز الحساب",
-      "cancel": "إلغاء",
-      "saving": "جارٍ الحفظ...",
-      "update": "تحديث",
-      "publish": "نشر",
-      "catalog": "المقالات المنشورة",
-      "edit": "تعديل",
-      "delete": "حذف",
-      "empty": "لا توجد مقالات منشورة بعد.",
-      "seedButton": "تحميل مقالات جاهزة",
-      "seedLoading": "جارٍ النشر المبدئي...",
-      "seedSuccess": "تم نشر المقالات المبدئية",
-      "seedError": "تعذر استيراد المقالات.",
-      "arabicBlock": "الترجمة العربية (اختياري)",
-      "titleAr": "العنوان بالعربية",
-      "summaryAr": "الملخص بالعربية",
-      "contentAr": "المحتوى بالعربية"
-    }
-  },
-  "userSettings": {
-    "messages": {
-      "firstNameRequired": "أدخل الاسم الأول",
-      "firstNameTooShort": "يجب أن لا يقل الاسم الأول عن حرفين",
-      "firstNameTooLong": "يجب أن يكون الاسم الأول أقل من 50 حرفاً",
-      "lastNameRequired": "أدخل اسم العائلة",
-      "lastNameTooShort": "يجب أن لا يقل اسم العائلة عن حرفين",
-      "lastNameTooLong": "يجب أن يكون اسم العائلة أقل من 50 حرفاً",
-      "invalidEmail": "أدخل بريداً إلكترونياً صحيحاً",
-      "phoneRequiredGeneric": "رقم الموبايل مطلوب",
-      "invalidEgyptPhone": "أدخل موبايل مصري يبدأ بـ 01 ويتكون من 11 رقماً",
-      "invalidImageUrl": "أدخل رابط صورة صالح (jpg, png, gif, webp)",
-      "usernameRequired": "أدخل اسم مستخدم",
-      "usernameTooShort": "اسم المستخدم يجب ألا يقل عن 3 أحرف",
-      "usernameTooLong": "اسم المستخدم يجب أن يكون أقل من 30 حرفاً",
-      "usernameInvalid": "اسم المستخدم يمكن أن يحتوي على حروف، أرقام، وشرطة سفلية فقط",
-      "usernameTaken": "اسم المستخدم مستخدم بالفعل",
-      "invalidDate": "أدخل تاريخاً صحيحاً",
-      "invalidGender": "اختر النوع",
-      "professionTooLong": "وصف المهنة طويل جداً (الحد 80 حرفاً)",
-      "currentPasswordRequired": "أدخل كلمة المرور الحالية",
-      "newPasswordRequired": "أدخل كلمة مرور جديدة",
-      "passwordTooShort": "كلمة المرور يجب أن لا تقل عن 8 أحرف",
-      "passwordWeak": "يجب أن تتضمن كلمة المرور حروفاً كبيرة وصغيرة وأرقاماً",
-      "passwordsNotMatch": "كلمتا المرور غير متطابقتين",
-      "saveProfileFailed": "تعذر حفظ الملف. تحقق من الاتصال وحاول مرة أخرى.",
-      "noChangesToSave": "لا تغييرات للحفظ",
-      "securitySection": "الأمان",
-      "securityTitle": "تغيير كلمة المرور",
-      "securityDescription": "حدّث كلمة مرورك بانتظام للحفاظ على الأمان.",
-      "currentPassword": "كلمة المرور الحالية",
-      "newPassword": "كلمة المرور الجديدة",
-      "confirmNewPassword": "تأكيد كلمة المرور الجديدة",
-      "passwordTip": "نصيحة: استخدم 12 حرفاً على الأقل مع أرقام ورموز. لا تعِد استخدام كلمات المرور من مواقع أخرى.",
-      "updatingPassword": "جارٍ تحديث كلمة المرور...",
-      "updatePassword": "تحديث كلمة المرور",
-      "forgotPassword": "نسيت كلمة المرور؟",
-      "forgotPasswordSuccess": "تم إرسال بريد لإعادة التعيين! تحقق من بريدك.",
-      "forgotPasswordError": "فشل إرسال بريد إعادة التعيين. حاول لاحقاً.",
-      "forgotPasswordNoEmail": "لا يوجد بريد مرتبط بحسابك.",
-      "sendingReset": "جارٍ الإرسال...",
-      "notificationsSection": "الإشعارات",
-      "notificationsTitle": "اختر ما يهمك",
-      "notificationsDescription": "حدد التحديثات التي ترغب بها.",
-      "notificationDescription": "ابقَ على اطلاع بالتحديثات الهامة.",
-      "savingNotifications": "جارٍ الحفظ...",
-      "savePreferences": "حفظ التفضيلات",
-      "saveProfileSuccess": "تم تحديث ملفك بنجاح.",
-      "savePreferencesFailed": "تعذر حفظ التفضيلات. حاول مرة أخرى.",
-      "savePreferencesSuccess": "تم حفظ تفضيلاتك.",
-      "saveNotificationsFailed": "تعذر حفظ إعدادات الإشعارات. حاول مرة أخرى.",
-      "saveNotificationsSuccess": "تم حفظ تفضيلات الإشعارات.",
-      "updatePasswordFailed": "تعذر تحديث كلمة المرور. تحقق من الكلمة الحالية وحاول مجدداً.",
-      "updatePasswordSuccess": "تم تغيير كلمة المرور بنجاح.",
-      "accountActionFailed": "تعذر تنفيذ الطلب. حاول مرة أخرى أو تواصل مع الدعم.",
-      "accountDeleted": "تم حذف حسابك وإلغاء أي طلبات معلقة.",
-      "emailRequiresRecentLogin": "للأمان، يرجى تسجيل الدخول مجدداً قبل تغيير البريد أو حذف الحساب.",
-      "emailUpdateFailed": "تعذر تحديث البريد. حاول بعد قليل.",
-      "wrongPassword": "كلمة المرور الحالية غير صحيحة",
-      "weakPassword": "يرجى اختيار كلمة مرور أقوى",
-      "tooManyRequests": "محاولات كثيرة. انتظر بضع دقائق قبل المحاولة.",
-      "invalidImageFile": "اختر ملف صورة صالح (PNG, JPG, أو WebP)",
-      "imageTooLarge": "الصورة كبيرة. اختر ملفاً أقل من 2 ميجابايت",
-      "fileReadError": "تعذر قراءة الملف. حاول مرة أخرى.",
-      "accountDeactivated": "تم تعطيل حسابك. يمكنك إعادة تفعيله بتسجيل الدخول.",
-      "accountDeletionRequested": "تم تسجيل طلب الحذف. سيتواصل فريق الدعم خلال 24 ساعة.",
-      "passwordResetEmailSent": "تم إرسال بريد لإعادة تعيين كلمة المرور. تحقق من البريد واتبع التعليمات.",
-      "saving": "جارٍ الحفظ...",
-      "updating": "جارٍ التحديث...",
-      "processing": "جارٍ المعالجة...",
-      "loading": "جارٍ التحميل...",
-      "fix_errors": "يرجى إصلاح الأخطاء التالية قبل الحفظ:",
-      "fix_errors_short": "تحقق من هذه الحقول للمتابعة:",
-      "photo_link_toggle": "استخدام رابط صورة (اختياري)",
-      "photo_link_toggle_hide": "إخفاء رابط الصورة"
-    }
-  },
-  "products": {
-    "title": "المنتجات",
-    "search": "ابحث عن المنتجات...",
-    "sortLabel": "ترتيب",
-    "sort": {
-      "createdAt": "الأحدث",
-      "price": "السعر",
-      "title": "أبجدي"
+        "dashboard": "لوحة التحكم",
+        "courses": "الدورات",
+        "new_course": "دورة جديدة",
+        "categories": "الفئات",
+        "category_name": "اسم الفئة",
+        "create": "إنشاء",
+        "new_category": "فئة جديدة",
+        "status": {
+            "published": "منشور",
+            "draft": "مسودة"
+        },
+        "productForm": {
+            "editTitle": "تعديل المنتج",
+            "newTitle": "منتج جديد",
+            "saveChanges": "حفظ التغييرات",
+            "addProduct": "إضافة المنتج",
+            "cancel": "إلغاء",
+            "loading": "جارٍ التحميل...",
+            "productName": "اسم المنتج",
+            "description": "الوصف",
+            "imageUrl": "رابط الصورة",
+            "category": "الفئة",
+            "selectCategory": "اختر الفئة.",
+            "price": "السعر",
+            "stock": "المخزون",
+            "stockHelp": "تحديد كمية المخزون (الوحدات المتاحة).",
+            "currency": "العملة",
+            "available": "متاح",
+            "preview": "معاينة",
+            "validation": {
+                "titleMin": "اسم المنتج قصير جداً",
+                "titleRequired": "اسم المنتج مطلوب",
+                "descriptionMin": "الوصف قصير جداً",
+                "descriptionRequired": "الوصف مطلوب",
+                "thumbnailUrl": "أدخل رابط صورة صالحاً",
+                "thumbnailUrlRequired": "رابط الصورة مطلوب",
+                "priceNumber": "السعر يجب أن يكون رقماً",
+                "pricePositive": "السعر يجب أن يكون أكبر من 0",
+                "priceRequired": "السعر مطلوب",
+                "stockNumber": "المخزون يجب أن يكون رقماً",
+                "stockInteger": "المخزون يجب أن يكون عدداً صحيحاً",
+                "stockMin": "المخزون لا يمكن أن يكون سلبياً",
+                "stockRequired": "المخزون مطلوب",
+                "currencyRequired": "العملة مطلوبة",
+                "categoryRequired": "الفئة مطلوبة"
+            }
+        },
+        "footer_note": "© {{year}} لوحة تحكم العيادة البيطرية — مصممة بعناية"
     },
-    "asc": "تصاعدي",
-    "desc": "تنازلي",
-    "perPage": "لكل صفحة",
-    "error": "فشل تحميل المنتجات.",
-    "fallback": "لا تزال المنتجات تتزامن. نعرض الكتالوج الأساسي حتى تجهز قاعدة البيانات.",
-    "noResults": "لا توجد منتجات.",
-    "noImage": "لا توجد صورة",
-    "addToCart": "أضف إلى السلة",
-    "inCart": "في السلة"
-  },
-  "home": {
-    "heroTitle": "التسوق الذكي يبدأ من هنا",
-    "heroSubtitle": "متجرك المتكامل للمنتجات عالية الجودة، والموارد الخبيرة، ونصائح زراعية مدعومة بالذكاء الاصطناعي.",
-    "shopByCategory": "تسوق حسب الفئة",
-    "categoryFallback": "فئة",
-    "categoryNoteFallback": "تصفح المنتجات",
-    "topArticles": "أفضل المقالات",
-    "articleFallback": "مقال",
-    "ecoBannerTitle": "حلول زراعية مستدامة",
-    "ecoBannerText": "ابدأ بخطوات صغيرة: قلل الهدر، احفظ المياه، وخفّض التكلفة بنسبة تصل إلى 20% بفضل تقنياتنا وأنظمتنا الذكية. كُن جزءاً من مجتمع مزارع واعٍ يدعم الاستدامة!",
-    "vetHelpTitle": "الدعم البيطري بين يديك",
-    "vetHelpText": "استشر أطبائنا البيطريين وخبراء الزراعة عبر محادثة سريعة لتحصل على توصيات دقيقة عن صحة القطيع، التغذية، والوقاية قبل ظهور المشكلة.",
-    "contactVet": "تواصل مع خبيرنا البيطري",
-    "readMore": "اقرأ المزيد",
-    "shopAllProducts": "تسوق كل المنتجات",
-    "addToCart": "أضف إلى السلة",
-    "featuredProducts": "منتجات مميزة",
-    "viewAll": "عرض الكل"
-  },
-  "footer": {
-    "brandName": "متجر فارم فيت",
-    "brandDescription": "منتجات بيطرية موثوقة بأعلى جودة وأسعار معقولة.",
-    "quickLinks": "روابط سريعة",
-    "home": "الرئيسية",
-    "products": "المنتجات",
-    "about": "من نحن",
-    "contact": "تواصل معنا",
-    "followUs": "تابعنا",
-    "copyright": "© {{year}} متجر فارم فيت. جميع الحقوق محفوظة."
-  }
+    "layout": {
+        "sidebar_height_hint": "الارتفاع: {{value}}"
+    },
+    "format": {
+        "price": "{{value, number}} {{currency}}",
+        "created": "{{value, datetime}}"
+    },
+    "sort": {
+        "createdAt": "تاريخ الإنشاء",
+        "price": "السعر",
+        "title": "أبجدي"
+    },
+    "filter": {
+        "all": "الكل"
+    },
+    "empty": {
+        "courses_title": "لا توجد دورات",
+        "categories_title": "لا توجد فئات بعد",
+        "try_clear": "جرّب مسح البحث أو تغيير الفلاتر.",
+        "create_first_course": "ابدأ بإنشاء أول دورة.",
+        "create_first_category": "أنشئ أول فئة."
+    },
+    "errors": {
+        "courses_load_failed": "فشل تحميل الدورات",
+        "categories_load_failed": "فشل تحميل الفئات",
+        "404_code": "404",
+        "404_title": "الصفحة غير موجودة",
+        "404_message": "الصفحة التي تبحث عنها ربما أُزيلت.",
+        "403_code": "403",
+        "403_title": "ممنوع",
+        "403_message": "ليست لديك صلاحية الوصول لهذه الصفحة."
+    },
+    "common": {
+        "go_home": "الانتقال للرئيسية",
+        "signing_in": "جارٍ تسجيل الدخول...",
+        "creating": "جارٍ الإنشاء...",
+        "sending": "جارٍ الإرسال...",
+        "delete": "حذف",
+        "cancel": "إلغاء",
+        "working": "جارٍ العمل...",
+        "light_mode": "وضع النهار",
+        "dark_mode": "الوضع الليلي",
+        "retry": "إعادة المحاولة",
+        "error": "خطأ",
+        "rateLimitExceeded": "محاولات كثيرة. الرجاء الانتظار {{seconds}} ثانية.",
+        "valid": "صالح",
+        "total": "الإجمالي",
+        "customer": "العميل",
+        "admin": "الإدارة"
+    },
+    "settings": {
+        "language_display": "اللغة والعرض",
+        "personalize_info": "خصص تجربتك",
+        "units_language_notes": "اختر اللغة المفضلة، الوحدات، وأضف ملاحظات التوصيل.",
+        "interface_language": "اللغة",
+        "measurements": "الوحدات",
+        "metric_units": "متري (كجم، كم)",
+        "imperial_units": "إنجليزي (رطل، ميل)",
+        "delivery_notes": "تعليمات التوصيل",
+        "reset_defaults": "إعادة الضبط للإعدادات الافتراضية",
+        "save_display_settings": "حفظ التفضيلات",
+        "personal_info": "المعلومات الشخصية",
+        "keep_contact_accurate": "تحديث بيانات التواصل",
+        "info_on_invoices": "ستظهر هذه المعلومات على الفواتير ووثائق التوصيل.",
+        "upload_profile_photo": "إضافة صورة الملف الشخصي",
+        "photo_formats": "PNG, JPG, WebP - حد أقصى 2 ميجابايت - محسنة لكل الأجهزة",
+        "choose_file": "اختر ملفاً",
+        "photo_link_label": "أدخل رابط الصورة",
+        "photo_link_placeholder": "ضع رابط تخزين Firebase أو أي رابط صورة",
+        "photo_link_helper": "استخدم رابط صورة مباشر (يعمل مع Firebase المجاني).",
+        "first_name": "الاسم الأول",
+        "first_name_placeholder": "محمد",
+        "last_name": "اسم العائلة",
+        "last_name_placeholder": "أحمد",
+        "gender": "النوع",
+        "select": "اختر",
+        "male": "ذكر",
+        "female": "أنثى",
+        "birth_date": "تاريخ الميلاد",
+        "profession_role": "المهنة",
+        "profession_placeholder": "مثال: متخصص تغذية ماشية",
+        "phone_number": "رقم الموبايل",
+        "phone_placeholder": "01XXXXXXXXX",
+        "farm_city": "موقع المزرعة",
+        "location_placeholder": "أضف مدينتك أو علامة توصيل",
+        "unsaved_changes": "لديك تغييرات غير محفوظة",
+        "auto_saving": "سيتم الحفظ تلقائياً خلال 3 ثوانٍ...",
+        "all_changes_saved": "تم حفظ كل التغييرات",
+        "save_profile": "حفظ الملف الشخصي",
+        "profile_helper_text": "حافظ على تحديث ملفك الشخصي لتوصيات مخصصة.",
+        "securitySection": "الأمان",
+        "securityTitle": "حماية حسابك",
+        "securityDescription": "استخدم كلمة مرور قوية وغيّرها بانتظام.",
+        "currentPassword": "كلمة المرور الحالية",
+        "newPassword": "كلمة المرور الجديدة",
+        "confirmNewPassword": "تأكيد كلمة المرور الجديدة",
+        "passwordTip": "نصيحة: اجمع 12 حرفاً على الأقل مع الأرقام والرموز. تجنب إعادة استخدام كلمات المرور من خدمات أخرى.",
+        "updatingPassword": "جارٍ التحديث...",
+        "updatePassword": "تحديث كلمة المرور",
+        "forgotPassword": "نسيت كلمة المرور؟",
+        "forgotPasswordSuccess": "تم إرسال بريد إعادة التعيين! تحقق من بريدك.",
+        "forgotPasswordError": "فشل إرسال بريد إعادة التعيين. حاول مرة أخرى.",
+        "forgotPasswordNoEmail": "لا يوجد بريد مرتبط بحسابك.",
+        "sendingReset": "جارٍ الإرسال...",
+        "navigation": {
+            "focus_area": "منطقة التركيز",
+            "aria_label": "أقسام إعدادات الملف الشخصي",
+            "categories": {
+                "profile": {
+                    "label": "الملف الشخصي",
+                    "description": "البيانات الشخصية والأمان",
+                    "helper": "حافظ على بياناتك الشخصية والأمنية دقيقة."
+                },
+                "preferences": {
+                    "label": "إعدادات المزرعة",
+                    "description": "خصص تجربة المزرعة",
+                    "helper": "اضبط لغة الواجهة وتفضيلات الموقع."
+                },
+                "account": {
+                    "label": "حساب المزرعة",
+                    "description": "إدارة الحساب",
+                    "helper": "اتخذ إجراءات على حالة حسابك وطلبات البيانات."
+                }
+            },
+            "items": {
+                "personal": {
+                    "label": "البيانات الشخصية",
+                    "description": "تحديث ملفك الزراعي"
+                },
+                "security": {
+                    "label": "الأمان",
+                    "description": "حماية حسابك"
+                },
+                "notifications": {
+                    "label": "الإشعارات",
+                    "description": "تنبيهات وتحديثات المزرعة"
+                },
+                "preferences": {
+                    "label": "التفضيلات",
+                    "description": "تخصيص تجربتك"
+                },
+                "account": {
+                    "label": "الحساب",
+                    "description": "إدارة حساب المزرعة"
+                },
+                "support": {
+                    "label": "الدعم",
+                    "description": "الحصول على المساعدة"
+                }
+            }
+        },
+        "notificationOptions": {
+            "productUpdates": {
+                "label": "تحديثات المنتجات",
+                "description": "أبرز المنتجات والعروض الأسبوعية."
+            },
+            "orderUpdates": {
+                "label": "تحديثات الطلب",
+                "description": "تتبع الشحن والتنبيهات الخاصة بالفواتير لكل عملية شراء."
+            },
+            "securityAlerts": {
+                "label": "تنبيهات الأمان",
+                "description": "تنبيهات تسجيل الدخول والنشاط غير المعتاد."
+            },
+            "marketingEmails": {
+                "label": "رسائل تسويقية",
+                "description": "عروض موسمية ومحتوى تعليمي."
+            }
+        },
+        "dangerZone": {
+            "eyebrow": "حذف الحساب",
+            "title": "حذف هذا الحساب نهائياً",
+            "description": "إزالة ملفك وإلغاء أي طلبات نشطة مرتبطة به.",
+            "readBefore": "قبل الحذف",
+            "deleteDataNotice": "سيتم مسح كل البيانات (الاسم، البريد، الهاتف، العناوين، والتفضيلات).",
+            "orderCancelNotice": "أي طلبات مفتوحة أو قيد الانتظار سيتم إلغاؤها تلقائياً.",
+            "irreversible": "هذا الإجراء فوري ولا يمكن التراجع عنه.",
+            "delete": "حذف الحساب الآن",
+            "requesting": "جارٍ الحذف...",
+            "needHelp": "تحتاج مساعدة أولاً؟",
+            "contactSupport": "تواصل مع الدعم"
+        },
+        "confirmDialog": {
+            "title": "تأكيد مطلوب",
+            "deleteTitle": "حذف الحساب الآن؟",
+            "deleteBody": "سنحذف ملفك ونلغي أي طلبات معلقة. ستحتاج إلى إنشاء حساب جديد للعودة.",
+            "keepAccount": "إبقاء الحساب",
+            "deleteAction": "نعم، احذف كل شيء"
+        },
+        "support": {
+            "section": "الدعم",
+            "title": "تحتاج مساعدة أو لديك ملاحظات؟",
+            "description": "تواصل مع فريق الدعم أو تصفح مصادر المساعدة.",
+            "feedback": "إرسال ملاحظات",
+            "feedbackDesc": "شارك رأيك حول منتجاتنا وخدماتنا",
+            "help": "الحصول على مساعدة",
+            "helpDesc": "اعثر على إجابات للأسئلة الشائعة",
+            "helpComing": "مركز المساعدة قادم قريباً!",
+            "call": "اتصال بالدعم",
+            "callDesc": "تحدث مع فريق الدعم",
+            "email": "بريد الدعم",
+            "emailDesc": "أرسل لنا بريداً لمساعدة مفصلة"
+        }
+    },
+    "account": {
+        "profile_preferences": "الملف الشخصي والتفضيلات",
+        "profile_description": "الاسم، اللغة، والأمان",
+        "payment_methods": "طرق الدفع",
+        "payment_description": "البطاقات، المحافظ، الفوترة",
+        "order_history": "طلباتي",
+        "order_description": "الفواتير والإيصالات",
+        "order_tracking": "تتبع الطلب",
+        "tracking_description": "حالة التوصيل مباشرة",
+        "saved_products": "المنتجات المحفوظة",
+        "saved_description": "القوائم والتنبيهات",
+        "favorite_articles": "المقالات المفضلة",
+        "articles_description": "إرشادات ومصادر",
+        "ai_conversations": "محادثات الذكاء الاصطناعي",
+        "ai_description": "سجل المحادثة",
+        "aiConversations": {
+            "eyebrow": "مساعد الإرشاد",
+            "title": "محادثات الذكاء الاصطناعي",
+            "subtitleWithEntries": "راجع المحادثات السابقة مع المساعد الزراعي وأكمل من حيث توقفت.",
+            "subtitleWithoutEntries": "لم تبدأ أي محادثة بعد. ابدأ مع المساعد الآن.",
+            "emptyTitle": "لا توجد نصوص محفوظة بعد",
+            "emptySubtitle": "أي طلب ترسله للمساعد العائم سيظهر هنا للرجوع السريع.",
+            "startChat": "بدء محادثة جديدة",
+            "exportTranscript": "تصدير المحادثة",
+            "reopenChat": "إعادة فتح المحادثة",
+            "untitledPrompt": "طلب بلا عنوان",
+            "waitingResponse": "بانتظار رد المساعد...",
+            "justNow": "الآن"
+        },
+        "feedback_support": "الملاحظات والدعم",
+        "support_description": "شارك رأيك أو احصل على مساعدة",
+        "complaints_topic_fallback": "دعم عام",
+        "complaints_topics": {
+            "orders": "الطلبات واللوجستيات",
+            "billing": "الفوترة والمدفوعات",
+            "product": "ملاحظات المنتج",
+            "ai": "مساعد الذكاء الاصطناعي",
+            "technical": "مشكلة تقنية",
+            "other": "أخرى"
+        },
+        "complaints_status": {
+            "pending": "قيد المراجعة",
+            "in-progress": "قيد التنفيذ",
+            "resolved": "تم الحل",
+            "closed": "مغلق"
+        },
+        "logout": "تسجيل الخروج",
+        "complaints": "استفساراتي",
+        "complaints_description": "قدّم وتتبع استفساراتك",
+        "complaints_title": "مركز الدعم",
+        "complaints_subtitle": "تابع طلبات الدعم الخاصة بك ومراحل حلها.",
+        "complaints_helper": "شاهد تحديثات الحالة وتفاصيل الاتصال وأولوية الرد بنظرة سريعة.",
+        "submit_new_complaint": "تقديم استفسار جديد",
+        "no_complaints_title": "لا توجد استفسارات بعد",
+        "no_complaints_subtitle": "لم تقدّم أي استفسار بعد. اضغط الزر بالأعلى لتقديم استفسارك الأول.",
+        "login_required_title": "الرجاء تسجيل الدخول لرؤية الاستفسارات",
+        "login_required_subtitle": "يجب تسجيل الدخول للوصول إلى سجل الاستفسارات.",
+        "complaints_actions": {
+            "close_complaint": "إغلاق الاستفسار",
+            "closing": "جارٍ الإغلاق...",
+            "no_response_yet": "لا يوجد رد بعد",
+            "awaiting_response": "نراجع استفسارك وسنرد قريباً.",
+            "complaint_closed": "تم إغلاق الاستفسار بنجاح",
+            "add_follow_up": "إضافة متابعة",
+            "send_follow_up": "إرسال المتابعة",
+            "follow_up_placeholder": "أضف تفاصيل أو رقم طلب أو رابط صور لتوضيح المشكلة.",
+            "follow_up_saved": "تم إرسال المتابعة"
+        },
+        "admin_response": "رد الإدارة",
+        "user_follow_up": "متابعتك",
+        "confirm_close_message": "هل أنت متأكد من إغلاق هذا الاستفسار؟ لا يمكن التراجع عن هذا الإجراء.",
+        "helper_text": "",
+        "savedProducts": {
+            "eyebrow": "المفضلة",
+            "title": "المنتجات المحفوظة",
+            "subtitle": "هذه العناصر متزامنة مع المخزون الحقيقي المُدار من لوحة الإدارة.",
+            "emptyTitle": "لا توجد منتجات محفوظة بعد",
+            "emptySubtitle": "استكشف الكتالوج واضغط على القلب للحفظ.",
+            "browse": "تصفح المنتجات",
+            "view": "عرض",
+            "addToCart": "أضف إلى السلة",
+            "remove": "إزالة",
+            "inStock": "متوفر",
+            "unavailable": "غير متوفر حالياً",
+            "priceUnknown": "السعر غير متاح",
+            "noImage": "لا توجد صورة"
+        },
+        "favoriteArticles": {
+            "loading": "جارٍ تحميل قائمة القراءة...",
+            "emptyTitle": "لا توجد مقالات محفوظة بعد",
+            "emptySubtitle": "احفظ المقالات من الكتالوج وستظهر هنا تلقائياً.",
+            "browse": "تصفح المقالات",
+            "eyebrow": "تيار المعرفة",
+            "title": "المقالات المفضلة",
+            "subtitle": "قائمة قراءة مخصصة لفريقك. العناصر المحفوظة تتجاوز اختياراتنا القياسية.",
+            "readMore": "متابعة القراءة →"
+        },
+        "orderHistory": {
+            "title": "تاريخ الطلبات",
+            "subtitle": "تتبع جميع طلباتك وحالة كل منها الحالية",
+            "noOrders": "لا توجد طلبات بعد",
+            "noOrdersDesc": "سيظهر تاريخ طلباتك هنا بمجرد إجراء أول عملية شراء.",
+            "orderNumber": "الطلب رقم",
+            "total": "المجموع",
+            "invoice": "الفاتورة",
+            "track": "تتبع",
+            "orderItems": "عناصر الطلب",
+            "shippingInfo": "معلومات الشحن",
+            "paymentInfo": "معلومات الدفع",
+            "orderTimeline": "جدول زمني للطلب",
+            "customerConfirmed": "تم التأكيد من العميل",
+            "by": "بواسطة"
+        }
+    },
+    "checkout": {
+        "errors": {
+            "fullName": "أدخل الاسم الكامل.",
+            "email": "أدخل بريداً إلكترونياً صالحاً.",
+            "phone": "أدخل رقماً صحيحاً.",
+            "address": "العنوان مطلوب.",
+            "city": "المدينة مطلوبة.",
+            "postalCode": "الرمز البريدي مطلوب.",
+            "country": "الدولة مطلوبة."
+        },
+        "messages": {
+            "loginRequired": "الرجاء تسجيل الدخول للمتابعة.",
+            "emptyCart": "سلة التسوق فارغة.",
+            "success": "تم تقديم الطلب بنجاح!",
+            "failure": "تعذر تقديم الطلب. حاول مرة أخرى."
+        },
+        "empty": {
+            "title": "السلة فارغة",
+            "subtitle": "أضف بعض المستلزمات للمتابعة.",
+            "cta": "تصفح المنتجات"
+        },
+        "authRequired": {
+            "title": "مطلوب تسجيل الدخول",
+            "subtitle": "سجل الدخول لإتمام الشراء.",
+            "cta": "الانتقال لتسجيل الدخول"
+        },
+        "header": {
+            "eyebrow": "دفع آمن",
+            "title": "مراجعة وتأكيد",
+            "subtitle": "أدخل بيانات الاتصال والشحن، ثم اختر طريقة الدفع."
+        },
+        "sections": {
+            "contact": "بيانات الاتصال",
+            "shipping": "عنوان الشحن",
+            "payment": "طريقة الدفع"
+        },
+        "fields": {
+            "fullName": "الاسم الكامل",
+            "email": "البريد الإلكتروني",
+            "phone": "رقم الهاتف",
+            "addressLine1": "العنوان الأول",
+            "addressLine2": "العنوان الثاني",
+            "optional": "اختياري",
+            "city": "المدينة",
+            "state": "المحافظة / الولاية",
+            "postalCode": "الرمز البريدي",
+            "country": "الدولة"
+        },
+        "payment": {
+            "cod": {
+                "title": "الدفع عند الاستلام",
+                "subtitle": "ادفع عند وصول الطلب."
+            },
+            "card": {
+                "title": "الدفع بالبطاقة",
+                "subtitle": "ادفع بأمان عبر الإنترنت."
+            }
+        },
+        "actions": {
+            "backToCart": "العودة للسلة",
+            "processing": "جارٍ المعالجة...",
+            "completeOrder": "إتمام الطلب"
+        },
+        "summary": {
+            "title": "ملخص الطلب",
+            "subtitle": "المنتجات في سلتك",
+            "quantity": "{{count}} منتج",
+            "quantity_plural": "{{count}} منتجات",
+            "subtotal": "الإجمالي الفرعي",
+            "shipping": "الشحن",
+            "total": "الإجمالي",
+            "note": "ستصلك رسالة تأكيد بالبريد مع معلومات التتبع."
+        }
+    },
+    "notifications": {
+        "center_label": "مركز الإشعارات",
+        "title": "ابقَ على اطلاع بكل حدث",
+        "subtitle": "تتبع تقدم الطلبات، ردود الدعم، وتحديثات النظام المهمة في مكان واحد.",
+        "unread_count": "{{count}} غير مقروء",
+        "all_caught_up": "لا توجد إشعارات جديدة",
+        "mark_all_read": "تحديد الكل كمقروء",
+        "groups": {
+            "orders": "الطلبات",
+            "support": "الدعم",
+            "system": "النظام"
+        },
+        "group_count": "{{count}} تحديثات",
+        "new_badge": "جديد",
+        "marked": "مقروء",
+        "mark_read": "تحديد كمقروء",
+        "view_details": "عرض التفاصيل",
+        "empty_title": "لا توجد إشعارات بعد",
+        "empty_description": "التحديثات المهمة حول طلباتك واستفساراتك ستظهر هنا."
+    },
+    "pagination": {
+        "prev": "السابق",
+        "next": "التالي",
+        "showing": "عرض",
+        "to": "إلى",
+        "of": "من",
+        "results": "نتيجة",
+        "noResults": "لا توجد نتائج"
+    },
+    "orders": {
+        "loading": "جارٍ تحميل طلباتك...",
+        "empty": {
+            "title": "لا توجد طلبات بعد",
+            "subtitle": "عند الشراء ستظهر الطلبات هنا.",
+            "cta": "تسوق المنتجات"
+        },
+        "overview": {
+            "eyebrow": "نظرة عامة",
+            "title": "طلباتي",
+            "subtitle": "عرض مشترياتك الأخيرة وتتبع حالتها."
+        },
+        "table": {
+            "order": "الطلب",
+            "date": "التاريخ",
+            "items": "العناصر",
+            "itemsCount": "{{count}} عنصر",
+            "itemsCount_plural": "{{count}} عناصر",
+            "total": "الإجمالي",
+            "status": "الحالة",
+            "actions": "الإجراءات",
+            "view": "عرض التفاصيل",
+            "pending": "جاري المعالجة"
+        },
+        "status": {
+            "processing": "جاري المعالجة",
+            "shipped": "تم الشحن",
+            "delivered": "تم التوصيل"
+        }
+    },
+    "tracking": {
+        "eyebrow": "تتبع مشترياتك الأخيرة",
+        "title": "تتبع الطلب",
+        "subtitle": "نحدّث خط سير الطلب في الوقت الفعلي.",
+        "viewAllOrders": "عرض كل الطلبات",
+        "order": "الطلب",
+        "total": "الإجمالي",
+        "placedOn": "تم في",
+        "awaitingUpdate": "بانتظار التحديث",
+        "selectOrder": "اختر طلباً لعرض التحديثات المباشرة.",
+        "noOrders": {
+            "title": "لا توجد طلبات متتبعة بعد",
+            "subtitle": "عند تقديم طلب سيظهر التتبع هنا.",
+            "cta": "تسوق الآن"
+        },
+        "trackingStatus": "حالة التتبع",
+        "shippingInfo": "معلومات الشحن",
+        "shippingTo": "الشحن إلى",
+        "carrier": "شركة الشحن",
+        "trackingNumber": "رقم التتبع",
+        "trackOnCarrierSite": "تتبع على موقع الشاحن",
+        "trackCarrier": "تتبع على موقع الشاحن",
+        "steps": {
+            "orderPlaced": "تم تقديم الطلب",
+            "processing": "جارٍ التجهيز",
+            "shipped": "تم الشحن",
+            "outForDelivery": "خارج للتسليم",
+            "delivered": "تم التوصيل"
+        }
+    },
+    "confirmation": {
+        "messages": {
+            "noOrder": "لا توجد معلومات عن الطلب.",
+            "notFound": "لم نعثر على هذا الطلب.",
+            "loading": "جارٍ جلب تفاصيل الطلب..."
+        },
+        "actions": {
+            "goShopping": "الذهاب للتسوق",
+            "viewOrders": "عرض الطلبات",
+            "continueShopping": "متابعة التسوق"
+        },
+        "header": {
+            "eyebrow": "شكراً لك",
+            "title": "تم تأكيد الطلب",
+            "subtitle": "أرسلنا الإيصال بالبريد وسنحدثك بحالة الشحن."
+        },
+        "meta": {
+            "reference": "مرجع الطلب",
+            "date": "تم في",
+            "status": "الحالة",
+            "shippingTo": "الشحن إلى",
+            "contact": "بيانات الاتصال",
+            "pending": "قيد الانتظار"
+        },
+        "items": {
+            "title": "عناصر هذا الطلب",
+            "quantity": "{{count}} قطعة",
+            "quantity_plural": "{{count}} قطع"
+        },
+        "summary": {
+            "subtotal": "الإجمالي الفرعي",
+            "shipping": "الشحن",
+            "total": "الإجمالي"
+        }
+    },
+    "support": {
+        "title": "الملاحظات والدعم",
+        "subtitle": "نحن هنا لمساعدتك! شارك ملاحظاتك، أبلغ عن مشكلة، أو اطلب مساعدة من فريق الخبراء.",
+        "topic": "الموضوع",
+        "topics": {
+            "orders": "الطلبات واللوجستيات",
+            "billing": "الفوترة والمدفوعات",
+            "product": "ملاحظات المنتج",
+            "ai": "مساعد الذكاء الاصطناعي",
+            "technical": "مشكلات تقنية",
+            "other": "أخرى"
+        },
+        "phoneNumber": "رقم الموبايل",
+        "phonePlaceholder": "أدخل رقم الموبايل للتواصل",
+        "phoneRequired": "مطلوب للتواصل معك (بالإنجليزية أو العربية) بخصوص طلب الدعم",
+        "phoneInvalid": "أدخل موبايل مصري يبدأ بـ 010/011/012/015 ويتكون من 11 رقماً",
+        "message": "الرسالة",
+        "placeholder": "اشرح المشكلة أو الملاحظة أو الاستفسار بتفصيل...",
+        "messageRequired": "أدخل رسالة من فضلك",
+        "sending": "جارٍ الإرسال...",
+        "sendMessage": "إرسال الرسالة",
+        "messageSent": "تم إرسال رسالتك بنجاح!",
+        "messageError": "فشل إرسال الرسالة. حاول مرة أخرى.",
+        "messageInappropriate": "يرجى إزالة العبارات غير اللائقة قبل إرسال الرسالة.",
+        "moderationFailed": "تعذر التحقق من الرسالة. حاول مرة أخرى."
+    },
+    "articles": {
+        "list": {
+            "eyebrow": "قاعدة المعرفة",
+            "title": "المقالات والملاحظات الميدانية",
+            "subtitle": "نصائح زراعية حديثة، جداول بيطرية، ورؤى مدعومة بالذكاء الاصطناعي.",
+            "search": "ابحث في المقالات...",
+            "allTags": "كل المواضيع",
+            "manage": "إدارة المقالات",
+            "loading": "جارٍ تحميل المقالات...",
+            "readMore": "متابعة القراءة →",
+            "emptyTitle": "لا توجد مقالات تطابق البحث",
+            "emptySubtitle": "جرّب مصطلح بحث آخر أو استعرض كل المواضيع.",
+            "fallbackNotice": "فريق التحرير ما زال ينشر المقالات الحية. نعرض أدلة موثوقة حتى تصل.",
+            "comingSoonTitle": "المقالات قادمة قريباً",
+            "comingSoonSubtitle": "نجهز مصادر ثنائية اللغة لهذا القسم. عد قريباً."
+        },
+        "detail": {
+            "loading": "جارٍ تحميل المقال...",
+            "notFound": "المقال غير موجود",
+            "back": "عودة للمقالات",
+            "authNeeded": "سجّل الدخول لحفظ المقالات",
+            "saved": "محفوظ",
+            "savedButton": "محفوظ",
+            "saveButton": "حفظ لوقت لاحق",
+            "removed": "أزيل من المفضلة",
+            "error": "تعذر تحديث المفضلة",
+            "byline": "كتبه {{author}}",
+            "emptyContent": "المحتوى قادم قريباً.",
+            "share": "مشاركة",
+            "save": "حفظ"
+        },
+        "admin": {
+            "eyebrow": "مركز المعرفة",
+            "title": "إدارة المقالات",
+            "subtitle": "انشر التحديثات أو استخدم مساعد الصياغة بالذكاء الاصطناعي.",
+            "generate": "إنشاء بالذكاء الاصطناعي",
+            "featureHome": "إبراز في الصفحة الرئيسية",
+            "featureAccount": "اقتراح داخل مركز الحساب",
+            "cancel": "إلغاء",
+            "saving": "جارٍ الحفظ...",
+            "update": "تحديث",
+            "publish": "نشر",
+            "catalog": "المقالات المنشورة",
+            "edit": "تعديل",
+            "delete": "حذف",
+            "empty": "لا توجد مقالات منشورة بعد.",
+            "seedButton": "تحميل مقالات جاهزة",
+            "seedLoading": "جارٍ النشر المبدئي...",
+            "seedSuccess": "تم نشر المقالات المبدئية",
+            "seedError": "تعذر استيراد المقالات.",
+            "arabicBlock": "الترجمة العربية (اختياري)",
+            "titleAr": "العنوان بالعربية",
+            "summaryAr": "الملخص بالعربية",
+            "contentAr": "المحتوى بالعربية"
+        }
+    },
+    "userSettings": {
+        "messages": {
+            "firstNameRequired": "أدخل الاسم الأول",
+            "firstNameTooShort": "يجب أن لا يقل الاسم الأول عن حرفين",
+            "firstNameTooLong": "يجب أن يكون الاسم الأول أقل من 50 حرفاً",
+            "lastNameRequired": "أدخل اسم العائلة",
+            "lastNameTooShort": "يجب أن لا يقل اسم العائلة عن حرفين",
+            "lastNameTooLong": "يجب أن يكون اسم العائلة أقل من 50 حرفاً",
+            "invalidEmail": "أدخل بريداً إلكترونياً صحيحاً",
+            "phoneRequiredGeneric": "رقم الموبايل مطلوب",
+            "invalidEgyptPhone": "أدخل موبايل مصري يبدأ بـ 01 ويتكون من 11 رقماً",
+            "invalidImageUrl": "أدخل رابط صورة صالح (jpg, png, gif, webp)",
+            "usernameRequired": "أدخل اسم مستخدم",
+            "usernameTooShort": "اسم المستخدم يجب ألا يقل عن 3 أحرف",
+            "usernameTooLong": "اسم المستخدم يجب أن يكون أقل من 30 حرفاً",
+            "usernameInvalid": "اسم المستخدم يمكن أن يحتوي على حروف، أرقام، وشرطة سفلية فقط",
+            "usernameTaken": "اسم المستخدم مستخدم بالفعل",
+            "invalidDate": "أدخل تاريخاً صحيحاً",
+            "invalidGender": "اختر النوع",
+            "professionTooLong": "وصف المهنة طويل جداً (الحد 80 حرفاً)",
+            "currentPasswordRequired": "أدخل كلمة المرور الحالية",
+            "newPasswordRequired": "أدخل كلمة مرور جديدة",
+            "passwordTooShort": "كلمة المرور يجب أن لا تقل عن 8 أحرف",
+            "passwordWeak": "يجب أن تتضمن كلمة المرور حروفاً كبيرة وصغيرة وأرقاماً",
+            "passwordsNotMatch": "كلمتا المرور غير متطابقتين",
+            "saveProfileFailed": "تعذر حفظ الملف. تحقق من الاتصال وحاول مرة أخرى.",
+            "noChangesToSave": "لا تغييرات للحفظ",
+            "securitySection": "الأمان",
+            "securityTitle": "تغيير كلمة المرور",
+            "securityDescription": "حدّث كلمة مرورك بانتظام للحفاظ على الأمان.",
+            "currentPassword": "كلمة المرور الحالية",
+            "newPassword": "كلمة المرور الجديدة",
+            "confirmNewPassword": "تأكيد كلمة المرور الجديدة",
+            "passwordTip": "نصيحة: استخدم 12 حرفاً على الأقل مع أرقام ورموز. لا تعِد استخدام كلمات المرور من مواقع أخرى.",
+            "updatingPassword": "جارٍ تحديث كلمة المرور...",
+            "updatePassword": "تحديث كلمة المرور",
+            "forgotPassword": "نسيت كلمة المرور؟",
+            "forgotPasswordSuccess": "تم إرسال بريد لإعادة التعيين! تحقق من بريدك.",
+            "forgotPasswordError": "فشل إرسال بريد إعادة التعيين. حاول لاحقاً.",
+            "forgotPasswordNoEmail": "لا يوجد بريد مرتبط بحسابك.",
+            "sendingReset": "جارٍ الإرسال...",
+            "notificationsSection": "الإشعارات",
+            "notificationsTitle": "اختر ما يهمك",
+            "notificationsDescription": "حدد التحديثات التي ترغب بها.",
+            "notificationDescription": "ابقَ على اطلاع بالتحديثات الهامة.",
+            "savingNotifications": "جارٍ الحفظ...",
+            "savePreferences": "حفظ التفضيلات",
+            "saveProfileSuccess": "تم تحديث ملفك بنجاح.",
+            "savePreferencesFailed": "تعذر حفظ التفضيلات. حاول مرة أخرى.",
+            "savePreferencesSuccess": "تم حفظ تفضيلاتك.",
+            "saveNotificationsFailed": "تعذر حفظ إعدادات الإشعارات. حاول مرة أخرى.",
+            "saveNotificationsSuccess": "تم حفظ تفضيلات الإشعارات.",
+            "updatePasswordFailed": "تعذر تحديث كلمة المرور. تحقق من الكلمة الحالية وحاول مجدداً.",
+            "updatePasswordSuccess": "تم تغيير كلمة المرور بنجاح.",
+            "accountActionFailed": "تعذر تنفيذ الطلب. حاول مرة أخرى أو تواصل مع الدعم.",
+            "accountDeleted": "تم حذف حسابك وإلغاء أي طلبات معلقة.",
+            "emailRequiresRecentLogin": "للأمان، يرجى تسجيل الدخول مجدداً قبل تغيير البريد أو حذف الحساب.",
+            "emailUpdateFailed": "تعذر تحديث البريد. حاول بعد قليل.",
+            "wrongPassword": "كلمة المرور الحالية غير صحيحة",
+            "weakPassword": "يرجى اختيار كلمة مرور أقوى",
+            "tooManyRequests": "محاولات كثيرة. انتظر بضع دقائق قبل المحاولة.",
+            "invalidImageFile": "اختر ملف صورة صالح (PNG, JPG, أو WebP)",
+            "imageTooLarge": "الصورة كبيرة. اختر ملفاً أقل من 2 ميجابايت",
+            "fileReadError": "تعذر قراءة الملف. حاول مرة أخرى.",
+            "accountDeactivated": "تم تعطيل حسابك. يمكنك إعادة تفعيله بتسجيل الدخول.",
+            "accountDeletionRequested": "تم تسجيل طلب الحذف. سيتواصل فريق الدعم خلال 24 ساعة.",
+            "passwordResetEmailSent": "تم إرسال بريد لإعادة تعيين كلمة المرور. تحقق من البريد واتبع التعليمات.",
+            "saving": "جارٍ الحفظ...",
+            "updating": "جارٍ التحديث...",
+            "processing": "جارٍ المعالجة...",
+            "loading": "جارٍ التحميل...",
+            "fix_errors": "يرجى إصلاح الأخطاء التالية قبل الحفظ:",
+            "fix_errors_short": "تحقق من هذه الحقول للمتابعة:",
+            "photo_link_toggle": "استخدام رابط صورة (اختياري)",
+            "photo_link_toggle_hide": "إخفاء رابط الصورة"
+        }
+    },
+    "products": {
+        "title": "المنتجات",
+        "search": "ابحث عن المنتجات...",
+        "sortLabel": "ترتيب",
+        "sort": {
+            "createdAt": "الأحدث",
+            "price": "السعر",
+            "title": "أبجدي"
+        },
+        "asc": "تصاعدي",
+        "desc": "تنازلي",
+        "perPage": "لكل صفحة",
+        "error": "فشل تحميل المنتجات.",
+        "fallback": "لا تزال المنتجات تتزامن. نعرض الكتالوج الأساسي حتى تجهز قاعدة البيانات.",
+        "noResults": "لا توجد منتجات.",
+        "noImage": "لا توجد صورة",
+        "addToCart": "أضف إلى السلة",
+        "inCart": "في السلة",
+        "details": {
+            "loading": "جاري تحميل المنتج...",
+            "errorTitle": "المنتج غير موجود",
+            "errorMessage": "لم نتمكن من العثور على هذا المنتج. جرّب تصفح الكتالوج.",
+            "backToProducts": "العودة للمنتجات",
+            "back": "العودة للمنتجات",
+            "price": "السعر",
+            "currency": "ج.م",
+            "contactForPrice": "تواصل لمعرفة السعر",
+            "inStock": "متوفر",
+            "outOfStock": "غير متوفر",
+            "inCart": "مضاف إلى السلة",
+            "addToCart": "أضف إلى السلة",
+            "addFav": "أضف للمفضلة",
+            "removeFav": "إزالة من المفضلة",
+            "category": "الفئة",
+            "sku": "كود المنتج",
+            "stock": "المخزون",
+            "units": "وحدات",
+            "tabDescription": "الوصف",
+            "tabSpecs": "المواصفات",
+            "tabFaq": "الأسئلة الشائعة",
+            "noDescription": "لا يوجد وصف متاح.",
+            "noSpecs": "لا توجد مواصفات مضافة.",
+            "noFaq": "لا توجد أسئلة شائعة بعد.",
+            "askAiCta": "هل لديك سؤال حول المنتج؟ اسأل الـAI الآن",
+            "askAiButton": "اسأل الذكاء الاصطناعي",
+            "noImage": "لا توجد صورة متاحة"
+        }
+    },
+    "home": {
+        "heroTitle": "التسوق الذكي يبدأ من هنا",
+        "heroSubtitle": "متجرك المتكامل للمنتجات عالية الجودة، والموارد الخبيرة، ونصائح زراعية مدعومة بالذكاء الاصطناعي.",
+        "shopByCategory": "تسوق حسب الفئة",
+        "categoryFallback": "فئة",
+        "categoryNoteFallback": "تصفح المنتجات",
+        "topArticles": "أفضل المقالات",
+        "articleFallback": "مقال",
+        "ecoBannerTitle": "حلول زراعية مستدامة",
+        "ecoBannerText": "ابدأ بخطوات صغيرة: قلل الهدر، احفظ المياه، وخفّض التكلفة بنسبة تصل إلى 20% بفضل تقنياتنا وأنظمتنا الذكية. كُن جزءاً من مجتمع مزارع واعٍ يدعم الاستدامة!",
+        "vetHelpTitle": "الدعم البيطري بين يديك",
+        "vetHelpText": "استشر أطبائنا البيطريين وخبراء الزراعة عبر محادثة سريعة لتحصل على توصيات دقيقة عن صحة القطيع، التغذية، والوقاية قبل ظهور المشكلة.",
+        "contactVet": "تواصل مع خبيرنا البيطري",
+        "readMore": "اقرأ المزيد",
+        "shopAllProducts": "تسوق كل المنتجات",
+        "addToCart": "أضف إلى السلة",
+        "featuredProducts": "منتجات مميزة",
+        "viewAll": "عرض الكل"
+    },
+    "footer": {
+        "brandName": "متجر فارم فيت",
+        "brandDescription": "منتجات بيطرية موثوقة بأعلى جودة وأسعار معقولة.",
+        "quickLinks": "روابط سريعة",
+        "home": "الرئيسية",
+        "products": "المنتجات",
+        "about": "من نحن",
+        "contact": "تواصل معنا",
+        "followUs": "تابعنا",
+        "copyright": "© {{year}} متجر فارم فيت. جميع الحقوق محفوظة."
+    }
 }

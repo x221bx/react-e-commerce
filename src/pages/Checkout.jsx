@@ -25,6 +25,7 @@ import { useUserProfile } from "../hooks/useUserProfile";
 import { useOrderSummary } from "../hooks/useOrderSummary";
 import { useCardValidation } from "../hooks/useCardValidation";
 import { UseTheme } from "../theme/ThemeProvider";
+import Footer from "../Authcomponents/Footer";
 
 const formatSavedMethod = (method) => {
   if (!method) return "";
@@ -67,7 +68,14 @@ export default function Checkout() {
     user?.name || user?.displayName || user?.username || userEmail || "";
 
   // form hooks
-  const { form, setForm, errors, formErrors, validate } = useCheckoutForm(user);
+  const {
+    form,
+    setForm,
+    errors,
+    formErrors,
+    validate,
+    handlePhoneChange,
+  } = useCheckoutForm(user);
 
   const {
     methods,
@@ -410,7 +418,12 @@ export default function Checkout() {
               </div>
             )}
 
-            <CheckoutContactForm form={form} setForm={setForm} errors={errors} />
+            <CheckoutContactForm
+              form={form}
+              setForm={setForm}
+              errors={errors}
+              handlePhoneChange={handlePhoneChange}
+            />
             <CheckoutShippingForm form={form} setForm={setForm} errors={errors} />
 
             <CheckoutPaymentSection
@@ -467,6 +480,8 @@ export default function Checkout() {
           />
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 }

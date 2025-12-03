@@ -8,6 +8,7 @@ import { selectCurrentUser } from "../features/auth/authSlice";
 import { useUserNotifications } from "../hooks/useUserNotifications";
 import Button from "../components/ui/Button";
 import { UseTheme } from "../theme/ThemeProvider";
+import Footer from "../Authcomponents/Footer";
 
 const categoryIconMap = {
   orders: FiPackage,
@@ -247,6 +248,8 @@ export default function Notifications() {
           })
         )}
       </div>
+
+      <Footer />
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiCheckCircle } from "react-icons/fi";
 import { useSelector } from "react-redux";
+import Footer from "../Authcomponents/Footer";
 
 export default function SuccessPage() {
   const navigate = useNavigate();
@@ -52,6 +53,8 @@ export default function SuccessPage() {
           </button>
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 }

@@ -17,6 +17,7 @@ const PersonalSection = ({
   isSavingProfile,
   hasUnsavedChanges,
   errors = {},
+  handlePhoneChange,
 }) => {
   const { t } = useTranslation();
   const errorEntries = Object.entries(errors || {});
@@ -170,10 +171,23 @@ const PersonalSection = ({
             inputMode="numeric"
             maxLength={11}
             value={profile.profileForm.phone}
-            onChange={(e) => {
-              const digitsOnly = e.target.value.replace(/\D/g, "").slice(0, 11);
-              handleProfileChange("phone", digitsOnly);
-            }}
+            aria-invalid={!!errors.phone}
+            onChange={(e) =>
+              handlePhoneChange
+                ? handlePhoneChange(e.target.value)
+                : handleProfileChange(
+                    "phone",
+                    e.target.value.replace(/\D/g, "").slice(0, 11)
+                  )
+            }
+            onBlur={(e) =>
+              handlePhoneChange
+                ? handlePhoneChange(e.target.value)
+                : handleProfileChange(
+                    "phone",
+                    e.target.value.replace(/\D/g, "").slice(0, 11)
+                  )
+            }
             placeholder={t("settings.phone_placeholder", "01XXXXXXXXX")}
             error={errors.phone}
           />

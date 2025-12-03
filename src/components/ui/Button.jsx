@@ -2,11 +2,15 @@ import { motion as Motion } from "framer-motion";
 import { UseTheme } from "../../theme/ThemeProvider";
 
 export default function Button({
-  text = "Click Me",
+  text,
+  children,
   onClick = () => {},
   className = "",
   full = false, // ✅ لو عايز الزرار ياخد عرض كامل
   size = "md", // sm / md / lg
+  type = "button",
+  disabled = false,
+  ariaLabel,
 }) {
   const { theme } = UseTheme();
 
@@ -21,19 +25,24 @@ export default function Button({
       whileHover={{ scale: 1.03 }}
       whileTap={{ scale: 0.95 }}
       onClick={onClick}
+      type={type}
+      disabled={disabled}
+      aria-label={ariaLabel}
       className={`
         ${full ? "w-full" : "w-fit"}
         ${sizes[size]}
+        inline-flex items-center justify-center whitespace-nowrap
         rounded-lg font-semibold transition-all duration-300
         ${
           theme === "dark"
-            ? "bg-[#B8E4E6] text-[#0e1b1b] hover:bg-[#a7d8da]"
-            : "bg-[#2F7E80] text-white hover:bg-[#256b6d]"
+            ? "bg-pale-teal text-dark-text hover:bg-hover-pale"
+            : "bg-accent-teal text-white hover:bg-hover-teal"
         }
+        disabled:opacity-60 disabled:cursor-not-allowed
         ${className}
       `}
     >
-      {text}
+      {children ?? text}
     </Motion.button>
   );
 }

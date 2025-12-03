@@ -9,7 +9,13 @@ import {
   deleteArticle,
   updateArticle,
 } from "../../services/articlesService";
-import { generateAiDraft, reviewArticleWithAI, generateSEOWithAI } from "../../utils/aiHelpers";
+import {
+  generateAiDraft,
+  reviewArticleWithAI,
+  generateSEOWithAI,
+  buildArticleRagContext,
+  askArticlesRag,
+} from "../../utils/aiHelpers";
 import { UseTheme } from "../../theme/ThemeProvider";
 import { ArticleForm, ArticleList, PublishOverlay, PreviewModal } from "./components";
 
@@ -123,6 +129,10 @@ const AdminArticles = () => {
   const [aiTopic, setAiTopic] = useState("");
   const [aiLines, setAiLines] = useState(5);
   const [productContext, setProductContext] = useState("");
+  const [aiDrafting, setAiDrafting] = useState(false);
+  const [ragQuestion, setRagQuestion] = useState("");
+  const [ragAnswer, setRagAnswer] = useState("");
+  const [ragLoading, setRagLoading] = useState(false);
 
   // New state for enhanced features
   const [showPreview, setShowPreview] = useState(false);
@@ -132,6 +142,50 @@ const AdminArticles = () => {
   const [showPublishOverlay, setShowPublishOverlay] = useState(false);
   const [seoSuggestions, setSeoSuggestions] = useState(null);
   const [generatingSEO, setGeneratingSEO] = useState(false);
+
+  const ragContext = useMemo(
+    () => buildArticleRagContext(articles, 8),
+    [articles]
+  );
+
+  const topArticles = useMemo(() => {
+    if (!Array.isArray(articles)) return [];
+    return [...articles]
+      .map((a) => ({
+        ...a,
+        _score:
+          (a.likes || 0) * 3 +
+          (a.views || 0) * 0.5 +
+          (Array.isArray(a.comments) ? a.comments.length : 0) * 2,
+      }))
+      .sort((a, b) => (b._score || 0) - (a._score || 0))
+      .slice(0, 3);
+  }, [articles]);
+
+  const validateFormFields = () => {
+    const title = (form.title || "").trim();
+    const summary = (form.summary || "").trim();
+    const content = (form.content || "").trim();
+    const author = (form.author || "").trim();
+
+    if (!title) {
+      toast.error("Title is required");
+      return false;
+    }
+    if (!summary) {
+      toast.error("Summary is required");
+      return false;
+    }
+    if (!content) {
+      toast.error("Content is required");
+      return false;
+    }
+    if (!author) {
+      toast.error("Author is required");
+      return false;
+    }
+    return true;
+  };
 
   const handleChange = (event) => {
     const { name, value, type, checked } = event.target;
@@ -168,7 +222,7 @@ const AdminArticles = () => {
     });
   };
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     if (!aiTopic) {
       toast.error("Select a topic focus before generating.");
       return;
@@ -177,22 +231,31 @@ const AdminArticles = () => {
       toast.error("Describe the product or context for the article.");
       return;
     }
-    const draft = generateAiDraft({
-      topicKey: aiTopic,
-      productContext,
-      lineCount: aiLines,
-    });
-    setForm((prev) => ({
-      ...prev,
-      title: prev.title || draft.title,
-      summary: draft.summary,
-      content: draft.content,
-      tag: draft.tag,
-      heroImage: prev.heroImage || draft.heroImage,
-      readTime: computeReadTime(draft.content, draft.readTime),
-      author: prev.author || draft.author || "Product Specialist",
-    }));
-
+    setAiDrafting(true);
+    try {
+      const draft = await generateAiDraft({
+        topicKey: aiTopic,
+        productContext,
+        lineCount: aiLines,
+        ragContext,
+      });
+      setForm((prev) => ({
+        ...prev,
+        title: prev.title || draft.title,
+        summary: draft.summary || prev.summary,
+        content: draft.content || prev.content,
+        tag: draft.tag || prev.tag,
+        heroImage: prev.heroImage || draft.heroImage,
+        readTime: computeReadTime(draft.content || prev.content, draft.readTime),
+        author: prev.author || draft.author || "Product Specialist",
+      }));
+      toast.success("AI draft generated with RAG context!");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to generate draft");
+    } finally {
+      setAiDrafting(false);
+    }
   };
 
   const handleGenerateTitle = async () => {
@@ -200,13 +263,21 @@ const AdminArticles = () => {
       toast.error("Add content or summary first");
       return;
     }
+    setAiDrafting(true);
     try {
       // Assume aiHelpers has generateTitle function
-      const generatedTitle = await generateAiDraft({ content: form.content || form.summary, type: 'title' });
+      const generatedTitle = await generateAiDraft({
+        content: form.content || form.summary,
+        type: "title",
+        ragContext,
+      });
       setForm(prev => ({ ...prev, title: generatedTitle.title }));
       toast.success("Title generated!");
-    } catch {
+    } catch (error) {
+      console.error(error);
       toast.error("Failed to generate title");
+    } finally {
+      setAiDrafting(false);
     }
   };
 
@@ -215,12 +286,20 @@ const AdminArticles = () => {
       toast.error("Add content first");
       return;
     }
+    setAiDrafting(true);
     try {
-      const generatedSummary = await generateAiDraft({ content: form.content, type: 'summary' });
+      const generatedSummary = await generateAiDraft({
+        content: form.content,
+        type: "summary",
+        ragContext,
+      });
       setForm(prev => ({ ...prev, summary: generatedSummary.summary }));
       toast.success("Summary generated!");
-    } catch {
+    } catch (error) {
+      console.error(error);
       toast.error("Failed to generate summary");
+    } finally {
+      setAiDrafting(false);
     }
   };
 
@@ -230,12 +309,23 @@ const AdminArticles = () => {
       toast.error("Add content first");
       return;
     }
+    setAiDrafting(true);
     try {
-      const rewritten = generateAiDraft({ content: form.content, style });
-      setForm(prev => ({ ...prev, content: rewritten }));
+      const rewritten = await generateAiDraft({
+        content: form.content,
+        style,
+        ragContext,
+      });
+      const newContent = typeof rewritten === "string" ? rewritten : rewritten?.content;
+      if (newContent) {
+        setForm((prev) => ({ ...prev, content: newContent }));
+      }
       toast.success("Content rewritten!");
-    } catch {
+    } catch (error) {
+      console.error(error);
       toast.error("Failed to rewrite content");
+    } finally {
+      setAiDrafting(false);
     }
   };
 
@@ -266,10 +356,18 @@ const AdminArticles = () => {
   const handleAiReview = async () => {
     setReviewing(true);
     try {
-      const review = await reviewArticleWithAI(form);
-      setAiReview(review);
-      setActiveTab("review");
-      toast.success("AI review completed!");
+      const review = await reviewArticleWithAI(form, ragContext);
+      if (!review || review.error) {
+        setAiReview(
+          review || { error: true, message: "AI review unavailable (check OpenRouter key or network)." }
+        );
+        setActiveTab("review");
+        toast.error(review?.message || "AI review unavailable (check OpenRouter key or network).");
+      } else {
+        setAiReview(review);
+        setActiveTab("review");
+        toast.success("AI review completed!");
+      }
     } catch {
       toast.error("AI review failed");
     } finally {
@@ -280,7 +378,7 @@ const AdminArticles = () => {
   const handleGenerateSEO = async () => {
     setGeneratingSEO(true);
     try {
-      const seoData = await generateSEOWithAI(form);
+      const seoData = await generateSEOWithAI(form, ragContext);
       setSeoSuggestions(seoData);
       setForm(prev => ({
         ...prev,
@@ -297,6 +395,27 @@ const AdminArticles = () => {
     }
   };
 
+  const handleRagAsk = async () => {
+    if (!ragQuestion.trim()) {
+      toast.error("Add a question first");
+      return;
+    }
+    setRagLoading(true);
+    try {
+      const answer = await askArticlesRag({
+        question: ragQuestion,
+        ragContext,
+      });
+      setRagAnswer(answer);
+      toast.success("AI answer ready");
+    } catch (error) {
+      console.error(error);
+      toast.error("RAG answer failed");
+    } finally {
+      setRagLoading(false);
+    }
+  };
+
 
   // Autosave draft every 10 seconds
   useEffect(() => {
@@ -308,6 +427,7 @@ const AdminArticles = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    if (!validateFormFields()) return;
 
     // Only show overlay for content tab (publishing/updating articles)
     if (activeTab === "content") {
@@ -320,6 +440,10 @@ const AdminArticles = () => {
   };
 
   const handleConfirmPublish = async () => {
+    if (!validateFormFields()) {
+      setShowPublishOverlay(false);
+      return;
+    }
     setSubmitting(true);
     try {
       const { titleAr, summaryAr, contentAr, publishDate, ...rest } = form;
@@ -528,6 +652,86 @@ const AdminArticles = () => {
           </div>
         </header>
 
+        <div className="mt-6 grid gap-4 lg:grid-cols-3">
+          <div className="rounded-2xl border border-muted bg-panel p-4 shadow-sm">
+            <p className="text-xs font-semibold uppercase text-[var(--text-muted)] mb-2">
+              AI RAG Workbench
+            </p>
+            <p className="text-sm text-[var(--text-muted)] mb-3">
+              Ask about trends or gaps using the existing article knowledge base.
+            </p>
+            <textarea
+              value={ragQuestion}
+              onChange={(e) => setRagQuestion(e.target.value)}
+              rows={3}
+              placeholder="Example: What topics are missing for irrigation safety?"
+              className="w-full rounded-xl border border-muted bg-surface px-3 py-2 text-sm text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+            <div className="mt-3 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleRagAsk}
+                disabled={ragLoading || !ragContext}
+                className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-500 disabled:opacity-60"
+              >
+                {ragLoading ? "Thinking..." : "Ask AI"}
+              </button>
+              {!ragContext && (
+                <span className="text-xs text-amber-600">
+                  Add articles to feed the RAG context.
+                </span>
+              )}
+            </div>
+            {ragAnswer && (
+              <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50/40 p-3 text-sm text-[var(--text-main)]">
+                {ragAnswer}
+              </div>
+            )}
+          </div>
+
+          <div className="lg:col-span-2 rounded-2xl border border-muted bg-panel p-4 shadow-sm">
+            <div className="flex items-center justify-between gap-2 mb-3">
+              <p className="text-xs font-semibold uppercase text-[var(--text-muted)]">
+                Top articles (likes + views)
+              </p>
+              <span className="text-[11px] text-[var(--text-muted)]">
+                Auto-ranked by engagement
+              </span>
+            </div>
+            <div className="grid gap-3 md:grid-cols-3">
+              {topArticles.map((article) => (
+                <div
+                  key={article.id}
+                  className="rounded-xl border border-muted bg-surface p-3 shadow-sm flex flex-col gap-2"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-[var(--text-main)] line-clamp-2">
+                        {article.title}
+                      </p>
+                      <p className="text-[11px] text-[var(--text-muted)]">
+                        {article.tag || "General"}
+                      </p>
+                    </div>
+                    <div className="text-right text-xs text-[var(--text-muted)]">
+                      <div>👍 {article.likes || 0}</div>
+                      <div>👁️ {article.views || 0}</div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-[var(--text-muted)] line-clamp-3">
+                    {article.summary || "No summary provided."}
+                  </p>
+                </div>
+              ))}
+              {topArticles.length === 0 && (
+                <div className="col-span-3 rounded-xl border border-dashed border-muted bg-surface p-4 text-sm text-[var(--text-muted)]">
+                  No published articles yet. Add content to power the leaderboard.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
         <div className="mt-8 grid gap-6 lg:grid-cols-3">
           <ArticleForm
             form={form}
@@ -552,6 +756,7 @@ const AdminArticles = () => {
             seoSuggestions={seoSuggestions}
             handleGenerateSEO={handleGenerateSEO}
             generatingSEO={generatingSEO}
+            aiDrafting={aiDrafting}
             aiReview={aiReview}
             handleAiReview={handleAiReview}
             reviewing={reviewing}
@@ -590,4 +795,3 @@ const AdminArticles = () => {
 };
 
 export default AdminArticles;
-
