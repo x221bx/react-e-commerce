@@ -1,3 +1,4 @@
+// src/pages/UserSettings/components/Navigation.jsx
 import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { navCategories, navItems } from "../utils/constants";
@@ -78,12 +79,12 @@ const Navigation = ({
   const activeCategoryDescription = getCategoryDescription(activeCategoryCopy) || "Personal information and security";
   const activeCategoryHelper = getCategoryHelper(activeCategoryCopy) || "Keep your personal and security details accurate.";
 
-  const categoryActiveClasses = isDarkMode
-    ? "bg-slate-700 text-emerald-100 shadow"
-    : "bg-gradient-to-r from-green-50 to-amber-50 text-green-900 shadow";
+const categoryActiveClasses = isDarkMode
+  ? "bg-[#144344] text-white shadow-lg"
+  : "bg-[#2F7E80] !text-white shadow";
   const categoryIdleClasses = isDarkMode
-    ? "text-slate-300 hover:text-white"
-    : "text-slate-600 hover:text-slate-900";
+  ? "bg-[#0f1d1d] text-slate-300 hover:bg-[#142626]"
+  : "bg-white text-slate-600 hover:bg-slate-100";
   const sectionActiveClasses = isDarkMode
     ? "bg-emerald-900/30 text-emerald-200 border border-emerald-800"
     : "bg-emerald-50 text-emerald-700 border border-emerald-200";
@@ -95,7 +96,7 @@ const Navigation = ({
     return (
       <div className="space-y-6">
         {/* Category Tabs - Mobile-First Design */}
-        <div className="flex gap-1 rounded-2xl bg-slate-100 p-1 dark:bg-slate-800">
+        <div className="flex gap-1 rounded-2xl bg-transparent">
           {navCategories.map((category) => {
             const isCategoryActive = category.id === activeCategory;
             const CategoryIcon = category.icon;

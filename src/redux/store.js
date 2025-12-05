@@ -16,9 +16,11 @@ export const store = configureStore({
     favorites,
     ordersSlice,
   },
-  preloadedState: {
-    cart: { items: savedCart }, // <-- هنا الـ cart هيبدأ بالبيانات المحفوظة
+ preloadedState: {
+  cart: {
+    items: Array.isArray(savedCart) ? savedCart : [],
   },
+},
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: false,

@@ -1,7 +1,27 @@
 // src/features/cart/cartSlice.js
 import { createSlice } from "@reduxjs/toolkit";
 
-const savedCart = JSON.parse(localStorage.getItem("cartItems") || "[]");
+// Pick saved cart for current user (if logged in) or guest key
+const getCurrentUserId = () => {
+  try {
+    const authUser = JSON.parse(localStorage.getItem("authUser") || "null");
+    return authUser?.uid || null;
+  } catch {
+    return null;
+  }
+};
+
+const getCartStorageKey = () => {
+  const uid = getCurrentUserId();
+  return uid ? `cartItems_${uid}` : "cartItems";
+};
+
+const rawSavedCart = JSON.parse(localStorage.getItem(getCartStorageKey()) || "[]");
+
+// Deep clone initial cart items to prevent reference sharing with favorites
+const savedCart = Array.isArray(rawSavedCart)
+  ? rawSavedCart.map(item => JSON.parse(JSON.stringify(item)))
+  : [];
 
 const cartSlice = createSlice({
   name: "cart",
@@ -13,7 +33,10 @@ const cartSlice = createSlice({
     addToCart: (state, action) => {
       const product = action.payload;
 
-      const exists = state.items.find((i) => i.id === product.id);
+      // store a deep-cloned product to avoid retaining references
+      const prod = JSON.parse(JSON.stringify(product || {}));
+
+      const exists = state.items.find((i) => i.id === prod.id);
 
       if (exists) {
         if (exists.quantity < (exists.stock || Infinity)) {
@@ -24,13 +47,18 @@ const cartSlice = createSlice({
         }
       } else {
         state.items.push({
-          ...product,
+          ...prod,
           quantity: 1,
           maxReached: false,
         });
       }
 
-      localStorage.setItem("cartItems", JSON.stringify(state.items));
+      // persist to user-specific key when logged in, otherwise guest key
+      try {
+        localStorage.setItem(getCartStorageKey(), JSON.stringify(state.items));
+      } catch (e) {
+        console.warn("Failed to persist cart to localStorage", e);
+      }
     },
 
     decreaseQuantity: (state, action) => {
@@ -39,17 +67,41 @@ const cartSlice = createSlice({
         item.quantity -= 1;
         item.maxReached = false;
       }
-      localStorage.setItem("cartItems", JSON.stringify(state.items));
+      try {
+        localStorage.setItem(getCartStorageKey(), JSON.stringify(state.items));
+      } catch (e) {
+        console.warn("Failed to persist cart to localStorage", e);
+      }
     },
 
     removeFromCart: (state, action) => {
       state.items = state.items.filter((i) => i.id !== action.payload);
-      localStorage.setItem("cartItems", JSON.stringify(state.items));
+      try {
+        localStorage.setItem(getCartStorageKey(), JSON.stringify(state.items));
+      } catch (e) {
+        console.warn("Failed to persist cart to localStorage", e);
+      }
     },
 
     clearCart: (state) => {
+      // Clear guest cart and current in-memory cart; do NOT remove user-specific storage
       state.items = [];
-      localStorage.setItem("cartItems", "[]");
+      try {
+        const uid = getCurrentUserId();
+        if (!uid) {
+          // guest clear
+          localStorage.setItem("cartItems", "[]");
+        } else {
+          // do not wipe user cart on clearCart (preserve persisted cart)
+        }
+      } catch (e) {
+        console.warn("Failed to update cart storage", e);
+      }
+    },
+
+    // Clear only in-memory cart without removing persisted per-user cart
+    clearCartLocal: (state) => {
+      state.items = [];
     },
 
     finalizeOrderLocal: (state) => {
@@ -70,13 +122,24 @@ const cartSlice = createSlice({
         };
       });
 
-      localStorage.setItem("cartItems", JSON.stringify(state.items));
+      try {
+        localStorage.setItem(getCartStorageKey(), JSON.stringify(state.items));
+      } catch (e) {
+        console.warn("Failed to persist cart to localStorage", e);
+      }
     },
 
     // 🔥 ضروري علشان الميدلواير
     setCartItems: (state, action) => {
-      state.items = action.payload || [];
-      localStorage.setItem("cartItems", JSON.stringify(state.items));
+      // Deep clone to avoid reference sharing with favorites
+      state.items = Array.isArray(action.payload)
+        ? action.payload.map(item => JSON.parse(JSON.stringify(item)))
+        : [];
+      try {
+        localStorage.setItem(getCartStorageKey(), JSON.stringify(state.items));
+      } catch (e) {
+        console.warn("Failed to persist cart to localStorage", e);
+      }
     },
   },
 });
@@ -86,6 +149,7 @@ export const {
   decreaseQuantity,
   removeFromCart,
   clearCart,
+  clearCartLocal,
   finalizeOrderLocal,
   updateCartStock,
   setCartItems,

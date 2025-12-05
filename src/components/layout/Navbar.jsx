@@ -1,4 +1,5 @@
-﻿import { useState, useEffect } from "react";
+﻿// src/components/layout/Navbar.jsx
+import { useState, useEffect } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { selectCurrentUser, signOut } from "../../features/auth/authSlice";
@@ -245,15 +246,13 @@ export default function Navbar() {
                 }}
                 className="hidden md:block px-3 py-1 text-sm bg-accent-teal text-white hover:bg-hover-teal"
               />
-              <button
+              <Button
+                text={t("auth.register")}
                 onClick={(e) => {
                   e.preventDefault();
                   navigate("/register");
                 }}
-                className="hidden md:block text-sm underline opacity-80 hover:opacity-100"
-              >
-                {t("auth.register")}
-              </button>
+                className="hidden md:block px-3 py-1 text-sm bg-accent-teal text-white hover:bg-hover-teal"/>
             </>
           )}
 

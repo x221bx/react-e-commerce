@@ -17,7 +17,7 @@ import { UseTheme } from "../theme/ThemeProvider";
 import { toggleFavourite } from "../features/favorites/favoritesSlice";
 import { addToCart } from "../features/cart/cartSlice";
 import { useCategoriesSorted } from "../hooks/useCategoriesSorted";
-
+import ProductCard from "../components/cards/ProductCard";
 const SORT_FIELDS = [
   { value: "createdAt", label: "Newest" },
   { value: "price", label: "Price" },
@@ -85,15 +85,17 @@ export default function Products() {
   const handleCardClick = (productId) => navigate(`/product/${productId}`);
 
   return (
-    <div
-      className={`
-        min-h-screen font-sans 
-        bg-gradient-to-b from-transparent to-gray-50/50 
-        dark:to-slate-800/30 
-        ${isDark ? "text-white" : "text-slate-900"}
-      `}
-    >
-      <div className="mx-auto max-w-8xl px-6 py-8">
+   <div
+  className={`
+    min-h-screen font-sans 
+    bg-gradient-to-b from-transparent to-gray-50/50 
+    dark:to-slate-800/30 
+    ${isDark ? "text-white" : "text-slate-900"}
+  `}
+>
+
+
+     <div className="mx-auto max-w-8xl flex-1">
         <div
           className={`
           rounded-2xl shadow-md border overflow-hidden
@@ -212,108 +214,9 @@ export default function Products() {
               {paginatedData.map((p) => {
                 const isFavorite = favoriteIds.has(p.id);
                 return (
-                  <li
-                    key={p.id}
-                    className={`
-                      group rounded-2xl overflow-hidden cursor-pointer transition shadow-md
-                      ${isDark
-                        ? "bg-[#0f1d1d]/70 border border-white/10 hover:shadow-lg"
-                        : "bg-white border border-gray-100 hover:shadow-lg"}
-                    `}
-                  >
-                    {/* Image */}
-                    <div
-                      className="relative h-66 w-full flex items-center justify-center bg-gray-50"
-                      onClick={() => handleCardClick(p.id)}
-                    >
-                      {p.thumbnailUrl ? (
-                        <img
-                          src={p.thumbnailUrl}
-                          alt={p.title}
-                          className="object-contain h-full w-full transition-transform duration-300 group-hover:scale-105"
-                        />
-                      ) : (
-                        <div className="text-sm text-slate-400">No image</div>
-                      )}
-
-                      {/* Price */}
-                      <div
-                        className={`
-                          absolute rtl:right-4 ltr:left-4 top-4 rounded-md px-3 py-1 text-sm font-semibold shadow-sm
-                          ${isDark ? "bg-black/40 text-white" : "bg-white/90 text-slate-800"}
-                        `}
-                      >
-                        {Number(p.price || 0).toLocaleString()} EGP
-                      </div>
-
-                      {/* Favorite */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleToggleFavorite(p);
-                        }}
-                        className={`
-                          absolute rtl:left-3 ltr:right-3 top-3 p-2 rounded-full shadow-md transition
-                          ${isDark ? "bg-gray-800/70" : "bg-white/90"}
-                        `}
-                      >
-                        {isFavorite ? (
-                          <AiFillHeart size={22} className="text-red-500" />
-                        ) : (
-                          <AiOutlineHeart
-                            size={22}
-                            className={isDark ? "text-gray-300" : "text-gray-500"}
-                          />
-                        )}
-                      </button>
-                    </div>
-
-                    {/* Product Info */}
-                    <div className="p-5">
-                      <h3
-                        onClick={() => handleCardClick(p.id)}
-                        className={`
-                          text-lg font-semibold line-clamp-2 cursor-pointer
-                          ${isDark ? "text-white" : "text-slate-900"}
-                        `}
-                      >
-                        {p.title}
-                      </h3>
-
-                      <p
-                        className={`
-                          text-sm mt-2
-                          ${isDark ? "text-white/60" : "text-slate-500"}
-                        `}
-                      >
-                        {categories.find((c) => c.id === p.categoryId)?.name ||
-                          "Unknown"}
-                      </p>
-
-                      <div className="mt-4 flex items-center justify-between gap-3">
-                        <div
-                          className={`
-                            text-sm
-                            ${isDark ? "text-white/40" : "text-slate-400"}
-                          `}
-                        >
-                          {p.sku}
-                        </div>
-
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleAddToCart(p);
-                          }}
-                          disabled={p.stock === 0}
-                          className="inline-flex items-center gap-2 rounded-lg bg-green-600 text-white px-3 py-2 text-sm font-semibold shadow hover:bg-green-700 disabled:opacity-50"
-                        >
-                          <BsCartPlus />
-                          <span>{t("products.addToCart", "Add to Cart")}</span>
-                        </button>
-                      </div>
-                    </div>
-                  </li>
+                <li key={p.id} className="scale-[0.90] origin-top">
+                <ProductCard product={p} />
+                </li>
                 );
               })}
             </ul>
@@ -332,11 +235,11 @@ export default function Products() {
           )}
         </main>
 
-        {/* Footer */}
-        <div className="mt-14">
-          <Footer />
-        </div>
       </div>
+        {/* Footer */}
+        <div className="mt-0">
+        <Footer />
+        </div>
     </div>
   );
 }

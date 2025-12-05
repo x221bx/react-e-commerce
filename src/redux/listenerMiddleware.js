@@ -13,7 +13,7 @@ import {
 } from "firebase/firestore";
 
 import { setCurrentUser, setAuthInitialized } from "../features/auth/authSlice";
-import { setCartItems, clearCart } from "../features/cart/cartSlice";
+import { setCartItems, clearCartLocal } from "../features/cart/cartSlice";
 import {
   setFavoritesItems,
   clearUserData as clearFavoritesData,
@@ -74,12 +74,19 @@ export const startAuthListener = (store) => {
   };
 
   // ---------------------------
-  // Preload from localStorage
+  // Preload from localStorage (guest keys) with deep cloning
   // ---------------------------
-  const preloadCart = JSON.parse(localStorage.getItem("cartItems") || "[]");
-  const preloadFavorites = JSON.parse(
-    localStorage.getItem("favoritesItems") || "[]"
-  );
+  const rawPreloadCart = JSON.parse(localStorage.getItem("cartItems") || "[]");
+  const rawPreloadFavorites = JSON.parse(localStorage.getItem("favoritesItems") || "[]");
+  
+  // Deep clone to prevent reference sharing
+  const preloadCart = Array.isArray(rawPreloadCart)
+    ? rawPreloadCart.map(item => JSON.parse(JSON.stringify(item)))
+    : [];
+  const preloadFavorites = Array.isArray(rawPreloadFavorites)
+    ? rawPreloadFavorites.map(item => JSON.parse(JSON.stringify(item)))
+    : [];
+  
   store.dispatch(setCartItems(preloadCart));
   store.dispatch(setFavoritesItems(preloadFavorites));
 
@@ -93,12 +100,19 @@ export const startAuthListener = (store) => {
 // LOGOUT
     // ---------------------------
     if (!fbUser) {
+    const previousUser = store.getState().auth.currentUser;
+
+    // عند تسجيل الخروج نريد مسح الحالة في الذاكرة لكن لا نمسح التخزين الخاص بالمستخدم
+    if (previousUser?.uid) {
       store.dispatch(setCurrentUser(null));
-      store.dispatch(clearCart());
+      store.dispatch(clearCartLocal());
       store.dispatch(clearFavoritesData());
-      ensureInit();
-      return;
     }
+
+  ensureInit();
+  return;
+}
+
 
     // ---------------------------
 // LOGIN
@@ -135,17 +149,18 @@ export const startAuthListener = (store) => {
 
       // ---------------------------
 // CART Subscription
-      // ---------------------------
-      cartUnsub = subscribeToUserCart(profile.uid, (cartItems) => {
-        store.dispatch(setCartItems(cartItems));
-      });
+cartUnsub = subscribeToUserCart(profile.uid, (cartItems) => {
+  if (Array.isArray(cartItems)) {
+    store.dispatch(setCartItems(cartItems));
+  }
+});
 
-      // ---------------------------
 // FAVORITES Subscription
-      // ---------------------------
-      favoritesUnsub = subscribeToUserFavorites(profile.uid, (favorites) => {
-        store.dispatch(setFavoritesItems(favorites));
-      });
+favoritesUnsub = subscribeToUserFavorites(profile.uid, (favorites) => {
+  if (Array.isArray(favorites)) {
+    store.dispatch(setFavoritesItems(favorites));
+  }
+});
 
       // ---------------------------
 // Apply locale

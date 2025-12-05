@@ -65,8 +65,8 @@ export default function OrderHistory() {
 
   // Products-style theme
   const containerBg = isDark
-    ? "bg-gradient-to-b from-transparent to-slate-800/30 text-white"
-    : "bg-gradient-to-b from-transparent to-gray-50/50 text-slate-900";
+    ? "bg-slate-950 text-white"
+    : "bg-white text-slate-900";
 
   const cardBg = isDark
     ? "bg-[#0f1d1d]/70 border border-white/10 shadow-md hover:shadow-lg"
@@ -80,7 +80,7 @@ export default function OrderHistory() {
   const mutedText = isDark ? "text-white/60" : "text-slate-600";
 
   return (
-    <div className={`min-h-screen py-8 px-4 sm:px-6 lg:px-8 ${containerBg}`}>
+    <div className="space-y-8 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">

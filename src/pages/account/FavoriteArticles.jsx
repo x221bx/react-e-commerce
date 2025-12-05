@@ -39,14 +39,7 @@ export default function FavoriteArticles() {
     : "bg-white border border-gray-200 shadow-md";
 
   return (
-    <div
-      className={`
-      min-h-screen font-sans 
-      bg-gradient-to-b from-transparent to-gray-50/50
-      dark:to-slate-800/30
-      ${isDark ? "text-white" : "text-slate-900"}
-    `}
-    >
+    <div className="space-y-8 font-sans">
       <div className="max-w-5xl mx-auto px-6 py-8 space-y-8">
         {/* HEADER */}
         <header className="space-y-2">

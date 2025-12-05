@@ -3,7 +3,7 @@ import Footer from "./Footer";
 
 export default function AuthLayout({ title, subtitle, children }) {
   return (
-    <div className="relative min-h-screen flex items-center justify-center pt-28 overflow-hidden">
+  <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* 🔥 خلفية جديدة واضحة */}
       <div className="absolute inset-0">
         <img
@@ -31,7 +31,6 @@ export default function AuthLayout({ title, subtitle, children }) {
         </div>
       </div>
 
-      <Footer />
     </div>
   );
 }

@@ -83,8 +83,8 @@ export default function SavedProducts() {
     [favourites]
   );
 
-  const handleRemove = (original) => dispatch(toggleFavourite(original));
-  const handleAddToCart = (original) => dispatch(addToCart(original));
+  const handleRemove = (original) => dispatch(toggleFavourite({ ...original }));
+  const handleAddToCart = (original) => dispatch(addToCart({ ...original }));
   const handleViewProduct = (id) => id && navigate(`/product/${id}`);
 
   const headingColor = isDark ? "text-white" : "text-slate-900";

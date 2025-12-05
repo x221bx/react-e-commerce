@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
+import toast from "react-hot-toast";
 import { UseTheme } from "../../theme/ThemeProvider";
 import { selectCurrentUser } from "../../features/auth/authSlice";
 import ConfirmDialog from "../../admin/ConfirmDialog";
@@ -39,12 +40,37 @@ export default function PaymentMethods() {
   const handleAddCard = async (cardForm) => {
     if (!user?.uid) return;
 
+    // Check for duplicate card
+    const isDuplicate = methods.some(
+      (method) =>
+        method.type === "card" &&
+        method.cardNumber === cardForm.cardNumber &&
+        method.expiryMonth === cardForm.expiryMonth &&
+        method.expiryYear === cardForm.expiryYear
+    );
+
+    if (isDuplicate) {
+      toast.error(
+        t(
+          "payments.duplicateCardError",
+          "This card already exists in your saved payment methods."
+        )
+      );
+      return;
+    }
+
     setIsAddingCard(true);
     try {
       await addCard(cardForm, cardValidation.detectBrand, generateId);
       cardValidation.resetCard();
+      toast.success(
+        t("payments.cardAddedSuccess", "Card added successfully!")
+      );
     } catch (err) {
       console.error("Failed to save card", err);
+      toast.error(
+        t("payments.cardAddedError", "Failed to add card. Please try again.")
+      );
     } finally {
       setIsAddingCard(false);
     }

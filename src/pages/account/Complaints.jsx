@@ -235,8 +235,8 @@ export default function Complaints() {
   }
 
   const heroSurface = isDark
-  ? "from-green-950 via-green-900 to-green-900/90 text-white"
-  : "from-emerald-50 via-white to-white text-slate-900";
+  ? "from-green-950 via-green-950 to-green-950 text-white"
+  : "from-emerald-100 via-emerald-50 to-emerald-50 text-slate-900";
 
   const cardSurface = isDark
   ? "bg-green-990 border-green-200 text-green-200"
@@ -245,7 +245,7 @@ export default function Complaints() {
   const metaText = isDark ? "text-slate-300" : "text-slate-600";
 
   return (
-    <div className={`min-h-screen ${isDark ? "bg-slate-950 text-white" : "bg-white text-slate-900"} py-10`}>
+    <div className={`min-h-screen ${isDark ? "bg-green-950 text-white" : "bg-emerald-100 text-slate-900"} py-10`}>
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         <div className={`rounded-3xl border shadow-sm p-6 sm:p-8 bg-gradient-to-br ${heroSurface}`}>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
