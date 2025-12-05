@@ -11,6 +11,91 @@ import { selectCurrentUser } from "../../features/auth/authSlice";
 import { UseTheme } from "../../theme/ThemeProvider";
 import { db } from "../../services/firebase";
 import Button from "../../components/ui/Button";
+import { usePagination } from "../../hooks/usePagination";
+import Pagination from "../../components/ui/Pagination";
+
+const extractResponseText = (payload) => {
+  if (!payload) return "";
+
+  // OpenAI "responses" API shape
+  if (typeof payload.output_text === "string") return payload.output_text;
+  if (Array.isArray(payload.output)) {
+    for (const item of payload.output) {
+      const textValue =
+        item?.content?.[0]?.text?.value ||
+        item?.content?.[0]?.text ||
+        item?.content?.[0]?.value;
+      if (typeof textValue === "string") return textValue;
+    }
+  }
+
+  // Chat completions shape (OpenRouter/OpenAI compatible)
+  if (Array.isArray(payload.choices)) {
+    const choice = payload.choices[0];
+    if (typeof choice?.message?.content === "string")
+      return choice.message.content;
+    if (Array.isArray(choice?.message?.content))
+      return choice.message.content.map((part) => part?.text || part).join(" ");
+    if (typeof choice?.text === "string") return choice.text;
+  }
+
+  return "";
+};
+
+const moderateMessage = async (text) => {
+  const API_KEY = import.meta.env.VITE_OR_KEY || import.meta.env.VITE_OPENAI_KEY;
+  if (!API_KEY) return { allowed: true };
+  const prompt = `
+You are a strict content moderator. Review the following message and respond with either:
+- "ALLOW" (if the text is safe to send)
+- "REJECT: <short reason>" (if it contains harassment, hate speech, sexual or violent content, or personal attacks).
+Message:
+"""${text}"""
+`;
+  try {
+    const headers = {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${API_KEY}`,
+      "X-Title": "Farm-Vet E-Shop Support",
+    };
+
+    if (typeof window !== "undefined" && window.location?.origin) {
+      headers["HTTP-Referer"] = window.location.origin;
+    }
+
+    const response = await fetch(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [{ role: "user", content: prompt }],
+          max_tokens: 200,
+        }),
+      }
+    );
+
+    if (!response.ok) throw new Error("Moderation request failed");
+
+    const data = await response.json();
+    const verdictRaw = extractResponseText(data).trim();
+    const verdict = verdictRaw.toUpperCase();
+    if (!verdict) return { allowed: true };
+    if (verdict.startsWith("ALLOW")) return { allowed: true };
+    if (verdict.startsWith("REJECT")) {
+      const reason = verdictRaw.split(":").slice(1).join(":").trim();
+      return {
+        allowed: false,
+        reason: reason || "Message contains inappropriate content",
+      };
+    }
+    return { allowed: true };
+  } catch (error) {
+    console.error("AI moderation failed", error);
+    return { allowed: false, reason: "Moderation failed, please try again" };
+  }
+};
 
 // Simple rate limiter utility
 const useRateLimiter = (maxAttempts = 3, windowMs = 60000) => {
@@ -53,6 +138,19 @@ export default function Complaints() {
   const rateLimiter = useRateLimiter(3, 60000); // 3 attempts per minute
   const [followUps, setFollowUps] = useState({});
   const [sendingFollowUps, setSendingFollowUps] = useState(new Set());
+
+  // Pagination
+  const {
+    paginatedData,
+    currentPage,
+    totalPages,
+    totalItems,
+    rangeStart,
+    rangeEnd,
+    setPage,
+  } = usePagination(complaints, 4, {
+    resetKeys: [complaints.length], // Reset to page 1 when complaints change
+  });
 
   // Merge current snapshots from queries (uid and legacy userId)
   const mergeComplaints = (uidDocs, userIdDocs) => {
@@ -201,12 +299,22 @@ export default function Complaints() {
 
     try {
       setSendingFollowUps((prev) => new Set(prev).add(complaintId));
+
+      // Moderate the message
+      const moderationVerdict = await moderateMessage(text);
+      if (!moderationVerdict.allowed) {
+        toast.error(moderationVerdict.reason);
+        return;
+      }
+
       const complaintRef = doc(db, "support", complaintId);
       await updateDoc(complaintRef, {
         userFollowUp: text,
         updatedAt: new Date()
       });
       toast.success(t("account.complaints_actions.follow_up_saved", "Follow-up sent"));
+      // Clear the text after sending
+      setFollowUps((prev) => ({ ...prev, [complaintId]: "" }));
     } catch (error) {
       console.error("Error sending follow-up:", error);
       toast.error("Failed to send follow-up");
@@ -304,8 +412,9 @@ export default function Complaints() {
             </p>
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2">
-            {complaints.map((complaint) => {
+          <div>
+            <div className="grid gap-4 md:grid-cols-2">
+              {paginatedData.map((complaint) => {
               const topicKey = complaint.topic
                 ? `account.complaints_topics.${complaint.topic}`
                 : "account.complaints_topic_fallback";
@@ -327,8 +436,13 @@ export default function Complaints() {
                       <h3 className="text-xl font-semibold leading-tight">
                         {t(topicKey, complaint.topic || t("account.complaints_topic_fallback", "General support"))}
                       </h3>
-                      {complaint.description && (
-                        <p className={`${metaText} line-clamp-2`}>{complaint.description}</p>
+                      {(complaint.message || complaint.description) && (
+                        <div className={`mt-2 p-3 rounded-lg border ${isDark ? "bg-slate-800 border-slate-700" : "bg-slate-50 border-slate-200"}`}>
+                          <p className={`text-sm font-medium ${isDark ? "text-slate-200" : "text-slate-700"}`}>
+                            {t("account.complaints_your_message", "Your Message")}
+                          </p>
+                          <p className={`text-sm ${metaText} mt-1`}>{complaint.message || complaint.description}</p>
+                        </div>
                       )}
                     </div>
                     <div className="text-right space-y-2">
@@ -403,7 +517,7 @@ export default function Complaints() {
                     )}
 
                     {/* Show message for unresolved complaints */}
-                    {complaint.status !== "closed" && complaint.status !== "resolved" && (
+                    {complaint.status !== "closed" && complaint.status !== "resolved" && !complaint.adminResponse && (
                       <div className={`text-xs ${metaText} text-center`}>
                         {t("account.complaints_actions.wait_for_resolution", "Our support team is reviewing this request.")}
                       </div>
@@ -438,6 +552,18 @@ export default function Complaints() {
                 </article>
               );
             })}
+            </div>
+
+            {/* Pagination */}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            rangeStart={rangeStart}
+            rangeEnd={rangeEnd}
+            onPageChange={setPage}
+            className="mt-8"
+          />
           </div>
         )}
 

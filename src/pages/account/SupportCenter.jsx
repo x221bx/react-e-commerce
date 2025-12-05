@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { UseTheme } from "../../theme/ThemeProvider";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
@@ -36,6 +37,7 @@ const extractResponseText = (payload) => {
 };
 
 export default function SupportCenter() {
+  const navigate = useNavigate();
   const { theme } = UseTheme();
   const { t, i18n } = useTranslation();
   const user = useSelector(selectCurrentUser);
@@ -220,6 +222,8 @@ Message:
       const resetPhone = normalizePhoneInput(user?.phone || "");
       setPhoneNumber(resetPhone);
       setPhoneError(validatePhoneNumber(resetPhone));
+      // Redirect to My Inquiries
+      navigate("/account/complaints");
     } catch (error) {
       toastMessage(
         error.message ||
