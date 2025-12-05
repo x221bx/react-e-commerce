@@ -1,4 +1,3 @@
-// src/pages/ProductDetails.jsx
 import React, { useMemo, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
@@ -233,7 +232,7 @@ export default function ProductDetails() {
 
         {showTabs && (
           <div className="mt-6 bg-[var(--bg-card)] dark:bg-[var(--bg-card)] border border-gray-200 dark:border-gray-200 rounded-2xl shadow-sm p-4 text-sm">
-            <div className="flex flex-wrap gap-4 border-b border-gray-200 dark:border-gray-200 pb-3 text-gray-600 dark:text-gray-600">
+            <div className="flex flex-wrap gap-4 border-b border-gray-200 dark:border-gray-200 pb-3 text-black-600 dark:text-gray-600">
               {[hasDescription && { key: "description", label: t("products.details.tabDescription", "Description") },
                 hasSpecs && { key: "specs", label: t("products.details.tabSpecs", "Specifications") }].filter(Boolean).map((tab) => (
                 <button
@@ -250,7 +249,7 @@ export default function ProductDetails() {
               ))}
             </div>
 
-            <div className="pt-4 text-gray-800 dark:text-gray-200 leading-relaxed min-h-[140px]">
+            <div className="pt-4 text-gray-800 leading-relaxed min-h-[140px]">
               {activeTab === "description" && hasDescription && (
                 <p>
                   {displayDescription ||

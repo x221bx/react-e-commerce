@@ -427,6 +427,7 @@ const hasProfileChanges = () => {
         name: displayName,
         email: trimmedEmail,
         username: normalizedUsername,
+        photoURL: sanitizedPhoto,
       }));
 
       setHasUnsavedChanges(false);

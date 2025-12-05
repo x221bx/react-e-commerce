@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
 
-import { selectCurrentUser } from "../../features/auth/authSlice";
+import { selectCurrentUser, signOut as signOutThunk } from "../../features/auth/authSlice";
 import { UseTheme } from "../../theme/ThemeProvider";
 import Footer from "../../Authcomponents/Footer";
 
@@ -187,6 +187,8 @@ export default function UserSettings({ variant = "standalone" }) {
     try {
       const result = await deleteUserAccount(user);
       toast.success(result.message);
+      // Log out immediately after deletion
+      dispatch(signOutThunk());
     } catch (error) {
       console.error("Account action error:", error);
       const errorMessage =

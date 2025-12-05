@@ -161,11 +161,6 @@ export default function AccountLayout() {
               </div>
             </div>
 
-            {/* Helper note */}
-            <div className={`mt-6 rounded-2xl p-4 text-xs ${helperCard}`}>
-              {t("account.helper_text")}
-            </div>
-
             {/* Navigation */}
             <nav className="mt-6 space-y-2" aria-label="Account menu">
               {navItems.map((item) => {

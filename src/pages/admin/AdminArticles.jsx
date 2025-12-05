@@ -425,6 +425,39 @@ const AdminArticles = () => {
     return () => clearInterval(interval);
   }, [form]);
 
+  // Check for scheduled articles to auto-publish every 30 seconds
+  useEffect(() => {
+    const checkScheduledArticles = async () => {
+      if (!articles.length) return;
+
+      const now = new Date();
+      const scheduledArticles = articles.filter(
+        (article) =>
+          article.status === "scheduled" &&
+          article.publishDate &&
+          new Date(article.publishDate) <= now
+      );
+
+      if (scheduledArticles.length > 0) {
+        for (const article of scheduledArticles) {
+          try {
+            await updateArticle(article.id, { status: "published" });
+            console.log(`Auto-published article: ${article.title}`);
+            toast.success(`Article "${article.title}" has been auto-published!`);
+          } catch (error) {
+            console.error(`Failed to auto-publish article ${article.id}:`, error);
+            toast.error(`Failed to auto-publish article "${article.title}"`);
+          }
+        }
+      }
+    };
+
+    // Check immediately and then every 30 seconds
+    checkScheduledArticles();
+    const interval = setInterval(checkScheduledArticles, 30000);
+    return () => clearInterval(interval);
+  }, [articles]);
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (!validateFormFields()) return;

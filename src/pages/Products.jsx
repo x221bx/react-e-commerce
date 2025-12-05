@@ -196,12 +196,21 @@ export default function Products() {
             {!isLoading && !isError && filteredList.length === 0 && (
               <div
                 className={`
-                rounded-md p-6 text-center text-sm
+                rounded-md p-6 text-center text-sm space-y-4
                 ${isDark ? "bg-white/10 border-white/20 text-white/60" :
                   "bg-gray-50 border border-gray-100 text-slate-600"}
               `}
               >
-                No products found.
+                <p>{t("products.noProductsFound", "No products found.")}</p>
+                <button
+                  onClick={() => {
+                    setQ("");
+                    setCategoryFilter("all");
+                  }}
+                  className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition"
+                >
+                  {t("products.shopProducts", "Shop Products")}
+                </button>
               </div>
             )}
           </div>

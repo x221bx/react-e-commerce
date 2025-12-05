@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { uploadImage } from "../../../services/firebase";
 import toast from "react-hot-toast";
 
@@ -15,6 +16,7 @@ const ArticleFormContent = ({
   setUploadingImage,
   aiDrafting,
 }) => {
+  const { t } = useTranslation();
   return (
     <div className="space-y-6">
       {/* Status */}
@@ -44,7 +46,7 @@ const ArticleFormContent = ({
             className="w-full rounded-lg border border-emerald-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
           />
           <p className="text-xs text-emerald-800">
-            Scheduled articles will auto-publish at this exact time.
+            {t("articles.admin.scheduledArticlesNote", "Scheduled articles will auto-publish at this exact time.")}
           </p>
         </div>
       )}

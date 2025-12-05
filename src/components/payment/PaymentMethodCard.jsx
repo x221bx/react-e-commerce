@@ -73,6 +73,11 @@ export default function PaymentMethodCard({
                                 ? `${badge.label} ${t("payments.endingIn", "ending in")} ${method.last4}`
                                 : `${badge.label} - ${method.email}`}
                         </p>
+                        {isCard && method.holder && (
+                            <p className={`text-xs ${muted} mt-1`}>
+                                {t("payments.cardHolder", "Card holder")}: {method.holder}
+                            </p>
+                        )}
                     </div>
                 </div>
 
@@ -83,10 +88,6 @@ export default function PaymentMethodCard({
                     </span>
                 )}
             </div>
-
-            {method.nickname && (
-                <p className={`mt-2 text-xs ${muted}`}>{method.nickname}</p>
-            )}
 
             <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
                 {!method.isDefault && (

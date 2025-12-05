@@ -10,10 +10,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { FiTrash2, FiArrowLeft, FiShoppingCart, FiHeart } from "react-icons/fi";
 import Footer from "../Authcomponents/Footer";
 import { UseTheme } from "../theme/ThemeProvider";
+import { useTranslation } from "react-i18next";
 
 export default function Favorites() {
   const { theme } = UseTheme();
   const isDark = theme === "dark";
+  const { t } = useTranslation();
   const favorites = useSelector((state) => state.favorites.items ?? []);
   const cart = useSelector((state) => state.cart.items);
   const dispatch = useDispatch();
@@ -32,7 +34,7 @@ export default function Favorites() {
       <div className="mx-auto max-w-6xl px-4 py-10">
         <header className="mb-8 flex items-center justify-between">
           <h1 className={`text-3xl font-bold flex items-center gap-2 ${isDark ? "text-white" : "text-gray-900"}`}>
-            <FiHeart className="text-secondary" /> My Favorites
+            <FiHeart className="text-secondary" /> {t("favorites.title", "My Favorites")}
           </h1>
 
           {favorites.length > 0 && (
@@ -40,19 +42,19 @@ export default function Favorites() {
               onClick={() => dispatch(clearFavourites())}
               className={`rounded-xl px-4 py-2 text-sm font-semibold text-white shadow transition ${isDark ? "bg-red-900 hover:bg-red-800" : "bg-red-500 hover:bg-red-600"}`}
             >
-              Clear All
+              {t("favorites.clearAll", "Clear All")}
             </button>
           )}
         </header>
 
         {favorites.length === 0 ? (
           <div className={`rounded-xl border p-10 text-center shadow-md ${isDark ? "bg-slate-800/50 border-emerald-900/30" : "bg-white/70 border-emerald-200"}`}>
-            <p className={`mb-4 text-lg ${isDark ? "text-gray-400" : "text-gray-500"}`}>No favorites yet.</p>
+            <p className={`mb-4 text-lg ${isDark ? "text-gray-400" : "text-gray-500"}`}>{t("favorites.emptyTitle", "No favorites yet.")}</p>
             <Link
               to="/products"
               className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-white shadow transition ${isDark ? "bg-emerald-700 hover:bg-emerald-800" : "bg-emerald-600 hover:bg-emerald-700"}`}
             >
-              <FiArrowLeft /> Browse Products
+              <FiArrowLeft /> {t("favorites.browseProducts", "Browse Products")}
             </Link>
           </div>
         ) : (
@@ -91,9 +93,9 @@ export default function Favorites() {
                       <button
                         onClick={() => handleBuyNow(item)}
                         className={`flex items-center gap-1 rounded-xl px-3 py-1 text-sm font-semibold text-white transition ${isDark ? "bg-emerald-700 hover:bg-emerald-800" : "bg-emerald-600 hover:bg-emerald-700"}`}
-                        title="Buy Now"
+                        title={t("favorites.buy", "Buy")}
                       >
-                        <FiShoppingCart size={16} /> Buy
+                        <FiShoppingCart size={16} /> {t("favorites.buy", "Buy")}
                       </button>
                     </div>
                   </div>

@@ -51,6 +51,14 @@ const generatePaymentMethodId = () => {
   return `payment-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 };
 
+const hashCardNumber = async (number) => {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(number);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+};
+
 export default function Checkout() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -130,6 +138,7 @@ export default function Checkout() {
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [showCardModal, setShowCardModal] = useState(false);
   const [saveCardForLater, setSaveCardForLater] = useState(false);
+  const [showOrderConfirm, setShowOrderConfirm] = useState(false);
 
   const paymentOptions = useMemo(
     () => [
@@ -177,9 +186,11 @@ export default function Checkout() {
     if (paymentMethod === "card") {
       const cardDetails = cardDetailsOverride || cardForm || {};
       const digits = (cardDetails.number || "").replace(/\D/g, "");
+      const brand = detectBrand(digits);
+      const formattedBrand = brand.charAt(0).toUpperCase() + brand.slice(1);
       return {
         type: "card",
-        label: t("checkout.payment.card.title"),
+        label: `${formattedBrand} **** ${digits.slice(-4)}`,
         holder: (cardDetails.holder || "").trim(),
         last4: digits.slice(-4),
       };
@@ -271,12 +282,22 @@ export default function Checkout() {
       return;
     }
 
-    await placeOrder();
+    setShowOrderConfirm(true);
   };
 
   const handleCardSubmit = async (cardData, shouldSave) => {
     if (!cardData) return;
     if (!validateCard()) return;
+
+    // Check for duplicate card
+    const sanitized = cardData.number.replace(/\s+/g, "");
+    const hashed = await hashCardNumber(sanitized);
+    const isDuplicate = methods.some(m => m.type === "card" && m.cardHash === hashed);
+    if (isDuplicate) {
+      toast.error(t("payments.duplicateCardError", "This card already exists in your saved payment methods."));
+      return;
+    }
+
     setShowCardModal(false);
 
     if (shouldSave && user?.uid) {
@@ -289,7 +310,12 @@ export default function Checkout() {
       }
     }
 
-    await placeOrder(cardData);
+    setShowOrderConfirm(true);
+  };
+
+  const handleConfirmOrder = async () => {
+    setShowOrderConfirm(false);
+    await placeOrder();
   };
 
   const handlePaymentSelection = (value) => {
@@ -478,6 +504,65 @@ export default function Checkout() {
             saveCardForLater={saveCardForLater}
             onSaveCardToggle={setSaveCardForLater}
           />
+
+          {/* Order confirmation modal */}
+          {showOrderConfirm && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+              <div className={`rounded-3xl border shadow-xl max-w-lg w-full p-6 ${isDark ? "bg-slate-900 border-slate-700 text-white" : "bg-white border-slate-200 text-slate-900"}`}>
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold mb-4">
+                    {t("checkout.confirm.title", "Confirm Your Order")}
+                  </h3>
+                  <p className="text-sm mb-6">
+                    {t("checkout.confirm.message", "Are you sure you want to place this order?")}
+                  </p>
+
+                  {/* Order Summary */}
+                  <div className={`rounded-xl p-4 mb-6 ${isDark ? "bg-slate-800" : "bg-slate-50"}`}>
+                    <h4 className="font-semibold mb-3">{t("checkout.summary.title", "Order Summary")}</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span>{t("checkout.summary.subtotal", "Subtotal")}:</span>
+                        <span>{summary.subtotal?.toLocaleString()} EGP</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>{t("checkout.summary.shipping", "Shipping")}:</span>
+                        <span>{summary.shipping?.toLocaleString()} EGP</span>
+                      </div>
+                      <div className="flex justify-between font-semibold border-t pt-2">
+                        <span>{t("checkout.summary.total", "Total")}:</span>
+                        <span>{summary.total?.toLocaleString()} EGP</span>
+                      </div>
+                      <div className="text-xs text-slate-500 mt-2">
+                        {t("checkout.summary.note", "Items: {{count}}", { count: cartItems.length })}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setShowOrderConfirm(false)}
+                      className={`flex-1 rounded-xl px-4 py-2 text-sm font-semibold border ${isDark ? "border-slate-700 text-slate-300 hover:bg-slate-800" : "border-slate-300 text-slate-600 hover:bg-slate-50"}`}
+                    >
+                      {t("common.cancel", "Cancel")}
+                    </button>
+                    <button
+                      onClick={handleConfirmOrder}
+                      disabled={loading}
+                      className="flex-1 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600 disabled:opacity-70"
+                    >
+                      {loading
+                        ? t("checkout.actions.processing", "Processing...")
+                        : paymentMethod === "card"
+                          ? t("checkout.confirm.confirmDeduction", "Confirm Deduction")
+                          : t("checkout.confirm.confirm", "Confirm Order")
+                      }
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

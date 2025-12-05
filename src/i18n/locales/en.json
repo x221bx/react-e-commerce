@@ -98,6 +98,13 @@
         "favorites": "Favorites",
         "cart": "Cart"
     },
+    "favorites": {
+        "title": "My Favorites",
+        "emptyTitle": "No favorites yet.",
+        "browseProducts": "Browse Products",
+        "clearAll": "Clear All",
+        "buy": "Buy"
+    },
     "auth": {
         "login": "Login",
         "register": "Sign Up",
@@ -848,6 +855,8 @@
         "error": "Failed to load products.",
         "fallback": "Live products are still syncing. Showing our core farm catalog until your database is ready.",
         "noResults": "No products found.",
+        "noProductsFound": "No products found.",
+        "shopProducts": "Shop Products",
         "noImage": "No image",
         "addToCart": "Add to Cart",
         "inCart": "In Cart",

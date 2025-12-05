@@ -12,6 +12,14 @@ import {
 } from "firebase/firestore";
 import { db } from "../services/firebase";
 
+const hashCardNumber = async (number) => {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(number);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+};
+
 export const usePaymentMethods = (userId) => {
     const [methods, setMethods] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -85,6 +93,7 @@ export const usePaymentMethods = (userId) => {
         const id = generateId();
         const sanitizedNumber = cardData.number.replace(/\s+/g, "");
         const brand = detectBrand(sanitizedNumber);
+        const cardHash = await hashCardNumber(sanitizedNumber);
 
         const newMethod = {
             id,
@@ -93,6 +102,7 @@ export const usePaymentMethods = (userId) => {
             holder: cardData.holder,
             last4: sanitizedNumber.slice(-4),
             nickname: cardData.nickname.trim(),
+            cardHash,
             isDefault: methods.length === 0 || !methods.some((m) => m.isDefault),
             createdAt: serverTimestamp(),
         };

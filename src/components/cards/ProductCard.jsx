@@ -1,5 +1,6 @@
 // src/components/cards/ProductCard.jsx
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { toggleFavourite } from "../../features/favorites/favoritesSlice";
 import { addToCart } from "../../features/cart/cartSlice";
 import { motion as Motion } from "framer-motion";
@@ -10,6 +11,7 @@ import { useTranslation } from "react-i18next";
 
 export default function ProductCard({ product, index = 0 }) {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { theme } = UseTheme();
   const { t } = useTranslation();
 
@@ -86,10 +88,11 @@ export default function ProductCard({ product, index = 0 }) {
       <Motion.div
         whileHover={{ scale: 1.05 }}
         transition={{ duration: 0.4 }}
-        className="relative z-10 w-full aspect-square bg-center bg-cover rounded-lg shadow-inner"
+        className="relative z-10 w-full aspect-square bg-center bg-cover rounded-lg shadow-inner cursor-pointer"
         style={{
           backgroundImage: `url('${imageUrl}')`,
         }}
+        onClick={() => navigate(`/product/${product.id}`)}
       />
 
       <div className="flex flex-col gap-2 text-center relative z-10">

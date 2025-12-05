@@ -98,6 +98,13 @@
         "favorites": "المفضلة",
         "cart": "السلة"
     },
+    "favorites": {
+        "title": "مفضلتي",
+        "emptyTitle": "لا توجد مفضلة بعد.",
+        "browseProducts": "تصفح المنتجات",
+        "clearAll": "مسح الكل",
+        "buy": "شراء"
+    },
     "auth": {
         "login": "تسجيل الدخول",
         "register": "إنشاء حساب",
@@ -427,7 +434,9 @@
             "add_follow_up": "إضافة متابعة",
             "send_follow_up": "إرسال المتابعة",
             "follow_up_placeholder": "أضف تفاصيل أو رقم طلب أو رابط صور لتوضيح المشكلة.",
-            "follow_up_saved": "تم إرسال المتابعة"
+            "follow_up_saved": "تم إرسال المتابعة",
+            "admin_response": "رد الإدارة",
+            "wait_for_resolution": "فريق الدعم يراجع هذا الطلب."
         },
         "admin_response": "رد الإدارة",
         "user_follow_up": "متابعتك",
@@ -515,13 +524,15 @@
             "fullName": "الاسم الكامل",
             "email": "البريد الإلكتروني",
             "phone": "رقم الهاتف",
+            "address": "العنوان",
             "addressLine1": "العنوان الأول",
             "addressLine2": "العنوان الثاني",
             "optional": "اختياري",
             "city": "المدينة",
             "state": "المحافظة / الولاية",
             "postalCode": "الرمز البريدي",
-            "country": "الدولة"
+            "country": "الدولة",
+            "notes": "ملاحظات (اختياري)"
         },
         "payment": {
             "cod": {
@@ -530,13 +541,21 @@
             },
             "card": {
                 "title": "الدفع بالبطاقة",
-                "subtitle": "ادفع بأمان عبر الإنترنت."
+                "subtitle": "اختر بطاقة موجودة أو أضف بطاقة جديدة.",
+                "dropdownHint": "اختر بطاقة محفوظة أو أضف بطاقة جديدة"
             }
         },
         "actions": {
             "backToCart": "العودة للسلة",
             "processing": "جارٍ المعالجة...",
-            "completeOrder": "إتمام الطلب"
+            "completeOrder": "إتمام الطلب",
+            "confirmOrder": "تأكيد الطلب"
+        },
+        "confirm": {
+            "title": "تأكيد طلبك",
+            "message": "هل أنت متأكد من رغبتك في تقديم هذا الطلب؟",
+            "confirm": "تأكيد الطلب",
+            "confirmDeduction": "تأكيد الخصم"
         },
         "summary": {
             "title": "ملخص الطلب",
@@ -624,6 +643,8 @@
             "cta": "تسوق الآن"
         },
         "trackingStatus": "حالة التتبع",
+        "estimated": "مقدر",
+        "viewInvoice": "عرض الفاتورة",
         "shippingInfo": "معلومات الشحن",
         "shippingTo": "الشحن إلى",
         "carrier": "شركة الشحن",
@@ -728,9 +749,17 @@
             "byline": "كتبه {{author}}",
             "emptyContent": "المحتوى قادم قريباً.",
             "share": "مشاركة",
-            "save": "حفظ"
+            "save": "حفظ",
+            "discoverMore": "اكتشف المزيد من المقالات",
+            "continueLearning": "تابع رحلتك التعليمية مع محتوى ذي صلة",
+            "browseAll": "تصفح جميع المقالات",
+            "like": "أعجبني",
+            "liked": "معجب",
+            "dislike": "لم يعجبني",
+            "disliked": "لم يعجب"
         },
         "admin": {
+            "scheduledArticlesNote": "المقالات المجدولة سيتم نشرها تلقائياً في هذا الوقت المحدد بالضبط.",
             "eyebrow": "مركز المعرفة",
             "title": "إدارة المقالات",
             "subtitle": "انشر التحديثات أو استخدم مساعد الصياغة بالذكاء الاصطناعي.",
@@ -847,6 +876,8 @@
         "error": "فشل تحميل المنتجات.",
         "fallback": "لا تزال المنتجات تتزامن. نعرض الكتالوج الأساسي حتى تجهز قاعدة البيانات.",
         "noResults": "لا توجد منتجات.",
+        "noProductsFound": "لم يتم العثور على منتجات.",
+        "shopProducts": "تسوق المنتجات",
         "noImage": "لا توجد صورة",
         "addToCart": "أضف إلى السلة",
         "inCart": "في السلة",

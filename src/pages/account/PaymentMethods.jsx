@@ -18,6 +18,14 @@ function generateId() {
   return `payment-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
+const hashCardNumber = async (number) => {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(number);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+};
+
 export default function PaymentMethods() {
   const { theme } = UseTheme();
   const { t } = useTranslation();
@@ -41,12 +49,10 @@ export default function PaymentMethods() {
     if (!user?.uid) return;
 
     // Check for duplicate card
+    const sanitized = cardForm.number.replace(/\s+/g, "");
+    const hashed = await hashCardNumber(sanitized);
     const isDuplicate = methods.some(
-      (method) =>
-        method.type === "card" &&
-        method.cardNumber === cardForm.cardNumber &&
-        method.expiryMonth === cardForm.expiryMonth &&
-        method.expiryYear === cardForm.expiryYear
+      (method) => method.type === "card" && method.cardHash === hashed
     );
 
     if (isDuplicate) {
