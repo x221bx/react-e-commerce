@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import {
   FiRefreshCw,
   FiClock,
@@ -10,14 +10,14 @@ import {
   FiPhoneCall,
 } from "react-icons/fi";
 import {
-  arrayUnion,
   collection,
   query,
   onSnapshot,
   doc,
   updateDoc,
   addDoc,
-  orderBy
+  orderBy,
+  getDoc
 } from "firebase/firestore";
 import { db } from "../../services/firebase";
 import { UseTheme } from "../../theme/ThemeProvider";
@@ -39,6 +39,14 @@ export default function AdminComplaints() {
   const [selectedComplaintId, setSelectedComplaintId] = useState(null);
   const [adminResponse, setAdminResponse] = useState("");
   const [respondingTo, setRespondingTo] = useState(null);
+  const chatContainerRef = useRef(null);
+
+  // Auto-scroll to bottom when replies change
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [complaints]);
 
   const filters = ["All", "pending", "in-progress", "resolved", "closed"];
   const sourceFilters = ["Account Support"];
@@ -49,25 +57,29 @@ export default function AdminComplaints() {
       const data = snapshot.docs.map((docSnapshot) => {
         const raw = docSnapshot.data() || {};
         const normalizedStatus = (raw.status || "pending").toLowerCase();
-        const responsesArray = Array.isArray(raw.adminResponses)
-          ? raw.adminResponses
+        const repliesArray = Array.isArray(raw.replies)
+          ? raw.replies
+          : Array.isArray(raw.adminResponses)
+          ? raw.adminResponses.map(r => ({
+              id: r.id || Date.now().toString() + Math.random().toString(36).substr(2, 9),
+              message: r.message,
+              sender: r.sender || "admin",
+              timestamp: r.timestamp || r.createdAt || raw.respondedAt || raw.createdAt
+            }))
           : raw.adminResponse
           ? [{
-            message: raw.adminResponse,
-            createdAt: raw.respondedAt || raw.updatedAt || raw.createdAt
-          }]
+              id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+              message: raw.adminResponse,
+              sender: "admin",
+              timestamp: raw.respondedAt || raw.updatedAt || raw.createdAt
+            }]
           : [];
-        const latestResponse =
-          responsesArray[responsesArray.length - 1]?.message ||
-          raw.adminResponse ||
-          "";
 
         return {
           id: docSnapshot.id,
           ...raw,
           status: normalizedStatus,
-          adminResponses: responsesArray,
-          adminResponse: latestResponse,
+          replies: repliesArray,
           source: raw.source || "account_support"
         };
       });
@@ -84,10 +96,10 @@ export default function AdminComplaints() {
   }, []);
 
   const hasAdminReply = (complaint) => {
-    const responses = Array.isArray(complaint.adminResponses)
-      ? complaint.adminResponses.length
+    const replies = Array.isArray(complaint.replies)
+      ? complaint.replies.length
       : 0;
-    return responses > 0 || Boolean(complaint.adminResponse);
+    return replies > 0;
   };
 
 
@@ -127,7 +139,7 @@ export default function AdminComplaints() {
     setTimeout(() => setRefreshing(false), 1000);
   };
 
-  const statusColorClass = (status) => {
+  const statusColorClass = () => {
     // Always green as requested
     return isDark ? "bg-emerald-900/40 text-emerald-200" : "bg-emerald-100 text-emerald-700";
   };
@@ -153,19 +165,33 @@ export default function AdminComplaints() {
     try {
       const responseText = adminResponse.trim();
       const complaint = complaints.find(c => c.id === complaintId);
-      const hasPreviousResponse = hasAdminReply(complaint);
-      const newStatus = hasPreviousResponse ? complaint.status : "in-progress";
 
-      await updateDoc(doc(db, "support", complaintId), {
-        adminResponse: responseText,
-        adminResponses: arrayUnion({
-          message: responseText,
-          createdAt: new Date()
-        }),
-        status: newStatus,
-        respondedAt: new Date(),
+      // Get current complaint data to append to replies array
+      const complaintRef = doc(db, "support", complaintId);
+      const complaintSnap = await getDoc(complaintRef);
+      const currentData = complaintSnap.data() || {};
+      const currentReplies = currentData.replies || [];
+
+      const newReply = {
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        message: responseText,
+        sender: "admin",
+        timestamp: new Date()
+      };
+
+      // Only update status if it hasn't been responded to yet
+      const updateData = {
+        replies: [...currentReplies, newReply],
         updatedAt: new Date()
-      });
+      };
+
+      if (currentReplies.length === 0) {
+        // First reply - set status to in-progress and respondedAt
+        updateData.status = "in-progress";
+        updateData.respondedAt = new Date();
+      }
+
+      await updateDoc(complaintRef, updateData);
 
       // Create notification for user
       if (complaint && (complaint.uid || complaint.userId)) {
@@ -379,19 +405,45 @@ export default function AdminComplaints() {
                       </div>
                     )}
 
-                    {complaint.adminResponse && (
-                      <div className={`p-3 rounded-lg border ${
-                        isDark ? "bg-green-900/20 border-green-800" : "bg-green-50 border-green-200"
-                      }`}>
-                        <p className="text-sm font-medium mb-1 text-green-700 dark:text-green-300">Admin Response:</p>
-                        <p className="text-sm">{complaint.adminResponse}</p>
-                        {complaint.respondedAt && (
-                          <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                            Responded: {formatDate(complaint.respondedAt)}
-                          </p>
-                        )}
+                    {/* Chat-style conversation */}
+                    <div className={`rounded-lg border ${
+                      isDark ? "bg-slate-800 border-slate-700" : "bg-gray-50 border-gray-200"
+                    }`}>
+                      <div className="p-3 border-b border-gray-200 dark:border-gray-700">
+                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
+                          Conversation ({complaint.replies.length} messages)
+                        </h4>
                       </div>
-                    )}
+                      <div ref={chatContainerRef} className="max-h-96 overflow-y-auto p-3 space-y-3">
+                        {/* Customer Message */}
+                        <div className="flex justify-start">
+                          <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                            isDark ? "bg-blue-900/30 text-blue-100" : "bg-blue-100 text-blue-900"
+                          }`}>
+                            <p className="text-sm">{complaint.message}</p>
+                            <p className="text-xs mt-1 opacity-70">
+                              {formatDate(complaint.createdAt)}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Admin Replies */}
+                        {complaint.replies
+                          .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+                          .map((reply) => (
+                          <div key={reply.id} className="flex justify-end">
+                            <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                              isDark ? "bg-emerald-700 text-white" : "bg-emerald-600 text-white"
+                            }`}>
+                              <p className="text-sm">{reply.message}</p>
+                              <p className="text-xs mt-1 opacity-70">
+                                {formatDate(reply.timestamp)}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
 
                   <div className="flex flex-col gap-2 lg:min-w-[200px]">

@@ -114,8 +114,9 @@ export const updateUserPassword = async (currentPassword, newPassword) => {
   }
 };
 
-export const deleteUserAccount = async (user) => {
+export const deleteUserAccount = async (user, password) => {
   if (!user?.uid) throw new Error("User not authenticated");
+  if (!password) throw new Error("Password is required for account deletion");
   const currentUser = auth.currentUser;
   if (!currentUser) throw new Error(getSettingsMessage("accountActionFailed"));
 
@@ -151,14 +152,34 @@ export const deleteUserAccount = async (user) => {
   }
 
   try {
+    // Re-authenticate before deletion
+    const credential = EmailAuthProvider.credential(
+      currentUser.email,
+      password
+    );
+    await reauthenticateWithCredential(currentUser, credential);
+
+    // Now delete the user
     await deleteUser(currentUser);
   } catch (error) {
     console.error("Auth delete error", error);
-    if (error.code === "auth/requires-recent-login") {
-      throw new Error(getSettingsMessage("emailRequiresRecentLogin"));
+    if (error.code === "auth/wrong-password") {
+      throw new Error("Incorrect password. Please try again.");
+    } else if (error.code === "auth/too-many-requests") {
+      throw new Error("Too many failed attempts. Please try again later.");
+    } else if (error.code === "auth/requires-recent-login") {
+      throw new Error("For security reasons, please sign out and sign back in before deleting your account.");
     }
     throw new Error(getSettingsMessage("accountActionFailed"));
   }
+
+  // Firebase Auth automatically signs out the user after deleteUser()
+  // The auth state listener in App.jsx will handle Redux state updates
+
+  // Redirect to home page after successful deletion
+  setTimeout(() => {
+    window.location.href = "/";
+  }, 1500); // Give time for success message to show
 
   return {
     success: true,
@@ -251,9 +272,11 @@ export const sendSupportMessage = async (user, messageData) => {
   }
 
   try {
+    const trimmedMessage = messageData.message.trim();
     const supportData = {
       topic: messageData.topic || "general",
-      message: messageData.message.trim(),
+      message: trimmedMessage,
+      originalMessage: trimmedMessage, // Preserve original message
       phoneNumber: messageData.phoneNumber.trim(),
       uid: user.uid,
       userId: user.uid,
