@@ -4,7 +4,7 @@ import { doc, serverTimestamp, setDoc, getDoc, deleteDoc } from "firebase/firest
 import { updateEmail, updateProfile } from "firebase/auth";
 import toast from "react-hot-toast";
 
-import { auth, db } from "../../../services/firebase";
+import { auth, db, uploadImage } from "../../../services/firebase";
 import { updateCurrentUser } from "../../../features/auth/authSlice";
 import { getProfileState } from "../utils/helpers";
 import { validateProfileField } from "../utils/validation";
@@ -162,7 +162,7 @@ export const useProfileForm = (user) => {
     setIsUploadingAvatar(true);
 
     try {
-      // Compress image aggressively for Firestore storage
+      // Compress image for Firebase Storage
       const compressImage = (file) => {
         return new Promise((resolve, reject) => {
           const canvas = document.createElement('canvas');
@@ -171,8 +171,8 @@ export const useProfileForm = (user) => {
 
           img.onload = () => {
             try {
-              // Calculate new dimensions (max 200px for profile images to stay under Firestore limits)
-              const maxSize = 200;
+              // Calculate new dimensions (max 400px for profile images)
+              const maxSize = 400;
               let { width, height } = img;
 
               if (width > height) {
@@ -194,7 +194,7 @@ export const useProfileForm = (user) => {
 
               // Always use JPEG for maximum compression (no transparency needed for profile pics)
               const outputType = 'image/jpeg';
-              const quality = 0.6; // Lower quality for smaller file size
+              const quality = 0.8; // Good quality for storage
 
               canvas.toBlob((blob) => {
                 // Clean up resources
@@ -224,45 +224,30 @@ export const useProfileForm = (user) => {
 
       const compressedFile = await compressImage(file);
 
-      // Check compressed file size (should be well under 1MB)
-      if (compressedFile.size > 500000) { // 500KB limit for safety
-        throw new Error('Compressed image is too large. Please choose a smaller image.');
-      }
+      // Upload to Firebase Storage
+      const downloadURL = await uploadImage(compressedFile, `avatars/${user.uid}/`);
 
-      // Convert to base64 for Firestore storage
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = typeof reader.result === "string" ? reader.result : "";
-        setProfileForm((prev) => ({ ...prev, photoURL: result }));
-        setUploadedAvatarName(file.name);
-        setAvatarError(false);
-        setProfileErrors((prev) => ({ ...prev, photoURL: "" }));
-        setHasUnsavedChanges(true);
-        setIsUploadingAvatar(false);
-        toast.success('Profile image processed successfully!');
-      };
-      reader.onerror = () => {
-        setIsUploadingAvatar(false);
-        toast.error('Failed to process image. Please try again.');
-        setProfileErrors((prev) => ({
-          ...prev,
-          photoURL: 'Failed to process image',
-        }));
-      };
-      reader.readAsDataURL(compressedFile);
+      // Update form with the download URL
+      setProfileForm((prev) => ({ ...prev, photoURL: downloadURL }));
+      setUploadedAvatarName(file.name);
+      setAvatarError(false);
+      setProfileErrors((prev) => ({ ...prev, photoURL: "" }));
+      setHasUnsavedChanges(true);
+      setIsUploadingAvatar(false);
+      toast.success('Profile image uploaded successfully!');
     } catch (error) {
       console.error('Avatar upload error:', error);
-      toast.error(error.message || 'Failed to process image. Please try again.');
+      toast.error(error.message || 'Failed to upload image. Please try again.');
       setProfileErrors((prev) => ({
         ...prev,
-        photoURL: error.message || 'Failed to process image',
+        photoURL: error.message || 'Failed to upload image',
       }));
       setIsUploadingAvatar(false);
     }
   };
 
   const handleAvatarReset = () => {
-    setProfileForm((prev) => ({ ...prev, photoURL: user?.photoURL || "" }));
+    setProfileForm((prev) => ({ ...prev, photoURL: "" }));
     setUploadedAvatarName("");
     setAvatarError(false);
     setProfileErrors((prev) => ({ ...prev, photoURL: "" }));

@@ -138,6 +138,7 @@ export default function Complaints() {
   const rateLimiter = useRateLimiter(3, 60000); // 3 attempts per minute
   const [followUps, setFollowUps] = useState({});
   const [sendingFollowUps, setSendingFollowUps] = useState(new Set());
+  const chatContainerRef = useRef(null);
 
   // Pagination
   const {
@@ -234,6 +235,13 @@ export default function Complaints() {
       unsubscribers.forEach((fn) => fn && fn());
     };
   }, [user?.uid]);
+
+  // Auto-scroll to bottom when complaints change
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [complaints]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -436,12 +444,12 @@ export default function Complaints() {
                       <h3 className="text-xl font-semibold leading-tight">
                         {t(topicKey, complaint.topic || t("account.complaints_topic_fallback", "General support"))}
                       </h3>
-                      {(complaint.message || complaint.description) && (
+                      {(complaint.originalMessage || complaint.message || complaint.description) && (
                         <div className={`mt-2 p-3 rounded-lg border ${isDark ? "bg-slate-800 border-slate-700" : "bg-slate-50 border-slate-200"}`}>
                           <p className={`text-sm font-medium ${isDark ? "text-slate-200" : "text-slate-700"}`}>
                             {t("account.complaints_your_message", "Your Message")}
                           </p>
-                          <p className={`text-sm ${metaText} mt-1`}>{complaint.message || complaint.description}</p>
+                          <p className={`text-sm ${metaText} mt-1`}>{complaint.originalMessage || complaint.message || complaint.description}</p>
                         </div>
                       )}
                     </div>
@@ -471,18 +479,61 @@ export default function Complaints() {
                     </div>
                   )}
 
-                  {/* Admin Response */}
-                  {complaint.adminResponse && (
-                    <div className={`flex items-start gap-3 p-3 rounded-lg border ${isDark ? "bg-green-900/20 border-green-800" : "bg-green-50 border-green-200"}`}>
-                      <MessageSquare className={`h-5 w-5 mt-0.5 ${isDark ? "text-green-400" : "text-green-600"}`} />
-                      <div className="flex-1">
-                        <p className={`text-sm font-medium ${isDark ? "text-green-300" : "text-green-800"}`}>
-                          {t("common.admin_response", "Support Response")}
-                        </p>
-                        <p className={`text-xs ${metaText}`}>{complaint.adminResponse}</p>
+                  {/* Chat-style conversation */}
+                  {(complaint.replies && complaint.replies.length > 0) || complaint.adminResponse ? (
+                    <div className={`rounded-lg border ${
+                      isDark ? "bg-slate-800 border-slate-700" : "bg-gray-50 border-gray-200"
+                    }`}>
+                      <div className="p-3 border-b border-gray-200 dark:border-gray-700">
+                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
+                          Conversation ({(complaint.replies?.length || 0) + (complaint.adminResponse ? 1 : 0)} messages)
+                        </h4>
+                      </div>
+                      <div ref={chatContainerRef} className="max-h-80 overflow-y-auto p-3 space-y-3">
+                        {/* Customer Message */}
+                        <div className="flex justify-start">
+                          <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                            isDark ? "bg-blue-900/30 text-blue-100" : "bg-blue-100 text-blue-900"
+                          }`}>
+                            <p className="text-sm">{complaint.originalMessage || complaint.message || complaint.description}</p>
+                            <p className="text-xs mt-1 opacity-70">
+                              {complaint.createdAt?.toDate?.()?.toLocaleString?.() || new Date(complaint.createdAt).toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Admin Replies */}
+                        {complaint.replies && complaint.replies
+                          .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+                          .map((reply) => (
+                          <div key={reply.id} className="flex justify-end">
+                            <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                              isDark ? "bg-emerald-700 text-white" : "bg-emerald-600 text-white"
+                            }`}>
+                              <p className="text-sm">{reply.message}</p>
+                              <p className="text-xs mt-1 opacity-70">
+                                {reply.timestamp?.toDate ? reply.timestamp.toDate().toLocaleString() : new Date(reply.timestamp).toLocaleString()}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+
+                        {/* Legacy admin response */}
+                        {complaint.adminResponse && (!complaint.replies || complaint.replies.length === 0) && (
+                          <div className="flex justify-end">
+                            <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                              isDark ? "bg-emerald-700 text-white" : "bg-emerald-600 text-white"
+                            }`}>
+                              <p className="text-sm">{complaint.adminResponse}</p>
+                              <p className="text-xs mt-1 opacity-70">
+                                {complaint.respondedAt?.toDate ? complaint.respondedAt.toDate().toLocaleString() : new Date(complaint.respondedAt).toLocaleString()}
+                              </p>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
-                  )}
+                  ) : null}
                   {complaint.userFollowUp && (
                     <div className={`flex items-start gap-3 p-3 rounded-lg border ${isDark ? "bg-emerald-900/15 border-emerald-800" : "bg-emerald-50 border-emerald-200"}`}>
                       <MessageSquare className={`h-5 w-5 mt-0.5 ${isDark ? "text-emerald-300" : "text-emerald-600"}`} />

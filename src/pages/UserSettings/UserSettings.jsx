@@ -3,13 +3,14 @@ import React, { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
 
-import { selectCurrentUser, signOut as signOutThunk } from "../../features/auth/authSlice";
+import { selectCurrentUser } from "../../features/auth/authSlice";
 import { UseTheme } from "../../theme/ThemeProvider";
 import Footer from "../../Authcomponents/Footer";
 
 // Import modular components
 import Navigation from "./components/Navigation";
 import ConfirmDialog from "./components/ConfirmDialog";
+import ReauthDialog from "./components/ReauthDialog";
 
 // Import section components
 import PersonalSection from "./components/sections/PersonalSection";
@@ -51,6 +52,10 @@ export default function UserSettings({ variant = "standalone" }) {
   const [confirmDialog, setConfirmDialog] = useState({
     open: false,
     intent: null,
+  });
+  const [reauthDialog, setReauthDialog] = useState({
+    open: false,
+    isLoading: false,
   });
   const [passwordStrength, setPasswordStrength] = useState({
     score: 0,
@@ -181,19 +186,23 @@ export default function UserSettings({ variant = "standalone" }) {
     }
   };
 
-  const handleAccountDelete = async () => {
+  const handleAccountDelete = async (password) => {
     if (!user?.uid) return;
     setPendingAccountAction("delete");
     try {
-      const result = await deleteUserAccount(user);
+      const result = await deleteUserAccount(user, password);
       toast.success(result.message);
-      // Log out immediately after deletion
-      dispatch(signOutThunk());
+
+      // Note: Firebase Auth automatically signs out the user after deleteUser()
+      // The auth state listener in App.jsx will automatically update Redux state
+      // and redirect will happen via window.location.href in the service
+
     } catch (error) {
       console.error("Account action error:", error);
       const errorMessage =
         error.message || getSettingsMessage("accountActionFailed");
       toast.error(errorMessage);
+      throw error; // Re-throw to be handled by reauth dialog
     } finally {
       setPendingAccountAction(null);
     }
@@ -204,8 +213,26 @@ export default function UserSettings({ variant = "standalone" }) {
   const closeConfirmDialog = () =>
     setConfirmDialog({ open: false, intent: null });
   const handleConfirmedAccountAction = () => {
-    handleAccountDelete();
     closeConfirmDialog();
+    setReauthDialog({ open: true, isLoading: false });
+  };
+
+  const handleReauthConfirm = async (password) => {
+    setReauthDialog(prev => ({ ...prev, isLoading: true }));
+
+    try {
+      await handleAccountDelete(password);
+      setReauthDialog({ open: false, isLoading: false });
+      // Redirect will be handled by the logout
+    } catch (error) {
+      console.error("Account deletion failed:", error);
+      setReauthDialog(prev => ({ ...prev, isLoading: false }));
+      // Error handling is done in handleAccountDelete
+    }
+  };
+
+  const handleReauthCancel = () => {
+    setReauthDialog({ open: false, isLoading: false });
   };
 
   // Clear sensitive data from memory
@@ -368,6 +395,12 @@ export default function UserSettings({ variant = "standalone" }) {
         intent={confirmDialog.intent}
         onCancel={closeConfirmDialog}
         onConfirm={handleConfirmedAccountAction}
+      />
+      <ReauthDialog
+        open={reauthDialog.open}
+        onCancel={handleReauthCancel}
+        onConfirm={handleReauthConfirm}
+        isLoading={reauthDialog.isLoading}
       />
       {!isEmbedded && <Footer />}
     </>

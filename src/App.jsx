@@ -1,11 +1,16 @@
 // src/App.jsx
 import { Routes, Route, Navigate } from "react-router-dom";
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { useDispatch } from "react-redux";
+import { onAuthStateChanged } from "firebase/auth";
 import i18n from "./i18n";
 import ProtectedRoute from "./Authcomponents/ProtectedRoute";
 import Navbar from "./components/layout/Navbar";
 import { Toaster } from "react-hot-toast";
+import { auth, db } from "./services/firebase";
+import { setCurrentUser, setAuthInitialized } from "./features/auth/authSlice";
+import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
 // import AdminMessages from "./pages/admin/AdminMessages";
 
 // Lazy load all components for better performance
@@ -61,6 +66,70 @@ const LoadingSpinner = ({ text }) => (
 
 export default function App() {
   const { t } = useTranslation();
+  const dispatch = useDispatch();
+
+  // Listen to Firebase Auth state changes and sync with Redux
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        try {
+          // User is signed in, fetch their profile data
+          const userRef = doc(db, "users", firebaseUser.uid);
+          const userSnap = await getDoc(userRef);
+
+          if (userSnap.exists()) {
+            const userData = userSnap.data();
+            let username = userData.username || "";
+
+            // If no username in user doc, try to find it in usernames collection
+            if (!username) {
+              const usernameQuery = query(
+                collection(db, "usernames"),
+                where("uid", "==", firebaseUser.uid)
+              );
+              const usernameDocs = await getDocs(usernameQuery);
+              if (!usernameDocs.empty) {
+                username = usernameDocs.docs[0].id;
+              }
+            }
+
+            const isAdmin = userData.isAdmin || userData.role === "admin";
+
+            const userPayload = {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              name: userData.name || firebaseUser.displayName,
+              username,
+              isAdmin,
+              role: isAdmin ? "admin" : "user",
+            };
+
+            dispatch(setCurrentUser(userPayload));
+            // Store in localStorage for persistence
+            localStorage.setItem("authUser", JSON.stringify(userPayload));
+          } else {
+            // User document doesn't exist, sign them out
+            console.warn("User document not found, signing out");
+            dispatch(setCurrentUser(null));
+            localStorage.removeItem("authUser");
+          }
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+          dispatch(setCurrentUser(null));
+          localStorage.removeItem("authUser");
+        }
+      } else {
+        // User is signed out
+        dispatch(setCurrentUser(null));
+        localStorage.removeItem("authUser");
+      }
+
+      // Mark auth as initialized
+      dispatch(setAuthInitialized(true));
+    });
+
+    return () => unsubscribe();
+  }, [dispatch]);
 
   return (
     <div className="min-h-screen transition-colors duration-300">
