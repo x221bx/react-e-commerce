@@ -1,9 +1,12 @@
+// src/pages/homeCom/FeaturedProducts.jsx
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import ProductCard from "../../components/cards/ProductCard";
 import { useProductsSorted } from "../../hooks/useProductsSorted";
 import { useTranslation } from "react-i18next";
 
 export default function FeaturedProducts() {
+  const navigate = useNavigate();
   const { t } = useTranslation();
   const { data = [], isLoading, isError, error } = useProductsSorted({
     sortBy: "createdAt",
@@ -49,7 +52,10 @@ export default function FeaturedProducts() {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold">{t("home.featuredProducts")}</h2>
 
-        <button className="text-primary hover:text-primary/80 font-medium transition">
+        <button 
+          onClick={() => navigate("/products")}
+          className="text-primary hover:text-primary/80 font-medium transition"
+        >
           {t("home.viewAll")}
         </button>
       </div>

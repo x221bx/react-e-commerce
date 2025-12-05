@@ -1,3 +1,4 @@
+// src/components/ui/Spinner.jsx
 export default function Spinner({ size = 24, color = "blue-500", thickness = 4, className = "" }) {
   return (
     <div

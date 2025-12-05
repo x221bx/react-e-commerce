@@ -1,4 +1,5 @@
-﻿const normalizeLocale = (locale = "en") => (locale?.toLowerCase().startsWith("ar") ? "ar" : "en");
+﻿// src/data/articles.js
+const normalizeLocale = (locale = "en") => (locale?.toLowerCase().startsWith("ar") ? "ar" : "en");
 
 const multiline = (segments) => segments.join("\n\n");
 

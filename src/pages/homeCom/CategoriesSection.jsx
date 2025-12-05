@@ -1,3 +1,4 @@
+// src/pages/homeCom/CategoriesSection.jsx
 import CategoryCard from './CategoryCard';
 
 export default function CategoriesSection({ header, items = [] }) {

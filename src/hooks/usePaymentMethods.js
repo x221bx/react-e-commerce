@@ -1,3 +1,4 @@
+// src/hooks/usePaymentMethods.js
 import { useEffect, useMemo, useState } from "react";
 import {
     collection,

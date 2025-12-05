@@ -1,3 +1,4 @@
+// src/components/search/SearchBar.jsx
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { UseTheme } from "../../theme/ThemeProvider";

@@ -285,8 +285,8 @@ Message:
                 onChange={(e) => setTopic(e.target.value)}
                 className={`w-full rounded-2xl border px-4 py-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 ${
                   isDark
-                    ? "border-slate-700 bg-slate-900/70 text-white"
-                    : "border-slate-200 bg-white text-slate-900"
+                    ? "border-emerald-900/40 bg-emerald-900/20 text-white"
+                    : "border-emerald-200 bg-emerald-50 text-slate-900"
                 }`}
               >
                 <option value="orders">
@@ -329,8 +329,8 @@ Message:
                     : "focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                 } ${
                   isDark
-                    ? "border-slate-700 bg-slate-900/70 text-white placeholder-slate-500"
-                    : "border-slate-200 bg-white text-slate-900 placeholder-slate-400"
+                    ? "border-emerald-900/40 bg-emerald-900/20 text-white placeholder-emerald-200/60"
+                    : "border-emerald-200 bg-emerald-50 text-slate-900 placeholder-emerald-600/50"
                 }`}
                 placeholder={t(
                   "support.phonePlaceholder",
@@ -360,8 +360,8 @@ Message:
                 rows={6}
                 className={`w-full rounded-2xl border px-4 py-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-none ${
                   isDark
-                    ? "border-slate-700 bg-slate-900/70 text-white placeholder-slate-500"
-                    : "border-slate-200 bg-white text-slate-900 placeholder-slate-400"
+                    ? "border-emerald-900/40 bg-emerald-900/20 text-white placeholder-emerald-200/60"
+                    : "border-emerald-200 bg-emerald-50 text-slate-900 placeholder-emerald-600/50"
                 }`}
                 placeholder={t(
                   "support.placeholder",

@@ -1,3 +1,4 @@
+// src/data/products.js
 const asTimestamp = (iso) => new Date(iso).getTime();
 
 export const fallbackProducts = [

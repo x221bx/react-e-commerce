@@ -1,3 +1,4 @@
+// src/redux/store.js
 import { configureStore } from "@reduxjs/toolkit";
 import auth from "../features/auth/authSlice";
 import cart from "../features/cart/cartSlice";
@@ -15,9 +16,11 @@ export const store = configureStore({
     favorites,
     ordersSlice,
   },
-  preloadedState: {
-    cart: { items: savedCart }, // <-- هنا الـ cart هيبدأ بالبيانات المحفوظة
+ preloadedState: {
+  cart: {
+    items: Array.isArray(savedCart) ? savedCart : [],
   },
+},
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: false,

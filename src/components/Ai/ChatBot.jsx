@@ -158,7 +158,7 @@ export default function ChatBot() {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                dispatch(addToCart(product));
+                dispatch(addToCart({ ...product }));
               }}
               className={`text-xs px-3 py-1.5 rounded-md ${
                 isDark ? "bg-[#154b3f] text-white" : "bg-teal-600 text-white"

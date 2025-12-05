@@ -32,12 +32,12 @@ export default function OrderInvoice() {
   if (!currentOrder) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center text-center p-8">
-        <FiPackage className="h-16 w-16 text-slate-400 mb-4" />
-        <h2 className="text-2xl font-bold text-slate-600 mb-2">Order Not Found</h2>
-        <p className="text-slate-500 mb-4">The order you're looking for doesn't exist or you don't have access to it.</p>
+        <FiPackage className="h-16 w-16 text-emerald-400 mb-4" />
+        <h2 className={`text-2xl font-bold mb-2 ${isDark ? "text-emerald-300" : "text-emerald-600"}`}>Order Not Found</h2>
+        <p className={`mb-4 ${isDark ? "text-emerald-200/70" : "text-emerald-600/70"}`}>The order you're looking for doesn't exist or you don't have access to it.</p>
         <button
           onClick={() => navigate('/account/OrderHistory')}
-          className="px-6 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
+          className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
         >
           Back to Orders
         </button>
@@ -45,10 +45,10 @@ export default function OrderInvoice() {
     );
   }
 
-  const containerBg = isDark ? "bg-slate-950" : "bg-slate-50";
-  const cardBg = isDark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200";
-  const textColor = isDark ? "text-white" : "text-slate-900";
-  const mutedText = isDark ? "text-slate-400" : "text-slate-500";
+  const containerBg = isDark ? "bg-gradient-to-b from-transparent to-emerald-900/20" : "bg-gradient-to-b from-transparent to-emerald-800/20";
+  const cardBg = isDark ? "bg-emerald-300/20 border-emerald-900/50" : "bg-emerald-600/10 border-emerald-200";
+  const textColor = isDark ? "text-white" : "text-emerald";
+  const mutedText = isDark ? "text-white" : "text-emerald";
 
   const handlePrint = () => {
     window.print();
@@ -165,7 +165,7 @@ export default function OrderInvoice() {
 
   return (
     <>
-      <style jsx>{`
+      <style>{`
         @media print {
           body * {
             visibility: hidden;
@@ -185,14 +185,14 @@ export default function OrderInvoice() {
           }
         }
       `}</style>
-      <div className={`min-h-screen ${containerBg} py-8 px-4 sm:px-6 lg:px-8`}>
+      <div className="space-y-8 py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto invoice-container">
         {/* Main Invoice Display */}
         {/* Header */}
         <div className="flex items-center justify-between mb-8 no-print">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${isDark ? "hover:bg-emerald-900/30" : "hover:bg-emerald-100"}`}
           >
             <FiArrowLeft className="w-5 h-5" />
             Back
@@ -201,14 +201,14 @@ export default function OrderInvoice() {
           <div className="flex gap-2">
             <button
               onClick={handlePrint}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${isDark ? "bg-emerald-900/30 hover:bg-emerald-800/40 text-white" : "bg-emerald-100 hover:bg-emerald-200 text-emerald-600"}`}
             >
               <FiPrinter className="w-5 h-5" />
               Print
             </button>
             <button
               onClick={handleDownload}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
             >
               <FiDownload className="w-5 h-5" />
               Download PDF
@@ -220,11 +220,11 @@ export default function OrderInvoice() {
         <div className={`rounded-2xl border shadow-sm p-8 mb-8 ${cardBg}`}>
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
             <div>
-              <h1 className={`text-3xl font-bold ${textColor} mb-2`}>Invoice</h1>
+              <h1 className={`text-3xl font-bold ${isDark ? "text-emerald-300" : textColor} mb-2`}>Invoice</h1>
               <p className={`text-lg ${mutedText}`}>Order #{currentOrder.orderNumber || currentOrder.id.slice(-8)}</p>
               <div className="flex items-center gap-4 mt-2">
                 <div className="flex items-center gap-2">
-                  <FiCalendar className="w-4 h-4 text-slate-400" />
+                  <FiCalendar className={`w-4 h-4 ${isDark ? "text-emerald-400" : "text-emerald-600"}`} />
                   <span className={mutedText}>
                     {new Date(currentOrder.createdAt).toLocaleDateString('en-US', {
                       year: 'numeric',
@@ -258,7 +258,7 @@ export default function OrderInvoice() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           {/* Bill To */}
           <div className={`rounded-2xl border shadow-sm p-6 ${cardBg}`}>
-            <h3 className={`text-lg font-semibold ${textColor} mb-4 flex items-center gap-2`}>
+            <h3 className={`text-lg font-semibold ${isDark ? "text-emerald-300" : textColor} mb-4 flex items-center gap-2`}>
               <FiPackage className="w-5 h-5" />
               Bill To
             </h3>
@@ -271,7 +271,7 @@ export default function OrderInvoice() {
 
           {/* Ship To */}
           <div className={`rounded-2xl border shadow-sm p-6 ${cardBg}`}>
-            <h3 className={`text-lg font-semibold ${textColor} mb-4 flex items-center gap-2`}>
+            <h3 className={`text-lg font-semibold ${isDark ? "text-emerald-300" : textColor} mb-4 flex items-center gap-2`}>
               <FiMapPin className="w-5 h-5" />
               Ship To
             </h3>
@@ -285,17 +285,17 @@ export default function OrderInvoice() {
 
         {/* Order Items */}
         <div className={`rounded-2xl border shadow-sm overflow-hidden mb-8 ${cardBg}`}>
-          <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
-            <h3 className={`text-lg font-semibold ${textColor}`}>Order Items</h3>
+          <div className={`px-6 py-4 border-b ${isDark ? "border-emerald-900/30" : "border-emerald-200"}`}>
+            <h3 className={`text-lg font-semibold ${isDark ? "text-emerald-300" : textColor}`}>Order Items</h3>
           </div>
 
-          <div className="divide-y divide-slate-200 dark:divide-slate-700">
+          <div className={`divide-y ${isDark ? "divide-emerald-900/30" : "divide-emerald-200"}`}>
             {currentOrder.items?.map((item, index) => (
               <div key={index} className="px-6 py-4 flex items-center gap-4">
                 <img
                   src={item.imageUrl || item.image || item.thumbnailUrl || item.img || "/placeholder.png"}
                   alt={item.name}
-                  className="w-16 h-16 rounded-lg object-cover border border-slate-200 dark:border-slate-700"
+                  className={`w-16 h-16 rounded-lg object-cover border ${isDark ? "border-emerald-900/30" : "border-emerald-200"}`}
                 />
                 <div className="flex-1">
                   <h4 className={`font-medium ${textColor}`}>{item.name}</h4>
@@ -316,7 +316,7 @@ export default function OrderInvoice() {
 
         {/* Order Summary */}
         <div className={`rounded-2xl border shadow-sm p-6 ${cardBg}`}>
-          <h3 className={`text-lg font-semibold ${textColor} mb-4 flex items-center gap-2`}>
+          <h3 className={`text-lg font-semibold ${isDark ? "text-emerald-300" : textColor} mb-4 flex items-center gap-2`}>
             <FiCreditCard className="w-5 h-5" />
             Order Summary
           </h3>
@@ -347,7 +347,7 @@ export default function OrderInvoice() {
               </div>
             )}
 
-            <div className="border-t border-slate-200 dark:border-slate-700 pt-3">
+            <div className={`border-t pt-3 ${isDark ? "border-emerald-900/30" : "border-emerald-200"}`}>
               <div className="flex justify-between text-lg font-semibold">
                 <span className={textColor}>Total</span>
                 <span className={textColor}>
@@ -358,9 +358,9 @@ export default function OrderInvoice() {
           </div>
 
           {/* Payment Method */}
-          <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
+          <div className={`mt-6 pt-4 border-t ${isDark ? "border-emerald-900/30" : "border-emerald-200"}`}>
             <div className="flex items-center gap-2">
-              <FiCreditCard className="w-5 h-5 text-slate-400" />
+              <FiCreditCard className={`w-5 h-5 ${isDark ? "text-emerald-400" : "text-emerald-600"}`} />
               <span className={mutedText}>Payment Method:</span>
               <span className={textColor}>
                 {currentOrder.paymentMethod || currentOrder.paymentSummary || 'Cash on Delivery'}

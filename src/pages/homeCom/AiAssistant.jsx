@@ -1,3 +1,4 @@
+// src/pages/homeCom/AiAssistant.jsx
 import { useState } from "react";
 import { motion as Motion } from "framer-motion";
 import { UseTheme } from "../../theme/ThemeProvider";

@@ -1,3 +1,4 @@
+// src/hooks/useCategoriesSorted.js
 import { useQuery } from "@tanstack/react-query";
 import { getDocs } from "firebase/firestore";
 import { buildCategoriesQuery } from "./firestore/buildCategoriesQuery";

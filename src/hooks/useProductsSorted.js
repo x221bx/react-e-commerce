@@ -1,3 +1,4 @@
+// src/hooks/useProductsSorted.js
 import { useQuery } from "@tanstack/react-query";
 import { getDocs } from "firebase/firestore";
 import { buildProductsQuery } from "./firestore/buildProductsQuery";

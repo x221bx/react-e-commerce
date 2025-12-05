@@ -1,3 +1,4 @@
+// src/pages/homeCom/CategoryCard.jsx
 import { motion as Motion } from "framer-motion";
 import { UseTheme } from "../../theme/ThemeProvider";
 import { useEffect, useMemo, useState } from "react";

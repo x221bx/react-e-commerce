@@ -14,11 +14,14 @@ import CartFooter from "../components/CartFooter";
 import Footer from "../Authcomponents/Footer";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { UseTheme } from "../theme/ThemeProvider";
 
 export default function Cart() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { theme } = UseTheme();
+  const isDark = theme === "dark";
   const { items = [] } = useSelector((state) => state.cart || {});
   const [toast, setToast] = useState("");
 
@@ -64,7 +67,7 @@ export default function Cart() {
       showToast(`Max stock reached for "${item.title || item.name}"`);
       return;
     }
-    dispatch(addToCart(item));
+    dispatch(addToCart({ ...item }));
   };
 
   const handleDecrease = (item) => {
@@ -97,26 +100,26 @@ export default function Cart() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--bg-main)] font-inter">
+    <div className={`min-h-screen font-inter pb-8 bg-gradient-to-b from-transparent to-gray-50/50 dark:to-slate-800/30`}>
       <div className="mx-auto max-w-6xl p-6">
         {toast && (
-          <div className="fixed top-4 rtl:left-4 ltr:right-4 bg-yellow-100 p-3 rounded shadow z-50">
+          <div className={`fixed top-4 rtl:left-4 ltr:right-4 p-3 rounded shadow z-50 ${isDark ? "bg-amber-900 text-amber-200" : "bg-yellow-100 text-yellow-800"}`}>
             {toast}
           </div>
         )}
 
-        <div className="bg-white p-6 md:p-8 rounded-2xl shadow-lg">
-          <h1 className="text-3xl font-bold flex items-center gap-2 mb-6 text-text-dark">
+        <div className={`p-6 md:p-8 rounded-2xl shadow-lg ${isDark ? "bg-slate-800/50 border border-emerald-900/30" : "bg-white/70 border border-emerald-200"}`}>
+          <h1 className={`text-3xl font-bold flex items-center gap-2 mb-6 ${isDark ? "text-white" : "text-gray-900"}`}>
             <FiShoppingCart className="text-secondary" /> {t("nav.cart", "Cart")}
           </h1>
 
           {!items.length ? (
-            <p className="text-gray-500 text-center text-lg">
+            <p className={`text-center text-lg ${isDark ? "text-gray-400" : "text-gray-500"}`}>
               {t("checkout.empty.title", "Your cart is empty")}
             </p>
           ) : (
             <>
-              <ul className="divide-y divide-gray-200">
+              <ul className={`divide-y ${isDark ? "divide-slate-700" : "divide-gray-200"}`}>
                 {items.map((item) => {
                   const price = Number(item.price || 0);
                   const qty = Number(item.quantity || 0);
@@ -128,7 +131,7 @@ export default function Cart() {
                       key={item.id}
                       className="py-4 flex flex-col sm:flex-row gap-4 items-start sm:items-center"
                     >
-                      <div className="w-full sm:w-32 h-32 flex-shrink-0 overflow-hidden rounded-lg border border-gray-200">
+                      <div className={`w-full sm:w-32 h-32 flex-shrink-0 overflow-hidden rounded-lg border ${isDark ? "border-slate-600" : "border-gray-200"}`}>
                         {item.thumbnailUrl || item.img ? (
                           <img
                             src={item.thumbnailUrl || item.img}
@@ -136,7 +139,7 @@ export default function Cart() {
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
+                          <div className={`w-full h-full flex items-center justify-center ${isDark ? "bg-slate-700 text-slate-400" : "bg-gray-100 text-gray-400"}`}>
                             No Image
                           </div>
                         )}
@@ -144,10 +147,10 @@ export default function Cart() {
 
                       <div className="flex-1 flex flex-col justify-between">
                         <div>
-                          <h3 className="text-lg font-semibold text-text-dark">
+                          <h3 className={`text-lg font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>
                             {item.name || item.title}
                           </h3>
-                          <p className="text-green-700 font-medium mt-1">
+                          <p className="text-green-500 font-medium mt-1">
                             {price.toLocaleString()} EGP
                           </p>
                         </div>
@@ -155,26 +158,25 @@ export default function Cart() {
                         <div className="mt-3 flex items-center gap-3">
                           <button
                             onClick={() => handleDecrease(item)}
-                            className="w-8 h-8 rounded-full border flex items-center justify-center text-gray-700 hover:bg-gray-100"
+                            className={`w-8 h-8 rounded-full border flex items-center justify-center transition ${isDark ? "border-slate-600 text-white hover:bg-slate-700" : "border-gray-300 text-gray-700 hover:bg-gray-100"}`}
                           >
                             <FiMinus />
                           </button>
-                          <span className="min-w-[40px] text-center">
+                          <span className={`min-w-[40px] text-center ${isDark ? "text-white" : "text-gray-900"}`}>
                             {qty}
                           </span>
                           <button
                             onClick={() => handleAdd(item)}
-                            className="w-8 h-8 rounded-full border flex items-center justify-center text-gray-700 hover:bg-gray-100"
+                            className={`w-8 h-8 rounded-full border flex items-center justify-center transition ${isDark ? "border-slate-600 text-white hover:bg-slate-700" : "border-gray-300 text-gray-700 hover:bg-gray-100"}`}
                           >
                             <FiPlus />
                           </button>
                         </div>
-
-                                              </div>
+                      </div>
 
                       <button
                         onClick={() => dispatch(removeFromCart(item.id))}
-                        className="mt-3 sm:mt-0 bg-red-500 text-white px-4 py-2 rounded flex items-center justify-center hover:bg-red-600"
+                        className={`mt-3 sm:mt-0 text-white px-4 py-2 rounded flex items-center justify-center transition ${isDark ? "bg-red-900 hover:bg-red-800" : "bg-red-500 hover:bg-red-600"}`}
                       >
                         <FiTrash2 size={20} />
                       </button>

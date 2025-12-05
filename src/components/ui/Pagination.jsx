@@ -1,3 +1,4 @@
+// src/components/ui/Pagination.jsx 
 import React from 'react';
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { useTranslation } from 'react-i18next';

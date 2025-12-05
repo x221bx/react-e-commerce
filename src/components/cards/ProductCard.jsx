@@ -1,3 +1,4 @@
+// src/components/cards/ProductCard.jsx
 import { useDispatch, useSelector } from "react-redux";
 import { toggleFavourite } from "../../features/favorites/favoritesSlice";
 import { addToCart } from "../../features/cart/cartSlice";
@@ -34,8 +35,10 @@ export default function ProductCard({ product, index = 0 }) {
   const favorites = useSelector(
     (state) => state.favorites?.items ?? state.favorites ?? []
   );
+
+  // Simple check: is product id in favorites?
   const isFav = Array.isArray(favorites)
-    ? favorites.some((f) => f?.id === product.id)
+    ? favorites.some((f) => String(f?.id) === String(product?.id))
     : false;
 
   const inCart = useSelector((state) =>
@@ -67,9 +70,13 @@ export default function ProductCard({ product, index = 0 }) {
             : "bg-[var(--bg-card)] text-[#1a1a1a] shadow-[0_3px_15px_rgba(0,0,0,0.1)] hover:shadow-[0_5px_20px_rgba(0,0,0,0.15)]"
         }`}
     >
+      {/* زر الفافوريت */}
       <Motion.button
         whileTap={{ scale: 0.9 }}
-        onClick={() => dispatch(toggleFavourite(safeProduct(product)))}
+        onClick={() => {
+          // Pass a fresh clone of product - never modify the original
+          dispatch(toggleFavourite({ ...product }));
+        }}
         aria-label="favorite"
         className="absolute top-3 rtl:left-3 ltr:right-3 z-20 p-2 rounded-full shadow-md border backdrop-blur-md bg-white/70 border-gray-200 hover:bg-gray-100 transition"
       >
@@ -96,10 +103,16 @@ export default function ProductCard({ product, index = 0 }) {
 
         <Motion.div variants={fadeUp} custom={0.4}>
           <Button
-            text={inCart ? t("products.inCart", "In Cart") : t("products.addToCart", "Add to Cart")}
+            text={
+              inCart
+                ? t("products.inCart", "In Cart")
+                : t("products.addToCart", "Add to Cart")
+            }
             full
             disabled={inCart}
-            onClick={() => !inCart && dispatch(addToCart(safeProduct(product)))}
+            onClick={() =>
+              !inCart && dispatch(addToCart(safeProduct(product)))
+            }
             className={`mt-1 ${inCart ? "opacity-60 cursor-not-allowed" : ""}`}
           />
         </Motion.div>

@@ -1,3 +1,4 @@
+// src/components/ui/Button.jsx
 import { motion as Motion } from "framer-motion";
 import { UseTheme } from "../../theme/ThemeProvider";
 
@@ -6,8 +7,8 @@ export default function Button({
   children,
   onClick = () => {},
   className = "",
-  full = false, // ✅ لو عايز الزرار ياخد عرض كامل
-  size = "md", // sm / md / lg
+  full = false,
+  size = "md",
   type = "button",
   disabled = false,
   ariaLabel,
@@ -33,11 +34,13 @@ export default function Button({
         ${sizes[size]}
         inline-flex items-center justify-center whitespace-nowrap
         rounded-lg font-semibold transition-all duration-300
+
         ${
           theme === "dark"
-            ? "bg-pale-teal text-dark-text hover:bg-hover-pale"
-            : "bg-accent-teal text-white hover:bg-hover-teal"
+            ? "bg-[#B8E4E6] text-[#0e1b1b] hover:bg-[#a7d8da]"
+            : "bg-[#2F7E80] text-white hover:bg-[#256b6d]"
         }
+
         disabled:opacity-60 disabled:cursor-not-allowed
         ${className}
       `}
