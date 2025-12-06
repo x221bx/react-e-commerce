@@ -72,12 +72,15 @@ const navItems = [
 ];
 
 export default function AccountLayout() {
+  const { t, i18n } = useTranslation();   // ← لازم الأول
+    console.log("LANG:", i18n.language);
+  console.log("TEST:", t("account.profile_preferences"));
   const user = useSelector(selectCurrentUser);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { theme } = UseTheme();
   const isDark = theme === "dark";
-  const { t } = useTranslation();
+  // const { t } = useTranslation();
 
   const initials = (user?.name || "Farmer")
     .split(" ")
