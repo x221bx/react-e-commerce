@@ -1,3 +1,4 @@
+// src/pages/UserSettings/components/ProfileAvatar.jsx
 import React from "react";
 
 const ProfileAvatar = ({ photo, initials, onError, size = "lg", className = "", name = "User" }) => {
