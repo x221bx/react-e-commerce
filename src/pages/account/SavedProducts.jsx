@@ -110,7 +110,7 @@ export default function SavedProducts() {
   if (!items.length) {
     return (
       <div
-        className={`rounded-3xl border border-white/10 bg-[#0f1a1a]/50 backdrop-blur-md p-8 text-center shadow-lg`}
+        className={`rounded-3xl p-8 text-center shadow-lg`}
       >
         <FiHeart className="mx-auto mb-3 h-10 w-10 text-emerald-400" />
         <p className={`text-xl font-bold ${headingColor}`}>
