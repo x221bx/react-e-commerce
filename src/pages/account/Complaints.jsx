@@ -430,7 +430,7 @@ export default function Complaints() {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-slate-950">
+      <div className="min-h-screen flex items-center justify-center bg-white ">
         <div className="text-center space-y-2">
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
             {t("account.login_required_title", "Please log in to view your complaints")}
@@ -454,7 +454,7 @@ export default function Complaints() {
   const metaText = isDark ? "text-slate-300" : "text-slate-600";
 
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-slate-900' : 'bg-white'} py-8`}>
+    <div className={`min-h-screen ${isDark ? ' ' : 'bg-white'} py-8`}>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Header */}
