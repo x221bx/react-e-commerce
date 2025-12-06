@@ -13,7 +13,7 @@ const SupportFormNavigation = ({
   const { t } = useTranslation();
 
   return (
-    <div className="px-8 py-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 ">
+    <div className="px-8 py-6 border-t border-gray-200 dark:border-gray-700    ">
       <div className="flex justify-between items-center">
         <button
           onClick={handlePrev}

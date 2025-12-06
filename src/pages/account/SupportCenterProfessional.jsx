@@ -91,7 +91,6 @@ Message:
   }
 };
 
-// Import the new components
 import SupportFormStep1 from "./components/SupportFormStep1";
 import SupportFormStep2 from "./components/SupportFormStep2";
 import SupportFormStep3 from "./components/SupportFormStep3";
@@ -234,17 +233,15 @@ const SupportCenterProfessional = () => {
   const selectedCategory = categories.find(cat => cat.id === formData.category);
 
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-slate-900' : 'bg-white'} py-8`}>
+    <div className={`min-h-screen py-8`}>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Header */}
         <div className="text-center mb-8">
-          <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 ${
-            isDark ? 'bg-emerald-900/50 text-emerald-400' : 'bg-emerald-100 text-emerald-600'
-          }`}>
+          <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 `}>
             <HeadphonesIcon className="w-8 h-8" />
           </div>
-          <h1 className={`text-3xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+          <h1 className={`text-3xl font-bold mb-2  `}>
             {t("support.title")}
           </h1>
           <p className={`text-lg ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
