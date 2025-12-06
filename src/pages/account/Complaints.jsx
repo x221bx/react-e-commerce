@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { collection, query, where, onSnapshot, doc, updateDoc } from "firebase/firestore";
+import { collection, query, where, onSnapshot, doc, updateDoc, getDoc } from "firebase/firestore";
 import { Phone, CalendarDays, AlertCircle, X, MessageSquare } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -184,7 +184,46 @@ export default function Complaints() {
       qUid,
       (snapshot) => {
         try {
-          const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+          const data = snapshot.docs.map((doc) => {
+            const raw = doc.data();
+            const normalizedStatus = (raw.status || "pending").toLowerCase();
+            const repliesArray = Array.isArray(raw.replies)
+              ? raw.replies
+              : Array.isArray(raw.adminResponses)
+              ? raw.adminResponses.map(r => ({
+                  id: r.id || Date.now().toString() + Math.random().toString(36).substr(2, 9),
+                  message: r.message,
+                  sender: r.sender || "admin",
+                  timestamp: r.timestamp || r.createdAt || raw.respondedAt || raw.createdAt
+                }))
+              : raw.adminResponse
+              ? [{
+                  id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+                  message: raw.adminResponse,
+                  sender: "admin",
+                  timestamp: raw.respondedAt || raw.updatedAt || raw.createdAt
+                }]
+              : [];
+
+            const userMessagesArray = Array.isArray(raw.userMessages)
+              ? raw.userMessages
+              : raw.userFollowUp
+              ? [{
+                  id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+                  message: raw.userFollowUp,
+                  sender: "user",
+                  timestamp: raw.updatedAt || raw.createdAt
+                }]
+              : [];
+
+            return {
+              id: doc.id,
+              ...raw,
+              status: normalizedStatus,
+              replies: repliesArray,
+              userMessages: userMessagesArray
+            };
+          });
           setComplaintsByUid(data);
           complaintsByUidRef.current = data;
           mergeComplaints(complaintsByUidRef.current, complaintsByUserIdRef.current);
@@ -210,7 +249,46 @@ export default function Complaints() {
       qUserId,
       (snapshot) => {
         try {
-          const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+          const data = snapshot.docs.map((doc) => {
+            const raw = doc.data();
+            const normalizedStatus = (raw.status || "pending").toLowerCase();
+            const repliesArray = Array.isArray(raw.replies)
+              ? raw.replies
+              : Array.isArray(raw.adminResponses)
+              ? raw.adminResponses.map(r => ({
+                  id: r.id || Date.now().toString() + Math.random().toString(36).substr(2, 9),
+                  message: r.message,
+                  sender: r.sender || "admin",
+                  timestamp: r.timestamp || r.createdAt || raw.respondedAt || raw.createdAt
+                }))
+              : raw.adminResponse
+              ? [{
+                  id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+                  message: raw.adminResponse,
+                  sender: "admin",
+                  timestamp: raw.respondedAt || raw.updatedAt || raw.createdAt
+                }]
+              : [];
+
+            const userMessagesArray = Array.isArray(raw.userMessages)
+              ? raw.userMessages
+              : raw.userFollowUp
+              ? [{
+                  id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+                  message: raw.userFollowUp,
+                  sender: "user",
+                  timestamp: raw.updatedAt || raw.createdAt
+                }]
+              : [];
+
+            return {
+              id: doc.id,
+              ...raw,
+              status: normalizedStatus,
+              replies: repliesArray,
+              userMessages: userMessagesArray
+            };
+          });
           setComplaintsByUserId(data);
           complaintsByUserIdRef.current = data;
           mergeComplaints(complaintsByUidRef.current, complaintsByUserIdRef.current);
@@ -236,10 +314,12 @@ export default function Complaints() {
     };
   }, [user?.uid]);
 
-  // Auto-scroll to bottom when complaints change
+  // Auto-scroll to bottom when replies change
   useEffect(() => {
     if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+      setTimeout(() => {
+        chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+      }, 100);
     }
   }, [complaints]);
 
@@ -311,15 +391,29 @@ export default function Complaints() {
       // Moderate the message
       const moderationVerdict = await moderateMessage(text);
       if (!moderationVerdict.allowed) {
-        toast.error(moderationVerdict.reason);
+        toast.error(t("account.moderation.inappropriate_content", "Your message contains inappropriate content. Please revise and try again."));
         return;
       }
 
       const complaintRef = doc(db, "support", complaintId);
+
+      // Get current complaint data to append to user messages array
+      const complaintSnap = await getDoc(complaintRef);
+      const currentData = complaintSnap.data() || {};
+      const currentUserMessages = Array.isArray(currentData.userMessages) ? currentData.userMessages : [];
+
+      const newUserMessage = {
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        message: text,
+        sender: "user",
+        timestamp: new Date()
+      };
+
       await updateDoc(complaintRef, {
-        userFollowUp: text,
+        userMessages: [...currentUserMessages, newUserMessage],
         updatedAt: new Date()
       });
+
       toast.success(t("account.complaints_actions.follow_up_saved", "Follow-up sent"));
       // Clear the text after sending
       setFollowUps((prev) => ({ ...prev, [complaintId]: "" }));
@@ -361,24 +455,26 @@ export default function Complaints() {
   const metaText = isDark ? "text-slate-300" : "text-slate-600";
 
   return (
-    <div className={`min-h-screen ${isDark ? "bg-green-950 text-white" : "bg-emerald-100 text-slate-900"} py-10`}>
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        <div className={`rounded-3xl border shadow-sm p-6 sm:p-8 bg-gradient-to-br ${heroSurface}`}>
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="space-y-2 max-w-2xl">
-              <p className="text-sm uppercase tracking-[0.18em] font-semibold text-emerald-700 dark:text-emerald-300">
-                {t("account.complaints_title", "My Inquiries")}
-              </p>
-              <h1 className="text-3xl font-bold leading-tight">
-                {t("account.complaints_subtitle", "Track your submitted inquiries and their resolution status.")}
-              </h1>
-              <p className={`text-sm ${metaText}`}>
-                {t("account.complaints_helper", "Check status, contact info, and priority in one glance.")}
-              </p>
-            </div>
+    <div className={`min-h-screen ${isDark ? 'bg-slate-900' : 'bg-gradient-to-br from-blue-50 via-white to-emerald-50'} py-8`}>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 ${
+            isDark ? 'bg-emerald-900/50 text-emerald-400' : 'bg-emerald-100 text-emerald-600'
+          }`}>
+            <MessageSquare className="w-8 h-8" />
+          </div>
+          <h1 className={`text-3xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            {t("account.complaints_title", "My Inquiries")}
+          </h1>
+          <p className={`text-lg ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
+            {t("account.complaints_subtitle", "Track your submitted inquiries and their resolution status.")}
+          </p>
+          <div className="mt-6">
             <Button
               onClick={() => navigate("/account/support")}
-              className="inline-flex items-center justify-center px-8 py-3 text-lg font-semibold min-w-[200px]"
+              className="inline-flex items-center justify-center px-8 py-3 text-lg font-semibold min-w-[200px] bg-emerald-600 text-white hover:bg-emerald-700"
               aria-label={t("account.submit_new_complaint", "Submit New Inquiry")}
             >
               {t("account.submit_new_complaint", "Submit New Inquiry")}
@@ -438,6 +534,14 @@ export default function Complaints() {
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="space-y-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className={`text-sm font-mono font-bold ${isDark ? "text-emerald-400" : "text-emerald-600"}`}>
+                          {complaint.ticketId || `#${complaint.id.slice(-6)}`}
+                        </span>
+                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${getStatusColor(complaint.status)}`}>
+                          {t(statusKey, complaint.status || "Pending")}
+                        </span>
+                      </div>
                       <p className={`text-xs uppercase tracking-[0.12em] font-semibold ${isDark ? "text-emerald-200" : "text-emerald-700"}`}>
                         {t("account.complaints_topic_fallback", "Topic")}
                       </p>
@@ -454,9 +558,6 @@ export default function Complaints() {
                       )}
                     </div>
                     <div className="text-right space-y-2">
-                      <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${getStatusColor(complaint.status)}`}>
-                        {t(statusKey, complaint.status || "Pending")}
-                      </span>
                       <div className={`flex items-center justify-end gap-2 text-xs ${metaText}`}>
                         <CalendarDays className="h-4 w-4" />
                         <span>{created}</span>
@@ -480,17 +581,19 @@ export default function Complaints() {
                   )}
 
                   {/* Chat-style conversation */}
-                  {(complaint.replies && complaint.replies.length > 0) || complaint.adminResponse ? (
+                  {((complaint.replies && complaint.replies.length > 0) ||
+                    (complaint.userMessages && complaint.userMessages.length > 0) ||
+                    complaint.adminResponse) ? (
                     <div className={`rounded-lg border ${
                       isDark ? "bg-slate-800 border-slate-700" : "bg-gray-50 border-gray-200"
                     }`}>
                       <div className="p-3 border-b border-gray-200 dark:border-gray-700">
                         <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
-                          Conversation ({(complaint.replies?.length || 0) + (complaint.adminResponse ? 1 : 0)} messages)
+                          Conversation ({(complaint.replies?.length || 0) + (complaint.userMessages?.length || 0) + (complaint.adminResponse ? 1 : 0)} messages)
                         </h4>
                       </div>
-                      <div ref={chatContainerRef} className="max-h-80 overflow-y-auto p-3 space-y-3">
-                        {/* Customer Message */}
+                      <div ref={chatContainerRef} className="min-h-[300px] max-h-96 overflow-y-auto p-3 space-y-3 scroll-smooth">
+                        {/* Customer Original Message */}
                         <div className="flex justify-start">
                           <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
                             isDark ? "bg-blue-900/30 text-blue-100" : "bg-blue-100 text-blue-900"
@@ -502,49 +605,36 @@ export default function Complaints() {
                           </div>
                         </div>
 
-                        {/* Admin Replies */}
-                        {complaint.replies && complaint.replies
+                        {/* Combine and sort all messages by timestamp */}
+                        {[
+                          ...(complaint.userMessages || []).map(msg => ({ ...msg, type: 'user' })),
+                          ...(complaint.replies || []).map(reply => ({ ...reply, type: 'admin' })),
+                          ...(complaint.adminResponse && (!complaint.replies || complaint.replies.length === 0) ? [{
+                            id: 'legacy-admin',
+                            message: complaint.adminResponse,
+                            sender: 'admin',
+                            timestamp: complaint.respondedAt || complaint.updatedAt || complaint.createdAt,
+                            type: 'admin'
+                          }] : [])
+                        ]
                           .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
-                          .map((reply) => (
-                          <div key={reply.id} className="flex justify-end">
+                          .map((message) => (
+                          <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-start' : 'justify-end'}`}>
                             <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                              isDark ? "bg-emerald-700 text-white" : "bg-emerald-600 text-white"
+                              message.type === 'user'
+                                ? (isDark ? "bg-orange-900/30 text-orange-100" : "bg-orange-100 text-orange-900")
+                                : (isDark ? "bg-emerald-700 text-white" : "bg-emerald-600 text-white")
                             }`}>
-                              <p className="text-sm">{reply.message}</p>
+                              <p className="text-sm">{message.message}</p>
                               <p className="text-xs mt-1 opacity-70">
-                                {reply.timestamp?.toDate ? reply.timestamp.toDate().toLocaleString() : new Date(reply.timestamp).toLocaleString()}
+                                {message.timestamp?.toDate ? message.timestamp.toDate().toLocaleString() : new Date(message.timestamp).toLocaleString()}
                               </p>
                             </div>
                           </div>
                         ))}
-
-                        {/* Legacy admin response */}
-                        {complaint.adminResponse && (!complaint.replies || complaint.replies.length === 0) && (
-                          <div className="flex justify-end">
-                            <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                              isDark ? "bg-emerald-700 text-white" : "bg-emerald-600 text-white"
-                            }`}>
-                              <p className="text-sm">{complaint.adminResponse}</p>
-                              <p className="text-xs mt-1 opacity-70">
-                                {complaint.respondedAt?.toDate ? complaint.respondedAt.toDate().toLocaleString() : new Date(complaint.respondedAt).toLocaleString()}
-                              </p>
-                            </div>
-                          </div>
-                        )}
                       </div>
                     </div>
                   ) : null}
-                  {complaint.userFollowUp && (
-                    <div className={`flex items-start gap-3 p-3 rounded-lg border ${isDark ? "bg-emerald-900/15 border-emerald-800" : "bg-emerald-50 border-emerald-200"}`}>
-                      <MessageSquare className={`h-5 w-5 mt-0.5 ${isDark ? "text-emerald-300" : "text-emerald-600"}`} />
-                      <div className="flex-1">
-                        <p className={`text-sm font-medium ${isDark ? "text-emerald-200" : "text-emerald-800"}`}>
-                          {t("account.user_follow_up", "Your Follow-up")}
-                        </p>
-                        <p className={`text-xs ${metaText}`}>{complaint.userFollowUp}</p>
-                      </div>
-                    </div>
-                  )}
 
                   <div className="flex items-center justify-between gap-3">
                     <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1 border ${isDark ? "border-slate-700" : "border-slate-200"}`}>
@@ -582,7 +672,7 @@ export default function Complaints() {
                         {t("account.complaints_actions.add_follow_up", "Add follow-up")}
                       </label>
                       <textarea
-                        value={followUps[complaint.id] ?? complaint.userFollowUp ?? ""}
+                        value={followUps[complaint.id] ?? ""}
                         onChange={(e) => setFollowUps((prev) => ({ ...prev, [complaint.id]: e.target.value }))}
                         rows={3}
                         className={`w-full rounded-md border px-3 py-2 text-sm ${isDark ? "bg-slate-800 border-slate-700 text-white" : "bg-white border-emerald-200 text-slate-900"}`}
