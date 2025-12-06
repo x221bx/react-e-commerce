@@ -212,7 +212,10 @@
         "valid": "Valid",
         "total": "Total",
         "customer": "Customer",
-        "admin": "Admin"
+        "admin": "Admin",
+        "uploading": "Uploading...",
+        "reset": "Reset",
+        "remove": "Remove photo"
     },
     "settings": {
         "language_display": "Language & Display",
@@ -249,6 +252,12 @@
         "phone_placeholder": "01XXXXXXXXX",
         "farm_city": "Farm Location",
         "location_placeholder": "Add your city or delivery landmark",
+        "username": "Username",
+        "username_placeholder": "your.username",
+        "email": "Email",
+        "email_placeholder": "john@example.com",
+        "location": "Location",
+        "photo_formats_desc": "Drag and drop or click to browse",
         "unsaved_changes": "You have unsaved changes",
         "auto_saving": "Auto-saving in 3 seconds...",
         "all_changes_saved": "All changes saved",
@@ -421,6 +430,7 @@
         "complaints_subtitle": "Monitor your support requests and follow their progress toward resolution.",
         "complaints_helper": "View status updates, contact details, and response priority at a glance.",
         "submit_new_complaint": "Submit New Inquiry",
+        "complaints_your_message": "Your Message",
         "no_complaints_title": "No inquiries yet",
         "no_complaints_subtitle": "You haven't submitted any inquiries yet. Click the button above to submit your first inquiry.",
         "login_required_title": "Please log in to view your inquiries",
@@ -697,15 +707,38 @@
         "phonePlaceholder": "Enter your phone number for contact purposes",
         "phoneRequired": "Required so we can contact you (in English or Arabic) about your support request",
         "phoneInvalid": "Enter an Egyptian mobile starting 010/011/012/015 with 11 digits",
+        "phoneHelp": "Required so we can contact you (in English or Arabic) about your support request",
         "message": "Message",
         "placeholder": "Please describe your issue, feedback, or question in detail...",
         "messageRequired": "Please enter a message",
+        "subject": "Subject",
+        "description": "Description",
         "sending": "Sending...",
         "sendMessage": "Send Message",
         "messageSent": "Your message has been sent successfully!",
         "messageError": "Failed to send message. Please try again.",
         "messageInappropriate": "Please remove offensive language before sending your message.",
-        "moderationFailed": "We couldn't verify your message. Please try again."
+        "moderationFailed": "We couldn't verify your message. Please try again.",
+        "step1": {
+            "title": "Select Category",
+            "subtitle": "Choose the category that best describes your issue"
+        },
+        "step2": {
+            "title": "Provide Details",
+            "subtitle": "Tell us more about your issue"
+        },
+        "step3": {
+            "title": "Contact Information",
+            "subtitle": "We need your phone number to contact you about your support request"
+        },
+        "step4": {
+            "title": "Review & Submit",
+            "subtitle": "Please review your information before submitting",
+            "review": "Review Your Request",
+            "category": "Category",
+            "expectedResponse": "Expected Response Time",
+            "within24Hours": "Within 24 hours"
+        }
     },
     "articles": {
         "list": {

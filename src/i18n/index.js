@@ -1,9 +1,8 @@
-// src/i18n/index.js
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
-import en from "../../src/i18n/locales/en.json";
-import ar from "../../src/i18n/locales/ar.json";
+import en from "./locales/en.json";
+import ar from "./locales/ar.json";
 
 i18n
   .use(LanguageDetector)
@@ -13,7 +12,7 @@ i18n
       en: { translation: en },
       ar: { translation: ar },
     },
-    lng: localStorage.getItem("i18nextLng") || "ar", // ←← هنا الحل
+    lng: localStorage.getItem("i18nextLng") || "en",
     fallbackLng: "en",
     detection: {
       order: ["localStorage", "navigator", "htmlTag"],

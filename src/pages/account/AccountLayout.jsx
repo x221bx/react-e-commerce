@@ -73,8 +73,10 @@ const navItems = [
 
 export default function AccountLayout() {
   const { t, i18n } = useTranslation();   // ← لازم الأول
-    console.log("LANG:", i18n.language);
-  console.log("TEST:", t("account.profile_preferences"));
+
+  console.log('AccountLayout - Current language:', i18n.language);
+  console.log('AccountLayout - Testing translation:', t('account.profile_preferences'));
+  console.log('AccountLayout - i18n resources:', i18n.services?.resourceStore?.data);
   const user = useSelector(selectCurrentUser);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -119,9 +121,6 @@ export default function AccountLayout() {
     ? "border-transparent text-white/70 hover:border-white/20 hover:bg-white/10"
     : "border-transparent text-slate-600 hover:border-gray-200 hover:bg-gray-50";
 
-  const helperCard = isDark
-    ? "bg-slate-800/50 border border-white/10 text-white/70"
-    : "bg-gray-50 border border-gray-200 text-slate-600";
 
   const navDescription = isDark ? "text-white/60" : "text-slate-500";
 

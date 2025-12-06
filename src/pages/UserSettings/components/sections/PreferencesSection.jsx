@@ -17,6 +17,7 @@ const PreferencesSection = ({
 
   const handleLocaleChange = (value) => {
     handlePreferenceChange("locale", value);
+    i18n.changeLanguage(value);
   };
 
   return (
@@ -69,7 +70,7 @@ const PreferencesSection = ({
           disabled={isSavingPreferences}
           className="inline-flex items-center rounded-xl bg-green-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-70 dark:bg-green-500 dark:hover:bg-green-600"
         >
-          {isSavingPreferences ? "Saving..." : t('settings.save_display_settings')}
+          {isSavingPreferences ? t('common.saving', 'Saving...') : t('settings.save_display_settings')}
         </button>
       </div>
     </form>

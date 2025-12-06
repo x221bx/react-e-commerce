@@ -4,11 +4,11 @@ import { doc, serverTimestamp, setDoc, getDoc, deleteDoc } from "firebase/firest
 import { updateEmail, updateProfile } from "firebase/auth";
 import toast from "react-hot-toast";
 
-import { auth, db, uploadImage } from "../../../services/firebase";
+import { auth, db } from "../../../services/firebase";
 import { updateCurrentUser } from "../../../features/auth/authSlice";
 import { getProfileState } from "../utils/helpers";
 import { validateProfileField } from "../utils/validation";
-import { MAX_AVATAR_SIZE } from "../utils/constants";
+import { MAX_AVATAR_SIZE, MAX_COMPRESSED_AVATAR_SIZE } from "../utils/constants";
 import { useDebounce } from "../../../hooks/useDebounce";
 import { getSettingsMessage } from "../utils/translations";
 
@@ -162,8 +162,8 @@ export const useProfileForm = (user) => {
     setIsUploadingAvatar(true);
 
     try {
-      // Compress image for Firebase Storage
-      const compressImage = (file) => {
+      // Compress and convert image to Base64
+      const processImageToBase64 = (file) => {
         return new Promise((resolve, reject) => {
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
@@ -171,8 +171,8 @@ export const useProfileForm = (user) => {
 
           img.onload = () => {
             try {
-              // Calculate new dimensions (max 400px for profile images)
-              const maxSize = 400;
+              // Calculate new dimensions (max 200px for any dimension)
+              const maxSize = 200;
               let { width, height } = img;
 
               if (width > height) {
@@ -192,17 +192,21 @@ export const useProfileForm = (user) => {
 
               ctx.drawImage(img, 0, 0, width, height);
 
-              // Always use JPEG for maximum compression (no transparency needed for profile pics)
-              const outputType = 'image/jpeg';
-              const quality = 0.8; // Good quality for storage
+              // Convert to Base64 with 60% quality JPEG
+              const base64String = canvas.toDataURL('image/jpeg', 0.6);
 
-              canvas.toBlob((blob) => {
-                // Clean up resources
-                URL.revokeObjectURL(img.src);
-                canvas.width = 0;
-                canvas.height = 0;
-                resolve(blob);
-              }, outputType, quality);
+              // Check if compressed size is under 500KB
+              const base64Size = Math.round((base64String.length * 3) / 4); // Approximate size in bytes
+              if (base64Size > MAX_COMPRESSED_AVATAR_SIZE) {
+                reject(new Error('Compressed image is too large. Please choose a smaller image.'));
+                return;
+              }
+
+              // Clean up resources
+              URL.revokeObjectURL(img.src);
+              canvas.width = 0;
+              canvas.height = 0;
+              resolve(base64String);
             } catch (error) {
               // Clean up on error
               URL.revokeObjectURL(img.src);
@@ -222,25 +226,28 @@ export const useProfileForm = (user) => {
         });
       };
 
-      const compressedFile = await compressImage(file);
+      const base64Image = await processImageToBase64(file);
 
-      // Upload to Firebase Storage
-      const downloadURL = await uploadImage(compressedFile, `avatars/${user.uid}/`);
-
-      // Update form with the download URL
-      setProfileForm((prev) => ({ ...prev, photoURL: downloadURL }));
+      // Update form with the Base64 string
+      setProfileForm((prev) => ({ ...prev, photoURL: base64Image }));
       setUploadedAvatarName(file.name);
       setAvatarError(false);
       setProfileErrors((prev) => ({ ...prev, photoURL: "" }));
       setHasUnsavedChanges(true);
+
+      // Update Redux state immediately to show avatar in sidebar
+      dispatch(updateCurrentUser({
+        photoURL: base64Image,
+      }));
+
       setIsUploadingAvatar(false);
-      toast.success('Profile image uploaded successfully!');
+      toast.success('Profile image processed successfully!');
     } catch (error) {
-      console.error('Avatar upload error:', error);
-      toast.error(error.message || 'Failed to upload image. Please try again.');
+      console.error('Avatar processing error:', error);
+      toast.error(error.message || 'Failed to process image. Please try again.');
       setProfileErrors((prev) => ({
         ...prev,
-        photoURL: error.message || 'Failed to upload image',
+        photoURL: error.message || 'Failed to process image',
       }));
       setIsUploadingAvatar(false);
     }
@@ -252,6 +259,11 @@ export const useProfileForm = (user) => {
     setAvatarError(false);
     setProfileErrors((prev) => ({ ...prev, photoURL: "" }));
     setHasUnsavedChanges(true);
+
+    // Update Redux state immediately to remove avatar from sidebar
+    dispatch(updateCurrentUser({
+      photoURL: "",
+    }));
   };
 
   const handlePhotoLinkChange = (value) => {

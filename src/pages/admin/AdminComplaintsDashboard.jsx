@@ -315,7 +315,7 @@ const AdminComplaintsDashboard = () => {
       }
 
       setAdminResponse("");
-      setRespondingTo(null);
+      // Keep input open for multiple replies
       // Removed success toast for live chat feel
     } catch (error) {
       console.error("Error sending response:", error);

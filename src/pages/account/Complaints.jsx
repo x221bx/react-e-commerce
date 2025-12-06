@@ -1,5 +1,4 @@
-// src/pages/account/Complaints.jsx
-import React, { useState, useEffect, useRef } from "react";
+ import React, { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -455,7 +454,7 @@ export default function Complaints() {
   const metaText = isDark ? "text-slate-300" : "text-slate-600";
 
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-slate-900' : 'bg-gradient-to-br from-blue-50 via-white to-emerald-50'} py-8`}>
+    <div className={`min-h-screen ${isDark ? 'bg-slate-900' : 'bg-white'} py-8`}>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Header */}
@@ -519,8 +518,8 @@ export default function Complaints() {
           <div>
             <div className="grid gap-4 md:grid-cols-2">
               {paginatedData.map((complaint) => {
-              const topicKey = complaint.topic
-                ? `account.complaints_topics.${complaint.topic}`
+              const topicKey = complaint.category
+                ? `account.complaints_topics.${complaint.category}`
                 : "account.complaints_topic_fallback";
               const statusKey = complaint.status
                 ? `account.complaints_status.${complaint.status}`
@@ -546,7 +545,7 @@ export default function Complaints() {
                         {t("account.complaints_topic_fallback", "Topic")}
                       </p>
                       <h3 className="text-xl font-semibold leading-tight">
-                        {t(topicKey, complaint.topic || t("account.complaints_topic_fallback", "General support"))}
+                        {t(topicKey, complaint.category || t("account.complaints_topic_fallback", "General support"))}
                       </h3>
                       {(complaint.originalMessage || complaint.message || complaint.description) && (
                         <div className={`mt-2 p-3 rounded-lg border ${isDark ? "bg-slate-800 border-slate-700" : "bg-slate-50 border-slate-200"}`}>
@@ -589,49 +588,128 @@ export default function Complaints() {
                     }`}>
                       <div className="p-3 border-b border-gray-200 dark:border-gray-700">
                         <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
-                          Conversation ({(complaint.replies?.length || 0) + (complaint.userMessages?.length || 0) + (complaint.adminResponse ? 1 : 0)} messages)
+                          Conversation ({(() => {
+                            const allMessages = [
+                              // Original customer message
+                              {
+                                id: 'original-customer',
+                                message: complaint.originalMessage || complaint.message || complaint.description,
+                                sender: 'user',
+                                timestamp: complaint.createdAt,
+                                type: 'original'
+                              },
+                              // User follow-ups
+                              ...(complaint.userMessages || []).map(msg => ({ ...msg, sender: 'user', type: 'followup' })),
+                              // Admin replies
+                              ...(complaint.replies || []).map(reply => ({ ...reply, sender: 'admin', type: 'admin' })),
+                              // Legacy admin response
+                              ...(complaint.adminResponse && (!complaint.replies || complaint.replies.length === 0) ? [{
+                                id: 'legacy-admin',
+                                message: complaint.adminResponse,
+                                sender: 'admin',
+                                timestamp: complaint.respondedAt || complaint.updatedAt || complaint.createdAt,
+                                type: 'admin'
+                              }] : [])
+                            ].sort((a, b) => {
+                              const aTime = a.timestamp?.seconds ? a.timestamp.seconds : new Date(a.timestamp).getTime() / 1000;
+                              const bTime = b.timestamp?.seconds ? b.timestamp.seconds : new Date(b.timestamp).getTime() / 1000;
+                              return aTime - bTime;
+                            });
+
+                            // Group consecutive messages from the same sender
+                            const groupedMessages = [];
+                            let currentGroup = null;
+                            allMessages.forEach(message => {
+                              if (currentGroup && currentGroup.sender === message.sender) {
+                                currentGroup.messages.push(message);
+                              } else {
+                                currentGroup = { sender: message.sender, messages: [message] };
+                                groupedMessages.push(currentGroup);
+                              }
+                            });
+                            return groupedMessages.length;
+                          })()} message groups)
                         </h4>
                       </div>
                       <div ref={chatContainerRef} className="min-h-[300px] max-h-96 overflow-y-auto p-3 space-y-3 scroll-smooth">
-                        {/* Customer Original Message */}
-                        <div className="flex justify-start">
-                          <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                            isDark ? "bg-blue-900/30 text-blue-100" : "bg-blue-100 text-blue-900"
-                          }`}>
-                            <p className="text-sm">{complaint.originalMessage || complaint.message || complaint.description}</p>
-                            <p className="text-xs mt-1 opacity-70">
-                              {complaint.createdAt?.toDate?.()?.toLocaleString?.() || new Date(complaint.createdAt).toLocaleString()}
-                            </p>
-                          </div>
-                        </div>
+                        {/* Combine all messages: original, user follow-ups, admin replies */}
+                        {(() => {
+                          const allMessages = [
+                            // Original customer message
+                            {
+                              id: 'original-customer',
+                              message: complaint.originalMessage || complaint.message || complaint.description,
+                              sender: 'user',
+                              timestamp: complaint.createdAt,
+                              type: 'original'
+                            },
+                            // User follow-ups
+                            ...(complaint.userMessages || []).map(msg => ({ ...msg, sender: 'user', type: 'followup' })),
+                            // Admin replies
+                            ...(complaint.replies || []).map(reply => ({ ...reply, sender: 'admin', type: 'admin' })),
+                            // Legacy admin response
+                            ...(complaint.adminResponse && (!complaint.replies || complaint.replies.length === 0) ? [{
+                              id: 'legacy-admin',
+                              message: complaint.adminResponse,
+                              sender: 'admin',
+                              timestamp: complaint.respondedAt || complaint.updatedAt || complaint.createdAt,
+                              type: 'admin'
+                            }] : [])
+                          ].sort((a, b) => {
+                            const aTime = a.timestamp?.seconds ? a.timestamp.seconds : new Date(a.timestamp).getTime() / 1000;
+                            const bTime = b.timestamp?.seconds ? b.timestamp.seconds : new Date(b.timestamp).getTime() / 1000;
+                            return aTime - bTime;
+                          });
 
-                        {/* Combine and sort all messages by timestamp */}
-                        {[
-                          ...(complaint.userMessages || []).map(msg => ({ ...msg, type: 'user' })),
-                          ...(complaint.replies || []).map(reply => ({ ...reply, type: 'admin' })),
-                          ...(complaint.adminResponse && (!complaint.replies || complaint.replies.length === 0) ? [{
-                            id: 'legacy-admin',
-                            message: complaint.adminResponse,
-                            sender: 'admin',
-                            timestamp: complaint.respondedAt || complaint.updatedAt || complaint.createdAt,
-                            type: 'admin'
-                          }] : [])
-                        ]
-                          .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
-                          .map((message) => (
-                          <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-start' : 'justify-end'}`}>
-                            <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                              message.type === 'user'
-                                ? (isDark ? "bg-orange-900/30 text-orange-100" : "bg-orange-100 text-orange-900")
-                                : (isDark ? "bg-emerald-700 text-white" : "bg-emerald-600 text-white")
-                            }`}>
-                              <p className="text-sm">{message.message}</p>
-                              <p className="text-xs mt-1 opacity-70">
-                                {message.timestamp?.toDate ? message.timestamp.toDate().toLocaleString() : new Date(message.timestamp).toLocaleString()}
-                              </p>
+                          // Group consecutive messages from the same sender
+                          const groupedMessages = [];
+                          let currentGroup = null;
+                          allMessages.forEach(message => {
+                            if (currentGroup && currentGroup.sender === message.sender) {
+                              currentGroup.messages.push(message);
+                            } else {
+                              currentGroup = { sender: message.sender, messages: [message] };
+                              groupedMessages.push(currentGroup);
+                            }
+                          });
+
+                          return groupedMessages.map((group, groupIndex) => (
+                            <div
+                              key={group.messages[0].id}
+                              className={`flex w-full ${group.sender === 'user' ? 'justify-start' : 'justify-end'}`}
+                            >
+                              <div className={`max-w-[70%] px-4 py-3 rounded-2xl shadow-sm ${
+                                group.sender === 'user'
+                                  ? (isDark ? "bg-blue-900/40 text-blue-100 border border-blue-800/50" : "bg-blue-50 text-blue-900 border border-blue-200")
+                                  : (isDark ? "bg-emerald-700 text-white border border-emerald-600" : "bg-emerald-600 text-white border border-emerald-500")
+                              }`}>
+                                <div className="flex items-center space-x-2 mb-2">
+                                  {group.sender === 'user' ? (
+                                    <>
+                                      <MessageSquare className="w-4 h-4" />
+                                      <span className="text-sm font-medium">You</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <span className="text-sm font-medium">Support Team</span>
+                                      <div className={`w-2 h-2 rounded-full ${isDark ? 'bg-emerald-400' : 'bg-emerald-300'}`}></div>
+                                    </>
+                                  )}
+                                </div>
+                                {group.messages.map((message, index) => (
+                                  <div key={message.id}>
+                                    <p className="text-sm leading-relaxed break-words">{message.message}</p>
+                                    {index === group.messages.length - 1 && (
+                                      <p className="text-xs mt-2 opacity-70">
+                                        {message.timestamp?.toDate ? message.timestamp.toDate().toLocaleString() : new Date(message.timestamp).toLocaleString()}
+                                      </p>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          ));
+                        })()}
                       </div>
                     </div>
                   ) : null}

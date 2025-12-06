@@ -9,7 +9,8 @@ import {
 } from "lucide-react";
 
 // UserSettings Constants
-export const MAX_AVATAR_SIZE = 2 * 1024 * 1024; // 2MB
+export const MAX_AVATAR_SIZE = 2 * 1024 * 1024; // 2MB (original file size limit)
+export const MAX_COMPRESSED_AVATAR_SIZE = 500 * 1024; // 500KB (compressed Base64 size limit)
 
 export const navItems = [
   {

@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { XCircle, MessageSquare, User, AlertCircle } from 'lucide-react';
 import ChatConversation from './ChatConversation';
 import ReplyForm from './ReplyForm';
@@ -18,6 +19,7 @@ const ComplaintsModal = ({
   getStatusColor,
   isDark
 }) => {
+  const { t } = useTranslation();
   const lastMessageRef = useRef(null);
 
   if (!selectedComplaint) return null;
@@ -127,6 +129,19 @@ const ComplaintsModal = ({
                           <option key={option.value} value={option.value}>{option.label}</option>
                         ))}
                       </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
+                      Category
+                    </label>
+                    <div className={`px-3 py-2 rounded-xl border transition-colors ${
+                      isDark
+                        ? 'bg-slate-600 border-slate-500 text-white'
+                        : 'bg-gray-100 border-gray-300 text-gray-900'
+                    }`}>
+                      {t(`support.topics.${selectedComplaint.category}`) || 'General'}
                     </div>
                   </div>
 

@@ -235,7 +235,7 @@ const SupportCenterProfessional = () => {
   const selectedCategory = categories.find(cat => cat.id === formData.category);
 
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-slate-900' : 'bg-gradient-to-br from-blue-50 via-white to-emerald-50'} py-8`}>
+    <div className={`min-h-screen ${isDark ? 'bg-slate-900' : 'bg-white'} py-8`}>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Header */}
