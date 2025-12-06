@@ -32,7 +32,8 @@ export default function Products() {
   const [categoryFilter, setCategoryFilter] = useState(categoryId || "all");
 
   const { theme } = UseTheme();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === "ar";
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const isDark = theme === "dark";
@@ -85,17 +86,18 @@ export default function Products() {
   const handleCardClick = (productId) => navigate(`/product/${productId}`);
 
   return (
-   <div
-  className={`
+    <div
+      dir={isRTL ? "rtl" : "ltr"}
+      className={`
     min-h-screen font-sans 
     bg-gradient-to-b from-transparent to-gray-50/50 
     dark:to-slate-800/30 
     ${isDark ? "text-white" : "text-slate-900"}
   `}
->
+    >
 
 
-     <div className="mx-auto max-w-8xl flex-1">
+      <div className="mx-auto max-w-8xl flex-1">
         <div
           className={`
           rounded-2xl shadow-md border overflow-hidden
@@ -112,7 +114,7 @@ export default function Products() {
             <h1
               className={`text-4xl lg:text-5xl font-bold bg-clip-text text-transparent
               ${isDark ? "bg-gradient-to-r from-teal-300 via-green-300 to-lime-300" :
-                "bg-gradient-to-r from-green-400 via-blue-500 to-cyan-500"}
+                  "bg-gradient-to-r from-green-400 via-blue-500 to-cyan-500"}
             `}
             >
               {t("products.title", "Our Products")}
@@ -198,7 +200,7 @@ export default function Products() {
                 className={`
                 rounded-md p-6 text-center text-sm space-y-4
                 ${isDark ? "bg-white/10 border-white/20 text-white/60" :
-                  "bg-gray-50 border border-gray-100 text-slate-600"}
+                    "bg-gray-50 border border-gray-100 text-slate-600"}
               `}
               >
                 <p>{t("products.noProductsFound", "No products found.")}</p>
@@ -223,9 +225,9 @@ export default function Products() {
               {paginatedData.map((p) => {
                 const isFavorite = favoriteIds.has(p.id);
                 return (
-                <li key={p.id} className="scale-[0.90] origin-top">
-                <ProductCard product={p} />
-                </li>
+                  <li key={p.id} className="scale-[0.90] origin-top">
+                    <ProductCard product={p} />
+                  </li>
                 );
               })}
             </ul>
@@ -245,10 +247,10 @@ export default function Products() {
         </main>
 
       </div>
-        {/* Footer */}
-        <div className="mt-0">
+      {/* Footer */}
+      <div className="mt-0">
         <Footer />
-        </div>
+      </div>
     </div>
   );
 }

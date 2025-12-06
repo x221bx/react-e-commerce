@@ -18,6 +18,7 @@ import Footer from "../../Authcomponents/Footer";
 const ArticleDetails = () => {
     const { articleId } = useParams();
     const { t, i18n } = useTranslation();
+    const isRTL = (i18n.language || "en").startsWith("ar");
     const user = useSelector(selectCurrentUser);
     const { article, loading, notFound } = useArticle(articleId);
     const favoriteIds = useUserFavoriteIds(user?.uid);
@@ -60,14 +61,14 @@ const ArticleDetails = () => {
 
     if (loading) {
         return (
-            <div className="flex min-h-screen items-center justify-center">
+            <div dir={isRTL ? "rtl" : "ltr"} className="flex min-h-screen items-center justify-center">
                 <LoadingSpinner />
             </div>
         );
     }
 
     if (notFound || !localizedArticle) {
-        return <ErrorMessage text={t("articles.detail.notFound", "Article not found")} />;
+        return <div dir={isRTL ? "rtl" : "ltr"}><ErrorMessage text={t("articles.detail.notFound", "Article not found")} /></div>;
     }
 
     // Check if article is published (only published articles should be visible to clients, unless admin)
@@ -76,7 +77,7 @@ const ArticleDetails = () => {
     }
 
     return (
-        <div className="min-h-screen bg-surface text-[var(--text-main)]">
+        <div dir={isRTL ? "rtl" : "ltr"} className="min-h-screen bg-surface text-[var(--text-main)]">
             {/* Article Content */}
             <article className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8 card-surface rounded-[32px] shadow-2xl">
                 {/* Hero Image */}
@@ -100,28 +101,26 @@ const ArticleDetails = () => {
                                 <div className="flex items-center gap-1 bg-slate-50 dark:bg-slate-800 rounded-lg p-1 border border-slate-200 dark:border-slate-700">
                                     <button
                                         onClick={handleLike}
-                                        className={`inline-flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium transition-all ${
-                                            isLiked
+                                        className={`inline-flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium transition-all ${isLiked
                                                 ? "bg-emerald-100 text-emerald-700 shadow-sm dark:bg-emerald-900/30 dark:text-emerald-300"
                                                 : "text-slate-600 hover:bg-white dark:text-slate-400 dark:hover:bg-slate-700"
-                                        }`}
+                                            }`}
                                         aria-label={isLiked ? "Remove like" : "Like this article"}
                                     >
                                         <FiThumbsUp className="h-4 w-4" />
-                                        <span>{isLiked ? "Liked" : "Like"}</span>
+                                        <span>{isLiked ? t("articles.detail.liked", "Liked") : t("articles.detail.like", "Like")}</span>
                                     </button>
 
                                     <button
                                         onClick={handleDislike}
-                                        className={`inline-flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium transition-all ${
-                                            isDisliked
+                                        className={`inline-flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium transition-all ${isDisliked
                                                 ? "bg-red-100 text-red-700 shadow-sm dark:bg-red-900/30 dark:text-red-300"
                                                 : "text-slate-600 hover:bg-white dark:text-slate-400 dark:hover:bg-slate-700"
-                                        }`}
+                                            }`}
                                         aria-label={isDisliked ? "Remove dislike" : "Dislike this article"}
                                     >
                                         <FiThumbsDown className="h-4 w-4" />
-                                        <span>{isDisliked ? "Disliked" : "Dislike"}</span>
+                                        <span>{isDisliked ? t("articles.detail.disliked", "Disliked") : t("articles.detail.dislike", "Dislike")}</span>
                                     </button>
                                 </div>
                             )}
@@ -148,11 +147,10 @@ const ArticleDetails = () => {
                         {user && (
                             <button
                                 onClick={handleToggleFavorite}
-                                className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all shadow-sm ${
-                                    isFavorite
+                                className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all shadow-sm ${isFavorite
                                         ? "bg-amber-100 text-amber-700 border border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800"
                                         : "bg-slate-100 text-slate-700 border border-slate-200 hover:bg-white dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700"
-                                }`}
+                                    }`}
                                 aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
                             >
                                 {isFavorite ? (
@@ -172,10 +170,10 @@ const ArticleDetails = () => {
 
                     {/* Category Badge */}
                     <div className="mb-6 text-center">
-            <span className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-4 py-2 text-sm font-medium text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">
-              <FiUser className="h-4 w-4" />
-                {localizedArticle?.tag || t("articles.tag.insights", "Insights")}
-            </span>
+                        <span className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-4 py-2 text-sm font-medium text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">
+                            <FiUser className="h-4 w-4" />
+                            {localizedArticle?.tag || t("articles.tag.insights", "Insights")}
+                        </span>
                     </div>
 
                     {/* Title */}
@@ -211,7 +209,7 @@ const ArticleDetails = () => {
                                 {t("articles.detail.emptyContent", "Article content is being prepared.")}
                             </h3>
                             <p className="text-slate-500 dark:text-slate-500">
-                                Check back soon for updates!
+                                {t("articles.detail.continueJourney", "Check back soon for updates!")}
                             </p>
                         </div>
                     )}

@@ -14,15 +14,14 @@ export const SelectInput = ({ label, value, onChange, children, required, error 
         aria-label={label}
         aria-required={required}
         aria-invalid={!!error}
-        className={`h-11 w-full appearance-none rounded-xl border px-3 pr-8 text-sm font-normal shadow-sm transition focus:outline-none focus:ring-2 ${
-          error
+        className={`h-11 w-full appearance-none rounded-xl border px-3 pr-8 text-sm font-normal shadow-sm transition focus:outline-none focus:ring-2 ${error
             ? "border-red-300 bg-red-50 text-red-900 focus:border-red-500 focus:ring-red-100 dark:border-red-700 dark:bg-red-950/30 dark:text-red-100 dark:focus:border-red-500 dark:focus:ring-red-500/30"
             : "border-slate-300 bg-white text-slate-900 focus:border-emerald-500 focus:ring-emerald-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-emerald-500 dark:focus:ring-emerald-500/30"
-        }`}
+          }`}
       >
         {children}
       </select>
-      <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+      <div className="pointer-events-none absolute ltr:right-3 rtl:left-3 top-1/2 -translate-y-1/2">
         <svg className="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
@@ -57,11 +56,10 @@ export const TextAreaInput = ({ label, value, onChange, placeholder, required, e
       rows={3}
       aria-required={required}
       aria-invalid={!!error}
-      className={`rounded-2xl border px-3 py-2 text-sm font-normal shadow-sm transition focus:outline-none focus:ring-2 resize-none ${
-        error
+      className={`rounded-2xl border px-3 py-2 text-sm font-normal shadow-sm transition focus:outline-none focus:ring-2 resize-none ${error
           ? "border-red-300 bg-red-50 text-red-900 focus:border-red-500 focus:ring-red-100 dark:border-red-700 dark:bg-red-950/30 dark:text-red-100 dark:focus:border-red-500 dark:focus:ring-red-500/30"
           : "border-slate-200 bg-white text-slate-700 focus:border-emerald-400 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-emerald-500 dark:focus:ring-emerald-500/30"
-      }`}
+        }`}
     />
     {error && (
       <p className="text-sm text-red-600 dark:text-red-400" role="alert">
@@ -96,20 +94,18 @@ export const PasswordInput = ({
         aria-label={label}
         aria-required={required}
         aria-invalid={!!error}
-        className={`h-11 w-full rounded-xl border px-3 pr-12 text-sm font-normal shadow-sm transition focus:outline-none focus:ring-2 ${
-          error
+        className={`h-11 w-full rounded-xl border px-3 pr-12 text-sm font-normal shadow-sm transition focus:outline-none focus:ring-2 ${error
             ? "border-red-300 bg-red-50 text-red-900 focus:border-red-500 focus:ring-red-100 dark:border-red-700 dark:bg-red-950/30 dark:text-red-100 dark:focus:border-red-500 dark:focus:ring-red-500/30"
             : "border-slate-300 bg-white text-slate-900 focus:border-emerald-500 focus:ring-emerald-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-emerald-500 dark:focus:ring-emerald-500/30"
-        }`}
+          }`}
       />
       <button
         type="button"
         onClick={onToggleVisibility}
-        className={`absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-lg transition focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
-          error
+        className={`absolute ltr:right-2 rtl:left-2 top-1/2 -translate-y-1/2 p-1 rounded-lg transition focus:outline-none focus:ring-2 focus:ring-emerald-500 ${error
             ? "text-red-600 hover:text-red-700 hover:bg-red-100 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/30"
             : "text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-700"
-        }`}
+          }`}
         aria-label={showPassword ? "Hide password" : "Show password"}
         aria-expanded={showPassword}
       >

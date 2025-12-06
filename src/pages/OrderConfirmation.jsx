@@ -6,7 +6,8 @@ import { useTranslation } from "react-i18next";
 import Footer from "../Authcomponents/Footer";
 
 const OrderConfirmation = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === "ar";
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const { theme } = UseTheme();
@@ -61,7 +62,7 @@ const OrderConfirmation = () => {
   }, [orderId, t]);
 
   return (
-    <div className={`min-h-screen ${pageBackground} py-12 px-4 sm:px-8`}>
+    <div dir={isRTL ? "rtl" : "ltr"} className={`min-h-screen ${pageBackground} py-12 px-4 sm:px-8`}>
       <div className="mx-auto flex max-w-5xl flex-col gap-6">
         {loading && (
           <div

@@ -13,6 +13,7 @@ import {
   FiCalendar,
   FiLayers,
 } from "react-icons/fi";
+import { useTranslation } from "react-i18next";
 import { RiChatSmileLine } from "react-icons/ri";
 import Footer from "../Authcomponents/Footer";
 
@@ -21,6 +22,9 @@ export default function OrderDetails() {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
+
+  const { i18n } = useTranslation();
+  const isRTL = i18n.language === "ar";
 
   // Convert ANY Firestore / JS time format → Date object
   const toDateObj = (ts) => {
@@ -101,7 +105,7 @@ export default function OrderDetails() {
 
   if (loading)
     return (
-      <div className="max-w-5xl mx-auto py-10 px-4">
+      <div dir={isRTL ? "rtl" : "ltr"} className="max-w-5xl mx-auto py-10 px-4">
         <Skeleton className="h-6 w-32 mb-4" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
           <Skeleton className="h-24 w-full" />
@@ -119,13 +123,13 @@ export default function OrderDetails() {
 
   if (!order)
     return (
-      <div className="min-h-screen flex items-center justify-center text-red-600 font-semibold">
+      <div dir={isRTL ? "rtl" : "ltr"} className="min-h-screen flex items-center justify-center text-red-600 font-semibold">
         Order not found.
       </div>
     );
 
   return (
-    <div className="max-w-5xl mx-auto py-10 px-4">
+    <div dir={isRTL ? "rtl" : "ltr"} className="max-w-5xl mx-auto py-10 px-4">
       {/* Breadcrumb */}
       <div className="flex items-center text-sm text-gray-500 mb-6">
         <Link
@@ -166,11 +170,10 @@ export default function OrderDetails() {
               <FiClock /> Status
             </h3>
             <span
-              className={`inline-block mt-2 px-3 py-1 rounded-full text-sm font-medium ${
-                order.status === "Cancelled"
+              className={`inline-block mt-2 px-3 py-1 rounded-full text-sm font-medium ${order.status === "Cancelled"
                   ? "bg-red-100 text-red-700"
                   : "bg-green-100 text-green-700"
-              }`}
+                }`}
             >
               {order.status}
             </span>
@@ -200,24 +203,21 @@ export default function OrderDetails() {
             return (
               <div key={i} className="flex flex-col items-center relative">
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${
-                    isActive ? "bg-green-600" : "bg-gray-300"
-                  }`}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${isActive ? "bg-green-600" : "bg-gray-300"
+                    }`}
                 >
                   {i + 1}
                 </div>
                 <span
-                  className={`mt-2 text-xs ${
-                    isActive ? "text-green-700" : "text-gray-400"
-                  }`}
+                  className={`mt-2 text-xs ${isActive ? "text-green-700" : "text-gray-400"
+                    }`}
                 >
                   {step}
                 </span>
                 {i < statusSteps.length - 1 && (
                   <div
-                    className={`absolute top-3 left-10 w-16 h-1 ${
-                      i < currentStepIndex ? "bg-green-600" : "bg-gray-300"
-                    }`}
+                    className={`absolute top-3 left-10 w-16 h-1 ${i < currentStepIndex ? "bg-green-600" : "bg-gray-300"
+                      }`}
                   />
                 )}
               </div>

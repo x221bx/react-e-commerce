@@ -19,7 +19,8 @@ import { UseTheme } from "../theme/ThemeProvider";
 export default function Cart() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === "ar";
   const { theme } = UseTheme();
   const isDark = theme === "dark";
   const { items = [] } = useSelector((state) => state.cart || {});
@@ -100,7 +101,7 @@ export default function Cart() {
   };
 
   return (
-    <div className={`min-h-screen font-inter pb-8 bg-gradient-to-b from-transparent to-gray-50/50 dark:to-slate-800/30`}>
+    <div dir={isRTL ? "rtl" : "ltr"} className={`min-h-screen font-inter pb-8 bg-gradient-to-b from-transparent to-gray-50/50 dark:to-slate-800/30`}>
       <div className="mx-auto max-w-6xl p-6">
         {toast && (
           <div className={`fixed top-4 rtl:left-4 ltr:right-4 p-3 rounded shadow z-50 ${isDark ? "bg-amber-900 text-amber-200" : "bg-yellow-100 text-yellow-800"}`}>

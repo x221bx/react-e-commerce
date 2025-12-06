@@ -15,6 +15,7 @@ import { useCategoryRepresentativeImages } from "../hooks/useCategoryRepresentat
 export default function Home() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const isRTL = i18n.language === "ar";
   const { data: catData = [] } = useCategoriesSorted({ dir: "desc" });
   const { articles: allFeaturedArticles } = useArticles({ featureHome: true });
   const featuredArticles = allFeaturedArticles.filter(
@@ -67,7 +68,7 @@ export default function Home() {
   }));
 
   return (
-    <main className="flex flex-col gap-12 md:gap-16 lg:gap-20">
+    <main className="flex flex-col gap-12 md:gap-16 lg:gap-20" dir={isRTL ? "rtl" : "ltr"}>
       <div className="animate-fade-in">
         <Hero
           title={t("home.heroTitle")}

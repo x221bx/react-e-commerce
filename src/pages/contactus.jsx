@@ -7,10 +7,13 @@ import Footer from "../Authcomponents/Footer";
 import { UseTheme } from "../theme/ThemeProvider";
 import { FiPhone, FiMail, FiUser, FiMessageCircle } from "react-icons/fi";
 import { motion as Motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 export default function ContactUs() {
   const { theme } = UseTheme();
   const isDark = theme === "dark";
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === "ar";
 
   const [form, setForm] = useState({
     name: "",
@@ -81,6 +84,7 @@ Message: ${form.message}`;
 
   return (
     <main
+      dir={isRTL ? "rtl" : "ltr"}
       className={`
         min-h-screen flex flex-col 
         ${isDark ? "bg-[#0b1714] text-[#d7f7d0]" : "bg-gray-100 text-gray-900"}
@@ -121,7 +125,7 @@ Message: ${form.message}`;
                 ${isDark ? "text-teal-300" : "text-teal-700"}
               `}
             >
-              Contact Us
+              {t("contact.title", "Contact Us")}
             </h1>
 
             <p
@@ -130,7 +134,7 @@ Message: ${form.message}`;
                 ${isDark ? "text-teal-200/90" : "text-teal-800/90"}
               `}
             >
-              We're here to assist you anytime
+              {t("contact.heroSubtitle", "We're here to assist you anytime")}
             </p>
           </div>
         </div>
@@ -152,27 +156,26 @@ Message: ${form.message}`;
         >
           <h2 className="text-3xl font-bold mb-4 flex items-center gap-2">
             <FiMessageCircle className="text-teal-600" />
-            Get in Touch
+            {t("contact.getInTouch", "Get in Touch")}
           </h2>
 
           <p className="text-sm opacity-80 leading-relaxed">
-            If you have any questions or need support, feel free to contact us at
-            any time. Our team will get back to you as soon as possible.
+            {t("contact.description", "If you have any questions or need support, feel free to contact us at any time. Our team will get back to you as soon as possible.")}
           </p>
 
           <div className="mt-6 space-y-4 text-sm">
             <p className="flex items-center gap-3">
               <FiMail className="text-teal-600" />
-              <span>mmohamedd.ms@gmail.com</span>
+              <span>{t("contact.email", "mmohamedd.ms@gmail.com")}</span>
             </p>
 
             <p className="flex items-center gap-3">
               <FiPhone className="text-teal-600" />
-              <span>+20 114 404 6547</span>
+              <span>{t("contact.phone", "+20 114 404 6547")}</span>
             </p>
 
             <p className="flex items-center gap-3">
-              📍 Cairo, Egypt
+              📍 {t("contact.address", "Cairo, Egypt")}
             </p>
           </div>
         </Motion.div>
@@ -197,13 +200,12 @@ Message: ${form.message}`;
               name="name"
               value={form.name}
               onChange={handleChange}
-              placeholder="Your Name"
+              placeholder={t("contact.form.namePlaceholder", "Your Name")}
               required
-              className={`w-full rounded-lg py-2 pl-10 pr-3 text-sm ${
-                isDark
+              className={`w-full rounded-lg py-2 pl-10 pr-3 text-sm ${isDark
                   ? "bg-[#173a30]/60 border border-[#2d5a4f] placeholder:text-[#a3ccb9]"
                   : "bg-white border border-gray-300"
-              }`}
+                }`}
             />
           </div>
 
@@ -215,13 +217,12 @@ Message: ${form.message}`;
               name="email"
               value={form.email}
               onChange={handleChange}
-              placeholder="Your Email"
+              placeholder={t("contact.form.emailPlaceholder", "Your Email")}
               required
-              className={`w-full rounded-lg py-2 pl-10 pr-3 text-sm ${
-                isDark
+              className={`w-full rounded-lg py-2 pl-10 pr-3 text-sm ${isDark
                   ? "bg-[#173a30]/60 border border-[#2d5a4f] placeholder:text-[#a3ccb9]"
                   : "bg-white border border-gray-300"
-              }`}
+                }`}
             />
           </div>
 
@@ -233,13 +234,12 @@ Message: ${form.message}`;
               name="phone"
               value={form.phone}
               onChange={handleChange}
-              placeholder="Phone Number"
+              placeholder={t("contact.form.phonePlaceholder", "Phone Number")}
               required
-              className={`w-full rounded-lg py-2 pl-10 pr-3 text-sm ${
-                isDark
+              className={`w-full rounded-lg py-2 pl-10 pr-3 text-sm ${isDark
                   ? "bg-[#173a30]/60 border border-[#2d5a4f] placeholder:text-[#a3ccb9]"
                   : "bg-white border border-gray-300"
-              }`}
+                }`}
             />
           </div>
 
@@ -249,13 +249,12 @@ Message: ${form.message}`;
             rows="5"
             value={form.message}
             onChange={handleChange}
-            placeholder="Write your message..."
+            placeholder={t("contact.form.messagePlaceholder", "Write your message...")}
             required
-            className={`w-full rounded-lg p-3 text-sm ${
-              isDark
+            className={`w-full rounded-lg p-3 text-sm ${isDark
                 ? "bg-[#173a30]/60 border border-[#2d5a4f] placeholder:text-[#a3ccb9]"
                 : "bg-white border border-gray-300"
-            }`}
+              }`}
           />
 
           <button
@@ -263,7 +262,7 @@ Message: ${form.message}`;
             disabled={loading}
             className="w-full bg-teal-600 hover:bg-teal-700 text-white py-2 rounded-lg shadow disabled:opacity-50"
           >
-            {loading ? "Sending..." : "Send Message"}
+            {loading ? t("contact.form.sending", "Sending...") : t("contact.form.submit", "Send Message")}
           </button>
         </Motion.form>
       </section>

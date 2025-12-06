@@ -31,6 +31,7 @@ export default function ProductDetails() {
   const dispatch = useDispatch();
   const { t, i18n } = useTranslation();
   const isAr = (i18n.language || "en").startsWith("ar");
+  const isRTL = isAr;
 
   const [activeTab, setActiveTab] = useState("description");
 
@@ -83,7 +84,7 @@ export default function ProductDetails() {
   /* Loading */
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--bg-card)] dark:bg-[var(--bg-card)]">
+      <div dir={isRTL ? "rtl" : "ltr"} className="min-h-screen flex items-center justify-center bg-[var(--bg-card)] dark:bg-[var(--bg-card)]">
         <p className="text-gray-500 dark:text-gray-200 text-base">
           {t("products.details.loading", "Loading product...")}
         </p>
@@ -94,7 +95,7 @@ export default function ProductDetails() {
   /* Error */
   if (isError || !product) {
     return (
-      <div className="min-h-screen bg-[var(--bg-card)] dark:bg-[var(--bg-card)] flex items-center justify-center p-8">
+      <div dir={isRTL ? "rtl" : "ltr"} className="min-h-screen bg-[var(--bg-card)] dark:bg-[var(--bg-card)] flex items-center justify-center p-8">
         <div className="text-center">
           <div className="text-7xl mb-4 text-emerald-500">😕</div>
           <h1 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">
@@ -121,16 +122,16 @@ export default function ProductDetails() {
   const price =
     product?.price != null
       ? `${Number(product.price).toLocaleString()} ${t(
-          "products.details.currency",
-          "EGP"
-        )}`
+        "products.details.currency",
+        "EGP"
+      )}`
       : t("products.details.contactForPrice", "Contact for price");
   const hasDescription = Boolean(displayDescription);
   const hasSpecs = false;
   const showTabs = hasDescription;
 
   return (
-    <div className="min-h-screen bg-[var(--bg-main)] dark:bg-[var(--bg-main)] pt-20 pb-14">
+    <div dir={isRTL ? "rtl" : "ltr"} className="min-h-screen bg-[var(--bg-main)] dark:bg-[var(--bg-main)] pt-20 pb-14">
       <div className="max-w-6xl mx-auto px-4">
         {/* Product Card */}
         <div className="bg-[var(--bg-card)] dark:bg-[var(--bg-card)] rounded-2xl shadow-sm border border-gray-200 dark:border-gray-200 overflow-hidden">
@@ -185,11 +186,10 @@ export default function ProductDetails() {
                 <button
                   onClick={handleAddToCart}
                   disabled={inCart}
-                  className={`flex-1 min-w-[180px] py-3 rounded-xl text-white text-sm font-semibold transition ${
-                    inCart
+                  className={`flex-1 min-w-[180px] py-3 rounded-xl text-white text-sm font-semibold transition ${inCart
                       ? "bg-gray-400 cursor-not-allowed"
                       : "bg-emerald-600 hover:bg-emerald-700"
-                  }`}
+                    }`}
                 >
                   {inCart
                     ? t("products.details.inCart", "Already in cart")
@@ -198,11 +198,10 @@ export default function ProductDetails() {
 
                 <button
                   onClick={handleToggleFavorite}
-                  className={`flex items-center justify-center gap-2 px-5 py-3 rounded-xl border text-sm font-semibold transition ${
-                    isFavorite
+                  className={`flex items-center justify-center gap-2 px-5 py-3 rounded-xl border text-sm font-semibold transition ${isFavorite
                       ? "bg-red-500 text-white border-red-500"
                       : "border-emerald-600 text-emerald-700 hover:bg-emerald-50"
-                  }`}
+                    }`}
                 >
                   {isFavorite ? <BsHeartFill /> : <BsHeart />}
                   {isFavorite
@@ -234,15 +233,14 @@ export default function ProductDetails() {
           <div className="mt-6 bg-[var(--bg-card)] dark:bg-[var(--bg-card)] border border-gray-200 dark:border-gray-200 rounded-2xl shadow-sm p-4 text-sm">
             <div className="flex flex-wrap gap-4 border-b border-gray-200 dark:border-gray-200 pb-3 text-black-600 dark:text-gray-600">
               {[hasDescription && { key: "description", label: t("products.details.tabDescription", "Description") },
-                hasSpecs && { key: "specs", label: t("products.details.tabSpecs", "Specifications") }].filter(Boolean).map((tab) => (
+              hasSpecs && { key: "specs", label: t("products.details.tabSpecs", "Specifications") }].filter(Boolean).map((tab) => (
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
-                  className={`pb-2 ${
-                    activeTab === tab.key
+                  className={`pb-2 ${activeTab === tab.key
                       ? "text-emerald-600 font-semibold border-b-2 border-emerald-600"
                       : ""
-                  }`}
+                    }`}
                 >
                   {tab.label}
                 </button>

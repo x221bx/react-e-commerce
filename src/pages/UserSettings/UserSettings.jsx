@@ -1,5 +1,6 @@
 // src/pages/UserSettings/UserSettings.jsx
 import React, { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
 
@@ -36,6 +37,8 @@ export default function UserSettings({ variant = "standalone" }) {
   const isEmbedded = variant === "embedded";
   const { theme } = UseTheme();
   const isDarkMode = theme === "dark";
+  const { i18n } = useTranslation();
+  const isRTL = i18n.language === "ar";
 
   // Form states
   const [securityForm, setSecurityForm] = useState(emptySecurityForm);
@@ -246,7 +249,7 @@ export default function UserSettings({ variant = "standalone" }) {
   // ───────────────── LOADING STATE ─────────────────
   if (!user || isLoadingUserData) {
     return (
-      <div className="min-h-screen bg-white py-10 transition-colors dark:bg-[#020f0f]">
+      <div dir={isRTL ? "rtl" : "ltr"} className="min-h-screen bg-white py-10 transition-colors dark:bg-[#020f0f]">
         <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 sm:px-6 lg:flex-row lg:gap-10 lg:px-8">
           {/* Sidebar skeleton */}
           <aside className="space-y-4 lg:w-64">
@@ -347,11 +350,11 @@ export default function UserSettings({ variant = "standalone" }) {
   // ───────────────── EMBEDDED (inside AccountLayout) ─────────────────
   const content = isEmbedded ? (
     <div
-      className={`settings-shell space-y-6 rounded-3xl p-4 transition-colors ${
-        isDarkMode
+      dir={isRTL ? "rtl" : "ltr"}
+      className={`settings-shell space-y-6 rounded-3xl p-4 transition-colors ${isDarkMode
           ? "bg-[#0f1d1d]/80 ring-emerald-900/40 text-slate-200"
           : "bg-white/95 ring-emerald-100 text-slate-900"
-      }`}
+        }`}
     >
       <Navigation
         variant="embedded"
@@ -368,7 +371,7 @@ export default function UserSettings({ variant = "standalone" }) {
     </div>
   ) : (
     // ───────────────── STANDALONE VARIANT ─────────────────
-    <div className="min-h-screen bg-white py-10 transition-colors dark:bg-[#020f0f]">
+    <div dir={isRTL ? "rtl" : "ltr"} className="min-h-screen bg-white py-10 transition-colors dark:bg-[#020f0f]">
       <div className="settings-shell mx-auto flex max-w-6xl flex-col gap-6 px-4 sm:px-6 lg:flex-row lg:gap-10 lg:px-8">
         <aside className="space-y-4 lg:w-64">
           <Navigation

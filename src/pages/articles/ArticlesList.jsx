@@ -21,6 +21,7 @@ const ArticlesList = () => {
     const [tag, setTag] = useState("all");
     const favoriteIds = useUserFavoriteIds(user?.uid);
     const locale = i18n.language || "en";
+    const isRTL = (i18n.language || "en").startsWith("ar");
     const PAGE_SIZE = 6;
     const [currentPage, setCurrentPage] = useState(1);
 
@@ -97,7 +98,7 @@ const ArticlesList = () => {
     };
 
     return (
-        <div className="min-h-screen bg-surface text-[var(--text-main)]">
+        <div dir={isRTL ? "rtl" : "ltr"} className="min-h-screen bg-surface text-[var(--text-main)]">
             {/* Hero */}
             <section className="relative overflow-hidden border-b border-muted bg-panel">
                 <div className="absolute inset-0 bg-grid-pattern opacity-5 dark:opacity-10" />
@@ -114,14 +115,14 @@ const ArticlesList = () => {
                             {t("articles.list.subtitle", "Fresh agronomy tips, veterinary schedules, and AI-powered insights for your farm.")}
                         </p>
                         <div className="mt-5 flex flex-wrap gap-4 text-sm text-[var(--text-muted)]">
-              <span className="inline-flex items-center gap-2">
-                <FiTrendingUp className="h-4 w-4 text-emerald-500" />
-                  {stats.total} {t("articles.stats.articles", "articles")}
-              </span>
                             <span className="inline-flex items-center gap-2">
-                <FiFilter className="h-4 w-4 text-emerald-500" />
+                                <FiTrendingUp className="h-4 w-4 text-emerald-500" />
+                                {stats.total} {t("articles.stats.articles", "articles")}
+                            </span>
+                            <span className="inline-flex items-center gap-2">
+                                <FiFilter className="h-4 w-4 text-emerald-500" />
                                 {stats.tags} {t("articles.stats.topics", "topics")}
-              </span>
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -134,20 +135,19 @@ const ArticlesList = () => {
                         {/* Filters */}
                         <div className="flex flex-col items-center gap-4">
                             <div className="flex flex-wrap items-center justify-center gap-2">
-                <span className="text-sm font-medium text-slate-700 dark:text-slate-300 mr-2">
-                  {t("articles.filters.title", "Topics:")}
-                </span>
+                                <span className="text-sm font-medium text-slate-700 dark:text-slate-300 mr-2">
+                                    {t("articles.filters.title", "Topics:")}
+                                </span>
                                 <div className="flex flex-wrap gap-2">
                                     {tags.slice(0, 6).map((currentTag) => (
                                         <button
                                             key={currentTag}
                                             type="button"
                                             onClick={() => setTag(currentTag)}
-                                            className={`rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 ${
-                                                tag === currentTag
+                                            className={`rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 ${tag === currentTag
                                                     ? "bg-slate-900 text-white shadow-md dark:bg-slate-100 dark:text-slate-900"
                                                     : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-300 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 dark:border-slate-600"
-                                            }`}
+                                                }`}
                                         >
                                             {currentTag === "all" ? t("articles.list.allTags", "All") : currentTag}
                                         </button>

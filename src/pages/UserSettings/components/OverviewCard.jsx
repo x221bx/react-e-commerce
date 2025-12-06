@@ -2,7 +2,8 @@ import React from "react";
 import { Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import ProfileAvatar from "./ProfileAvatar";
-import { formatLastUpdated, formatLocaleLabel, formatMeasurementLabel, formatStatusLabel } from "../utils/helpers";
+import { formatLastUpdated, formatMeasurementLabel, formatStatusLabel } from "../utils/helpers";
+import { useTranslation } from "react-i18next";
 
 const OverviewCard = ({ user, profileForm, preferenceForm, scrollToSection }) => {
   const currentName = React.useMemo(() => {
@@ -30,17 +31,19 @@ const OverviewCard = ({ user, profileForm, preferenceForm, scrollToSection }) =>
     );
   }, [profileForm.photoURL, user?.photoURL, user?.photoUrl]);
 
+  const { t, i18n } = useTranslation();
+
   const heroChips = React.useMemo(() => {
     const chips = [];
     if (profileForm.location) {
       chips.push({ label: profileForm.location, tone: "outline" });
     }
     chips.push({
-      label: user?.isAdmin === true ? "Administrator" : "Customer",
+      label: user?.isAdmin === true ? t('common.admin', 'Administrator') : t('common.customer', 'Customer'),
       tone: "solid",
     });
     chips.push({
-      label: formatLocaleLabel(preferenceForm.locale),
+      label: preferenceForm.locale === 'ar' ? t('languages.arabic', 'العربية') : t('languages.english', 'English'),
       tone: "outline",
     });
     chips.push({
@@ -61,15 +64,15 @@ const OverviewCard = ({ user, profileForm, preferenceForm, scrollToSection }) =>
 
     return [
       {
-        label: "Account Status",
+        label: t('userSettings.account_status', 'Account Status'),
         value: formatStatusLabel(user?.accountStatus || "active"),
       },
       {
-        label: "Interface Language",
-        value: formatLocaleLabel(preferenceForm.locale),
+        label: t('userSettings.interface_language', 'Interface Language'),
+        value: preferenceForm.locale === 'ar' ? t('languages.arabic', 'العربية') : t('languages.english', 'English'),
       },
       {
-        label: "Notifications",
+        label: t('userSettings.notifications', 'Notifications'),
         value: `${activeNotificationCount}/${Object.keys(notificationForm).length} enabled`,
       },
     ];
@@ -89,14 +92,13 @@ const OverviewCard = ({ user, profileForm, preferenceForm, scrollToSection }) =>
             />
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300">
-                Unified settings hub
+                {t('userSettings.hub_eyebrow', 'Unified settings hub')}
               </p>
               <h1 className="text-xl font-semibold text-slate-900 dark:text-white">
-                Hi {currentName || "there"}, keep everything aligned
+                {t('userSettings.hi_message', 'Hi {{name}}, keep everything aligned', { name: currentName || t('userSettings.hi_fallback', 'there') })}
               </h1>
               <p className="text-sm text-slate-500 dark:text-slate-300">
-                Personal info, preferences, notifications, and account safety share the same design in
-                /settings and /account/settings.
+                {t('userSettings.hub_description', 'Personal info, preferences, notifications, and account safety share the same design in /settings and /account/settings.')}
               </p>
             </div>
           </div>
@@ -104,11 +106,10 @@ const OverviewCard = ({ user, profileForm, preferenceForm, scrollToSection }) =>
             {heroChips.map((chip) => (
               <span
                 key={chip.label}
-                className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                  chip.tone === "solid"
+                className={`rounded-full px-3 py-1 text-xs font-semibold ${chip.tone === "solid"
                     ? "bg-emerald-600 text-white"
                     : "bg-slate-100 text-slate-600 dark:bg-slate-800/70 dark:text-slate-200"
-                }`}
+                  }`}
               >
                 {chip.label}
               </span>
@@ -146,14 +147,14 @@ const OverviewCard = ({ user, profileForm, preferenceForm, scrollToSection }) =>
               onClick={() => scrollToSection("personal")}
               className="inline-flex items-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400"
             >
-              Edit profile
+              {t('userSettings.edit_profile', 'Edit profile')}
             </button>
             <button
               type="button"
               onClick={() => scrollToSection("security")}
               className="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-white dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
             >
-              Review security
+              {t('userSettings.review_security', 'Review security')}
             </button>
             <Link
               to="/articles"

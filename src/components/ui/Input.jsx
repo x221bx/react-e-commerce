@@ -4,15 +4,15 @@ import { UseTheme } from "../../theme/ThemeProvider";
 
 const Input = (
   {
-  label,
-  icon,
-  error,
-  value = "",
-  onChange,
-  placeholder = "Type something...",
-  type = "text",
-  ...props
-},
+    label,
+    icon,
+    error,
+    value = "",
+    onChange,
+    placeholder = "Type something...",
+    type = "text",
+    ...props
+  },
   ref
 ) => {
   const [focused, setFocused] = useState(false);
@@ -42,9 +42,8 @@ const Input = (
       )}
 
       <div
-        className={`flex items-center gap-2 px-3 h-11 rounded-xl border transition-all duration-300 relative ${surfaceClasses} ${
-          error ? "border-red-500 ring-1 ring-red-400/40" : ""
-        }`}
+        className={`flex items-center gap-2 px-3 h-11 rounded-xl border transition-all duration-300 relative ${surfaceClasses} ${error ? "border-red-500 ring-1 ring-red-400/40" : ""
+          } rtl:flex-row-reverse`}
       >
         {icon && (
           <span className={`material-symbols-outlined text-base ${iconColor} input-icon`}>
@@ -61,17 +60,15 @@ const Input = (
           ref={ref}
           onFocus={() => !isDisabled && setFocused(true)}
           onBlur={() => setTimeout(() => setFocused(false), 120)}
-          className={`flex-1 bg-transparent outline-none text-sm ${textColor} input-field ${
-            isDisabled ? "cursor-not-allowed" : ""
-          }`}
+          className={`flex-1 bg-transparent outline-none text-sm ${textColor} input-field ${isDisabled ? "cursor-not-allowed" : ""
+            }`}
         />
       </div>
 
       {focused && !error && !isDisabled && (
         <div
-          className={`absolute left-0 right-0 top-[1.9rem] h-11 rounded-xl ring-2 pointer-events-none transition-all duration-300 ${
-            isDark ? "ring-emerald-200/40" : "ring-emerald-500/30"
-          }`}
+          className={`absolute left-0 right-0 top-[1.9rem] h-11 rounded-xl ring-2 pointer-events-none transition-all duration-300 ${isDark ? "ring-emerald-200/40" : "ring-emerald-500/30"
+            }`}
         />
       )}
 

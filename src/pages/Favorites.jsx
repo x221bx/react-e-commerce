@@ -15,7 +15,8 @@ import { useTranslation } from "react-i18next";
 export default function Favorites() {
   const { theme } = UseTheme();
   const isDark = theme === "dark";
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === "ar";
   const favorites = useSelector((state) => state.favorites.items ?? []);
   const cart = useSelector((state) => state.cart.items);
   const dispatch = useDispatch();
@@ -30,7 +31,7 @@ export default function Favorites() {
   };
 
   return (
-    <div className={`min-h-screen bg-gradient-to-b from-transparent to-gray-50/50 dark:to-slate-800/30`}>
+    <div dir={isRTL ? "rtl" : "ltr"} className={`min-h-screen bg-gradient-to-b from-transparent to-gray-50/50 dark:to-slate-800/30`}>
       <div className="mx-auto max-w-6xl px-4 py-10">
         <header className="mb-8 flex items-center justify-between">
           <h1 className={`text-3xl font-bold flex items-center gap-2 ${isDark ? "text-white" : "text-gray-900"}`}>

@@ -77,6 +77,7 @@ export default function AccountLayout() {
   const navigate = useNavigate();
   const { theme } = UseTheme();
   const isDark = theme === "dark";
+  const isRTL = (i18n.language || "en").startsWith("ar");
   // const { t } = useTranslation();
 
   const initials = (user?.name || "Farmer")
@@ -124,7 +125,7 @@ export default function AccountLayout() {
     : "border-red-200 text-red-600 hover:bg-red-50";
 
   return (
-    <div className={`min-h-screen flex flex-col transition-colors ${containerBg}`}>
+    <div dir={isRTL ? "rtl" : "ltr"} className={`min-h-screen flex flex-col transition-colors ${containerBg}`}>
       <div className="flex-1 pt-10 pb-6">
         <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 sm:px-6 lg:flex-row lg:gap-8 lg:px-8">
 

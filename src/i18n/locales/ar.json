@@ -48,6 +48,9 @@
       "email": "أدخل بريداً إلكترونياً صالحاً."
     },
     "securityHint": "نحفظ آخر 4 أرقام فقط؛ الرقم الكامل ورمز CVV لا يُحفظان أبداً.",
+    "form": {
+      "saveForLater": "احفظ هذه البطاقة في طرق الدفع للمرة القادمة"
+    },
     "brandUnknown": "نوع البطاقة غير معروف بعد",
     "noMethods": "لا توجد طرق دفع محفوظة بعد. استخدم النماذج على اليمين لإضافة واحدة.",
     "cardLabel": "بطاقة",
@@ -151,8 +154,7 @@
         "currencyRequired": "العملة مطلوبة",
         "categoryRequired": "الفئة مطلوبة"
       }
-    }
-  ,
+    },
     "footer_note": "© {{year}} لوحة تحكم العيادة البيطرية — مصممة بعناية"
   },
   "layout": {
@@ -201,7 +203,9 @@
     "error": "خطأ",
     "rateLimitExceeded": "محاولات كثيرة. الرجاء الانتظار {{seconds}} ثانية.",
     "valid": "صالح",
-    "total": "الإجمالي"
+    "total": "الإجمالي",
+    "customer": "العميل",
+    "admin": "المسؤول"
   },
   "settings": {
     "language_display": "اللغة والعرض",
@@ -453,6 +457,22 @@
       "title": "المقالات المفضلة",
       "subtitle": "قائمة قراءة مخصصة لفريقك. العناصر المحفوظة تتجاوز اختياراتنا القياسية.",
       "readMore": "متابعة القراءة →"
+    },
+    "orderHistory": {
+      "title": "سجل الطلبات",
+      "subtitle": "تتبع جميع طلباتك وحالتها الحالية",
+      "noOrders": "لا توجد طلبات بعد",
+      "noOrdersDesc": "سيظهر سجل طلباتك هنا بعد إجراء أول عملية شراء.",
+      "orderNumber": "رقم الطلب #",
+      "total": "الإجمالي",
+      "invoice": "الفاتورة",
+      "track": "تتبع",
+      "orderItems": "عناصر الطلب",
+      "shippingInfo": "معلومات الشحن",
+      "paymentInfo": "معلومات الدفع",
+      "orderTimeline": "خط زمني للطلب",
+      "customerConfirmed": "تم تأكيد العميل",
+      "by": "بواسطة"
     }
   },
   "checkout": {
@@ -501,7 +521,9 @@
       "city": "المدينة",
       "state": "المحافظة / الولاية",
       "postalCode": "الرمز البريدي",
-      "country": "الدولة"
+      "country": "الدولة",
+      "address": "العنوان",
+      "notes": "ملاحظات (اختياري)"
     },
     "payment": {
       "cod": {
@@ -519,11 +541,6 @@
       "completeOrder": "إتمام الطلب",
       "confirmOrder": "تأكيد الطلب"
     },
-    "confirmOrder": {
-      "title": "تأكيد طلبك",
-      "message": "هل أنت متأكد من رغبتك في تقديم هذا الطلب؟",
-      "confirmDeduction": "تأكيد الخصم"
-    },
     "cardSelection": {
       "address": "العنوان",
       "selectSavedCard": "اختر بطاقة محفوظة أو أضف بطاقة جديدة",
@@ -539,6 +556,10 @@
       "shipping": "الشحن",
       "total": "الإجمالي",
       "note": "ستصلك رسالة تأكيد بالبريد مع معلومات التتبع."
+    },
+    "confirm": {
+      "title": "تأكيد طلبك",
+      "message": "هل أنت متأكد من رغبتك في تقديم هذا الطلب؟"
     }
   },
   "orders": {
@@ -570,6 +591,35 @@
       "shipped": "تم الشحن",
       "delivered": "تم التوصيل"
     }
+  },
+  "notifications": {
+    "center_label": "مركز الإشعارات",
+    "title": "ابق على اطلاع مع كل إجراء",
+    "subtitle": "تتبع تقدم الطلب وردود الدعم والتحديثات المهمة في مكان واحد.",
+    "unread_count": "{{count}} غير مقروء",
+    "all_caught_up": "اطلعت على كل شيء",
+    "mark_all_read": "تحديد الكل كمقروء",
+    "groups": {
+      "orders": "الطلبات",
+      "support": "الدعم",
+      "system": "النظام"
+    },
+    "group_count": "{{count}} تحديثات",
+    "new_badge": "جديد",
+    "marked": "مقروء",
+    "mark_read": "تحديد كمقروء",
+    "view_details": "عرض التفاصيل",
+    "empty_title": "لا توجد إشعارات بعد",
+    "empty_description": "ستظهر التحديثات المهمة حول طلباتك والاستفسارات هنا."
+  },
+  "pagination": {
+    "prev": "السابق",
+    "next": "التالي",
+    "showing": "عرض",
+    "to": "إلى",
+    "of": "من",
+    "results": "النتائج",
+    "noResults": "لم يتم العثور على نتائج"
   },
   "tracking": {
     "eyebrow": "تتبع مشترياتك الأخيرة",
@@ -610,7 +660,8 @@
     "actions": {
       "goShopping": "الذهاب للتسوق",
       "viewOrders": "عرض الطلبات",
-      "continueShopping": "متابعة التسوق"
+      "continueShopping": "متابعة التسوق",
+      "viewInvoice": "عرض الفاتورة"
     },
     "header": {
       "eyebrow": "شكراً لك",
@@ -855,11 +906,29 @@
       "updating": "جارٍ التحديث...",
       "processing": "جارٍ المعالجة...",
       "loading": "جارٍ التحميل...",
+      "delivery_example": "مثال: تواصل مع مسؤول المزرعة قبل الوصول.",
+      "interface_language": "لغة الواجهة",
+      "language_display": "اللغة والعرض",
+      "personalize_info": "تخصيص تجربتك",
+      "units_language_notes": "اختر الوحدات واللغة المفضلة للواجهة.",
+      "languages": {
+        "english": "English",
+        "arabic": "العربية"
+      },
       "fix_errors": "يرجى إصلاح الأخطاء التالية قبل الحفظ:",
       "fix_errors_short": "تحقق من هذه الحقول للمتابعة:",
       "photo_link_toggle": "استخدام رابط صورة (اختياري)",
       "photo_link_toggle_hide": "إخفاء رابط الصورة"
-    }
+    },
+    "hub_eyebrow": "مركز الإعدادات الموحد",
+    "hi_message": "مرحبًا {{name}}، حافظ على كل شيء مرتب",
+    "hi_fallback": "هناك",
+    "hub_description": "المعلومات الشخصية، التفضيلات، الإشعارات، وأمان الحساب تتبع نفس تصميم الإعدادات في /settings و /account/settings.",
+    "edit_profile": "تعديل الملف الشخصي",
+    "review_security": "مراجعة الأمان",
+    "account_status": "حالة الحساب",
+    "interface_language": "لغة الواجهة",
+    "notifications": "الإشعارات"
   },
   "products": {
     "title": "المنتجات",
@@ -898,6 +967,35 @@
     "addToCart": "أضف إلى السلة",
     "featuredProducts": "منتجات مميزة",
     "viewAll": "عرض الكل"
+  },
+  "about": {
+    "title": "من نحن",
+    "heroSubtitle": "التسوق الذكي يبدأ معنا",
+    "whoWeAreTitle": "من نحن",
+    "whoWeAre": "متجر فارم فيت مصدر موثوق لمنتجات الزراعة والعناية بالحيوانات ونصائح زراعية مدعومة بالذكاء الاصطناعي.",
+    "missionTitle": "مهمتنا",
+    "mission": "ندعم المزارعين بتوريد منتجات عالية الجودة وإرشاد ذكي يساعد على تحسين الإنتاج وصحة الحيوانات.",
+    "whyTitle": "لماذا تختارنا؟",
+    "whyList1": "مجموعة واسعة من المنتجات الزراعية والبيطرية",
+    "whyList2": "مساعد ذكي للحصول على نصائح فورية للزراعة",
+    "whyList3": "شحن سريع وخدمة عملاء موثوقة",
+    "whyList4": "منتجات معتمدة من خبراء"
+  },
+  "contact": {
+    "title": "تواصل معنا",
+    "heroSubtitle": "نحن هنا لمساعدتك في أي وقت",
+    "getInTouch": "تواصل معنا",
+    "description": "إذا كان لديك أي أسئلة أو تحتاج إلى دعم، لا تتردد في التواصل معنا. سيعود فريقنا للرد في أقرب وقت ممكن.",
+    "email": "mmohamedd.ms@gmail.com",
+    "phone": "+20 114 404 6547",
+    "address": "القاهرة، مصر",
+    "form": {
+      "namePlaceholder": "الاسم",
+      "emailPlaceholder": "البريد الإلكتروني",
+      "phonePlaceholder": "رقم الهاتف",
+      "messagePlaceholder": "رسالتك",
+      "submit": "أرسل الرسالة"
+    }
   },
   "footer": {
     "brandName": "متجر فارم فيت",

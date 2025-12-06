@@ -162,15 +162,13 @@ export default function OrderTracking() {
       <div className={`rounded-3xl border shadow-sm ${shellSurface}`}>
         {/* Order Header Info */}
         <div
-          className={`flex flex-wrap items-center justify-between gap-4 border-b px-6 py-5 ${
-            isDark ? "border-slate-800" : "border-slate-100"
-          }`}
+          className={`flex flex-wrap items-center justify-between gap-4 border-b px-6 py-5 ${isDark ? "border-slate-800" : "border-slate-100"
+            }`}
         >
           <div>
             <p
-              className={`text-xs font-semibold uppercase tracking-wide ${
-                isDark ? "text-slate-500" : "text-slate-400"
-              }`}
+              className={`text-xs font-semibold uppercase tracking-wide ${isDark ? "text-slate-500" : "text-slate-400"
+                }`}
             >
               {t("tracking.order", "Order")}
             </p>
@@ -189,13 +187,12 @@ export default function OrderTracking() {
               className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-colors text-sm font-medium"
             >
               <FileText size={16} />
-              View Invoice
+              {t("confirmation.actions.viewInvoice", "View Invoice")}
             </button>
             <div className="text-right">
               <p
-                className={`text-xs font-semibold uppercase tracking-wide ${
-                  isDark ? "text-slate-500" : "text-slate-400"
-                }`}
+                className={`text-xs font-semibold uppercase tracking-wide ${isDark ? "text-slate-500" : "text-slate-400"
+                  }`}
               >
                 {t("tracking.total", "Total")}
               </p>

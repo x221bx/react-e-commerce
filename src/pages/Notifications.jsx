@@ -32,6 +32,7 @@ export default function Notifications() {
   const user = useSelector(selectCurrentUser);
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const isRTL = i18n.language === "ar";
 
   const {
     notifications,
@@ -71,7 +72,7 @@ export default function Notifications() {
   };
 
   return (
-    <div className={`min-h-screen ${isDark ? "bg-slate-950 text-white" : "bg-slate-50 text-slate-900"}`}>
+    <div dir={isRTL ? "rtl" : "ltr"} className={`min-h-screen ${isDark ? "bg-slate-950 text-white" : "bg-slate-50 text-slate-900"}`}>
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
         <header
           className={`rounded-3xl border shadow-sm p-6 sm:p-8 flex flex-col gap-6 ${cardSurface}`}
@@ -93,16 +94,15 @@ export default function Notifications() {
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <div
-                className={`rounded-full px-4 py-2 text-sm font-semibold ${
-                  unreadCount
+                className={`rounded-full px-4 py-2 text-sm font-semibold ${unreadCount
                     ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-300"
                     : "bg-slate-200/50 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
-                }`}
+                  }`}
               >
                 {unreadCount
                   ? t("notifications.unread_count", "{{count}} unread", {
-                      count: unreadCount,
-                    })
+                    count: unreadCount,
+                  })
                   : t("notifications.all_caught_up", "All caught up")}
               </div>
               <Button
@@ -110,9 +110,8 @@ export default function Notifications() {
                 text={t("notifications.mark_all_read", "Mark all read")}
                 onClick={handleMarkAll}
                 disabled={!unreadCount}
-                className={`whitespace-nowrap ${
-                  !unreadCount ? "opacity-60 pointer-events-none" : ""
-                }`}
+                className={`whitespace-nowrap ${!unreadCount ? "opacity-60 pointer-events-none" : ""
+                  }`}
               />
             </div>
           </div>
@@ -161,8 +160,8 @@ export default function Notifications() {
                       {category === "orders"
                         ? t("notifications.groups.orders", "Orders")
                         : category === "support"
-                        ? t("notifications.groups.support", "Support")
-                        : t("notifications.groups.system", "System")}
+                          ? t("notifications.groups.support", "Support")
+                          : t("notifications.groups.system", "System")}
                     </p>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
                       {t("notifications.group_count", "{{count}} updates", {
@@ -178,21 +177,19 @@ export default function Notifications() {
                     return (
                       <li
                         key={notification.id}
-                        className={`px-6 py-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between ${
-                          notification.read
+                        className={`px-6 py-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between ${notification.read
                             ? ""
                             : isDark
-                            ? "bg-emerald-950/40"
-                            : "bg-emerald-50/50"
-                        }`}
+                              ? "bg-emerald-950/40"
+                              : "bg-emerald-50/50"
+                          }`}
                       >
                         <div className="flex items-start gap-4">
                           <div
-                            className={`mt-1 h-9 w-9 rounded-full grid place-items-center ${
-                              notification.read
+                            className={`mt-1 h-9 w-9 rounded-full grid place-items-center ${notification.read
                                 ? "bg-slate-200/40 dark:bg-slate-800"
                                 : "bg-emerald-500/20 text-emerald-500"
-                            }`}
+                              }`}
                           >
                             <ItemIcon size={16} />
                           </div>
@@ -219,11 +216,10 @@ export default function Notifications() {
                           <button
                             type="button"
                             onClick={() => handleItemClick(notification)}
-                            className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-semibold transition ${
-                              isDark
+                            className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-semibold transition ${isDark
                                 ? "border-slate-700 text-slate-200 hover:bg-slate-800"
                                 : "border-slate-200 text-slate-700 hover:bg-slate-50"
-                            }`}
+                              }`}
                           >
                             {notification.read ? (
                               <>

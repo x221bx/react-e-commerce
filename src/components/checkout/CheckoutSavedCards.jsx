@@ -61,7 +61,7 @@ export default function CheckoutSavedCards({
             >
                 <label className={`font-semibold ${isDark ? "text-white" : "text-slate-900"}`}>
                     {t(
-                        "checkout.payment.card.dropdownLabel",
+                        "checkout.cardSelection.selectSavedCard",
                         "Select a saved card or add a new one"
                     )}
                 </label>
@@ -83,14 +83,14 @@ export default function CheckoutSavedCards({
                     ))}
 
                     <option value={NEW_CARD_OPTION} className="font-semibold">
-                        {t("checkout.payment.card.addNew", "Add a new card")}
+                        {t("checkout.cardSelection.addNewCard", "Add a new card")}
                     </option>
                 </select>
 
                 {selectedSavedCardId === NEW_CARD_OPTION ? (
                     <p className={`text-xs ${hintActive}`}>
                         {t(
-                            "checkout.payment.card.addNewHint",
+                            "checkout.cardSelection.secureCollection",
                             "We will collect your card details securely after you confirm."
                         )}
                     </p>

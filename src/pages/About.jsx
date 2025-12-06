@@ -1,10 +1,13 @@
 import Footer from "../Authcomponents/Footer";
 import { UseTheme } from "../theme/ThemeProvider";
 import { motion as Motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 export default function About() {
   const { theme } = UseTheme();
   const isDark = theme === "dark";
+  const { i18n, t } = useTranslation();
+  const isRTL = i18n.language === "ar";
 
   // 🔥 نفس الـ fadeUp المستخدم في Footer بالظبط
   const fadeUp = {
@@ -17,7 +20,7 @@ export default function About() {
   };
 
   return (
-    <main className="flex flex-col gap-12 md:gap-16 lg:gap-20">
+    <main className="flex flex-col gap-12 md:gap-16 lg:gap-20" dir={isRTL ? "rtl" : "ltr"}>
 
       {/* HERO — Motion + fadeUp */}
       <Motion.div
@@ -53,7 +56,7 @@ export default function About() {
                 ${isDark ? "text-teal-300" : "text-teal-700"}
               `}
             >
-              About Us
+              {t("about.title", "About Us")}
             </h1>
 
             <p
@@ -62,7 +65,7 @@ export default function About() {
                 ${isDark ? "text-teal-200/90" : "text-teal-800/90"}
               `}
             >
-              Smarter Farming Starts With Us
+              {t("about.heroSubtitle", "Smarter Farming Starts Here")}
             </p>
           </div>
         </section>
@@ -78,13 +81,10 @@ export default function About() {
           viewport={{ once: true, amount: 0.3 }}
         >
           <h2 className="text-3xl font-bold text-teal-700 dark:text-teal-300">
-            Who We Are
+            {t("about.whoWeAreTitle", "Who We Are")}
           </h2>
           <p className="text-lg leading-relaxed text-gray-700 dark:text-gray-300">
-            Farm Vet Shop is your trusted source for high-quality agricultural
-            products, livestock care solutions, and expert farming advice powered by AI.
-            We aim to empower farmers with the right tools, knowledge, and
-            technology to achieve sustainable and profitable farming.
+            {t("about.whoWeAre", "Farm Vet Shop is your trusted source for high-quality agricultural products, livestock care solutions, and expert farming advice powered by AI.")}
           </p>
         </Motion.div>
 
@@ -95,12 +95,10 @@ export default function About() {
           viewport={{ once: true, amount: 0.3 }}
         >
           <h2 className="text-3xl font-bold text-teal-700 dark:text-teal-300">
-            Our Mission
+            {t("about.missionTitle", "Our Mission")}
           </h2>
           <p className="text-lg leading-relaxed text-gray-700 dark:text-gray-300">
-            Our mission is to support farmers with top-quality fertilizers,
-            pesticides, seeds, and livestock medicines, while providing
-            AI-powered guidance that helps improve crop yield and animal health.
+            {t("about.mission", "To support farmers with top-quality supplies and AI guidance that improves yield and animal health.")}
           </p>
         </Motion.div>
 
@@ -111,13 +109,13 @@ export default function About() {
           viewport={{ once: true, amount: 0.3 }}
         >
           <h2 className="text-3xl font-bold text-teal-700 dark:text-teal-300">
-            Why Choose Us?
+            {t("about.whyTitle", "Why Choose Us?")}
           </h2>
           <ul className="list-disc pl-6 space-y-2 text-gray-700 dark:text-gray-300">
-            <li>Wide range of agricultural and veterinary products</li>
-            <li>AI Assistant for real-time farming support</li>
-            <li>Fast shipping and trusted customer service</li>
-            <li>Expert-approved products only</li>
+            <li>{t("about.whyList1", "Wide range of agricultural and veterinary products")}</li>
+            <li>{t("about.whyList2", "AI Assistant for real-time farming support")}</li>
+            <li>{t("about.whyList3", "Fast shipping and trusted customer service")}</li>
+            <li>{t("about.whyList4", "Expert-approved products only")}</li>
           </ul>
         </Motion.div>
 

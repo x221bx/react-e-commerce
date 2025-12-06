@@ -62,10 +62,11 @@ const hashCardNumber = async (number) => {
 export default function Checkout() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const { theme } = UseTheme();
   const isDark = theme === "dark";
+  const isRTL = i18n.language === "ar";
 
   const cartItems = useSelector((state) => state.cart.items || []);
   const storeUser = useSelector(selectCurrentUser);
@@ -154,9 +155,9 @@ export default function Checkout() {
         title: t("checkout.payment.card.title"),
         subtitle: savedCards.length
           ? t(
-              "checkout.payment.card.dropdownHint",
-              "Choose an existing card or add a new one."
-            )
+            "checkout.payment.card.dropdownHint",
+            "Choose an existing card or add a new one."
+          )
           : t("checkout.payment.card.subtitle"),
       },
     ],
@@ -352,11 +353,10 @@ export default function Checkout() {
   if (!cartItems.length) {
     return (
       <section
-        className={`mx-auto mt-20 max-w-2xl rounded-3xl border border-dashed p-10 text-center shadow-sm ${
-          isDark
-            ? "border-emerald-900/40 bg-[#0f1d1d]/50 text-slate-100"
-            : "border-emerald-200 bg-emerald-50/70 text-slate-800"
-        }`}
+        className={`mx-auto mt-20 max-w-2xl rounded-3xl border border-dashed p-10 text-center shadow-sm ${isDark
+          ? "border-emerald-900/40 bg-[#0f1d1d]/50 text-slate-100"
+          : "border-emerald-200 bg-emerald-50/70 text-slate-800"
+          }`}
       >
         <p className="text-xl font-semibold">
           {t("checkout.empty.title", "Your cart is empty")}
@@ -379,11 +379,10 @@ export default function Checkout() {
   if (!user) {
     return (
       <section
-        className={`mx-auto mt-20 max-w-2xl rounded-3xl border p-10 text-center shadow-sm ${
-          isDark
-            ? "border-amber-900/40 bg-[#0f1d1d]/60 text-amber-100"
-            : "border-amber-200 bg-amber-50/80 text-amber-900"
-        }`}
+        className={`mx-auto mt-20 max-w-2xl rounded-3xl border p-10 text-center shadow-sm ${isDark
+          ? "border-amber-900/40 bg-[#0f1d1d]/60 text-amber-100"
+          : "border-amber-200 bg-amber-50/80 text-amber-900"
+          }`}
       >
         <p className="text-lg font-semibold">
           {t("checkout.loginRequired.title", "You need to login")}
@@ -404,14 +403,13 @@ export default function Checkout() {
   }
 
   return (
-    <div className={`min-h-screen ${pageBg} py-10`}>
+    <div className={`min-h-screen ${pageBg} py-10`} dir={isRTL ? "rtl" : "ltr"}>
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         {/* Page header */}
         <header className="mb-6">
           <p
-            className={`text-xs font-semibold uppercase tracking-[0.18em] ${
-              isDark ? "text-emerald-300" : "text-emerald-600"
-            }`}
+            className={`text-xs font-semibold uppercase tracking-[0.18em] ${isDark ? "text-emerald-300" : "text-emerald-600"
+              }`}
           >
             {t("checkout.header.eyebrow", "Checkout")}
           </p>
@@ -434,11 +432,10 @@ export default function Checkout() {
           >
             {formErrors && (
               <div
-                className={`rounded-2xl border px-4 py-3 text-sm ${
-                  isDark
-                    ? "border-red-900/50 bg-red-950/60 text-red-200"
-                    : "border-red-200 bg-red-50 text-red-700"
-                }`}
+                className={`rounded-2xl border px-4 py-3 text-sm ${isDark
+                  ? "border-red-900/50 bg-red-950/60 text-red-200"
+                  : "border-red-200 bg-red-50 text-red-700"
+                  }`}
               >
                 {formErrors}
               </div>
@@ -470,11 +467,10 @@ export default function Checkout() {
             <div className="flex flex-wrap gap-3 pt-3">
               <Link
                 to="/cart"
-                className={`rounded-2xl border px-5 py-2 text-sm font-semibold transition ${
-                  isDark
-                    ? "border-slate-700 text-slate-200 hover:bg-slate-800/70"
-                    : "border-slate-200 text-slate-600 hover:bg-slate-50"
-                }`}
+                className={`rounded-2xl border px-5 py-2 text-sm font-semibold transition ${isDark
+                  ? "border-slate-700 text-slate-200 hover:bg-slate-800/70"
+                  : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                  }`}
               >
                 {t("checkout.actions.backToCart", "Back to Cart")}
               </Link>
@@ -511,10 +507,10 @@ export default function Checkout() {
               <div className={`rounded-3xl border shadow-xl max-w-lg w-full p-6 ${isDark ? "bg-slate-900 border-slate-700 text-white" : "bg-white border-slate-200 text-slate-900"}`}>
                 <div className="text-center">
                   <h3 className="text-lg font-semibold mb-4">
-                    {t("checkout.confirm.title", "Confirm Your Order")}
+                    {t("checkout.confirmOrder.title", "Confirm Your Order")}
                   </h3>
                   <p className="text-sm mb-6">
-                    {t("checkout.confirm.message", "Are you sure you want to place this order?")}
+                    {t("checkout.confirmOrder.message", "Are you sure you want to place this order?")}
                   </p>
 
                   {/* Order Summary */}
@@ -554,8 +550,8 @@ export default function Checkout() {
                       {loading
                         ? t("checkout.actions.processing", "Processing...")
                         : paymentMethod === "card"
-                          ? t("checkout.confirm.confirmDeduction", "Confirm Deduction")
-                          : t("checkout.confirm.confirm", "Confirm Order")
+                          ? t("checkout.confirmOrder.confirmDeduction", "Confirm Deduction")
+                          : t("checkout.actions.confirmOrder", "Confirm Order")
                       }
                     </button>
                   </div>
