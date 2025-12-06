@@ -79,6 +79,22 @@ export default function ChatBot() {
     if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
   }, [messages, open]);
 
+  // Listen for chatbot:open event from product pages
+  useEffect(() => {
+    const handleChatbotOpen = (event) => {
+      const { message } = event.detail || {};
+      if (message) {
+        setInput(message);
+        setOpen(true);
+      }
+    };
+
+    window.addEventListener("chatbot:open", handleChatbotOpen);
+    return () => {
+      window.removeEventListener("chatbot:open", handleChatbotOpen);
+    };
+  }, []);
+
   // timestamp tracking
   useEffect(() => {
     setMeta((prev) => {
@@ -115,9 +131,8 @@ export default function ChatBot() {
       <Motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className={`rounded-2xl p-3 mb-3 flex gap-3 shadow-md border cursor-pointer ${
-          isDark ? "bg-[#0f1d1d] border-white/10 text-[#e8f7f6]" : "bg-white border-gray-200 text-gray-900"
-        }`}
+        className={`rounded-2xl p-3 mb-3 flex gap-3 shadow-md border cursor-pointer ${isDark ? "bg-[#0f1d1d] border-white/10 text-[#e8f7f6]" : "bg-white border-gray-200 text-gray-900"
+          }`}
         onClick={() => navigate(`/product/${product.id}`)}
       >
         <img
@@ -144,14 +159,13 @@ export default function ChatBot() {
             )}
           </div>
           <div className="flex gap-2">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/product/${product.id}`);
-                  }}
-              className={`flex items-center gap-1 text-xs px-3 py-1.5 rounded-md border ${
-                isDark ? "border-white/20 text-[#cfe9ea]" : "border-teal-200 text-teal-700"
-              }`}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/product/${product.id}`);
+              }}
+              className={`flex items-center gap-1 text-xs px-3 py-1.5 rounded-md border ${isDark ? "border-white/20 text-[#cfe9ea]" : "border-teal-200 text-teal-700"
+                }`}
             >
               <FiExternalLink size={12} /> View
             </button>
@@ -160,9 +174,8 @@ export default function ChatBot() {
                 e.stopPropagation();
                 dispatch(addToCart({ ...product }));
               }}
-              className={`text-xs px-3 py-1.5 rounded-md ${
-                isDark ? "bg-[#154b3f] text-white" : "bg-teal-600 text-white"
-              }`}
+              className={`text-xs px-3 py-1.5 rounded-md ${isDark ? "bg-[#154b3f] text-white" : "bg-teal-600 text-white"
+                }`}
             >
               Add to Cart
             </button>
@@ -247,9 +260,8 @@ export default function ChatBot() {
             dragMomentum={false}
             dragElastic={0.12}
             ref={chatRef}
-            className={`fixed z-50 rounded-3xl shadow-2xl overflow-hidden flex flex-col border ${
-              isDark ? "bg-[#0b1313] border-white/10" : "bg-[#f8faf9] border-gray-200"
-            }`}
+            className={`fixed z-50 rounded-3xl shadow-2xl overflow-hidden flex flex-col border ${isDark ? "bg-[#0b1313] border-white/10" : "bg-[#f8faf9] border-gray-200"
+              }`}
             style={{ width: size.width, height: size.height, bottom: "120px", right: "50px" }}
             initial={{ opacity: 0, scale: 0.85 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -258,9 +270,8 @@ export default function ChatBot() {
             <div onMouseDown={startResize} className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize bg-transparent" />
 
             <div
-              className={`flex items-center justify-between px-4 py-3 ${
-                isDark ? "bg-[#0f2d2a] text-white" : "bg-gradient-to-r from-teal-600 to-emerald-500 text-white"
-              }`}
+              className={`flex items-center justify-between px-4 py-3 ${isDark ? "bg-[#0f2d2a] text-white" : "bg-gradient-to-r from-teal-600 to-emerald-500 text-white"
+                }`}
             >
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center text-sm font-semibold">AI</div>
@@ -322,13 +333,12 @@ export default function ChatBot() {
                     {formatTime(meta[i]?.createdAt)}
                   </div>
                   <div
-                    className={`p-3 rounded-2xl shadow-sm border ${
-                      m.role === "user"
+                    className={`p-3 rounded-2xl shadow-sm border ${m.role === "user"
                         ? "bg-teal-600 text-white border-transparent rounded-br-sm"
                         : isDark
-                        ? "bg-[#132221] text-[#e4f4f2] border-white/10 rounded-bl-sm"
-                        : "bg-white text-gray-900 border-gray-200 rounded-bl-sm"
-                    }`}
+                          ? "bg-[#132221] text-[#e4f4f2] border-white/10 rounded-bl-sm"
+                          : "bg-white text-gray-900 border-gray-200 rounded-bl-sm"
+                      }`}
                   >
                     {renderMessage(m.content)}
                   </div>
@@ -350,18 +360,16 @@ export default function ChatBot() {
                       handleSend();
                     }
                   }}
-                  className={`flex-1 rounded-xl px-3 py-2 text-sm resize-none outline-none border ${
-                    isDark ? "bg-[#0c1313] text-white border-[#1f2d2d]" : "bg-white border-gray-200"
-                  }`}
+                  className={`flex-1 rounded-xl px-3 py-2 text-sm resize-none outline-none border ${isDark ? "bg-[#0c1313] text-white border-[#1f2d2d]" : "bg-white border-gray-200"
+                    }`}
                   rows={2}
                   placeholder="اسأل عن منتج، سعر، أو اطلب ترشيحات..."
                 />
                 <button
                   onClick={handleSend}
                   disabled={!input.trim()}
-                  className={`px-4 rounded-xl flex items-center justify-center ${
-                    input.trim() ? "bg-teal-600 text-white" : "bg-gray-200 text-gray-500"
-                  }`}
+                  className={`px-4 rounded-xl flex items-center justify-center ${input.trim() ? "bg-teal-600 text-white" : "bg-gray-200 text-gray-500"
+                    }`}
                 >
                   <FiSend size={18} />
                 </button>
