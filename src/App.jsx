@@ -38,7 +38,7 @@ const OrderHistory = lazy(() => import("./pages/account/OrderHistory"));
 const OrderInvoice = lazy(() => import("./pages/account/OrderInvoice"));
 const SavedProducts = lazy(() => import("./pages/account/SavedProducts"));
 const FavoriteArticles = lazy(() => import("./pages/account/FavoriteArticles"));
-const SupportCenter = lazy(() => import("./pages/account/SupportCenter"));
+const SupportCenterProfessional = lazy(() => import("./pages/account/SupportCenterProfessional"));
 const Complaints = lazy(() => import("./pages/account/Complaints"));
 const PaymentMethods = lazy(() => import("./pages/account/PaymentMethods"));
 const AdminLayout = lazy(() => import("./admin/AdminLayout"));
@@ -47,7 +47,7 @@ const AdminProducts = lazy(() => import("./pages/admin/AdminProducts"));
 const AdminProductForm = lazy(() => import("./pages/admin/AdminProductForm"));
 const AdminCategories = lazy(() => import("./pages/admin/AdminCategories"));
 const AdminArticles = lazy(() => import("./pages/admin/AdminArticles"));
-const AdminComplaints = lazy(() => import("./pages/admin/AdminComplaints"));
+const AdminComplaints = lazy(() => import("./pages/admin/AdminComplaintsDashboard"));
 const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
 const AdminOrderDetails = lazy(() => import("./pages/admin/AdminOrderDetails"));
 const AdminMessages = lazy(() => import("./pages/admin/AdminMessages"));
@@ -182,7 +182,7 @@ export default function App() {
               <Route path="saved" element={<SavedProducts />} />
               <Route path="articles" element={<FavoriteArticles />} />
               <Route path="ai" element={<AiConversations />} />
-              <Route path="support" element={<SupportCenter />} />
+              <Route path="support" element={<SupportCenterProfessional />} />
               <Route path="complaints" element={<Complaints />} />
             </Route>
           </Route>

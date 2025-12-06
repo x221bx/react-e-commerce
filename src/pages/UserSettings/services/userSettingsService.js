@@ -263,8 +263,8 @@ export const sendSupportMessage = async (user, messageData) => {
     throw new Error("User not authenticated");
   }
 
-  if (!messageData?.message?.trim()) {
-    throw new Error("Message is required");
+  if (!messageData?.description?.trim()) {
+    throw new Error("Description is required");
   }
 
   if (!messageData?.phoneNumber?.trim()) {
@@ -272,32 +272,76 @@ export const sendSupportMessage = async (user, messageData) => {
   }
 
   try {
-    const trimmedMessage = messageData.message.trim();
+    const trimmedDescription = messageData.description.trim();
     const supportData = {
-      topic: messageData.topic || "general",
-      message: trimmedMessage,
-      originalMessage: trimmedMessage, // Preserve original message
+      // New professional structure
+      category: messageData.category || messageData.topic || "general",
+      priority: messageData.priority || "normal",
+      subject: messageData.subject || "Support Request",
+      description: trimmedDescription,
+      originalMessage: trimmedDescription, // Preserve original message
+
+      // Contact information
       phoneNumber: messageData.phoneNumber.trim(),
+
+      // User information
       uid: user.uid,
       userId: user.uid,
       userEmail: user.email,
       userName: user.name || user.displayName,
+
+      // Status and tracking
       status: "pending",
+      priority: messageData.priority || "normal",
+      tags: [], // For future categorization
+      assignedTo: null, // For admin assignment
+      sla: {
+        targetResponseTime: getSLATarget(messageData.priority || "normal"),
+        actualResponseTime: null,
+        targetResolutionTime: getSLAResolutionTarget(messageData.priority || "normal"),
+        actualResolutionTime: null
+      },
+
+      // Conversation thread
+      replies: [], // Will be populated by admin responses
+
+      // Metadata
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
+      lastActivity: serverTimestamp(),
+
+      // Additional tracking
+      source: "customer_portal",
+      channel: "web_form",
+      satisfaction: null, // For post-resolution feedback
+      reopened: false,
+      reopenedCount: 0
     };
 
-    // Save to user's support messages collection
-    const userSupportRef = doc(db, "users", user.uid, "support", Date.now().toString());
-    await setDoc(userSupportRef, supportData);
+    // Generate unique ticket ID
+    const ticketId = generateTicketId();
+    supportData.ticketId = ticketId;
 
-    // Also save to global support collection for admin access
-    const globalSupportRef = doc(db, "support", Date.now().toString());
+    // Save to global support collection for admin access
+    const globalSupportRef = doc(db, "support", ticketId);
     await setDoc(globalSupportRef, supportData);
+
+    // Also save to user's support tickets
+    const userSupportRef = doc(db, "users", user.uid, "support_tickets", ticketId);
+    await setDoc(userSupportRef, {
+      ticketId,
+      category: supportData.category,
+      priority: supportData.priority,
+      subject: supportData.subject,
+      status: supportData.status,
+      createdAt: supportData.createdAt,
+      lastActivity: supportData.lastActivity
+    });
 
     return {
       success: true,
-      message: "Your message has been sent successfully! Our support team will respond within 24 hours."
+      message: `Your support request has been submitted successfully! Ticket #${ticketId} created.`,
+      ticketId
     };
   } catch (error) {
     console.error('Error sending support message:', error);
@@ -310,5 +354,33 @@ export const sendSupportMessage = async (user, messageData) => {
     }
 
     throw new Error("Failed to send message. Please try again.");
+  }
+};
+
+// Helper function to generate unique ticket IDs
+const generateTicketId = () => {
+  const timestamp = Date.now().toString(36);
+  const random = Math.random().toString(36).substr(2, 5);
+  return `TCK-${timestamp}-${random}`.toUpperCase();
+};
+
+// SLA target times based on priority (in hours)
+const getSLATarget = (priority) => {
+  switch (priority) {
+    case "urgent": return 1; // 1 hour
+    case "high": return 4; // 4 hours
+    case "normal": return 24; // 24 hours
+    case "low": return 72; // 72 hours
+    default: return 24;
+  }
+};
+
+const getSLAResolutionTarget = (priority) => {
+  switch (priority) {
+    case "urgent": return 8; // 8 hours
+    case "high": return 24; // 24 hours
+    case "normal": return 72; // 72 hours
+    case "low": return 168; // 1 week
+    default: return 72;
   }
 };
