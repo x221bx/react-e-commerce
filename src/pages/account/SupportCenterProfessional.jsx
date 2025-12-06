@@ -87,7 +87,6 @@ Message:
     }
     return { allowed: true };
   } catch (error) {
-    console.error("AI moderation failed", error);
     return { allowed: false, reason: "Moderation failed, please try again" };
   }
 };
@@ -158,9 +157,9 @@ const SupportCenterProfessional = () => {
   // Validation functions
   const validatePhone = (phone) => {
     const digits = phone.replace(/\D/g, "");
-    if (!digits) return "Phone number is required";
-    if (digits.length !== 11) return "Phone number must be 11 digits";
-    if (!/^01[0-2,5]\d{8}$/.test(digits)) return "Please enter a valid Egyptian mobile number (01xxxxxxxxx)";
+    if (!digits) return t("support.validation.phoneRequired");
+    if (digits.length !== 11) return t("support.validation.phoneInvalidLength");
+    if (!/^01[0-2,5]\d{8}$/.test(digits)) return t("support.validation.phoneInvalidFormat");
     return "";
   };
 
@@ -169,11 +168,11 @@ const SupportCenterProfessional = () => {
 
     switch (step) {
       case 1:
-        if (!formData.category) newErrors.category = "Please select a category";
+        if (!formData.category) newErrors.category = t("support.validation.categoryRequired");
         break;
       case 2:
-        if (!formData.subject.trim()) newErrors.subject = "Subject is required";
-        if (!formData.description.trim()) newErrors.description = "Description is required";
+        if (!formData.subject.trim()) newErrors.subject = t("support.validation.subjectRequired");
+        if (!formData.description.trim()) newErrors.description = t("support.validation.descriptionRequired");
         break;
       case 3: {
         const phoneError = validatePhone(formData.phoneNumber);
@@ -216,10 +215,10 @@ const SupportCenterProfessional = () => {
         attachments: formData.attachments
       });
 
-      toast.success("Your support request has been submitted successfully!");
+      toast.success(t("support.messages.submitSuccess"));
       navigate("/account/complaints");
     } catch (error) {
-      toast.error(error.message || "Failed to submit support request");
+      toast.error(error.message || t("support.messages.submitError"));
     } finally {
       setIsSubmitting(false);
     }

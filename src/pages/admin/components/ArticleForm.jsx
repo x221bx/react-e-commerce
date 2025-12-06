@@ -108,7 +108,6 @@ const ArticleForm = ({
       }));
       toast.success("Content translated to Arabic!");
     } catch (error) {
-      console.error("Translation error:", error);
       toast.error("Failed to translate content");
     } finally {
       setTranslating(false);

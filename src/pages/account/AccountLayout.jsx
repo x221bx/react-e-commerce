@@ -72,11 +72,7 @@ const navItems = [
 ];
 
 export default function AccountLayout() {
-  const { t, i18n } = useTranslation();   // ← لازم الأول
-
-  console.log('AccountLayout - Current language:', i18n.language);
-  console.log('AccountLayout - Testing translation:', t('account.profile_preferences'));
-  console.log('AccountLayout - i18n resources:', i18n.services?.resourceStore?.data);
+  const { t, i18n } = useTranslation();
   const user = useSelector(selectCurrentUser);
   const dispatch = useDispatch();
   const navigate = useNavigate();

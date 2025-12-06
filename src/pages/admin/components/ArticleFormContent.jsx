@@ -169,7 +169,6 @@ const ArticleFormContent = ({
                   });
                   toast.success("Image uploaded successfully!");
                 } catch (error) {
-                  console.error("Upload error:", error);
                   toast.error("Failed to upload image");
                 } finally {
                   setUploadingImage(false);

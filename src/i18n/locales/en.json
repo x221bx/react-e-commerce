@@ -552,19 +552,31 @@
             }
         },
         "actions": {
-            "backToCart": "Back to cart",
-            "processing": "Processing...",
-            "completeOrder": "Place order"
+          "backToCart": "Back to cart",
+          "processing": "Processing...",
+          "completeOrder": "Place order",
+          "confirmOrder": "Confirm Order"
+        },
+        "confirmOrder": {
+          "title": "Confirm Your Order",
+          "message": "Are you sure you want to place this order?",
+          "confirmDeduction": "Confirm Deduction"
+        },
+        "cardSelection": {
+          "address": "Address",
+          "selectSavedCard": "Select a saved card or add a new one",
+          "addNewCard": "Add a new card",
+          "secureCollection": "We will collect your card details securely after you confirm."
         },
         "summary": {
-            "title": "Order summary",
-            "subtitle": "Products in your cart",
-            "quantity": "{{count}} item",
-            "quantity_plural": "{{count}} items",
-            "subtotal": "Subtotal",
-            "shipping": "Shipping",
-            "total": "Total",
-            "note": "You will receive an email confirmation with tracking information."
+          "title": "Order summary",
+          "subtitle": "Products in your cart",
+          "quantity": "{{count}} item",
+          "quantity_plural": "{{count}} items",
+          "subtotal": "Subtotal",
+          "shipping": "Shipping",
+          "total": "Total",
+          "note": "You will receive an email confirmation with tracking information."
         }
     },
     "notifications": {
@@ -697,11 +709,18 @@
         "topic": "Topic",
         "topics": {
             "orders": "Orders & Logistics",
+            "orders_desc": "Help with orders, shipping, and delivery",
             "billing": "Billing & Payments",
+            "billing_desc": "Questions about invoices, payments, and receipts",
             "product": "Product Feedback",
+            "product_desc": "Feedback about products, quality, and usage",
             "ai": "AI Assistant",
             "technical": "Technical Issues",
-            "other": "Other"
+            "technical_desc": "Technical issues with the website or app",
+            "account": "Account",
+            "account_desc": "Account management and settings",
+            "other": "Other",
+            "other_desc": "Any other inquiry not categorized"
         },
         "phoneNumber": "Phone Number",
         "phonePlaceholder": "Enter your phone number for contact purposes",
@@ -738,6 +757,36 @@
             "category": "Category",
             "expectedResponse": "Expected Response Time",
             "within24Hours": "Within 24 hours"
+        },
+        "navigation": {
+            "previous": "Previous",
+            "next": "Next",
+            "step": "Step",
+            "of": "of",
+            "submitting": "Submitting...",
+            "submitRequest": "Submit Request"
+        },
+        "validation": {
+            "phoneRequired": "Phone number is required",
+            "phoneInvalidLength": "Phone number must be 11 digits",
+            "phoneInvalidFormat": "Please enter a valid Egyptian mobile number (01xxxxxxxxx)",
+            "categoryRequired": "Please select a category",
+            "subjectRequired": "Subject is required",
+            "descriptionRequired": "Description is required"
+        },
+        "messages": {
+            "submitSuccess": "Your support request has been submitted successfully!",
+            "submitError": "Failed to submit support request"
+        },
+        "progress": {
+            "category": "Category",
+            "details": "Details",
+            "contact": "Contact",
+            "review": "Review",
+            "step1": "Category",
+            "step2": "Details",
+            "step3": "Contact",
+            "step4": "Review"
         }
     },
     "articles": {
@@ -769,7 +818,13 @@
             "byline": "Written by {{author}}",
             "emptyContent": "Content coming soon.",
             "share": "Share",
-            "save": "Save"
+            "save": "Save",
+            "like": "Like",
+            "dislike": "Dislike",
+            "topics": "Topics",
+            "discoverMore": "Discover More Articles",
+            "continueJourney": "Continue your learning journey with related content",
+            "browseAll": "Browse All Articles"
         },
         "admin": {
             "eyebrow": "Knowledge center",

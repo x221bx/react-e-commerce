@@ -1,6 +1,9 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 const SupportFormProgress = ({ currentStep, isDark }) => {
+  const { t } = useTranslation();
+  
   return (
     <div className="mb-8">
       <div className="flex items-center justify-center space-x-4">
@@ -22,10 +25,10 @@ const SupportFormProgress = ({ currentStep, isDark }) => {
         ))}
       </div>
       <div className="flex justify-center mt-2 space-x-8 text-sm">
-        <span className={currentStep >= 1 ? 'text-emerald-600 font-medium' : 'text-gray-400'}>Category</span>
-        <span className={currentStep >= 2 ? 'text-emerald-600 font-medium' : 'text-gray-400'}>Details</span>
-        <span className={currentStep >= 3 ? 'text-emerald-600 font-medium' : 'text-gray-400'}>Contact</span>
-        <span className={currentStep >= 4 ? 'text-emerald-600 font-medium' : 'text-gray-400'}>Review</span>
+        <span className={currentStep >= 1 ? 'text-emerald-600 font-medium' : 'text-gray-400'}>{t("support.progress.step1")}</span>
+        <span className={currentStep >= 2 ? 'text-emerald-600 font-medium' : 'text-gray-400'}>{t("support.progress.step2")}</span>
+        <span className={currentStep >= 3 ? 'text-emerald-600 font-medium' : 'text-gray-400'}>{t("support.progress.step3")}</span>
+        <span className={currentStep >= 4 ? 'text-emerald-600 font-medium' : 'text-gray-400'}>{t("support.progress.step4")}</span>
       </div>
     </div>
   );

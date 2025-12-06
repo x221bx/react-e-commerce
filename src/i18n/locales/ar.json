@@ -516,7 +516,19 @@
     "actions": {
       "backToCart": "العودة للسلة",
       "processing": "جارٍ المعالجة...",
-      "completeOrder": "إتمام الطلب"
+      "completeOrder": "إتمام الطلب",
+      "confirmOrder": "تأكيد الطلب"
+    },
+    "confirmOrder": {
+      "title": "تأكيد طلبك",
+      "message": "هل أنت متأكد من رغبتك في تقديم هذا الطلب؟",
+      "confirmDeduction": "تأكيد الخصم"
+    },
+    "cardSelection": {
+      "address": "العنوان",
+      "selectSavedCard": "اختر بطاقة محفوظة أو أضف بطاقة جديدة",
+      "addNewCard": "إضافة بطاقة جديدة",
+      "secureCollection": "سنقوم بجمع تفاصيل بطاقتك بأمان بعد التأكيد."
     },
     "summary": {
       "title": "ملخص الطلب",
@@ -630,17 +642,77 @@
     "topic": "الموضوع",
     "topics": {
       "orders": "الطلبات واللوجستيات",
+      "orders_desc": "مساعدة في الطلبات والشحن والتوصيل",
       "billing": "الفوترة والمدفوعات",
+      "billing_desc": "أسئلة حول الفواتير والمدفوعات والإيصالات",
       "product": "ملاحظات المنتج",
+      "product_desc": "ملاحظات حول المنتجات والجودة والاستخدام",
       "ai": "مساعد الذكاء الاصطناعي",
       "technical": "مشكلات تقنية",
-      "other": "أخرى"
+      "technical_desc": "مشكلات تقنية في الموقع أو التطبيق",
+      "account": "الحساب",
+      "account_desc": "مشاكل في تسجيل الدخول أو إدارة الحساب",
+      "other": "أخرى",
+      "other_desc": "أي استفسار آخر غير مصنف"
+    },
+    "step1": {
+      "title": "اختر الفئة",
+      "subtitle": "اختر الفئة التي تصف مشكلتك بشكل أفضل"
+    },
+    "step2": {
+      "title": "قدم التفاصيل",
+      "subtitle": "أخبرنا المزيد عن مشكلتك"
+    },
+    "step3": {
+      "title": "بيانات الاتصال",
+      "subtitle": "نحتاج رقم هاتفك للتواصل معك بخصوص طلب الدعم"
+    },
+    "step4": {
+      "title": "مراجعة وإرسال",
+      "subtitle": "يرجى مراجعة معلوماتك قبل الإرسال",
+      "review": "مراجعة طلبك",
+      "category": "الفئة",
+      "expectedResponse": "وقت الرد المتوقع",
+      "within24Hours": "خلال 24 ساعة"
+    },
+    "navigation": {
+      "previous": "السابق",
+      "next": "التالي",
+      "step": "الخطوة",
+      "of": "من",
+      "submitting": "جارٍ الإرسال...",
+      "submitRequest": "إرسال الطلب"
+    },
+    "validation": {
+      "phoneRequired": "رقم الموبايل مطلوب",
+      "phoneInvalidLength": "يجب أن يكون رقم الموبايل 11 رقماً",
+      "phoneInvalidFormat": "أدخل موبايل مصري صالح (01xxxxxxxxx)",
+      "categoryRequired": "يرجى اختيار فئة",
+      "subjectRequired": "الموضوع مطلوب",
+      "descriptionRequired": "الوصف مطلوب"
+    },
+    "messages": {
+      "submitSuccess": "تم إرسال طلب الدعم بنجاح!",
+      "submitError": "فشل في إرسال طلب الدعم"
+    },
+    "progress": {
+      "category": "الفئة",
+      "details": "التفاصيل",
+      "contact": "التواصل",
+      "review": "المراجعة",
+      "step1": "الفئة",
+      "step2": "التفاصيل",
+      "step3": "التواصل",
+      "step4": "المراجعة"
     },
     "phoneNumber": "رقم الموبايل",
     "phonePlaceholder": "أدخل رقم الموبايل للتواصل",
     "phoneRequired": "مطلوب للتواصل معك (بالإنجليزية أو العربية) بخصوص طلب الدعم",
     "phoneInvalid": "أدخل موبايل مصري يبدأ بـ 010/011/012/015 ويتكون من 11 رقماً",
+    "phoneHelp": "نحتاج رقم هاتفك للتواصل معك بخصوص طلب الدعم",
     "message": "الرسالة",
+    "subject": "الموضوع",
+    "description": "الوصف",
     "placeholder": "اشرح المشكلة أو الملاحظة أو الاستفسار بتفصيل...",
     "messageRequired": "أدخل رسالة من فضلك",
     "sending": "جارٍ الإرسال...",
@@ -677,7 +749,15 @@
       "removed": "أزيل من المفضلة",
       "error": "تعذر تحديث المفضلة",
       "byline": "كتبه {{author}}",
-      "emptyContent": "المحتوى قادم قريباً."
+      "emptyContent": "المحتوى قادم قريباً.",
+      "share": "مشاركة",
+      "save": "حفظ",
+      "like": "إعجاب",
+      "dislike": "عدم إعجاب",
+      "topics": "المواضيع",
+      "discoverMore": "اكتشف المزيد من المقالات",
+      "continueJourney": "تابع رحلة التعلم مع محتوى ذو صلة",
+      "browseAll": "تصفح كل المقالات"
     },
     "admin": {
       "eyebrow": "مركز المعرفة",

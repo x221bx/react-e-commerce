@@ -1,5 +1,6 @@
 import React from "react";
 import { ArrowRight, ArrowLeft, Send } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const SupportFormNavigation = ({
   currentStep,
@@ -9,8 +10,10 @@ const SupportFormNavigation = ({
   handleSubmit,
   isSubmitting
 }) => {
+  const { t } = useTranslation();
+
   return (
-    <div className="px-8 py-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-slate-800">
+    <div className="px-8 py-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 ">
       <div className="flex justify-between items-center">
         <button
           onClick={handlePrev}
@@ -22,11 +25,11 @@ const SupportFormNavigation = ({
           }`}
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Previous</span>
+          <span>{t("support.navigation.previous")}</span>
         </button>
 
         <div className="text-sm text-gray-500 dark:text-slate-400">
-          Step {currentStep} of {totalSteps}
+          {t("support.navigation.step")} {currentStep} {t("support.navigation.of")} {totalSteps}
         </div>
 
         {currentStep < totalSteps ? (
@@ -34,7 +37,7 @@ const SupportFormNavigation = ({
             onClick={handleNext}
             className="flex items-center space-x-2 px-6 py-3 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition"
           >
-            <span>Next</span>
+            <span>{t("support.navigation.next")}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         ) : (
@@ -46,12 +49,12 @@ const SupportFormNavigation = ({
             {isSubmitting ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                <span>Submitting...</span>
+                <span>{t("support.navigation.submitting")}</span>
               </>
             ) : (
               <>
                 <Send className="w-4 h-4" />
-                <span>Submit Request</span>
+                <span>{t("support.navigation.submitRequest")}</span>
               </>
             )}
           </button>

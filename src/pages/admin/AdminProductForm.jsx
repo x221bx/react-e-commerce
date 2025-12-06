@@ -177,7 +177,6 @@ export default function AdminProductForm() {
 
                 navigate("/admin/products", { replace: true });
               } catch (err) {
-                console.error("Save product failed:", err);
               } finally {
                 setSubmitting(false);
               }

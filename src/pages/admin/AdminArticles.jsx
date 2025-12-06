@@ -93,7 +93,7 @@ const formatPublishDateForInput = (raw) => {
       return Number.isNaN(raw.getTime()) ? "" : raw.toISOString().slice(0, 16);
     }
   } catch (error) {
-    console.error("formatPublishDateForInput error:", error);
+
   }
   return "";
 };
@@ -105,7 +105,6 @@ const serializePublishDate = (value) => {
     if (Number.isNaN(date.getTime())) return "";
     return date.toISOString();
   } catch (error) {
-    console.error("serializePublishDate error:", error);
     return "";
   }
 };
@@ -251,7 +250,6 @@ const AdminArticles = () => {
       }));
       toast.success("AI draft generated with RAG context!");
     } catch (error) {
-      console.error(error);
       toast.error("Failed to generate draft");
     } finally {
       setAiDrafting(false);
@@ -274,7 +272,6 @@ const AdminArticles = () => {
       setForm(prev => ({ ...prev, title: generatedTitle.title }));
       toast.success("Title generated!");
     } catch (error) {
-      console.error(error);
       toast.error("Failed to generate title");
     } finally {
       setAiDrafting(false);
@@ -296,7 +293,6 @@ const AdminArticles = () => {
       setForm(prev => ({ ...prev, summary: generatedSummary.summary }));
       toast.success("Summary generated!");
     } catch (error) {
-      console.error(error);
       toast.error("Failed to generate summary");
     } finally {
       setAiDrafting(false);
@@ -322,7 +318,6 @@ const AdminArticles = () => {
       }
       toast.success("Content rewritten!");
     } catch (error) {
-      console.error(error);
       toast.error("Failed to rewrite content");
     } finally {
       setAiDrafting(false);
@@ -409,7 +404,6 @@ const AdminArticles = () => {
       setRagAnswer(answer);
       toast.success("AI answer ready");
     } catch (error) {
-      console.error(error);
       toast.error("RAG answer failed");
     } finally {
       setRagLoading(false);
@@ -442,10 +436,8 @@ const AdminArticles = () => {
         for (const article of scheduledArticles) {
           try {
             await updateArticle(article.id, { status: "published" });
-            console.log(`Auto-published article: ${article.title}`);
             toast.success(`Article "${article.title}" has been auto-published!`);
           } catch (error) {
-            console.error(`Failed to auto-publish article ${article.id}:`, error);
             toast.error(`Failed to auto-publish article "${article.title}"`);
           }
         }
@@ -526,7 +518,6 @@ const AdminArticles = () => {
       setAiReview(null);
       localStorage.removeItem('articleDraft');
     } catch (error) {
-      console.error(error);
       toast.error("Unable to save article");
     } finally {
       setShowPublishOverlay(false);
@@ -563,7 +554,7 @@ const AdminArticles = () => {
     // Ensure slug exists for URL routing
     if (!article.slug && article.title) {
       // Update the article with a slug if missing
-      updateArticle(article.id, { slug: generateSlug(article.title) }).catch(console.error);
+      updateArticle(article.id, { slug: generateSlug(article.title) }).catch(() => {});
     }
 
 
@@ -614,7 +605,6 @@ const AdminArticles = () => {
         setAiReview(null);
       }
     } catch (error) {
-      console.error(error);
       toast.error("Failed to delete article");
     }
   };
