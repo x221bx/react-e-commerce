@@ -108,14 +108,6 @@ export default function Favorites() {
                           : t("favorites.addToCart", "Add to Cart")}
                       </button>
 
-                      <button
-                        onClick={() => navigate("/cart")}
-                        className={`flex items-center gap-1 rounded-xl px-3 py-1 text-sm font-semibold text-white transition ${isDark ? "bg-emerald-700 hover:bg-emerald-800" : "bg-emerald-600 hover:bg-emerald-700"}`}
-                        title={t("favorites.viewCart", "Go to Cart")}
-                      >
-                        <FiShoppingCart size={16} />
-                        {t("favorites.viewCart", "Go to Cart")}
-                      </button>
                     </div>
                   </div>
                 </div>
