@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { doc, onSnapshot } from "firebase/firestore";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { db } from "../services/firebase";
 import useUserOrders from "./useUserOrders";
 import toast from "react-hot-toast";
@@ -11,8 +11,13 @@ const buildTrackingUrl = (trackingNumber) =>
 export const useOrderTracking = (userId) => {
     const navigate = useNavigate();
     const location = useLocation();
+    const params = useParams();
     const query = useMemo(() => new URLSearchParams(location.search), [location.search]);
-    const orderIdQuery = query.get("orderId");
+    
+    // Support both path parameter (/tracking/:orderId) and query parameter (?orderId=...)
+    const orderIdFromPath = params.orderId;
+    const orderIdFromQuery = query.get("orderId") || query.get("order");
+    const orderIdQuery = orderIdFromPath || orderIdFromQuery;
 
     const { orders: allOrders, loading, connectionError: ordersConnectionError, confirmDelivery } = useUserOrders(userId);
   
@@ -74,7 +79,7 @@ export const useOrderTracking = (userId) => {
     }, [ordersConnectionError, orderConnectionError]);
 
     const handleSelectOrder = (id) => {
-        navigate(`/account/tracking?orderId=${id}`);
+        navigate(`/account/tracking/${id}`);
     };
 
     return {

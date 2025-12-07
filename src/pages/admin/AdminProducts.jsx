@@ -520,18 +520,18 @@ function StatusBadge({ available, small = false }) {
       <span
         className={`${base} ${
           small ? "px-1.5 py-0 text-[11px]" : ""
-        } bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-200 dark:ring-emerald-500/40`}
+        } bg-emerald-100 text-emerald-800 ring-emerald-300 dark:bg-emerald-600/20 dark:text-emerald-300 dark:ring-emerald-500/50`}
       >
-        • {t("admin.status.available", { defaultValue: "Available" })}
+        ✓ {t("admin.status.available", { defaultValue: "Available" })}
       </span>
     );
   return (
     <span
       className={`${base} ${
         small ? "px-1.5 py-0 text-[11px]" : ""
-      } bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-200 dark:ring-amber-500/40`}
+      } bg-amber-100 text-amber-800 ring-amber-300 dark:bg-amber-600/20 dark:text-amber-300 dark:ring-amber-500/50`}
     >
-      • {t("admin.status.unavailable", { defaultValue: "Out of stock" })}
+      ✗ {t("admin.status.unavailable", { defaultValue: "Out of stock" })}
     </span>
   );
 }

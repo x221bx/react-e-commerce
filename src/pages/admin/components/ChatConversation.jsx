@@ -6,20 +6,11 @@ const ChatConversation = ({
   isDark,
   lastMessageRef
 }) => {
-  // Auto-scroll to bottom when messages change
-  useEffect(() => {
-    if (lastMessageRef.current) {
-      setTimeout(() => {
-        lastMessageRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
-      }, 100);
-    }
-  }, [selectedComplaint?.replies]);
-
   // Combine all messages: original customer message, admin replies, and user follow-ups
   const allMessages = [
     // Original customer message
     {
-      id: 'original-customer',
+      id: `original-customer-${selectedComplaint.id}`,
       message: selectedComplaint.description || selectedComplaint.message,
       sender: 'user',
       timestamp: selectedComplaint.createdAt,
@@ -44,6 +35,15 @@ const ChatConversation = ({
   });
 
   const flatMessages = allMessages;
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    if (lastMessageRef.current) {
+      setTimeout(() => {
+        lastMessageRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
+      }, 150); // Slightly longer delay to ensure message is rendered
+    }
+  }, [selectedComplaint?.replies, selectedComplaint?.userMessages, flatMessages.length, selectedComplaint?.id]);
 
   return (
     <div className="flex-1 flex flex-col min-h-0 p-6 bg-[linear-gradient(135deg,#f8fafc_0%,#eef2ff_50%,#f8fafc_100%)] dark:bg-slate-900/40">

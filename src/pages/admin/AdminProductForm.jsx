@@ -24,9 +24,12 @@ const createSchema = (t) =>
     thumbnailUrl: Yup.string()
       .url(t("admin.productForm.validation.thumbnailUrl"))
       .required(t("admin.productForm.validation.thumbnailUrlRequired")),
-    price: Yup.number()
-      .typeError(t("admin.productForm.validation.priceNumber"))
-      .positive(t("admin.productForm.validation.pricePositive"))
+    price: Yup.string()
+      .test('is-valid-price', 'Price must be a valid positive number', (value) => {
+        if (!value && value !== 0) return false;
+        const numValue = parseFloat(value);
+        return !isNaN(numValue) && numValue >= 0 && numValue <= 999999999;
+      })
       .required(t("admin.productForm.validation.priceRequired")),
     stock: Yup.number()
       .typeError(t("admin.productForm.validation.stockNumber"))
@@ -85,34 +88,23 @@ export default function AdminProductForm() {
           isAvailable: true,
         };
 
-  const actions = (
-    <div className="flex items-center gap-2">
-      <button
-        type="submit"
-        form="productForm"
-        className="rounded-lg bg-[#49BBBD] px-3 py-2 text-sm font-semibold text-white hover:bg-[#2F7E80]"
-      >
-        {isEdit
-          ? t("admin.productForm.saveChanges")
-          : t("admin.productForm.addProduct")}
-      </button>
+  // Custom validation for price to prevent symbols
+  const validatePrice = (value) => {
+    if (!value && value !== 0) return t("admin.productForm.validation.priceRequired");
+    if (isNaN(value) || value < 0) return "Price must be a valid positive number";
+    if (value > 999999999) return "Price is too high";
+    return undefined;
+  };
 
-      <button
-        onClick={() => navigate(-1)}
-        type="button"
-        className={`
-          rounded-lg border px-3 py-2 text-sm transition
-          ${
-            dark
-              ? "border-[#1e3a3a] bg-[#0f2222] text-[#cfecec] hover:bg-[#163434]"
-              : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
-          }
-        `}
-      >
-        {t("admin.productForm.cancel")}
-      </button>
-    </div>
-  );
+  // Handle price input to prevent symbols
+  const handlePriceChange = (e, setFieldValue) => {
+    const value = e.target.value;
+    // Allow only numbers and decimal point
+    const cleanValue = value.replace(/[^0-9.]/g, '');
+    // Only allow one decimal point
+    const finalValue = cleanValue.replace(/(\..*)\./g, '$1');
+    setFieldValue('price', finalValue);
+  };
 
   return (
     <div
@@ -307,19 +299,40 @@ export default function AdminProductForm() {
                     <label className="block text-sm font-medium">
                       {t("admin.productForm.price")}
                     </label>
-                    <Field
-                      name="price"
-                      type="number"
-                      min="0"
-                      className={`
-                        w-full rounded-lg px-3 py-2 border
-                        ${
-                          dark
-                            ? "bg-[#0c1919] border-[#1e3a3a] text-[#cfecec]"
-                            : "bg-white border-gray-300 text-gray-800"
-                        }
-                      `}
-                    />
+                    <Field name="price">
+                      {({ field, form, meta }) => (
+                        <>
+                          <input
+                            {...field}
+                            type="text"
+                            inputMode="decimal"
+                            min="0"
+                            step="0.01"
+                            placeholder="0.00"
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              // Allow only numbers and decimal point
+                              const cleanValue = value.replace(/[^0-9.]/g, '');
+                              // Only allow one decimal point
+                              const finalValue = cleanValue.replace(/(\..*)\./g, '$1');
+                              field.onChange(finalValue);
+                            }}
+                            className={`
+                              w-full rounded-lg px-3 py-2 border
+                              ${
+                                dark
+                                  ? "bg-[#0c1919] border-[#1e3a3a] text-[#cfecec]"
+                                  : "bg-white border-gray-300 text-gray-800"
+                              }
+                              ${meta.touched && meta.error ? 'border-red-500' : ''}
+                            `}
+                          />
+                          {meta.touched && meta.error && (
+                            <p className="text-xs text-red-500 mt-1">{meta.error}</p>
+                          )}
+                        </>
+                      )}
+                    </Field>
                     <ErrorMessage
                       name="price"
                       component="p"

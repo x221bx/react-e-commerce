@@ -178,6 +178,7 @@ export default function App() {
               <Route path="payments" element={<PaymentMethods />} />
               <Route path="OrderHistory" element={<OrderHistory />} />
               <Route path="tracking" element={<OrderTracking />} />
+              <Route path="tracking/:orderId" element={<OrderTracking />} />
               <Route path="invoice/:orderId" element={<OrderInvoice />} />
               <Route path="saved" element={<SavedProducts />} />
               <Route path="articles" element={<FavoriteArticles />} />

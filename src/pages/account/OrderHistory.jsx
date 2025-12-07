@@ -159,7 +159,7 @@ export default function OrderHistory() {
                       ) && (
                         <button
                           onClick={() =>
-                            navigate(`/account/tracking?order=${order.id}`)
+                            navigate(`/account/tracking/${order.id}`)
                           }
                           className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors text-sm font-medium"
                         >
