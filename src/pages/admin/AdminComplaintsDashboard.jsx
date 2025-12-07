@@ -372,7 +372,7 @@ const AdminComplaintsDashboard = () => {
           isDark={isDark}
         />
 
-        {/* Ticket Detail Modal */}
+        {/* Overlay Conversation */}
         <ComplaintsModal
           selectedComplaint={selectedComplaint}
           setSelectedComplaint={setSelectedComplaint}

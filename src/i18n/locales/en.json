@@ -1,1062 +1,1091 @@
 {
-    "brand": {
-        "name": "Farm Vet Shop",
-        "store": "Farm Vet Shop"
+  "brand": {
+    "name": "Farm Vet Shop",
+    "store": "Farm Vet Shop"
+  },
+  "payments": {
+    "eyebrow": "Billing & wallets",
+    "title": "Payment Methods",
+    "subtitle": "Manage cards and wallets used for faster checkout.",
+    "fastCheckout": "Fast checkout",
+    "defaultLabel": "Default payment",
+    "noDefault": "No default selected",
+    "defaultCaption": "Used automatically for subscriptions and express checkout.",
+    "cardsHeader": "Saved cards",
+    "noCards": "No cards saved yet.",
+    "walletsHeader": "Connected wallets",
+    "noWallets": "No connected wallets yet.",
+    "status": {
+      "defaultBadge": "Default"
     },
-    "payments": {
-        "eyebrow": "Billing & wallets",
-        "title": "Payment Methods",
-        "subtitle": "Manage cards and wallets used for faster checkout.",
-        "fastCheckout": "Fast checkout",
-        "defaultLabel": "Default payment",
-        "noDefault": "No default selected",
-        "defaultCaption": "Used automatically for subscriptions and express checkout.",
-        "cardsHeader": "Saved cards",
-        "noCards": "No cards saved yet.",
-        "walletsHeader": "Connected wallets",
-        "noWallets": "No connected wallets yet.",
-        "status": {
-            "defaultBadge": "Default"
-        },
-        "actions": {
-            "makeDefault": "Make default",
-            "delete": "Delete"
-        },
-        "form": {
-            "cardTitle": "Add new card",
-            "cardPreview": "Card preview",
-            "cardHolder": "Card holder name",
-            "cardNumber": "Card number",
-            "expiry": "Expiry (MM/YY)",
-            "cvv": "CVV",
-            "nickname": "Nickname (optional)",
-            "nicknamePlaceholder": "Farm purchases",
-            "saving": "Saving...",
-            "saveCard": "Save card",
-            "reset": "Reset",
-            "walletTitle": "Link wallet",
-            "walletProvider": "Provider",
-            "walletEmail": "Account email",
-            "linking": "Linking...",
-            "linkWallet": "Link wallet"
-        },
-        "errors": {
-            "holder": "Please enter the card holder name.",
-            "number": "Enter a valid card number.",
-            "expiry": "Expiry must be MM/YY and in the future.",
-            "cvv": "Enter the 3 or 4 digit CVV.",
-            "email": "Enter a valid email address."
-        },
-        "securityHint": "We only store last 4; full number and CVV never saved.",
-        "brandUnknown": "Card type not recognized yet",
-        "noMethods": "No payment methods saved yet. Use the forms on the right to add one.",
-        "cardLabel": "Card",
-        "nameLabel": "Name",
-        "expLabel": "EXP",
-        "expPlaceholder": "MM/YY",
-        "endingIn": "ending in",
-        "separator": "-",
-        "confirmDeleteTitle": "Delete Payment Method",
-        "confirmDeleteMessage": "Are you sure you want to delete this payment method? This action cannot be undone."
+    "actions": {
+      "makeDefault": "Make default",
+      "delete": "Delete"
     },
-    "languages": {
-        "en": "English",
-        "ar": "Arabic",
-        "switch_to_ar": "العربية",
-        "switch_to_en": "English"
-    },
-    "navbar": {
-        "logout_success": "Logged out successfully 👋",
-        "language_changed": "Language changed to {{language}}",
-        "language_error": "Failed to change language",
-        "search_placeholder": "Search products...",
-        "language_toggle": "Toggle language",
-        "toggle_language": "Toggle language",
-        "toggle_theme": "Toggle theme",
-        "toggle_menu": "Toggle menu",
-        "menu_toggle": "Toggle menu",
-        "notifications": "Notifications",
-        "notification_error": "Real-time notifications are blocked. Please disable ad blockers for this site.",
-        "favorites": "Favorites",
-        "cart": "Cart",
-        "account": "Account",
-        "logout": "Logout",
-        "login": "Login",
-        "register": "Register"
-    },
-    "nav": {
-        "home": "Home",
-        "courses": "Courses",
-        "products": "Products",
-        "articles": "Articles",
-        "careers": "Careers",
-        "blog": "Blog",
-        "about": "About",
-        "admin": "Admin",
-        "account": "Account",
-        "account_settings": "Account & Settings",
-        "favorites": "Favorites",
-        "cart": "Cart"
-    },
-    "favorites": {
-        "title": "My Favorites",
-        "emptyTitle": "No favorites yet.",
-        "browseProducts": "Browse Products",
-        "clearAll": "Clear All",
-        "buy": "Buy"
-    },
-    "auth": {
-        "login": "Login",
-        "register": "Sign Up",
-        "logout": "Logout",
-        "email_username": "Email or Username",
-        "password": "Password",
-        "forgot": "Forgot?",
-        "create_account": "Create Account"
-    },
-    "admin": {
-        "dashboard": "Dashboard",
-        "courses": "Courses",
-        "new_course": "New Course",
-        "categories": "Categories",
-        "category_name": "Category name",
-        "create": "Create",
-        "new_category": "New Category",
-        "status": {
-            "published": "Published",
-            "draft": "Draft"
-        },
-        "productForm": {
-            "editTitle": "Edit Product",
-            "newTitle": "New Product",
-            "saveChanges": "Save Changes",
-            "addProduct": "Add Product",
-            "cancel": "Cancel",
-            "loading": "Loading…",
-            "productName": "Product Name",
-            "description": "Description",
-            "imageUrl": "Image URL",
-            "category": "Category",
-            "selectCategory": "Select category…",
-            "price": "Price",
-            "stock": "Stock",
-            "stockHelp": "Set product inventory (units available).",
-            "currency": "Currency",
-            "available": "Available",
-            "preview": "Preview",
-            "validation": {
-                "titleMin": "Product name is too short",
-                "titleRequired": "Product name is required",
-                "descriptionMin": "Description is too short",
-                "descriptionRequired": "Description is required",
-                "thumbnailUrl": "Please enter a valid image URL",
-                "thumbnailUrlRequired": "Image URL is required",
-                "priceNumber": "Price must be a number",
-                "pricePositive": "Price must be > 0",
-                "priceRequired": "Price is required",
-                "stockNumber": "Stock must be a number",
-                "stockInteger": "Stock must be a whole number",
-                "stockMin": "Stock cannot be negative",
-                "stockRequired": "Stock is required",
-                "currencyRequired": "Currency is required",
-                "categoryRequired": "Category is required"
-            }
-        },
-        "footer_note": "© {{year}} Vet Clinic Dashboard — Crafted with care"
-    },
-    "layout": {
-        "sidebar_height_hint": "Height: {{value}}"
-    },
-    "format": {
-        "price": "{{value, number}} {{currency}}",
-        "created": "{{value, datetime}}"
-    },
-    "sort": {
-        "createdAt": "Created At",
-        "price": "Price",
-        "title": "Alphabetical"
-    },
-    "filter": {
-        "all": "All"
-    },
-    "empty": {
-        "courses_title": "No courses found",
-        "categories_title": "No categories yet",
-        "try_clear": "Try clearing the search or changing filters.",
-        "create_first_course": "Start by creating your first course.",
-        "create_first_category": "Create your first category."
+    "form": {
+      "cardTitle": "Add new card",
+      "cardPreview": "Card preview",
+      "cardHolder": "Card holder name",
+      "cardNumber": "Card number",
+      "expiry": "Expiry (MM/YY)",
+      "cvv": "CVV",
+      "nickname": "Nickname (optional)",
+      "nicknamePlaceholder": "Farm purchases",
+      "saving": "Saving...",
+      "saveCard": "Save card",
+      "reset": "Reset",
+      "walletTitle": "Link wallet",
+      "walletProvider": "Provider",
+      "walletEmail": "Account email",
+      "linking": "Linking...",
+      "linkWallet": "Link wallet"
     },
     "errors": {
-        "courses_load_failed": "Failed to load courses",
-        "categories_load_failed": "Failed to load categories",
-        "404_code": "404",
-        "404_title": "Page not found",
-        "404_message": "The page you are looking for might have been removed.",
-        "403_code": "403",
-        "403_title": "Forbidden",
-        "403_message": "You don't have permission to access this page."
+      "holder": "Please enter the card holder name.",
+      "number": "Enter a valid card number.",
+      "expiry": "Expiry must be MM/YY and in the future.",
+      "cvv": "Enter the 3 or 4 digit CVV.",
+      "email": "Enter a valid email address."
     },
-    "common": {
-        "go_home": "Go to Home",
-        "signing_in": "Signing in…",
-        "creating": "Creating…",
-        "sending": "Sending…",
-        "delete": "Delete",
-        "cancel": "Cancel",
-        "working": "Working…",
-        "light_mode": "Light Mode",
-        "dark_mode": "Dark Mode",
-        "retry": "Retry",
-        "error": "Error",
-        "rateLimitExceeded": "Too many attempts. Please wait {{seconds}} seconds.",
-        "valid": "Valid",
-        "total": "Total",
-        "customer": "Customer",
-        "admin": "Admin",
-        "uploading": "Uploading...",
-        "reset": "Reset",
-        "remove": "Remove photo"
+    "securityHint": "We only store last 4; full number and CVV never saved.",
+    "brandUnknown": "Card type not recognized yet",
+    "noMethods": "No payment methods saved yet. Use the forms on the right to add one.",
+    "cardLabel": "Card",
+    "nameLabel": "Name",
+    "expLabel": "EXP",
+    "expPlaceholder": "MM/YY",
+    "endingIn": "ending in",
+    "separator": "-",
+    "confirmDeleteTitle": "Delete Payment Method",
+    "confirmDeleteMessage": "Are you sure you want to delete this payment method? This action cannot be undone."
+  },
+  "languages": {
+    "en": "English",
+    "ar": "Arabic",
+    "switch_to_ar": "العربية",
+    "switch_to_en": "English"
+  },
+  "navbar": {
+    "logout_success": "Logged out successfully 👋",
+    "language_changed": "Language changed to {{language}}",
+    "language_error": "Failed to change language",
+    "search_placeholder": "Search products...",
+    "language_toggle": "Toggle language",
+    "toggle_language": "Toggle language",
+    "toggle_theme": "Toggle theme",
+    "toggle_menu": "Toggle menu",
+    "menu_toggle": "Toggle menu",
+    "notifications": "Notifications",
+    "notification_error": "Real-time notifications are blocked. Please disable ad blockers for this site.",
+    "favorites": "Favorites",
+    "cart": "Cart",
+    "account": "Account",
+    "logout": "Logout",
+    "login": "Login",
+    "register": "Register"
+  },
+  "nav": {
+    "home": "Home",
+    "courses": "Courses",
+    "products": "Products",
+    "articles": "Articles",
+    "careers": "Careers",
+    "blog": "Blog",
+    "about": "About",
+    "admin": "Admin",
+    "account": "Account",
+    "account_settings": "Account & Settings",
+    "favorites": "Favorites",
+    "cart": "Cart"
+  },
+  "favorites": {
+    "title": "My Favorites",
+    "emptyTitle": "No favorites yet.",
+    "browseProducts": "Browse Products",
+    "clearAll": "Clear All",
+    "buy": "Buy"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Sign Up",
+    "logout": "Logout",
+    "email_username": "Email or Username",
+    "password": "Password",
+    "forgot": "Forgot?",
+    "create_account": "Create Account"
+  },
+  "admin": {
+    "dashboard": "Dashboard",
+    "courses": "Courses",
+    "new_course": "New Course",
+    "categories": "Categories",
+    "category_name": "Category name",
+    "create": "Create",
+    "new_category": "New Category",
+    "status": {
+      "published": "Published",
+      "draft": "Draft"
     },
-    "settings": {
-        "language_display": "Language & Display",
-        "personalize_info": "Customize your experience",
-        "units_language_notes": "Choose your preferred language, units, and add delivery instructions.",
-        "interface_language": "Language",
-        "measurements": "Units",
-        "metric_units": "Metric (kg, km)",
-        "imperial_units": "Imperial (lb, mi)",
-        "delivery_notes": "Delivery Instructions",
-        "reset_defaults": "Reset to defaults",
-        "save_display_settings": "Save preferences",
-        "personal_info": "Personal Information",
-        "keep_contact_accurate": "Update your contact details",
-        "info_on_invoices": "This information will appear on your invoices and delivery documents.",
-        "upload_profile_photo": "Add profile photo",
-        "photo_formats": "PNG, JPG, WebP - Max 2MB - Optimized for all devices",
-        "choose_file": "Choose file",
-        "photo_link_label": "Paste image link",
-        "photo_link_placeholder": "Paste a Firebase Storage URL or any image link",
-        "photo_link_helper": "Use a direct image link (works with free Firebase Storage).",
-        "first_name": "First Name",
-        "first_name_placeholder": "John",
-        "last_name": "Last Name",
-        "last_name_placeholder": "Appleseed",
-        "gender": "Gender",
-        "select": "Select",
-        "male": "Male",
-        "female": "Female",
-        "birth_date": "Date of Birth",
-        "profession_role": "Profession",
-        "profession_placeholder": "e.g., Livestock nutritionist",
-        "phone_number": "Phone Number",
-        "phone_placeholder": "01XXXXXXXXX",
-        "farm_city": "Farm Location",
-        "location_placeholder": "Add your city or delivery landmark",
-        "username": "Username",
-        "username_placeholder": "your.username",
-        "email": "Email",
-        "email_placeholder": "john@example.com",
-        "location": "Location",
-        "photo_formats_desc": "Drag and drop or click to browse",
-        "unsaved_changes": "You have unsaved changes",
-        "auto_saving": "Auto-saving in 3 seconds...",
-        "all_changes_saved": "All changes saved",
-        "save_profile": "Save profile",
-        "profile_helper_text": "Keep your profile updated for personalized recommendations.",
-        "securitySection": "Security",
-        "securityTitle": "Keep your account protected",
-        "securityDescription": "Use a unique password and refresh it frequently.",
-        "currentPassword": "Current Password",
-        "newPassword": "New Password",
-        "confirmNewPassword": "Confirm New Password",
-        "passwordTip": "Tip: combine at least 12 characters with numbers and symbols. Avoid reusing passwords from other services.",
-        "updatingPassword": "Updating...",
-        "updatePassword": "Update password",
-        "forgotPassword": "Forgot password?",
-        "forgotPasswordSuccess": "Password reset email sent! Check your inbox.",
-        "forgotPasswordError": "Failed to send reset email. Please try again.",
-        "forgotPasswordNoEmail": "No email address found for your account.",
-        "sendingReset": "Sending...",
-        "navigation": {
-            "focus_area": "Focus area",
-            "aria_label": "Profile settings sections",
-            "categories": {
-                "profile": {
-                    "label": "Profile",
-                    "description": "Personal info and security",
-                    "helper": "Keep your personal and security details accurate."
-                },
-                "preferences": {
-                    "label": "Farm Settings",
-                    "description": "Customize your farming experience",
-                    "helper": "Tune the interface language and site preferences."
-                },
-                "account": {
-                    "label": "Farm Account",
-                    "description": "Manage your agricultural account",
-                    "helper": "Take action on your profile status and data requests."
-                }
-            },
-            "items": {
-                "personal": {
-                    "label": "Personal info",
-                    "description": "Update your farming profile"
-                },
-                "security": {
-                    "label": "Security",
-                    "description": "Secure your farm account"
-                },
-                "notifications": {
-                    "label": "Notifications",
-                    "description": "Farm alerts and updates"
-                },
-                "preferences": {
-                    "label": "Preferences",
-                    "description": "Customize your experience"
-                },
-                "account": {
-                    "label": "Account",
-                    "description": "Farm account management"
-                },
-                "support": {
-                    "label": "Support",
-                    "description": "Get help and support"
-                }
-            }
+    "productForm": {
+      "editTitle": "Edit Product",
+      "newTitle": "New Product",
+      "saveChanges": "Save Changes",
+      "addProduct": "Add Product",
+      "cancel": "Cancel",
+      "loading": "Loading…",
+      "productName": "Product Name",
+      "description": "Description",
+      "imageUrl": "Image URL",
+      "category": "Category",
+      "selectCategory": "Select category…",
+      "price": "Price",
+      "stock": "Stock",
+      "stockHelp": "Set product inventory (units available).",
+      "currency": "Currency",
+      "available": "Available",
+      "preview": "Preview",
+      "validation": {
+        "titleMin": "Product name is too short",
+        "titleRequired": "Product name is required",
+        "descriptionMin": "Description is too short",
+        "descriptionRequired": "Description is required",
+        "thumbnailUrl": "Please enter a valid image URL",
+        "thumbnailUrlRequired": "Image URL is required",
+        "priceNumber": "Price must be a number",
+        "pricePositive": "Price must be > 0",
+        "priceRequired": "Price is required",
+        "stockNumber": "Stock must be a number",
+        "stockInteger": "Stock must be a whole number",
+        "stockMin": "Stock cannot be negative",
+        "stockRequired": "Stock is required",
+        "currencyRequired": "Currency is required",
+        "categoryRequired": "Category is required"
+      }
+    },
+    "footer_note": "© {{year}} Vet Clinic Dashboard — Crafted with care"
+  },
+  "layout": {
+    "sidebar_height_hint": "Height: {{value}}"
+  },
+  "format": {
+    "price": "{{value, number}} {{currency}}",
+    "created": "{{value, datetime}}"
+  },
+  "sort": {
+    "createdAt": "Created At",
+    "price": "Price",
+    "title": "Alphabetical"
+  },
+  "filter": {
+    "all": "All"
+  },
+  "empty": {
+    "courses_title": "No courses found",
+    "categories_title": "No categories yet",
+    "try_clear": "Try clearing the search or changing filters.",
+    "create_first_course": "Start by creating your first course.",
+    "create_first_category": "Create your first category."
+  },
+  "errors": {
+    "courses_load_failed": "Failed to load courses",
+    "categories_load_failed": "Failed to load categories",
+    "404_code": "404",
+    "404_title": "Page not found",
+    "404_message": "The page you are looking for might have been removed.",
+    "403_code": "403",
+    "403_title": "Forbidden",
+    "403_message": "You don't have permission to access this page."
+  },
+  "common": {
+    "go_home": "Go to Home",
+    "signing_in": "Signing in…",
+    "creating": "Creating…",
+    "sending": "Sending…",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "working": "Working…",
+    "light_mode": "Light Mode",
+    "dark_mode": "Dark Mode",
+    "retry": "Retry",
+    "error": "Error",
+    "rateLimitExceeded": "Too many attempts. Please wait {{seconds}} seconds.",
+    "valid": "Valid",
+    "total": "Total",
+    "customer": "Customer",
+    "admin": "Admin",
+    "uploading": "Uploading...",
+    "reset": "Reset",
+    "remove": "Remove photo"
+  },
+  "settings": {
+    "language_display": "Language & Display",
+    "personalize_info": "Customize your experience",
+    "units_language_notes": "Choose your preferred language, units, and add delivery instructions.",
+    "interface_language": "Interface Language",
+    "measurements": "Units",
+    "metric_units": "Metric (kg, km)",
+    "imperial_units": "Imperial (lb, mi)",
+    "delivery_notes": "Delivery Instructions",
+    "reset_defaults": "Reset to defaults",
+    "save_display_settings": "Save preferences",
+    "personal_info": "Personal Information",
+    "keep_contact_accurate": "Update your contact details",
+    "info_on_invoices": "This information will appear on your invoices and delivery documents.",
+    "upload_profile_photo": "Add profile photo",
+    "photo_formats": "PNG, JPG, WebP - Max 2MB - Optimized for all devices",
+    "choose_file": "Choose file",
+    "photo_link_label": "Paste image link",
+    "photo_link_placeholder": "Paste a Firebase Storage URL or any image link",
+    "photo_link_helper": "Use a direct image link (works with free Firebase Storage).",
+    "first_name": "First Name",
+    "first_name_placeholder": "John",
+    "last_name": "Last Name",
+    "last_name_placeholder": "Appleseed",
+    "gender": "Gender",
+    "select": "Select",
+    "male": "Male",
+    "female": "Female",
+    "birth_date": "Date of Birth",
+    "profession_role": "Profession",
+    "profession_placeholder": "e.g., Livestock nutritionist",
+    "phone_number": "Phone Number",
+    "phone_placeholder": "01XXXXXXXXX",
+    "farm_city": "Farm Location",
+    "location_placeholder": "Add your city or delivery landmark",
+    "username": "Username",
+    "username_placeholder": "your.username",
+    "email": "Email",
+    "email_placeholder": "john@example.com",
+    "location": "Location",
+    "photo_formats_desc": "Drag and drop or click to browse",
+    "unsaved_changes": "You have unsaved changes",
+    "auto_saving": "Auto-saving in 3 seconds...",
+    "all_changes_saved": "All changes saved",
+    "save_profile": "Save profile",
+    "profile_helper_text": "Keep your profile updated for personalized recommendations.",
+    "securitySection": "Security",
+    "securityTitle": "Keep your account protected",
+    "securityDescription": "Use a unique password and refresh it frequently.",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmNewPassword": "Confirm New Password",
+    "passwordTip": "Tip: combine at least 12 characters with numbers and symbols. Avoid reusing passwords from other services.",
+    "updatingPassword": "Updating...",
+    "updatePassword": "Update password",
+    "forgotPassword": "Forgot password?",
+    "forgotPasswordSuccess": "Password reset email sent! Check your inbox.",
+    "forgotPasswordError": "Failed to send reset email. Please try again.",
+    "forgotPasswordNoEmail": "No email address found for your account.",
+    "sendingReset": "Sending...",
+    "navigation": {
+      "focus_area": "Focus area",
+      "aria_label": "Profile settings sections",
+      "categories": {
+        "profile": {
+          "label": "Profile",
+          "description": "Personal info and security",
+          "helper": "Keep your personal and security details accurate."
         },
-        "notificationOptions": {
-            "productUpdates": {
-                "label": "Product Updates",
-                "description": "Weekly highlights about new agri-vet products and bundles."
-            },
-            "orderUpdates": {
-                "label": "Order Updates",
-                "description": "Delivery tracking and billing reminders for every purchase."
-            },
-            "securityAlerts": {
-                "label": "Security Alerts",
-                "description": "Sign-in alerts and unusual activity notifications."
-            },
-            "marketingEmails": {
-                "label": "Marketing Emails",
-                "description": "Seasonal promotions and educational content."
-            }
+        "preferences": {
+          "label": "Farm Settings",
+          "description": "Customize your farming experience",
+          "helper": "Tune the interface language and site preferences."
         },
-        "dangerZone": {
-            "eyebrow": "Delete account",
-            "title": "Permanently delete this account",
-            "description": "Remove your profile and cancel any active orders linked to it.",
-            "readBefore": "Before you delete",
-            "deleteDataNotice": "All saved details (name, email, phone, addresses, and preferences) will be erased.",
-            "orderCancelNotice": "Any open or pending orders on this account will be cancelled automatically.",
-            "irreversible": "This action is immediate and cannot be undone.",
-            "delete": "Delete account now",
-            "requesting": "Deleting...",
-            "needHelp": "Need help first?",
-            "contactSupport": "Contact support"
+        "account": {
+          "label": "Farm Account",
+          "description": "Manage your agricultural account",
+          "helper": "Take action on your profile status and data requests."
+        }
+      },
+      "items": {
+        "personal": {
+          "label": "Personal info",
+          "description": "Update your farming profile"
         },
-        "confirmDialog": {
-            "title": "Confirmation required",
-            "deleteTitle": "Delete your account now?",
-            "deleteBody": "We will erase your saved profile and cancel any pending orders. You will need to create a new account to return.",
-            "keepAccount": "Keep my account",
-            "deleteAction": "Yes, delete everything"
+        "security": {
+          "label": "Security",
+          "description": "Secure your farm account"
+        },
+        "notifications": {
+          "label": "Notifications",
+          "description": "Farm alerts and updates"
+        },
+        "preferences": {
+          "label": "Preferences",
+          "description": "Customize your experience"
+        },
+        "account": {
+          "label": "Account",
+          "description": "Farm account management"
         },
         "support": {
-            "section": "Support",
-            "title": "Need help or have feedback?",
-            "description": "Get in touch with our support team or browse our help resources.",
-            "feedback": "Send Feedback",
-            "feedbackDesc": "Share your thoughts about our products and services",
-            "help": "Get Help",
-            "helpDesc": "Find answers to common questions",
-            "helpComing": "Help center coming soon!",
-            "call": "Call Support",
-            "callDesc": "Speak with our support team",
-            "email": "Email Support",
-            "emailDesc": "Send us an email for detailed assistance"
-        },
-        "hub_eyebrow": "Unified settings hub",
-        "hi_message": "Hi {{name}}, keep everything aligned",
-        "hi_fallback": "there",
-        "hub_description": "Personal info, preferences, notifications, and account safety share the same design in /settings and /account/settings.",
-        "edit_profile": "Edit profile",
-        "review_security": "Review security",
-        "account_status": "Account Status",
-        "interface_language": "Interface Language",
-        "notifications": "Notifications"
-    },
-    "account": {
-        "profile_preferences": "Profile & Preferences",
-        "profile_description": "Name, language, and security",
-        "payment_methods": "Payment Methods",
-        "payment_description": "Cards, wallets, billing",
-        "order_history": "My orders",
-        "order_description": "Invoices and receipts",
-        "order_tracking": "Order Tracking",
-        "tracking_description": "Live delivery status",
-        "saved_products": "Saved Products",
-        "saved_description": "Lists and restocks",
-        "favorite_articles": "Favorite Articles",
-        "articles_description": "Guides and resources",
-        "ai_conversations": "AI Conversations",
-        "ai_description": "Chat history",
-        "aiConversations": {
-            "eyebrow": "Coaching assistant",
-            "title": "AI Conversations",
-            "subtitleWithEntries": "Revisit strategic chats with the agronomy copilot and resume from where you left off.",
-            "subtitleWithoutEntries": "You have not started any copilot chats yet. Launch the assistant to begin a new conversation.",
-            "emptyTitle": "No saved transcripts yet",
-            "emptySubtitle": "Every prompt you send to the floating AI assistant will appear here for quick reference.",
-            "startChat": "Start a new chat",
-            "exportTranscript": "Export transcript",
-            "reopenChat": "Reopen chat",
-            "untitledPrompt": "Untitled prompt",
-            "waitingResponse": "Waiting for assistant response...",
-            "justNow": "Just now"
-        },
-        "feedback_support": "Feedback & Support",
-        "support_description": "Share your opinion or get help",
-        "complaints_topic_fallback": "General support",
-        "complaints_topics": {
-            "orders": "Orders & logistics",
-            "billing": "Billing & payments",
-            "product": "Product feedback",
-            "ai": "AI assistant",
-            "technical": "Technical issue",
-            "other": "Other"
-        },
-        "complaints_status": {
-            "pending": "Pending",
-            "in-progress": "In progress",
-            "resolved": "Resolved",
-            "closed": "Closed"
-        },
-        "logout": "Log out",
-        "complaints": "My Inquiries",
-        "complaints_description": "Submit and track your inquiries",
-        "complaints_title": "Support Center",
-        "complaints_subtitle": "Monitor your support requests and follow their progress toward resolution.",
-        "complaints_helper": "View status updates, contact details, and response priority at a glance.",
-        "submit_new_complaint": "Submit New Inquiry",
-        "complaints_your_message": "Your Message",
-        "no_complaints_title": "No inquiries yet",
-        "no_complaints_subtitle": "You haven't submitted any inquiries yet. Click the button above to submit your first inquiry.",
-        "login_required_title": "Please log in to view your inquiries",
-        "login_required_subtitle": "You need to be logged in to access your inquiry history.",
-        "complaints_actions": {
-            "close_complaint": "Close Inquiry",
-            "closing": "Closing...",
-            "no_response_yet": "No response yet",
-            "awaiting_response": "We're reviewing your inquiry and will respond soon.",
-            "complaint_closed": "Inquiry closed successfully",
-            "add_follow_up": "Add follow-up",
-            "send_follow_up": "Send follow-up",
-            "follow_up_placeholder": "Add details, order reference, or photos link to clarify your issue.",
-            "follow_up_saved": "Follow-up sent",
-            "wait_for_resolution": "Our support team is still reviewing this request."
-        },
-        "admin_response": "Support Response",
-        "user_follow_up": "Your Follow-up",
-        "confirm_close_message": "Are you sure you want to close this inquiry? This action cannot be undone.",
-        "helper_text": "",
-        "savedProducts": {
-            "eyebrow": "Favorites",
-            "title": "Saved Products",
-            "subtitle": "These items stay in sync with the real inventory managed from the admin area.",
-            "emptyTitle": "No saved products yet",
-            "emptySubtitle": "Explore the catalog curated by your admins and tap the heart icon to keep favourites handy.",
-            "browse": "Browse products",
-            "view": "View",
-            "addToCart": "Add to cart",
-            "remove": "Remove",
-            "inStock": "In stock",
-            "unavailable": "Currently unavailable",
-            "priceUnknown": "Price unavailable",
-            "noImage": "No image"
-        },
-        "favoriteArticles": {
-            "loading": "Loading your reading list...",
-            "emptyTitle": "No saved articles yet",
-            "emptySubtitle": "Save knowledge base entries from the catalog and they will appear here automatically.",
-            "browse": "Browse articles",
-            "eyebrow": "Research stream",
-            "title": "Favorite Articles",
-            "subtitle": "Personalized reading list for your farm crew. Saved items override our curated picks.",
-            "readMore": "Continue reading →"
-        },
-        "orderHistory": {
-            "title": "Order History",
-            "subtitle": "Track all your orders and their current status",
-            "noOrders": "No orders yet",
-            "noOrdersDesc": "Your order history will appear here once you make your first purchase.",
-            "orderNumber": "Order #",
-            "total": "Total",
-            "invoice": "Invoice",
-            "track": "Track",
-            "orderItems": "Order Items",
-            "shippingInfo": "Shipping Information",
-            "paymentInfo": "Payment Information",
-            "orderTimeline": "Order Timeline",
-            "customerConfirmed": "Customer Confirmed",
-            "by": "by"
+          "label": "Support",
+          "description": "Get help and support"
         }
+      }
     },
-    "checkout": {
-        "errors": {
-            "fullName": "Please enter a full name.",
-            "email": "Provide a valid email address.",
-            "phone": "Provide a valid phone number.",
-            "address": "Address is required.",
-            "city": "City is required.",
-            "postalCode": "Postal code is required.",
-            "country": "Country is required."
-        },
-        "messages": {
-            "loginRequired": "Please sign in to continue.",
-            "emptyCart": "Your cart is empty.",
-            "success": "Order placed successfully!",
-            "failure": "Unable to place the order. Please try again."
-        },
-        "empty": {
-            "title": "Cart is empty",
-            "subtitle": "Add some farm supplies to continue.",
-            "cta": "Browse products"
-        },
-        "authRequired": {
-            "title": "Sign in required",
-            "subtitle": "Log in to finalize your purchase.",
-            "cta": "Go to login"
-        },
-        "header": {
-            "eyebrow": "Secure checkout",
-            "title": "Review and confirm",
-            "subtitle": "Enter your contact and shipping details, then choose a payment method."
-        },
-        "sections": {
-            "contact": "Contact information",
-            "shipping": "Shipping address",
-            "payment": "Payment method"
-        },
-        "fields": {
-            "fullName": "Full name",
-            "email": "Email",
-            "phone": "Phone",
-            "addressLine1": "Address line 1",
-            "addressLine2": "Address line 2",
-            "optional": "Optional",
-            "city": "City",
-            "state": "State / Province",
-            "postalCode": "Postal code",
-            "country": "Country",
-            "address": "Address",
-            "notes": "Notes (optional)"
-        },
-        "payment": {
-            "cod": {
-                "title": "Cash on delivery",
-                "subtitle": "Pay when your order arrives."
-            },
-            "card": {
-                "title": "Card payment",
-                "subtitle": "Pay securely online."
-            }
-        },
-        "actions": {
-            "backToCart": "Back to cart",
-            "processing": "Processing...",
-            "completeOrder": "Place order",
-            "confirmOrder": "Confirm Order"
-        },
-        "confirmOrder": {
-            "title": "Confirm Your Order",
-            "message": "Are you sure you want to place this order?",
-            "confirmDeduction": "Confirm Deduction"
-        },
-        "cardSelection": {
-            "address": "Address",
-            "selectSavedCard": "Select a saved card or add a new one",
-            "addNewCard": "Add a new card",
-            "secureCollection": "We will collect your card details securely after you confirm."
-        },
-        "summary": {
-            "title": "Order summary",
-            "subtitle": "Products in your cart",
-            "quantity": "{{count}} item",
-            "quantity_plural": "{{count}} items",
-            "subtotal": "Subtotal",
-            "shipping": "Shipping",
-            "total": "Total",
-            "note": "You will receive an email confirmation with tracking information."
-        }
+    "notificationOptions": {
+      "productUpdates": {
+        "label": "Product Updates",
+        "description": "Weekly highlights about new agri-vet products and bundles."
+      },
+      "orderUpdates": {
+        "label": "Order Updates",
+        "description": "Delivery tracking and billing reminders for every purchase."
+      },
+      "securityAlerts": {
+        "label": "Security Alerts",
+        "description": "Sign-in alerts and unusual activity notifications."
+      },
+      "marketingEmails": {
+        "label": "Marketing Emails",
+        "description": "Seasonal promotions and educational content."
+      }
     },
-    "notifications": {
-        "center_label": "Notifications Center",
-        "title": "Stay updated with every action",
-        "subtitle": "Track order progress, support replies, and important system updates in one place.",
-        "unread_count": "{{count}} unread",
-        "all_caught_up": "All caught up",
-        "mark_all_read": "Mark all read",
-        "groups": {
-            "orders": "Orders",
-            "support": "Support",
-            "system": "System"
-        },
-        "group_count": "{{count}} updates",
-        "new_badge": "New",
-        "marked": "Read",
-        "mark_read": "Mark read",
-        "view_details": "View details",
-        "empty_title": "No notifications yet",
-        "empty_description": "Important updates about your orders and inquiries will appear here."
+    "dangerZone": {
+      "eyebrow": "Delete account",
+      "title": "Permanently delete this account",
+      "description": "Remove your profile and cancel any active orders linked to it.",
+      "readBefore": "Before you delete",
+      "deleteDataNotice": "All saved details (name, email, phone, addresses, and preferences) will be erased.",
+      "orderCancelNotice": "Any open or pending orders on this account will be cancelled automatically.",
+      "irreversible": "This action is immediate and cannot be undone.",
+      "delete": "Delete account now",
+      "requesting": "Deleting...",
+      "needHelp": "Need help first?",
+      "contactSupport": "Contact support"
     },
-    "pagination": {
-        "prev": "Previous",
-        "next": "Next",
-        "showing": "Showing",
-        "to": "to",
-        "of": "of",
-        "results": "results",
-        "noResults": "No results found"
-    },
-    "orders": {
-        "loading": "Loading your orders...",
-        "empty": {
-            "title": "No orders yet",
-            "subtitle": "Once you purchase items you'll see them here.",
-            "cta": "Shop products"
-        },
-        "overview": {
-            "eyebrow": "Overview",
-            "title": "My orders",
-            "subtitle": "View your recent purchases and track their status."
-        },
-        "table": {
-            "order": "Order",
-            "date": "Date",
-            "items": "Items",
-            "itemsCount": "{{count}} item",
-            "itemsCount_plural": "{{count}} items",
-            "total": "Total",
-            "status": "Status",
-            "actions": "Actions",
-            "view": "View details",
-            "pending": "Processing"
-        },
-        "status": {
-            "processing": "Processing",
-            "shipped": "Shipped",
-            "delivered": "Delivered"
-        }
-    },
-    "tracking": {
-        "eyebrow": "Track your recent purchases",
-        "title": "Order Tracking",
-        "subtitle": "We refresh your order timeline in real time.",
-        "viewAllOrders": "View all orders",
-        "order": "Order",
-        "total": "Total",
-        "placedOn": "Placed on",
-        "awaitingUpdate": "Awaiting update",
-        "selectOrder": "Select an order to display live updates.",
-        "noOrders": {
-            "title": "No tracked orders yet",
-            "subtitle": "Once you place an order, we'll show real-time tracking here.",
-            "cta": "Shop now"
-        },
-        "trackingStatus": "Tracking Status",
-        "shippingInfo": "Shipping Information",
-        "shippingTo": "Shipping To",
-        "carrier": "Carrier",
-        "trackingNumber": "Tracking Number",
-        "trackOnCarrierSite": "Track on carrier site",
-        "trackCarrier": "Track on carrier site",
-        "steps": {
-            "orderPlaced": "Order Placed",
-            "processing": "Processing",
-            "shipped": "Shipped",
-            "outForDelivery": "Out for Delivery",
-            "delivered": "Delivered"
-        }
-    },
-    "confirmation": {
-        "messages": {
-            "noOrder": "No order information available.",
-            "notFound": "We couldn't find this order.",
-            "loading": "Fetching order details..."
-        },
-        "actions": {
-            "goShopping": "Go shopping",
-            "viewOrders": "View orders",
-            "continueShopping": "Continue shopping",
-            "viewInvoice": "View Invoice"
-        },
-        "header": {
-            "eyebrow": "Thank you",
-            "title": "Order confirmed",
-            "subtitle": "We've emailed your receipt and will keep you posted about shipment status."
-        },
-        "meta": {
-            "reference": "Order reference",
-            "date": "Placed on",
-            "status": "Status",
-            "shippingTo": "Shipping to",
-            "contact": "Contact",
-            "pending": "Pending"
-        },
-        "items": {
-            "title": "Items in this order",
-            "quantity": "{{count}} pc",
-            "quantity_plural": "{{count}} pcs"
-        },
-        "summary": {
-            "subtotal": "Subtotal",
-            "shipping": "Shipping",
-            "total": "Total"
-        }
+    "confirmDialog": {
+      "title": "Confirmation required",
+      "deleteTitle": "Delete your account now?",
+      "deleteBody": "We will erase your saved profile and cancel any pending orders. You will need to create a new account to return.",
+      "keepAccount": "Keep my account",
+      "deleteAction": "Yes, delete everything"
     },
     "support": {
-        "title": "Feedback & Support",
-        "subtitle": "We're here to help! Share your feedback, report issues, or get assistance from our team of experts.",
-        "topic": "Topic",
-        "topics": {
-            "orders": "Orders & Logistics",
-            "orders_desc": "Help with orders, shipping, and delivery",
-            "billing": "Billing & Payments",
-            "billing_desc": "Questions about invoices, payments, and receipts",
-            "product": "Product Feedback",
-            "product_desc": "Feedback about products, quality, and usage",
-            "ai": "AI Assistant",
-            "technical": "Technical Issues",
-            "technical_desc": "Technical issues with the website or app",
-            "account": "Account",
-            "account_desc": "Account management and settings",
-            "other": "Other",
-            "other_desc": "Any other inquiry not categorized"
-        },
-        "phoneNumber": "Phone Number",
-        "phonePlaceholder": "Enter your phone number for contact purposes",
-        "phoneRequired": "Required so we can contact you (in English or Arabic) about your support request",
-        "phoneInvalid": "Enter an Egyptian mobile starting 010/011/012/015 with 11 digits",
-        "phoneHelp": "Required so we can contact you (in English or Arabic) about your support request",
-        "message": "Message",
-        "placeholder": "Please describe your issue, feedback, or question in detail...",
-        "messageRequired": "Please enter a message",
-        "subject": "Subject",
-        "description": "Description",
-        "sending": "Sending...",
-        "sendMessage": "Send Message",
-        "messageSent": "Your message has been sent successfully!",
-        "messageError": "Failed to send message. Please try again.",
-        "messageInappropriate": "Please remove offensive language before sending your message.",
-        "moderationFailed": "We couldn't verify your message. Please try again.",
-        "step1": {
-            "title": "Select Category",
-            "subtitle": "Choose the category that best describes your issue"
-        },
-        "step2": {
-            "title": "Provide Details",
-            "subtitle": "Tell us more about your issue"
-        },
-        "step3": {
-            "title": "Contact Information",
-            "subtitle": "We need your phone number to contact you about your support request"
-        },
-        "step4": {
-            "title": "Review & Submit",
-            "subtitle": "Please review your information before submitting",
-            "review": "Review Your Request",
-            "category": "Category",
-            "expectedResponse": "Expected Response Time",
-            "within24Hours": "Within 24 hours"
-        },
-        "navigation": {
-            "previous": "Previous",
-            "next": "Next",
-            "step": "Step",
-            "of": "of",
-            "submitting": "Submitting...",
-            "submitRequest": "Submit Request"
-        },
-        "validation": {
-            "phoneRequired": "Phone number is required",
-            "phoneInvalidLength": "Phone number must be 11 digits",
-            "phoneInvalidFormat": "Please enter a valid Egyptian mobile number (01xxxxxxxxx)",
-            "categoryRequired": "Please select a category",
-            "subjectRequired": "Subject is required",
-            "descriptionRequired": "Description is required"
-        },
-        "messages": {
-            "submitSuccess": "Your support request has been submitted successfully!",
-            "submitError": "Failed to submit support request"
-        },
-        "progress": {
-            "category": "Category",
-            "details": "Details",
-            "contact": "Contact",
-            "review": "Review",
-            "step1": "Category",
-            "step2": "Details",
-            "step3": "Contact",
-            "step4": "Review"
-        }
+      "section": "Support",
+      "title": "Need help or have feedback?",
+      "description": "Get in touch with our support team or browse our help resources.",
+      "feedback": "Send Feedback",
+      "feedbackDesc": "Share your thoughts about our products and services",
+      "help": "Get Help",
+      "helpDesc": "Find answers to common questions",
+      "helpComing": "Help center coming soon!",
+      "call": "Call Support",
+      "callDesc": "Speak with our support team",
+      "email": "Email Support",
+      "emailDesc": "Send us an email for detailed assistance"
     },
-    "articles": {
-        "list": {
-            "eyebrow": "Knowledge base",
-            "title": "Articles & field notes",
-            "subtitle": "Fresh agronomy tips, veterinary schedules.",
-            "search": "Search articles...",
-            "allTags": "All topics",
-            "manage": "Manage articles",
-            "loading": "Loading articles...",
-            "readMore": "Continue reading →",
-            "emptyTitle": "No articles match this filter",
-            "emptySubtitle": "Try a different search term or browse all topics.",
-            "fallbackNotice": "Our editorial team is still publishing live articles. Showing trusted field guides until they arrive.",
-            "comingSoonTitle": "Articles are coming soon",
-            "comingSoonSubtitle": "We are preparing bilingual resources for this space. Check back shortly."
-        },
-        "detail": {
-            "loading": "Loading article...",
-            "notFound": "Article not found",
-            "back": "Back to articles",
-            "authNeeded": "Sign in to save articles",
-            "saved": "Saved",
-            "savedButton": "Saved",
-            "saveButton": "Save for later",
-            "removed": "Removed from favorites",
-            "error": "Unable to update favorites",
-            "byline": "Written by {{author}}",
-            "emptyContent": "Content coming soon.",
-            "share": "Share",
-            "save": "Save",
-            "like": "Like",
-            "dislike": "Dislike",
-            "topics": "Topics",
-            "discoverMore": "Discover More Articles",
-            "continueJourney": "Continue your learning journey with related content",
-            "browseAll": "Browse All Articles"
-        },
-        "admin": {
-            "eyebrow": "Knowledge center",
-            "title": "Manage Articles",
-            "subtitle": "Publish updates for the community or auto-fill content with the AI draft helper.",
-            "generate": "Generate with AI",
-            "featureHome": "Feature on home page",
-            "featureAccount": "Recommend inside account hub",
-            "cancel": "Cancel",
-            "saving": "Saving...",
-            "update": "Update",
-            "publish": "Publish",
-            "catalog": "Published articles",
-            "edit": "Edit",
-            "delete": "Delete",
-            "empty": "No articles published yet.",
-            "seedButton": "Load starter articles",
-            "seedLoading": "Publishing starter pack...",
-            "seedSuccess": "Starter articles published",
-            "seedError": "Unable to import starter articles.",
-            "arabicBlock": "Arabic translation (optional)",
-            "titleAr": "Arabic title",
-            "summaryAr": "Arabic summary",
-            "contentAr": "Arabic body content"
-        }
+    "hub_eyebrow": "Unified settings hub",
+    "hi_message": "Hi {{name}}, keep everything aligned",
+    "hi_fallback": "there",
+    "hub_description": "Personal info, preferences, notifications, and account safety share the same design in /settings and /account/settings.",
+    "edit_profile": "Edit profile",
+    "review_security": "Review security",
+    "account_status": "Account Status",
+    "notifications": "Notifications"
+  },
+  "account": {
+    "profile_preferences": "Profile & Preferences",
+    "profile_description": "Name, language, and security",
+    "payment_methods": "Payment Methods",
+    "payment_description": "Cards, wallets, billing",
+    "order_history": "My orders",
+    "order_description": "Invoices and receipts",
+    "order_tracking": "Order Tracking",
+    "tracking_description": "Live delivery status",
+    "saved_products": "Saved Products",
+    "saved_description": "Lists and restocks",
+    "favorite_articles": "Favorite Articles",
+    "articles_description": "Guides and resources",
+    "ai_conversations": "AI Conversations",
+    "ai_description": "Chat history",
+    "aiConversations": {
+      "eyebrow": "Coaching assistant",
+      "title": "AI Conversations",
+      "subtitleWithEntries": "Revisit strategic chats with the agronomy copilot and resume from where you left off.",
+      "subtitleWithoutEntries": "You have not started any copilot chats yet. Launch the assistant to begin a new conversation.",
+      "emptyTitle": "No saved transcripts yet",
+      "emptySubtitle": "Every prompt you send to the floating AI assistant will appear here for quick reference.",
+      "startChat": "Start a new chat",
+      "exportTranscript": "Export transcript",
+      "reopenChat": "Reopen chat",
+      "untitledPrompt": "Untitled prompt",
+      "waitingResponse": "Waiting for assistant response...",
+      "justNow": "Just now"
     },
-    "userSettings": {
-        "messages": {
-            "firstNameRequired": "Please enter your first name",
-            "firstNameTooShort": "First name must be at least 2 characters",
-            "firstNameTooLong": "First name must be less than 50 characters",
-            "lastNameRequired": "Please enter your last name",
-            "lastNameTooShort": "Last name must be at least 2 characters",
-            "lastNameTooLong": "Last name must be less than 50 characters",
-            "invalidEmail": "Please enter a valid email address",
-            "phoneRequiredGeneric": "Phone number is required",
-            "invalidEgyptPhone": "Enter an Egyptian mobile number that starts with 01 and is exactly 11 digits",
-            "invalidImageUrl": "Please enter a valid image URL (jpg, png, gif, webp)",
-            "usernameRequired": "Please enter a username",
-            "usernameTooShort": "Username must be at least 3 characters",
-            "usernameTooLong": "Username must be less than 30 characters",
-            "usernameInvalid": "Username can only include letters, numbers, and underscores",
-            "usernameTaken": "This username is already taken",
-            "invalidDate": "Please enter a valid date",
-            "invalidGender": "Please select your gender",
-            "professionTooLong": "Profession description is too long (max 80 characters)",
-            "currentPasswordRequired": "Please enter your current password",
-            "newPasswordRequired": "Please enter a new password",
-            "passwordTooShort": "Password must be at least 8 characters long",
-            "passwordWeak": "Password must include uppercase, lowercase, and numbers",
-            "passwordsNotMatch": "New passwords don't match",
-            "saveProfileFailed": "We couldn't save your profile. Please check your connection and try again.",
-            "noChangesToSave": "No changes to save",
-            "securitySection": "Security",
-            "securityTitle": "Change your password",
-            "securityDescription": "Update your password regularly to keep access safe.",
-            "currentPassword": "Current Password",
-            "newPassword": "New Password",
-            "confirmNewPassword": "Confirm New Password",
-            "passwordTip": "Tip: Use at least 12 characters with numbers and symbols. Don't reuse passwords from other sites.",
-            "updatingPassword": "Updating password...",
-            "updatePassword": "Update password",
-            "forgotPassword": "Forgot password?",
-            "forgotPasswordSuccess": "Password reset email sent! Check your inbox.",
-            "forgotPasswordError": "Failed to send reset email. Please try again.",
-            "forgotPasswordNoEmail": "No email address found for your account.",
-            "sendingReset": "Sending...",
-            "notificationsSection": "Notifications",
-            "notificationsTitle": "Choose what you want to hear about",
-            "notificationsDescription": "Select the updates that matter to you.",
-            "notificationDescription": "Stay informed with timely updates.",
-            "savingNotifications": "Saving preferences...",
-            "savePreferences": "Save preferences",
-            "saveProfileSuccess": "Your profile has been updated successfully.",
-            "savePreferencesFailed": "We couldn't save your preferences. Please try again.",
-            "savePreferencesSuccess": "Your preferences have been saved.",
-            "saveNotificationsFailed": "We couldn't save your notification settings. Please try again.",
-            "saveNotificationsSuccess": "Your notification preferences have been saved.",
-            "updatePasswordFailed": "We couldn't update your password. Please check your current password and try again.",
-            "updatePasswordSuccess": "Your password has been changed successfully.",
-            "accountActionFailed": "We couldn't process your request. Please try again or contact support.",
-            "accountDeleted": "Your account has been deleted and any pending orders were cancelled.",
-            "emailRequiresRecentLogin": "For security, please sign in again before changing your email or deleting your account.",
-            "emailUpdateFailed": "We couldn't update your email. Please try again in a moment.",
-            "wrongPassword": "The current password you entered is incorrect",
-            "weakPassword": "Please choose a stronger password",
-            "tooManyRequests": "Too many attempts. Please wait a few minutes before trying again.",
-            "invalidImageFile": "Please select a valid image file (PNG, JPG, or WebP)",
-            "imageTooLarge": "Image is too large. Please choose a file under 2MB",
-            "fileReadError": "We couldn't read the selected file. Please try again.",
-            "accountDeactivated": "Your account has been deactivated. You can reactivate it anytime by signing in.",
-            "accountDeletionRequested": "Your deletion request has been recorded. Our support team will contact you within 24 hours.",
-            "passwordResetEmailSent": "Password reset email sent. Please check your inbox and follow the instructions.",
-            "saving": "Saving...",
-            "updating": "Updating...",
-            "processing": "Processing...",
-            "loading": "Loading...",
-            "delivery_example": "Example: contact farm foreman before arrival.",
-            "interface_language": "Interface language",
-            "language_display": "Language & display",
-            "personalize_info": "Personalize your experience",
-            "units_language_notes": "Choose your preferred units and language for the interface.",
-            "interface_language": "Interface language",
-            "languages": {
-                "english": "English",
-                "arabic": "العربية"
-            },
-            "fix_errors": "Please fix the following errors before saving:",
-            "fix_errors_short": "Check these fields to continue:",
-            "photo_link_toggle": "Use an image link (optional)",
-            "photo_link_toggle_hide": "Hide image link"
-        }
+    "feedback_support": "Feedback & Support",
+    "support_description": "Share your opinion or get help",
+    "complaints_topic_fallback": "General support",
+    "complaints_topics": {
+      "orders": "Orders & logistics",
+      "billing": "Billing & payments",
+      "product": "Product feedback",
+      "ai": "AI assistant",
+      "technical": "Technical issue",
+      "other": "Other"
     },
-    "products": {
-        "title": "Products",
-        "search": "Search products...",
-        "sortLabel": "Sort",
-        "sort": {
-            "createdAt": "Newest",
-            "price": "Price",
-            "title": "Alphabetical"
-        },
-        "asc": "Ascending",
-        "desc": "Descending",
-        "perPage": "/ page",
-        "error": "Failed to load products.",
-        "fallback": "Live products are still syncing. Showing our core farm catalog until your database is ready.",
-        "noResults": "No products found.",
-        "noProductsFound": "No products found.",
-        "shopProducts": "Shop Products",
-        "noImage": "No image",
-        "addToCart": "Add to Cart",
-        "inCart": "In Cart",
-        "details": {
-            "loading": "Loading product...",
-            "errorTitle": "Product not found",
-            "errorMessage": "We couldn't find this product. Try browsing the catalog.",
-            "backToProducts": "Back to products",
-            "back": "Back to products",
-            "price": "Price",
-            "currency": "EGP",
-            "contactForPrice": "Contact for price",
-            "inStock": "In Stock",
-            "outOfStock": "Out of Stock",
-            "inCart": "Already in cart",
-            "addToCart": "Add to Cart",
-            "addFav": "Add to Favorites",
-            "removeFav": "Remove Favorite",
-            "category": "Category",
-            "sku": "SKU",
-            "stock": "In Stock",
-            "units": "units",
-            "tabDescription": "Description",
-            "tabSpecs": "Specifications",
-            "tabFaq": "FAQ",
-            "noDescription": "No description available.",
-            "noSpecs": "No specifications provided.",
-            "noFaq": "No FAQs yet.",
-            "askAiCta": "Have a question about this product? Ask AI now",
-            "askAiButton": "Ask AI",
-            "noImage": "No image available"
-        }
+    "complaints_status": {
+      "pending": "Pending",
+      "in-progress": "In progress",
+      "resolved": "Resolved",
+      "closed": "Closed"
     },
-    "home": {
-        "heroTitle": "Smarter Farming Starts Here",
-        "heroSubtitle": "Your one-stop shop for quality products, expert resources, and AI-powered farming advice.",
-        "shopByCategory": "Shop by Category",
-        "categoryFallback": "Category",
-        "categoryNoteFallback": "Browse products",
-        "topArticles": "Top Articles",
-        "articleFallback": "Article",
-        "ecoBannerTitle": "Spring Planting Sale",
-        "ecoBannerText": "Get up to 20% off all seeds and fertilizers. Stock up now for a bountiful harvest!",
-        "vetHelpTitle": "Need Help With Your Livestock? 🐄",
-        "vetHelpText": "Our veterinary experts are ready to assist you — from nutrition guidance to choosing the right treatments and products to keep your animals strong and healthy.",
-        "contactVet": "Contact Our Vet",
-        "readMore": "Continue reading →",
-        "shopAllProducts": "Shop All Products",
-        "addToCart": "Add to Cart",
-        "featuredProducts": "Featured Products",
-        "viewAll": "View All"
+    "logout": "Log out",
+    "complaints": "My Inquiries",
+    "complaints_description": "Submit and track your inquiries",
+    "complaints_title": "Support Center",
+    "complaints_subtitle": "Monitor your support requests and follow their progress toward resolution.",
+    "complaints_helper": "View status updates, contact details, and response priority at a glance.",
+    "submit_new_complaint": "Submit New Inquiry",
+    "complaints_your_message": "Your Message",
+    "no_complaints_title": "No inquiries yet",
+    "no_complaints_subtitle": "You haven't submitted any inquiries yet. Click the button above to submit your first inquiry.",
+    "login_required_title": "Please log in to view your inquiries",
+    "login_required_subtitle": "You need to be logged in to access your inquiry history.",
+    "complaints_actions": {
+      "close_complaint": "Close Inquiry",
+      "closing": "Closing...",
+      "no_response_yet": "No response yet",
+      "awaiting_response": "We're reviewing your inquiry and will respond soon.",
+      "complaint_closed": "Inquiry closed successfully",
+      "add_follow_up": "Add follow-up",
+      "send_follow_up": "Send follow-up",
+      "follow_up_placeholder": "Add details, order reference, or photos link to clarify your issue.",
+      "follow_up_saved": "Follow-up sent",
+      "wait_for_resolution": "Our support team is still reviewing this request.",
+      "response_sent": "Response sent",
+      "response_pending": "Awaiting support response",
+      "open_chat": "View conversation"
     },
-    "about": {
-        "title": "About Us",
-        "heroSubtitle": "Smarter Farming Starts With Us",
-        "whoWeAreTitle": "Who We Are",
-        "whoWeAre": "Farm Vet Shop is your trusted source for high-quality agricultural products, livestock care solutions, and expert farming advice powered by AI.",
-        "missionTitle": "Our Mission",
-        "mission": "To support farmers with top-quality supplies and AI guidance that improves yield and animal health.",
-        "whyTitle": "Why Choose Us?",
-        "whyList1": "Wide range of agricultural and veterinary products",
-        "whyList2": "AI Assistant for real-time farming support",
-        "whyList3": "Fast shipping and trusted customer service",
-        "whyList4": "Expert-approved products only"
+    "admin_response": "Support Response",
+    "user_follow_up": "Your Follow-up",
+    "confirm_close_message": "Are you sure you want to close this inquiry? This action cannot be undone.",
+    "helper_text": "",
+    "savedProducts": {
+      "eyebrow": "Favorites",
+      "title": "Saved Products",
+      "subtitle": "These items stay in sync with the real inventory managed from the admin area.",
+      "emptyTitle": "No saved products yet",
+      "emptySubtitle": "Explore the catalog curated by your admins and tap the heart icon to keep favourites handy.",
+      "browse": "Browse products",
+      "view": "View",
+      "addToCart": "Add to cart",
+      "remove": "Remove",
+      "inStock": "In stock",
+      "unavailable": "Currently unavailable",
+      "priceUnknown": "Price unavailable",
+      "noImage": "No image"
     },
-    "contact": {
-        "title": "Contact Us",
-        "heroSubtitle": "We're here to assist you anytime",
-        "getInTouch": "Get in Touch",
-        "description": "If you have any questions or need support, feel free to contact us at any time. Our team will get back to you as soon as possible.",
-        "email": "mmohamedd.ms@gmail.com",
-        "phone": "+20 114 404 6547",
-        "address": "Cairo, Egypt",
-        "form": {
-            "namePlaceholder": "Your Name",
-            "emailPlaceholder": "Your Email",
-            "phonePlaceholder": "Your Phone",
-            "messagePlaceholder": "Your Message",
-            "submit": "Send Message"
-        }
+    "favoriteArticles": {
+      "loading": "Loading your reading list...",
+      "emptyTitle": "No saved articles yet",
+      "emptySubtitle": "Save knowledge base entries from the catalog and they will appear here automatically.",
+      "browse": "Browse articles",
+      "eyebrow": "Research stream",
+      "title": "Favorite Articles",
+      "subtitle": "Personalized reading list for your farm crew. Saved items override our curated picks.",
+      "readMore": "Continue reading →"
     },
-    "footer": {
-        "brandName": "Farm Vet Shop",
-        "brandDescription": "Trusted veterinary products with top quality & affordable prices.",
-        "quickLinks": "Quick Links",
-        "home": "Home",
-        "products": "Products",
-        "about": "About",
-        "contact": "Contact",
-        "followUs": "Follow Us",
-        "copyright": "© {{year}} Farm Vet Shop. All rights reserved."
+    "orderHistory": {
+      "title": "Order History",
+      "subtitle": "Track all your orders and their current status",
+      "noOrders": "No orders yet",
+      "noOrdersDesc": "Your order history will appear here once you make your first purchase.",
+      "orderNumber": "Order #",
+      "total": "Total",
+      "invoice": "Invoice",
+      "track": "Track",
+      "orderItems": "Order Items",
+      "shippingInfo": "Shipping Information",
+      "paymentInfo": "Payment Information",
+      "orderTimeline": "Order Timeline",
+      "customerConfirmed": "Customer Confirmed",
+      "by": "by"
+    },
+    "orderInvoice": {
+      "title": "Invoice",
+      "orderLabel": "Order #",
+      "dateLabel": "Date",
+      "status": "Status",
+      "totalAmount": "Total Amount",
+      "billTo": "Bill To",
+      "shipTo": "Ship To",
+      "orderItems": "Order Items",
+      "quantity": "Quantity",
+      "orderSummary": "Order Summary",
+      "subtotal": "Subtotal",
+      "shipping": "Shipping",
+      "tax": "Tax",
+      "total": "Total",
+      "paymentMethod": "Payment Method",
+      "thanks": "Thank you for your business!",
+      "generatedOn": "Invoice generated on {{date}}",
+      "back": "Back",
+      "print": "Print",
+      "downloadPdf": "Download PDF",
+      "pdfGenerating": "Generating PDF...",
+      "pdfSuccess": "PDF downloaded successfully!",
+      "pdfError": "Failed to generate PDF. Please try again.",
+      "notFoundTitle": "Order Not Found",
+      "notFoundDesc": "The order you're looking for doesn't exist or you don't have access to it.",
+      "backToOrders": "Back to Orders"
     }
+  },
+  "checkout": {
+    "errors": {
+      "fullName": "Please enter a full name.",
+      "email": "Provide a valid email address.",
+      "phone": "Provide a valid phone number.",
+      "address": "Address is required.",
+      "city": "City is required.",
+      "postalCode": "Postal code is required.",
+      "country": "Country is required."
+    },
+    "messages": {
+      "loginRequired": "Please sign in to continue.",
+      "emptyCart": "Your cart is empty.",
+      "success": "Order placed successfully!",
+      "failure": "Unable to place the order. Please try again."
+    },
+    "empty": {
+      "title": "Cart is empty",
+      "subtitle": "Add some farm supplies to continue.",
+      "cta": "Browse products"
+    },
+    "authRequired": {
+      "title": "Sign in required",
+      "subtitle": "Log in to finalize your purchase.",
+      "cta": "Go to login"
+    },
+    "header": {
+      "eyebrow": "Secure checkout",
+      "title": "Review and confirm",
+      "subtitle": "Enter your contact and shipping details, then choose a payment method."
+    },
+    "sections": {
+      "contact": "Contact information",
+      "shipping": "Shipping address",
+      "payment": "Payment method"
+    },
+    "fields": {
+      "fullName": "Full name",
+      "email": "Email",
+      "phone": "Phone",
+      "addressLine1": "Address line 1",
+      "addressLine2": "Address line 2",
+      "optional": "Optional",
+      "city": "City",
+      "state": "State / Province",
+      "postalCode": "Postal code",
+      "country": "Country",
+      "address": "Address",
+      "notes": "Notes (optional)"
+    },
+    "payment": {
+      "cod": {
+        "title": "Cash on delivery",
+        "subtitle": "Pay when your order arrives."
+      },
+      "card": {
+        "title": "Card payment",
+        "subtitle": "Pay securely online."
+      }
+    },
+    "actions": {
+      "backToCart": "Back to cart",
+      "processing": "Processing...",
+      "completeOrder": "Place order",
+      "confirmOrder": "Confirm Order"
+    },
+    "confirmOrder": {
+      "title": "Confirm Your Order",
+      "message": "Are you sure you want to place this order?",
+      "confirmDeduction": "Confirm Deduction"
+    },
+    "cardSelection": {
+      "address": "Address",
+      "selectSavedCard": "Select a saved card or add a new one",
+      "addNewCard": "Add a new card",
+      "secureCollection": "We will collect your card details securely after you confirm."
+    },
+    "summary": {
+      "title": "Order summary",
+      "subtitle": "Products in your cart",
+      "quantity": "{{count}} item",
+      "quantity_plural": "{{count}} items",
+      "subtotal": "Subtotal",
+      "shipping": "Shipping",
+      "total": "Total",
+      "note": "You will receive an email confirmation with tracking information."
+    }
+  },
+  "notifications": {
+    "center_label": "Notifications Center",
+    "title": "Stay updated with every action",
+    "subtitle": "Track order progress, support replies, and important system updates in one place.",
+    "unread_count": "{{count}} unread",
+    "all_caught_up": "All caught up",
+    "mark_all_read": "Mark all read",
+    "groups": {
+      "orders": "Orders",
+      "support": "Support",
+      "system": "System"
+    },
+    "group_count": "{{count}} updates",
+    "new_badge": "New",
+    "marked": "Read",
+    "mark_read": "Mark read",
+    "view_details": "View details",
+    "empty_title": "No notifications yet",
+    "empty_description": "Important updates about your orders and inquiries will appear here."
+  },
+  "pagination": {
+    "prev": "Previous",
+    "next": "Next",
+    "showing": "Showing",
+    "to": "to",
+    "of": "of",
+    "results": "results",
+    "noResults": "No results found"
+  },
+  "orders": {
+    "loading": "Loading your orders...",
+    "empty": {
+      "title": "No orders yet",
+      "subtitle": "Once you purchase items you'll see them here.",
+      "cta": "Shop products"
+    },
+    "overview": {
+      "eyebrow": "Overview",
+      "title": "My orders",
+      "subtitle": "View your recent purchases and track their status."
+    },
+    "table": {
+      "order": "Order",
+      "date": "Date",
+      "items": "Items",
+      "itemsCount": "{{count}} item",
+      "itemsCount_plural": "{{count}} items",
+      "total": "Total",
+      "status": "Status",
+      "actions": "Actions",
+      "view": "View details",
+      "pending": "Processing"
+    },
+    "status": {
+      "processing": "Processing",
+      "shipped": "Shipped",
+      "delivered": "Delivered"
+    }
+  },
+  "tracking": {
+    "eyebrow": "Track your recent purchases",
+    "title": "Order Tracking",
+    "subtitle": "We refresh your order timeline in real time.",
+    "viewAllOrders": "View all orders",
+    "order": "Order",
+    "total": "Total",
+    "placedOn": "Placed on",
+    "awaitingUpdate": "Awaiting update",
+    "selectOrder": "Select an order to display live updates.",
+    "noOrders": {
+      "title": "No tracked orders yet",
+      "subtitle": "Once you place an order, we'll show real-time tracking here.",
+      "cta": "Shop now"
+    },
+    "trackingStatus": "Tracking Status",
+    "shippingInfo": "Shipping Information",
+    "shippingTo": "Shipping To",
+    "carrier": "Carrier",
+    "trackingNumber": "Tracking Number",
+    "trackOnCarrierSite": "Track on carrier site",
+    "trackCarrier": "Track on carrier site",
+    "steps": {
+      "orderPlaced": "Order Placed",
+      "processing": "Processing",
+      "shipped": "Shipped",
+      "outForDelivery": "Out for Delivery",
+      "delivered": "Delivered"
+    }
+  },
+  "confirmation": {
+    "messages": {
+      "noOrder": "No order information available.",
+      "notFound": "We couldn't find this order.",
+      "loading": "Fetching order details..."
+    },
+    "actions": {
+      "goShopping": "Go shopping",
+      "viewOrders": "View orders",
+      "continueShopping": "Continue shopping",
+      "viewInvoice": "View Invoice"
+    },
+    "header": {
+      "eyebrow": "Thank you",
+      "title": "Order confirmed",
+      "subtitle": "We've emailed your receipt and will keep you posted about shipment status."
+    },
+    "meta": {
+      "reference": "Order reference",
+      "date": "Placed on",
+      "status": "Status",
+      "shippingTo": "Shipping to",
+      "contact": "Contact",
+      "pending": "Pending"
+    },
+    "items": {
+      "title": "Items in this order",
+      "quantity": "{{count}} pc",
+      "quantity_plural": "{{count}} pcs"
+    },
+    "summary": {
+      "subtotal": "Subtotal",
+      "shipping": "Shipping",
+      "total": "Total"
+    }
+  },
+  "support": {
+    "title": "Feedback & Support",
+    "subtitle": "We're here to help! Share your feedback, report issues, or get assistance from our team of experts.",
+    "topic": "Topic",
+    "topics": {
+      "orders": "Orders & Logistics",
+      "orders_desc": "Help with orders, shipping, and delivery",
+      "billing": "Billing & Payments",
+      "billing_desc": "Questions about invoices, payments, and receipts",
+      "product": "Product Feedback",
+      "product_desc": "Feedback about products, quality, and usage",
+      "ai": "AI Assistant",
+      "technical": "Technical Issues",
+      "technical_desc": "Technical issues with the website or app",
+      "account": "Account",
+      "account_desc": "Account management and settings",
+      "other": "Other",
+      "other_desc": "Any other inquiry not categorized"
+    },
+    "phoneNumber": "Phone Number",
+    "phonePlaceholder": "Enter your phone number for contact purposes",
+    "phoneRequired": "Required so we can contact you (in English or Arabic) about your support request",
+    "phoneInvalid": "Enter an Egyptian mobile starting 010/011/012/015 with 11 digits",
+    "phoneHelp": "Required so we can contact you (in English or Arabic) about your support request",
+    "message": "Message",
+    "placeholder": "Please describe your issue, feedback, or question in detail...",
+    "messageRequired": "Please enter a message",
+    "subject": "Subject",
+    "description": "Description",
+    "sending": "Sending...",
+    "sendMessage": "Send Message",
+    "messageSent": "Your message has been sent successfully!",
+    "messageError": "Failed to send message. Please try again.",
+    "messageInappropriate": "Please remove offensive language before sending your message.",
+    "moderationFailed": "We couldn't verify your message. Please try again.",
+    "step1": {
+      "title": "Select Category",
+      "subtitle": "Choose the category that best describes your issue"
+    },
+    "step2": {
+      "title": "Provide Details",
+      "subtitle": "Tell us more about your issue"
+    },
+    "step3": {
+      "title": "Contact Information",
+      "subtitle": "We need your phone number to contact you about your support request"
+    },
+    "step4": {
+      "title": "Review & Submit",
+      "subtitle": "Please review your information before submitting",
+      "review": "Review Your Request",
+      "category": "Category",
+      "expectedResponse": "Expected Response Time",
+      "within24Hours": "Within 24 hours"
+    },
+    "navigation": {
+      "previous": "Previous",
+      "next": "Next",
+      "step": "Step",
+      "of": "of",
+      "submitting": "Submitting...",
+      "submitRequest": "Submit Request"
+    },
+    "validation": {
+      "phoneRequired": "Phone number is required",
+      "phoneInvalidLength": "Phone number must be 11 digits",
+      "phoneInvalidFormat": "Please enter a valid Egyptian mobile number (01xxxxxxxxx)",
+      "categoryRequired": "Please select a category",
+      "subjectRequired": "Subject is required",
+      "descriptionRequired": "Description is required"
+    },
+    "messages": {
+      "submitSuccess": "Your support request has been submitted successfully!",
+      "submitError": "Failed to submit support request"
+    },
+    "progress": {
+      "category": "Category",
+      "details": "Details",
+      "contact": "Contact",
+      "review": "Review",
+      "step1": "Category",
+      "step2": "Details",
+      "step3": "Contact",
+      "step4": "Review"
+    }
+  },
+  "articles": {
+    "list": {
+      "eyebrow": "Knowledge base",
+      "title": "Articles & field notes",
+      "subtitle": "Fresh agronomy tips, veterinary schedules.",
+      "search": "Search articles...",
+      "allTags": "All topics",
+      "manage": "Manage articles",
+      "loading": "Loading articles...",
+      "readMore": "Continue reading →",
+      "emptyTitle": "No articles match this filter",
+      "emptySubtitle": "Try a different search term or browse all topics.",
+      "fallbackNotice": "Our editorial team is still publishing live articles. Showing trusted field guides until they arrive.",
+      "comingSoonTitle": "Articles are coming soon",
+      "comingSoonSubtitle": "We are preparing bilingual resources for this space. Check back shortly."
+    },
+    "detail": {
+      "loading": "Loading article...",
+      "notFound": "Article not found",
+      "back": "Back to articles",
+      "authNeeded": "Sign in to save articles",
+      "saved": "Saved",
+      "savedButton": "Saved",
+      "saveButton": "Save for later",
+      "removed": "Removed from favorites",
+      "error": "Unable to update favorites",
+      "byline": "Written by {{author}}",
+      "emptyContent": "Content coming soon.",
+      "share": "Share",
+      "save": "Save",
+      "like": "Like",
+      "dislike": "Dislike",
+      "topics": "Topics",
+      "discoverMore": "Discover More Articles",
+      "continueJourney": "Continue your learning journey with related content",
+      "browseAll": "Browse All Articles"
+    },
+    "admin": {
+      "eyebrow": "Knowledge center",
+      "title": "Manage Articles",
+      "subtitle": "Publish updates for the community or auto-fill content with the AI draft helper.",
+      "generate": "Generate with AI",
+      "featureHome": "Feature on home page",
+      "featureAccount": "Recommend inside account hub",
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "update": "Update",
+      "publish": "Publish",
+      "catalog": "Published articles",
+      "edit": "Edit",
+      "delete": "Delete",
+      "empty": "No articles published yet.",
+      "seedButton": "Load starter articles",
+      "seedLoading": "Publishing starter pack...",
+      "seedSuccess": "Starter articles published",
+      "seedError": "Unable to import starter articles.",
+      "arabicBlock": "Arabic translation (optional)",
+      "titleAr": "Arabic title",
+      "summaryAr": "Arabic summary",
+      "contentAr": "Arabic body content"
+    }
+  },
+  "userSettings": {
+    "messages": {
+      "firstNameRequired": "Please enter your first name",
+      "firstNameTooShort": "First name must be at least 2 characters",
+      "firstNameTooLong": "First name must be less than 50 characters",
+      "lastNameRequired": "Please enter your last name",
+      "lastNameTooShort": "Last name must be at least 2 characters",
+      "lastNameTooLong": "Last name must be less than 50 characters",
+      "invalidEmail": "Please enter a valid email address",
+      "phoneRequiredGeneric": "Phone number is required",
+      "invalidEgyptPhone": "Enter an Egyptian mobile number that starts with 01 and is exactly 11 digits",
+      "invalidImageUrl": "Please enter a valid image URL (jpg, png, gif, webp)",
+      "usernameRequired": "Please enter a username",
+      "usernameTooShort": "Username must be at least 3 characters",
+      "usernameTooLong": "Username must be less than 30 characters",
+      "usernameInvalid": "Username can only include letters, numbers, and underscores",
+      "usernameTaken": "This username is already taken",
+      "invalidDate": "Please enter a valid date",
+      "invalidGender": "Please select your gender",
+      "professionTooLong": "Profession description is too long (max 80 characters)",
+      "currentPasswordRequired": "Please enter your current password",
+      "newPasswordRequired": "Please enter a new password",
+      "passwordTooShort": "Password must be at least 8 characters long",
+      "passwordWeak": "Password must include uppercase, lowercase, and numbers",
+      "passwordsNotMatch": "New passwords don't match",
+      "saveProfileFailed": "We couldn't save your profile. Please check your connection and try again.",
+      "noChangesToSave": "No changes to save",
+      "securitySection": "Security",
+      "securityTitle": "Change your password",
+      "securityDescription": "Update your password regularly to keep access safe.",
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmNewPassword": "Confirm New Password",
+      "passwordTip": "Tip: Use at least 12 characters with numbers and symbols. Don't reuse passwords from other sites.",
+      "updatingPassword": "Updating password...",
+      "updatePassword": "Update password",
+      "forgotPassword": "Forgot password?",
+      "forgotPasswordSuccess": "Password reset email sent! Check your inbox.",
+      "forgotPasswordError": "Failed to send reset email. Please try again.",
+      "forgotPasswordNoEmail": "No email address found for your account.",
+      "sendingReset": "Sending...",
+      "notificationsSection": "Notifications",
+      "notificationsTitle": "Choose what you want to hear about",
+      "notificationsDescription": "Select the updates that matter to you.",
+      "notificationDescription": "Stay informed with timely updates.",
+      "savingNotifications": "Saving preferences...",
+      "savePreferences": "Save preferences",
+      "saveProfileSuccess": "Your profile has been updated successfully.",
+      "savePreferencesFailed": "We couldn't save your preferences. Please try again.",
+      "savePreferencesSuccess": "Your preferences have been saved.",
+      "saveNotificationsFailed": "We couldn't save your notification settings. Please try again.",
+      "saveNotificationsSuccess": "Your notification preferences have been saved.",
+      "updatePasswordFailed": "We couldn't update your password. Please check your current password and try again.",
+      "updatePasswordSuccess": "Your password has been changed successfully.",
+      "accountActionFailed": "We couldn't process your request. Please try again or contact support.",
+      "accountDeleted": "Your account has been deleted and any pending orders were cancelled.",
+      "emailRequiresRecentLogin": "For security, please sign in again before changing your email or deleting your account.",
+      "emailUpdateFailed": "We couldn't update your email. Please try again in a moment.",
+      "wrongPassword": "The current password you entered is incorrect",
+      "weakPassword": "Please choose a stronger password",
+      "tooManyRequests": "Too many attempts. Please wait a few minutes before trying again.",
+      "invalidImageFile": "Please select a valid image file (PNG, JPG, or WebP)",
+      "imageTooLarge": "Image is too large. Please choose a file under 2MB",
+      "fileReadError": "We couldn't read the selected file. Please try again.",
+      "accountDeactivated": "Your account has been deactivated. You can reactivate it anytime by signing in.",
+      "accountDeletionRequested": "Your deletion request has been recorded. Our support team will contact you within 24 hours.",
+      "passwordResetEmailSent": "Password reset email sent. Please check your inbox and follow the instructions.",
+      "saving": "Saving...",
+      "updating": "Updating...",
+      "processing": "Processing...",
+      "loading": "Loading...",
+      "delivery_example": "Example: contact farm foreman before arrival.",
+      "interface_language": "Interface language",
+      "language_display": "Language & display",
+      "personalize_info": "Personalize your experience",
+      "units_language_notes": "Choose your preferred units and language for the interface.",
+      "languages": {
+        "english": "English",
+        "arabic": "العربية"
+      },
+      "fix_errors": "Please fix the following errors before saving:",
+      "fix_errors_short": "Check these fields to continue:",
+      "photo_link_toggle": "Use an image link (optional)",
+      "photo_link_toggle_hide": "Hide image link"
+    }
+  },
+  "products": {
+    "title": "Products",
+    "search": "Search products...",
+    "sortLabel": "Sort",
+    "sort": {
+      "createdAt": "Newest",
+      "price": "Price",
+      "title": "Alphabetical"
+    },
+    "asc": "Ascending",
+    "desc": "Descending",
+    "perPage": "/ page",
+    "error": "Failed to load products.",
+    "fallback": "Live products are still syncing. Showing our core farm catalog until your database is ready.",
+    "noResults": "No products found.",
+    "noProductsFound": "No products found.",
+    "shopProducts": "Shop Products",
+    "noImage": "No image",
+    "addToCart": "Add to Cart",
+    "inCart": "In Cart",
+    "details": {
+      "loading": "Loading product...",
+      "errorTitle": "Product not found",
+      "errorMessage": "We couldn't find this product. Try browsing the catalog.",
+      "backToProducts": "Back to products",
+      "back": "Back to products",
+      "price": "Price",
+      "currency": "EGP",
+      "contactForPrice": "Contact for price",
+      "inStock": "In Stock",
+      "outOfStock": "Out of Stock",
+      "inCart": "Already in cart",
+      "addToCart": "Add to Cart",
+      "addFav": "Add to Favorites",
+      "removeFav": "Remove Favorite",
+      "category": "Category",
+      "sku": "SKU",
+      "stock": "In Stock",
+      "units": "units",
+      "tabDescription": "Description",
+      "tabSpecs": "Specifications",
+      "tabFaq": "FAQ",
+      "noDescription": "No description available.",
+      "noSpecs": "No specifications provided.",
+      "noFaq": "No FAQs yet.",
+      "askAiCta": "Have a question about this product? Ask AI now",
+      "askAiButton": "Ask AI",
+      "noImage": "No image available"
+    }
+  },
+  "home": {
+    "heroTitle": "Smarter Farming Starts Here",
+    "heroSubtitle": "Your one-stop shop for quality products, expert resources, and AI-powered farming advice.",
+    "shopByCategory": "Shop by Category",
+    "categoryFallback": "Category",
+    "categoryNoteFallback": "Browse products",
+    "topArticles": "Top Articles",
+    "articleFallback": "Article",
+    "ecoBannerTitle": "Spring Planting Sale",
+    "ecoBannerText": "Get up to 20% off all seeds and fertilizers. Stock up now for a bountiful harvest!",
+    "vetHelpTitle": "Need Help With Your Livestock? 🐄",
+    "vetHelpText": "Our veterinary experts are ready to assist you — from nutrition guidance to choosing the right treatments and products to keep your animals strong and healthy.",
+    "contactVet": "Contact Our Vet",
+    "readMore": "Continue reading →",
+    "shopAllProducts": "Shop All Products",
+    "addToCart": "Add to Cart",
+    "featuredProducts": "Featured Products",
+    "viewAll": "View All"
+  },
+  "about": {
+    "title": "About Us",
+    "heroSubtitle": "Smarter Farming Starts With Us",
+    "whoWeAreTitle": "Who We Are",
+    "whoWeAre": "Farm Vet Shop is your trusted source for high-quality agricultural products, livestock care solutions, and expert farming advice powered by AI.",
+    "missionTitle": "Our Mission",
+    "mission": "To support farmers with top-quality supplies and AI guidance that improves yield and animal health.",
+    "whyTitle": "Why Choose Us?",
+    "whyList1": "Wide range of agricultural and veterinary products",
+    "whyList2": "AI Assistant for real-time farming support",
+    "whyList3": "Fast shipping and trusted customer service",
+    "whyList4": "Expert-approved products only"
+  },
+  "contact": {
+    "title": "Contact Us",
+    "heroSubtitle": "We're here to assist you anytime",
+    "getInTouch": "Get in Touch",
+    "description": "If you have any questions or need support, feel free to contact us at any time. Our team will get back to you as soon as possible.",
+    "email": "mmohamedd.ms@gmail.com",
+    "phone": "+20 114 404 6547",
+    "address": "Cairo, Egypt",
+    "form": {
+      "namePlaceholder": "Your Name",
+      "emailPlaceholder": "Your Email",
+      "phonePlaceholder": "Your Phone",
+      "messagePlaceholder": "Your Message",
+      "submit": "Send Message"
+    }
+  },
+  "footer": {
+    "brandName": "Farm Vet Shop",
+    "brandDescription": "Trusted veterinary products with top quality & affordable prices.",
+    "quickLinks": "Quick Links",
+    "home": "Home",
+    "products": "Products",
+    "about": "About",
+    "contact": "Contact",
+    "followUs": "Follow Us",
+    "copyright": "© {{year}} Farm Vet Shop. All rights reserved."
+  }
 }

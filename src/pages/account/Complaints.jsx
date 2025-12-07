@@ -96,6 +96,13 @@ Message:
   }
 };
 
+const formatDateTime = (value) => {
+  if (!value) return "";
+  if (value.toDate) return value.toDate().toLocaleString();
+  if (value.seconds) return new Date(value.seconds * 1000).toLocaleString();
+  return new Date(value).toLocaleString();
+};
+
 // Simple rate limiter utility
 const useRateLimiter = (maxAttempts = 3, windowMs = 60000) => {
   const [attempts, setAttempts] = useState([]);
@@ -129,6 +136,7 @@ export default function Complaints() {
   const [confirmClose, setConfirmClose] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeChat, setActiveChat] = useState(null);
   const user = useSelector(selectCurrentUser);
   const { theme } = UseTheme();
   const { t } = useTranslation();
@@ -524,7 +532,7 @@ export default function Complaints() {
               const statusKey = complaint.status
                 ? `account.complaints_status.${complaint.status}`
                 : "account.complaints_status.pending";
-              const created = complaint.createdAt?.toDate?.()?.toLocaleDateString?.() || complaint.createdAt;
+              const created = formatDateTime(complaint.createdAt);
 
               return (
                 <article
@@ -557,12 +565,12 @@ export default function Complaints() {
                       )}
                     </div>
                     <div className="text-right space-y-2">
-                      <div className={`flex items-center justify-end gap-2 text-xs ${metaText}`}>
-                        <CalendarDays className="h-4 w-4" />
-                        <span>{created}</span>
-                      </div>
-                    </div>
+                  <div className={`flex items-center justify-end gap-2 text-xs ${metaText}`}>
+                    <CalendarDays className="h-4 w-4" />
+                    <span>{created}</span>
                   </div>
+                </div>
+              </div>
 
                   {/* Response Section */}
                   {complaint.status === "pending" && !complaint.adminResponse && (
@@ -580,140 +588,13 @@ export default function Complaints() {
                   )}
 
                   {/* Chat-style conversation */}
-                  {((complaint.replies && complaint.replies.length > 0) ||
-                    (complaint.userMessages && complaint.userMessages.length > 0) ||
-                    complaint.adminResponse) ? (
-                    <div className={`rounded-lg border ${
-                      isDark ? "bg-slate-800 border-slate-700" : "bg-gray-50 border-gray-200"
-                    }`}>
-                      <div className="p-3 border-b border-gray-200 dark:border-gray-700">
-                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
-                          Conversation ({(() => {
-                            const allMessages = [
-                              // Original customer message
-                              {
-                                id: 'original-customer',
-                                message: complaint.originalMessage || complaint.message || complaint.description,
-                                sender: 'user',
-                                timestamp: complaint.createdAt,
-                                type: 'original'
-                              },
-                              // User follow-ups
-                              ...(complaint.userMessages || []).map(msg => ({ ...msg, sender: 'user', type: 'followup' })),
-                              // Admin replies
-                              ...(complaint.replies || []).map(reply => ({ ...reply, sender: 'admin', type: 'admin' })),
-                              // Legacy admin response
-                              ...(complaint.adminResponse && (!complaint.replies || complaint.replies.length === 0) ? [{
-                                id: 'legacy-admin',
-                                message: complaint.adminResponse,
-                                sender: 'admin',
-                                timestamp: complaint.respondedAt || complaint.updatedAt || complaint.createdAt,
-                                type: 'admin'
-                              }] : [])
-                            ].sort((a, b) => {
-                              const aTime = a.timestamp?.seconds ? a.timestamp.seconds : new Date(a.timestamp).getTime() / 1000;
-                              const bTime = b.timestamp?.seconds ? b.timestamp.seconds : new Date(b.timestamp).getTime() / 1000;
-                              return aTime - bTime;
-                            });
-
-                            // Group consecutive messages from the same sender
-                            const groupedMessages = [];
-                            let currentGroup = null;
-                            allMessages.forEach(message => {
-                              if (currentGroup && currentGroup.sender === message.sender) {
-                                currentGroup.messages.push(message);
-                              } else {
-                                currentGroup = { sender: message.sender, messages: [message] };
-                                groupedMessages.push(currentGroup);
-                              }
-                            });
-                            return groupedMessages.length;
-                          })()} message groups)
-                        </h4>
-                      </div>
-                      <div ref={chatContainerRef} className="min-h-[300px] max-h-96 overflow-y-auto p-3 space-y-3 scroll-smooth">
-                        {/* Combine all messages: original, user follow-ups, admin replies */}
-                        {(() => {
-                          const allMessages = [
-                            // Original customer message
-                            {
-                              id: 'original-customer',
-                              message: complaint.originalMessage || complaint.message || complaint.description,
-                              sender: 'user',
-                              timestamp: complaint.createdAt,
-                              type: 'original'
-                            },
-                            // User follow-ups
-                            ...(complaint.userMessages || []).map(msg => ({ ...msg, sender: 'user', type: 'followup' })),
-                            // Admin replies
-                            ...(complaint.replies || []).map(reply => ({ ...reply, sender: 'admin', type: 'admin' })),
-                            // Legacy admin response
-                            ...(complaint.adminResponse && (!complaint.replies || complaint.replies.length === 0) ? [{
-                              id: 'legacy-admin',
-                              message: complaint.adminResponse,
-                              sender: 'admin',
-                              timestamp: complaint.respondedAt || complaint.updatedAt || complaint.createdAt,
-                              type: 'admin'
-                            }] : [])
-                          ].sort((a, b) => {
-                            const aTime = a.timestamp?.seconds ? a.timestamp.seconds : new Date(a.timestamp).getTime() / 1000;
-                            const bTime = b.timestamp?.seconds ? b.timestamp.seconds : new Date(b.timestamp).getTime() / 1000;
-                            return aTime - bTime;
-                          });
-
-                          // Group consecutive messages from the same sender
-                          const groupedMessages = [];
-                          let currentGroup = null;
-                          allMessages.forEach(message => {
-                            if (currentGroup && currentGroup.sender === message.sender) {
-                              currentGroup.messages.push(message);
-                            } else {
-                              currentGroup = { sender: message.sender, messages: [message] };
-                              groupedMessages.push(currentGroup);
-                            }
-                          });
-
-                          return groupedMessages.map((group, groupIndex) => (
-                            <div
-                              key={group.messages[0].id}
-                              className={`flex w-full ${group.sender === 'user' ? 'justify-start' : 'justify-end'}`}
-                            >
-                              <div className={`max-w-[70%] px-4 py-3 rounded-2xl shadow-sm ${
-                                group.sender === 'user'
-                                  ? (isDark ? "bg-blue-900/40 text-blue-100 border border-blue-800/50" : "bg-blue-50 text-blue-900 border border-blue-200")
-                                  : (isDark ? "bg-emerald-700 text-white border border-emerald-600" : "bg-emerald-600 text-white border border-emerald-500")
-                              }`}>
-                                <div className="flex items-center space-x-2 mb-2">
-                                  {group.sender === 'user' ? (
-                                    <>
-                                      <MessageSquare className="w-4 h-4" />
-                                      <span className="text-sm font-medium">You</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <span className="text-sm font-medium">Support Team</span>
-                                      <div className={`w-2 h-2 rounded-full ${isDark ? 'bg-emerald-400' : 'bg-emerald-300'}`}></div>
-                                    </>
-                                  )}
-                                </div>
-                                {group.messages.map((message, index) => (
-                                  <div key={message.id}>
-                                    <p className="text-sm leading-relaxed break-words">{message.message}</p>
-                                    {index === group.messages.length - 1 && (
-                                      <p className="text-xs mt-2 opacity-70">
-                                        {message.timestamp?.toDate ? message.timestamp.toDate().toLocaleString() : new Date(message.timestamp).toLocaleString()}
-                                      </p>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          ));
-                        })()}
-                      </div>
-                    </div>
-                  ) : null}
-
+                  <div className="flex justify-end">
+                    <Button
+                      text={t("account.complaints_actions.open_chat", "عرض المحادثة")}
+                      onClick={() => setActiveChat(complaint)}
+                      className="px-4 py-2 text-sm"
+                    />
+                  </div>
                   <div className="flex items-center justify-between gap-3">
                     <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1 border ${isDark ? "border-slate-700" : "border-slate-200"}`}>
                       <Phone className="h-4 w-4 text-pink-500" />
@@ -827,6 +708,135 @@ export default function Complaints() {
           </div>
         </div>
       )}
+
+      {activeChat && (() => {
+        const statusTone =
+          (activeChat.status || "").toLowerCase() === "closed"
+            ? "bg-gray-100 text-gray-700 border border-gray-200"
+            : (activeChat.status || "").toLowerCase() === "resolved"
+            ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
+            : (activeChat.status || "").toLowerCase() === "in-progress"
+            ? "bg-blue-100 text-blue-700 border border-blue-200"
+            : "bg-yellow-100 text-yellow-700 border border-yellow-200";
+
+        const allMessages = [
+          {
+            id: "original-customer",
+            message: activeChat.originalMessage || activeChat.message || activeChat.description,
+            sender: "user",
+            timestamp: activeChat.createdAt,
+            type: "original",
+          },
+          ...(activeChat.userMessages || []).map((msg) => ({ ...msg, sender: "user", type: "followup" })),
+          ...(activeChat.replies || []).map((reply) => ({ ...reply, sender: "admin", type: "admin" })),
+          ...(activeChat.adminResponse && (!activeChat.replies || activeChat.replies.length === 0)
+            ? [
+                {
+                  id: "legacy-admin",
+                  message: activeChat.adminResponse,
+                  sender: "admin",
+                  timestamp: activeChat.respondedAt || activeChat.updatedAt || activeChat.createdAt,
+                  type: "admin",
+                },
+              ]
+            : []),
+        ].sort((a, b) => {
+          const aTime = a.timestamp?.seconds ? a.timestamp.seconds : new Date(a.timestamp).getTime() / 1000;
+          const bTime = b.timestamp?.seconds ? b.timestamp.seconds : new Date(b.timestamp).getTime() / 1000;
+          return aTime - bTime;
+        });
+
+        return (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className={`w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden border ${isDark ? "bg-slate-950 border-slate-800" : "bg-white border-gray-100"}`}>
+              <div className={`px-6 py-4 flex items-center justify-between border-b ${isDark ? "border-slate-800" : "border-gray-200"}`}>
+                <div className="space-y-1">
+                  <p className={`text-sm uppercase tracking-[0.14em] ${isDark ? "text-emerald-300" : "text-emerald-600"}`}>Conversation</p>
+                  <h3 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
+                    {activeChat.subject || "Support inquiry"}
+                  </h3>
+                  <div className="flex flex-wrap items-center gap-2 mt-2 text-xs">
+                    <span className={`px-2 py-1 rounded-full ${statusTone}`}>
+                      {t(`account.complaints_status.${(activeChat.status || "pending").toLowerCase()}`, activeChat.status || "pending")}
+                    </span>
+                    {activeChat.category && (
+                      <span className={`px-2 py-1 rounded-full ${isDark ? "bg-slate-800 text-slate-100" : "bg-slate-100 text-slate-700"}`}>
+                        {activeChat.category}
+                      </span>
+                    )}
+                    <span className={`${isDark ? "text-slate-400" : "text-gray-600"}`}>
+                      {formatDateTime(activeChat.createdAt)}
+                    </span>
+                  </div>
+                  {activeChat.phoneNumber && (
+                    <p className={`text-sm mt-2 flex items-center gap-2 ${isDark ? "text-slate-200" : "text-gray-700"}`}>
+                      <Phone className="w-4 h-4 text-pink-500" />
+                      {activeChat.phoneNumber}
+                    </p>
+                  )}
+                </div>
+                <button
+                  onClick={() => setActiveChat(null)}
+                  className={`px-4 py-2 rounded-xl text-sm font-semibold shadow-sm ${isDark ? "bg-slate-800 text-slate-200 hover:bg-slate-700" : "bg-gray-100 text-gray-800 hover:bg-gray-200"}`}
+                >
+                  إغلاق
+                </button>
+              </div>
+
+              <div className="max-h-[65vh] overflow-y-auto space-y-4 px-6 py-6 bg-[radial-gradient(circle_at_20%_20%,#ecfdf3,transparent_35%),radial-gradient(circle_at_80%_0%,#e0f2fe,transparent_28%)] dark:bg-[radial-gradient(circle_at_20%_20%,#0f172a,transparent_30%),radial-gradient(circle_at_80%_0%,#0b3b27,transparent_30%)]">
+                {allMessages.map((message, idx) => (
+                  <div
+                    key={message.id + idx}
+                    className={`flex w-full ${message.sender === "user" ? "justify-start" : "justify-end"}`}
+                  >
+                    <div className="flex flex-col gap-2 max-w-[75%]">
+                      <div
+                        className={`inline-flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-full w-fit ${
+                          message.sender === "user"
+                            ? isDark
+                              ? "bg-blue-900/70 text-blue-100"
+                              : "bg-blue-50 text-blue-700"
+                            : isDark
+                            ? "bg-emerald-800 text-emerald-50"
+                            : "bg-emerald-100 text-emerald-700"
+                        }`}
+                      >
+                        {message.sender === "user" ? (
+                          <>
+                            <MessageSquare className="w-4 h-4" />
+                            <span>أنت</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>الدعم</span>
+                            <div className={`w-2 h-2 rounded-full ${isDark ? "bg-emerald-400" : "bg-emerald-500"}`}></div>
+                          </>
+                        )}
+                      </div>
+                      <div
+                        className={`relative rounded-2xl px-4 py-3 shadow-md border ${
+                          message.sender === "user"
+                            ? isDark
+                              ? "bg-slate-800 border-slate-700 text-slate-100"
+                              : "bg-white border-slate-200 text-slate-900"
+                            : isDark
+                            ? "bg-emerald-700 border-emerald-600 text-white"
+                            : "bg-emerald-500 border-emerald-400 text-white"
+                        }`}
+                      >
+                        <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">{message.message}</p>
+                        <p className="text-[11px] mt-2 text-right opacity-75">
+                          {formatDateTime(message.timestamp)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

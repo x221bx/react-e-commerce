@@ -23,22 +23,7 @@
       "delete": "حذف"
     },
     "form": {
-      "cardTitle": "إضافة بطاقة جديدة",
-      "cardPreview": "معاينة البطاقة",
-      "cardHolder": "اسم حامل البطاقة",
-      "cardNumber": "رقم البطاقة",
-      "expiry": "تاريخ الانتهاء (شهر/سنة)",
-      "cvv": "CVV",
-      "nickname": "اسم مستعار (اختياري)",
-      "nicknamePlaceholder": "مشتريات المزرعة",
-      "saving": "جارٍ الحفظ...",
-      "saveCard": "حفظ البطاقة",
-      "reset": "إعادة ضبط",
-      "walletTitle": "ربط محفظة",
-      "walletProvider": "المزوّد",
-      "walletEmail": "بريد الحساب",
-      "linking": "جارٍ الربط...",
-      "linkWallet": "ربط المحفظة"
+      "saveForLater": "احفظ هذه البطاقة في طرق الدفع للمرة القادمة"
     },
     "errors": {
       "holder": "أدخل اسم حامل البطاقة.",
@@ -48,9 +33,6 @@
       "email": "أدخل بريداً إلكترونياً صالحاً."
     },
     "securityHint": "نحفظ آخر 4 أرقام فقط؛ الرقم الكامل ورمز CVV لا يُحفظان أبداً.",
-    "form": {
-      "saveForLater": "احفظ هذه البطاقة في طرق الدفع للمرة القادمة"
-    },
     "brandUnknown": "نوع البطاقة غير معروف بعد",
     "noMethods": "لا توجد طرق دفع محفوظة بعد. استخدم النماذج على اليمين لإضافة واحدة.",
     "cardLabel": "بطاقة",
@@ -427,7 +409,11 @@
       "add_follow_up": "إضافة متابعة",
       "send_follow_up": "إرسال المتابعة",
       "follow_up_placeholder": "أضف تفاصيل أو رقم طلب أو رابط صور لتوضيح المشكلة.",
-      "follow_up_saved": "تم إرسال المتابعة"
+      "follow_up_saved": "تم إرسال المتابعة",
+      "wait_for_resolution": "فريق الدعم ما زال يراجع هذا الطلب.",
+      "response_sent": "تم إرسال الرد",
+      "response_pending": "بانتظار رد الدعم",
+      "open_chat": "عرض المحادثة"
     },
     "admin_response": "رد الإدارة",
     "user_follow_up": "متابعتك",
@@ -460,19 +446,47 @@
     },
     "orderHistory": {
       "title": "سجل الطلبات",
-      "subtitle": "تتبع جميع طلباتك وحالتها الحالية",
+      "subtitle": "تابع جميع طلباتك وحالتها الحالية",
       "noOrders": "لا توجد طلبات بعد",
-      "noOrdersDesc": "سيظهر سجل طلباتك هنا بعد إجراء أول عملية شراء.",
-      "orderNumber": "رقم الطلب #",
+      "noOrdersDesc": "سيظهر سجل الطلبات هنا بعد إتمام أول عملية شراء.",
+      "orderNumber": "طلب رقم",
       "total": "الإجمالي",
       "invoice": "الفاتورة",
       "track": "تتبع",
       "orderItems": "عناصر الطلب",
       "shippingInfo": "معلومات الشحن",
       "paymentInfo": "معلومات الدفع",
-      "orderTimeline": "خط زمني للطلب",
-      "customerConfirmed": "تم تأكيد العميل",
+      "orderTimeline": "الخط الزمني للطلب",
+      "customerConfirmed": "تم التأكيد من العميل",
       "by": "بواسطة"
+    },
+    "orderInvoice": {
+      "title": "فاتورة",
+      "orderLabel": "طلب رقم",
+      "dateLabel": "التاريخ",
+      "status": "الحالة",
+      "totalAmount": "إجمالي المبلغ",
+      "billTo": "الفاتورة إلى",
+      "shipTo": "الشحن إلى",
+      "orderItems": "عناصر الطلب",
+      "quantity": "الكمية",
+      "orderSummary": "ملخص الطلب",
+      "subtotal": "الإجمالي الفرعي",
+      "shipping": "الشحن",
+      "tax": "الضريبة",
+      "total": "الإجمالي",
+      "paymentMethod": "طريقة الدفع",
+      "thanks": "شكرًا لتعاملك معنا!",
+      "generatedOn": "تم إنشاء الفاتورة في {{date}}",
+      "back": "رجوع",
+      "print": "طباعة",
+      "downloadPdf": "تحميل PDF",
+      "pdfGenerating": "جارٍ إنشاء ملف PDF...",
+      "pdfSuccess": "تم تحميل ملف PDF بنجاح!",
+      "pdfError": "فشل إنشاء ملف PDF. يرجى المحاولة مرة أخرى.",
+      "notFoundTitle": "الطلب غير موجود",
+      "notFoundDesc": "الطلب الذي تبحث عنه غير موجود أو ليس لديك صلاحية لعرضه.",
+      "backToOrders": "العودة للطلبات"
     }
   },
   "checkout": {
