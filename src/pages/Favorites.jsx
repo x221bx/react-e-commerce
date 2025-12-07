@@ -1,8 +1,8 @@
 // src/pages/Favorites.jsx
-import React from "react";
+import React, { useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
-  toggleFavourite,
+  removeFavourite,
   clearFavourites,
 } from "../features/favorites/favoritesSlice";
 import { addToCart } from "../features/cart/cartSlice";
@@ -18,16 +18,22 @@ export default function Favorites() {
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === "ar";
   const favorites = useSelector((state) => state.favorites.items ?? []);
-  const cart = useSelector((state) => state.cart.items);
+  const cart = useSelector((state) => state.cart.items ?? []);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const handleBuyNow = (item) => {
-    const exists = cart.find((i) => i.id === item.id);
-    if (!exists) {
-      dispatch(addToCart({ ...item }));
-    }
-    navigate("/checkout");
+  const cartItemIds = useMemo(
+    () => new Set(cart.map((item) => item.id)),
+    [cart]
+  );
+
+  const handleAddToCart = (item) => {
+    if (cartItemIds.has(item.id)) return;
+    dispatch(addToCart({ ...item }));
+  };
+
+  const handleRemoveFromFavorites = (item) => {
+    dispatch(removeFavourite({ ...item }));
   };
 
   return (
@@ -81,10 +87,9 @@ export default function Favorites() {
                       {Number(item.price).toLocaleString()} EGP
                     </span>
 
-                    <div className="flex items-center gap-3">
-                      {/* ❤️ toggle favourite (add/remove) */}
+                    <div className="flex flex-wrap items-center gap-2">
                       <button
-                        onClick={() => dispatch(toggleFavourite({ ...item }))}
+                        onClick={() => handleRemoveFromFavorites(item)}
                         className={`transition ${isDark ? "text-red-500 hover:text-red-400" : "text-red-500 hover:text-red-700"}`}
                         title="Remove from Favorites"
                       >
@@ -92,11 +97,24 @@ export default function Favorites() {
                       </button>
 
                       <button
-                        onClick={() => handleBuyNow(item)}
-                        className={`flex items-center gap-1 rounded-xl px-3 py-1 text-sm font-semibold text-white transition ${isDark ? "bg-emerald-700 hover:bg-emerald-800" : "bg-emerald-600 hover:bg-emerald-700"}`}
-                        title={t("favorites.buy", "Buy")}
+                        onClick={() => handleAddToCart(item)}
+                        disabled={!item.id || cartItemIds.has(item.id)}
+                        className={`flex items-center gap-1 rounded-xl px-3 py-1 text-sm font-semibold text-white transition ${isDark ? "bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-900/50" : "bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-500/60"}`}
+                        title={cartItemIds.has(item.id) ? t("favorites.inCart", "Already in cart") : t("favorites.addToCart", "Add to Cart")}
                       >
-                        <FiShoppingCart size={16} /> {t("favorites.buy", "Buy")}
+                        <FiShoppingCart size={16} />
+                        {cartItemIds.has(item.id)
+                          ? t("favorites.inCart", "In Cart")
+                          : t("favorites.addToCart", "Add to Cart")}
+                      </button>
+
+                      <button
+                        onClick={() => navigate("/cart")}
+                        className={`flex items-center gap-1 rounded-xl px-3 py-1 text-sm font-semibold text-white transition ${isDark ? "bg-emerald-700 hover:bg-emerald-800" : "bg-emerald-600 hover:bg-emerald-700"}`}
+                        title={t("favorites.viewCart", "Go to Cart")}
+                      >
+                        <FiShoppingCart size={16} />
+                        {t("favorites.viewCart", "Go to Cart")}
                       </button>
                     </div>
                   </div>

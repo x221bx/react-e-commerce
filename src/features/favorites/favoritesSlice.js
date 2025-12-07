@@ -84,6 +84,24 @@ const favouritesSlice = createSlice({
       }
     },
 
+    removeFavourite: (state, action) => {
+      const payload = action.payload || {};
+      const productId = String(payload?.id || '');
+
+      state.items = state.items.filter((item) => String(item?.id) !== productId);
+
+      const key = getFavoritesKey(state.userId);
+      try {
+        localStorage.setItem(key, JSON.stringify(state.items));
+      } catch (e) {
+        console.warn("Failed to persist favorites to localStorage", e);
+      }
+
+      if (state.userId) {
+        saveUserFavorites(state.userId, state.items).catch(console.error);
+      }
+    },
+
     clearFavourites: (state) => {
       state.items = [];
 
@@ -108,6 +126,7 @@ export const {
   clearUserData,
   setFavoritesItems,
   toggleFavourite,
+  removeFavourite,
   clearFavourites,
 } = favouritesSlice.actions;
 export default favouritesSlice.reducer;

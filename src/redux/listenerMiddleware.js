@@ -150,9 +150,14 @@ export const startAuthListener = (store) => {
       // ---------------------------
 // CART Subscription
 cartUnsub = subscribeToUserCart(profile.uid, (cartItems) => {
-  if (Array.isArray(cartItems)) {
-    store.dispatch(setCartItems(cartItems));
+  if (!Array.isArray(cartItems)) return;
+
+  const existingCart = store.getState().cart.items ?? [];
+  if (existingCart.length > 0 && cartItems.length === 0) {
+    return;
   }
+
+  store.dispatch(setCartItems(cartItems));
 });
 
 // FAVORITES Subscription
