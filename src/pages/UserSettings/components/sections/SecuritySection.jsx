@@ -159,7 +159,7 @@ const SecuritySection = ({
         <div className="rounded-2xl border px-4 py-3 text-sm border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900/40 dark:bg-[#0f1d1d]/70 dark:text-emerald-200">
           {t(
             "settings.passwordTip",
-            "Tip: combine at least 12 characters with numbers and symbols. Avoid reusing passwords from other services."
+            "نصيحة: كوّن كلمة مرور من 12 حرفاً فأكثر مع أرقام ورموز، وتجنّب إعادة استخدام كلمات المرور."
           )}
         </div>
 

@@ -30,11 +30,10 @@ export default function PaymentMethodsList({
                     <p className={`text-xs ${subText}`}>
                         {t(
                             "payments.savedCount",
-                            "{{count}} saved | {{cards}} cards | {{wallets}} wallets",
+                            "{{count}} saved | {{cards}} cards",
                             {
                                 count: methods.length,
                                 cards: methods.filter((m) => m.type === "card").length,
-                                wallets: methods.filter((m) => m.type === "wallet").length,
                             }
                         )}
                     </p>

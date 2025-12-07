@@ -209,10 +209,14 @@ export const saveProfile = async (user, profileData) => {
       birthDate: normalizedBirthDate,
       gender: normalizedGender,
       profession: sanitizedProfession || null,
+      // keep both top-level and nested contact for backward/forward compatibility
+      phone: profileData.phone.trim(),
+      location: profileData.location.trim(),
       contact: {
         ...(user?.contact || {}),
         phone: profileData.phone.trim(),
         location: profileData.location.trim(),
+        email: user.email || "",
       },
       updatedAt: serverTimestamp(),
     },

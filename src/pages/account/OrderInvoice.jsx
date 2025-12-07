@@ -50,6 +50,23 @@ export default function OrderInvoice() {
   const textColor = isDark ? "text-white" : "text-emerald";
   const mutedText = isDark ? "text-white" : "text-emerald";
 
+  const formatPaymentMethod = () => {
+    const payment = currentOrder.payment || {};
+    const brand = payment.brand || currentOrder.cardBrand || currentOrder.paymentBrand;
+    const last4 =
+      payment.last4 ||
+      payment.cardLast4 ||
+      currentOrder.cardLast4 ||
+      currentOrder.paymentLast4;
+    const summary = currentOrder.paymentSummary || currentOrder.paymentMethod;
+
+    if (brand && last4) return `${brand} •••• ${last4}`;
+    if (summary && last4) return `${summary} •••• ${last4}`;
+    if (summary) return summary;
+    if (last4) return `•••• ${last4}`;
+    return "Cash on Delivery";
+  };
+
   const handlePrint = () => {
     window.print();
   };
@@ -143,7 +160,7 @@ export default function OrderInvoice() {
       yPosition += 30;
       pdf.setFontSize(12);
       pdf.setTextColor(0, 0, 0);
-      pdf.text(`Payment Method: ${currentOrder.paymentMethod || currentOrder.paymentSummary || 'Cash on Delivery'}`, 20, yPosition);
+      pdf.text(`Payment Method: ${formatPaymentMethod()}`, 20, yPosition);
 
       // Footer
       yPosition += 20;
@@ -363,7 +380,7 @@ export default function OrderInvoice() {
               <FiCreditCard className={`w-5 h-5 ${isDark ? "text-emerald-400" : "text-emerald-600"}`} />
               <span className={mutedText}>Payment Method:</span>
               <span className={textColor}>
-                {currentOrder.paymentMethod || currentOrder.paymentSummary || 'Cash on Delivery'}
+                {formatPaymentMethod()}
               </span>
             </div>
           </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { doc, serverTimestamp, setDoc, getDoc, deleteDoc } from "firebase/firestore";
+import { doc, serverTimestamp, setDoc, getDoc, deleteDoc, onSnapshot } from "firebase/firestore";
 import { updateEmail, updateProfile } from "firebase/auth";
 import toast from "react-hot-toast";
 
@@ -99,6 +99,22 @@ export const useProfileForm = (user) => {
     };
 
     loadProfile();
+  }, [user?.uid]);
+
+  // Realtime listener to keep web in sync with any external (mobile) updates
+  useEffect(() => {
+    if (!user?.uid) return undefined;
+    const unsub = onSnapshot(doc(db, "users", user.uid), (snap) => {
+      if (!snap.exists()) return;
+      const data = snap.data();
+      const mergedUser = { ...user, ...data };
+      const mergedState = getProfileState(mergedUser);
+      const normalizedPhone = normalizePhoneInput(mergedState.phone);
+      setProfileForm({ ...mergedState, phone: normalizedPhone });
+      dispatch(updateCurrentUser({ ...mergedUser, phone: normalizedPhone, location: mergedState.location, contact: data.contact }));
+      setHasUnsavedChanges(false);
+    });
+    return () => unsub && unsub();
   }, [user?.uid]);
 
   useEffect(() => {
@@ -380,10 +396,13 @@ const hasProfileChanges = () => {
           email: trimmedEmail,
           username: normalizedUsername,
           photoURL: sanitizedPhoto || null,
+          phone: normalizedPhone,
+          location: trimmedLocation,
           contact: {
             ...(user?.contact || {}),
             phone: normalizedPhone,
             location: trimmedLocation,
+            email: trimmedEmail || user.email || "",
           },
           updatedAt: serverTimestamp(),
         },
@@ -425,6 +444,14 @@ const hasProfileChanges = () => {
         email: trimmedEmail,
         username: normalizedUsername,
         photoURL: sanitizedPhoto,
+        phone: normalizedPhone,
+        location: trimmedLocation,
+        contact: {
+          ...(user?.contact || {}),
+          phone: normalizedPhone,
+          location: trimmedLocation,
+          email: trimmedEmail || user.email || "",
+        },
       }));
 
       setHasUnsavedChanges(false);

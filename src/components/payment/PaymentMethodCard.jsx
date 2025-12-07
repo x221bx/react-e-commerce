@@ -48,8 +48,8 @@ export default function PaymentMethodCard({
 
     const getLabel = () => {
         if (isCard) {
-            const brand = brandCopy[method.brand]?.label || "Card";
-            return method.nickname || `${brand} **** ${method.last4}`;
+            // Title: nickname if present, else a generic card label
+            return method.nickname || t("payments.cardLabel", "Card");
         }
         const label = walletLabels[method.provider] || "Wallet";
         return method.nickname || `${label} (${method.email})`;
@@ -70,7 +70,7 @@ export default function PaymentMethodCard({
                         </p>
                         <p className={`text-xs ${muted}`}>
                             {isCard
-                                ? `${badge.label} ${t("payments.endingIn", "ending in")} ${method.last4}`
+                                ? `${badge.label} **** ${method.last4 || ""}`
                                 : `${badge.label} - ${method.email}`}
                         </p>
                         {isCard && method.holder && (

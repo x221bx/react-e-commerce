@@ -106,7 +106,7 @@ export const PasswordInput = ({
             ? "text-red-600 hover:text-red-700 hover:bg-red-100 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/30"
             : "text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-700"
           }`}
-        aria-label={showPassword ? "Hide password" : "Show password"}
+        aria-label={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
         aria-expanded={showPassword}
       >
         {showPassword ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
