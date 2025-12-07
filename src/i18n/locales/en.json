@@ -462,6 +462,8 @@
     "user_follow_up": "Your Follow-up",
     "confirm_close_message": "Are you sure you want to close this inquiry? This action cannot be undone.",
     "helper_text": "",
+    "complaints_last_admin": "Last admin reply:",
+    "complaints_last_user": "Last customer reply:",
     "savedProducts": {
       "eyebrow": "Favorites",
       "title": "Saved Products",

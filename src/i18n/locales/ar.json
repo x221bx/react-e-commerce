@@ -395,6 +395,8 @@
     "complaints_title": "مركز الدعم",
     "complaints_subtitle": "تابع طلبات الدعم الخاصة بك ومراحل حلها.",
     "complaints_helper": "شاهد تحديثات الحالة وتفاصيل الاتصال وأولوية الرد بنظرة سريعة.",
+    "complaints_last_admin": "آخر رد من فريق الدعم:",
+    "complaints_last_user": "آخر رد من العميل:",
     "submit_new_complaint": "تقديم استفسار جديد",
     "no_complaints_title": "لا توجد استفسارات بعد",
     "no_complaints_subtitle": "لم تقدّم أي استفسار بعد. اضغط الزر بالأعلى لتقديم استفسارك الأول.",

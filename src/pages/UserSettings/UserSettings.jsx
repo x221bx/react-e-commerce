@@ -38,7 +38,7 @@ export default function UserSettings({ variant = "standalone" }) {
   const { theme } = UseTheme();
   const isDarkMode = theme === "dark";
   const { i18n } = useTranslation();
-  const isRTL = i18n.language === "ar";
+  const isRTL = (i18n.dir && i18n.dir() === "rtl") || (i18n.language || "").startsWith("ar");
 
   // Form states
   const [securityForm, setSecurityForm] = useState(emptySecurityForm);

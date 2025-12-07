@@ -1,9 +1,10 @@
- import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { collection, query, where, onSnapshot, doc, updateDoc, getDoc } from "firebase/firestore";
-import { Phone, CalendarDays, AlertCircle, X, MessageSquare } from "lucide-react";
+import { Phone, CalendarDays, AlertCircle, MessageSquare } from "lucide-react";
+import ChatConversation from "../admin/components/ChatConversation";
 import toast from "react-hot-toast";
 
 import { selectCurrentUser } from "../../features/auth/authSlice";
@@ -139,13 +140,16 @@ export default function Complaints() {
   const [activeChat, setActiveChat] = useState(null);
   const user = useSelector(selectCurrentUser);
   const { theme } = UseTheme();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const isDark = theme === "dark";
+  const isRTL = (i18n.dir && i18n.dir() === "rtl") || (i18n.language || "").startsWith("ar");
   const rateLimiter = useRateLimiter(3, 60000); // 3 attempts per minute
   const [followUps, setFollowUps] = useState({});
   const [sendingFollowUps, setSendingFollowUps] = useState(new Set());
   const chatContainerRef = useRef(null);
+  const lastMessageRef = useRef(null);
+  const [activeFollowUp, setActiveFollowUp] = useState(null);
 
   // Pagination
   const {
@@ -330,20 +334,50 @@ export default function Complaints() {
     }
   }, [complaints]);
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "pending":
-        return "text-amber-700 bg-amber-100 dark:text-amber-300 dark:bg-amber-900/30";
-      case "in-progress":
-        return "text-blue-700 bg-blue-100 dark:text-blue-300 dark:bg-blue-900/30";
-      case "resolved":
-        return "text-green-700 bg-green-100 dark:text-green-300 dark:bg-green-900/30";
-      case "closed":
-        return "text-gray-700 bg-gray-100 dark:text-gray-300 dark:bg-gray-900/30";
-      default:
-        return "text-gray-700 bg-gray-100 dark:text-gray-300 dark:bg-gray-900/30";
-    }
-  };
+  const FollowUpModal = () =>
+    activeFollowUp && (
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className={`w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border ${isDark ? "bg-slate-950 border-slate-800" : "bg-white border-gray-100"}`}>
+          <div className={`px-6 py-4 flex items-center justify-between border-b ${isDark ? "border-slate-800" : "border-gray-200"}`}>
+            <div>
+              <p className={`text-sm ${isDark ? "text-slate-400" : "text-gray-500"}`}>{t("account.complaints_actions.add_follow_up", "Add follow-up")}</p>
+              <h3 className={`text-xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
+                {activeFollowUp.subject || activeFollowUp.category || t("account.complaints_topic_fallback", "General support")}
+              </h3>
+            </div>
+            <button
+              onClick={() => setActiveFollowUp(null)}
+              className={`px-3 py-1 rounded-lg text-sm ${isDark ? "bg-slate-800 text-slate-200" : "bg-gray-100 text-gray-700"}`}
+            >
+              {t("common.close", "Close")}
+            </button>
+          </div>
+          <div className="p-6 space-y-3">
+            <textarea
+              value={followUps[activeFollowUp.id] ?? ""}
+              onChange={(e) => setFollowUps((prev) => ({ ...prev, [activeFollowUp.id]: e.target.value }))}
+              rows={4}
+              className={`w-full rounded-2xl border px-3 py-2 text-sm ${isDark ? "bg-slate-900 border-slate-700 text-white" : "bg-white border-slate-200 text-slate-900"}`}
+              placeholder={t("account.complaints_actions.follow_up_placeholder", "Add details to clarify your issue")}
+            />
+            <div className="flex justify-end gap-2">
+              <Button
+                text={t("common.cancel", "Cancel")}
+                onClick={() => setActiveFollowUp(null)}
+                variant="outline"
+                className="px-4 py-2 text-sm"
+              />
+              <Button
+                text={sendingFollowUps.has(activeFollowUp.id) ? t("common.sending", "Sending...") : t("account.complaints_actions.send_follow_up", "Send follow-up")}
+                onClick={() => handleSendFollowUp(activeFollowUp.id)}
+                disabled={sendingFollowUps.has(activeFollowUp.id)}
+                className="px-4 py-2 text-sm"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
 
   const handleCloseClick = (complaintId) => {
     setConfirmClose(complaintId);
@@ -424,6 +458,7 @@ export default function Complaints() {
       toast.success(t("account.complaints_actions.follow_up_saved", "Follow-up sent"));
       // Clear the text after sending
       setFollowUps((prev) => ({ ...prev, [complaintId]: "" }));
+      setActiveFollowUp(null);
     } catch (error) {
       console.error("Error sending follow-up:", error);
       toast.error("Failed to send follow-up");
@@ -451,18 +486,42 @@ export default function Complaints() {
     );
   }
 
-  const heroSurface = isDark
-  ? "from-green-950 via-green-950 to-green-950 text-white"
-  : "from-emerald-100 via-emerald-50 to-emerald-50 text-slate-900";
-
   const cardSurface = isDark
   ? "bg-green-990 border-green-200 text-green-200"
   : "bg-white border-emerald-200 text-slate-900";
 
   const metaText = isDark ? "text-slate-300" : "text-slate-600";
+  const getStatusStyles = (status) => {
+    const key = (status || "").toLowerCase();
+    switch (key) {
+      case "resolved":
+      case "closed":
+        return {
+          badge: "bg-emerald-50 text-emerald-700 border border-emerald-100",
+          card: isDark ? "bg-emerald-950/30 border-emerald-900" : "bg-emerald-50/60 border-emerald-200",
+        };
+      case "pending":
+      case "new":
+        return {
+          badge: "bg-sky-50 text-sky-700 border border-sky-100",
+          card: isDark ? "bg-slate-800/60 border-slate-700" : "bg-sky-50/60 border-sky-200",
+        };
+      case "in-progress":
+      case "open":
+        return {
+          badge: "bg-amber-50 text-amber-700 border border-amber-100",
+          card: isDark ? "bg-amber-900/30 border-amber-800" : "bg-amber-50/60 border-amber-200",
+        };
+      default:
+        return {
+          badge: "bg-slate-100 text-slate-700 border border-slate-200",
+          card: isDark ? "bg-slate-800/60 border-slate-700" : "bg-slate-50/60 border-slate-200",
+        };
+    }
+  };
 
   return (
-    <div className={`min-h-screen ${isDark ? ' ' : 'bg-white'} py-8`}>
+    <div dir={isRTL ? "rtl" : "ltr"} className={`min-h-screen ${isDark ? "bg-slate-900" : "bg-white"} py-8`}>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Header */}
@@ -524,7 +583,7 @@ export default function Complaints() {
           </div>
         ) : (
           <div>
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-6 lg:grid-cols-1 xl:grid-cols-2">
               {paginatedData.map((complaint) => {
               const topicKey = complaint.category
                 ? `account.complaints_topics.${complaint.category}`
@@ -533,51 +592,91 @@ export default function Complaints() {
                 ? `account.complaints_status.${complaint.status}`
                 : "account.complaints_status.pending";
               const created = formatDateTime(complaint.createdAt);
+              const lastAdminReply = complaint.replies?.[complaint.replies.length - 1];
+              const lastUserReply = complaint.userMessages?.[complaint.userMessages.length - 1];
+              const statusStyles = getStatusStyles(complaint.status);
 
               return (
                 <article
                   key={complaint.id}
-                  className={`rounded-2xl border shadow-sm p-5 flex flex-col gap-4 hover:shadow-md transition ${cardSurface}`}
+                  className={`relative rounded-3xl border shadow-sm p-6 flex flex-col gap-5 hover:shadow-lg transition ${statusStyles.card}`}
                 >
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex flex-col gap-4 w-full">
+                    {/* Top meta row */}
+                    <div className="flex flex-wrap items-center gap-2 w-full">
+                      <span className={`text-sm font-mono font-semibold rounded-full px-3 py-1 ${isDark ? "bg-slate-800 text-emerald-300 border border-slate-700" : "bg-emerald-50 text-emerald-700 border border-emerald-100"}`}>
+                        {complaint.ticketId || `#${complaint.id.slice(-6)}`}
+                      </span>
+                      <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${statusStyles.badge}`}>
+                        {t(statusKey, complaint.status || "Pending")}
+                      </span>
+                      <span className={`flex items-center gap-1 text-xs px-3 py-1 rounded-full ${isDark ? "bg-slate-800 text-slate-200 border border-slate-700" : "bg-white text-slate-700 border border-slate-200"}`}>
+                        <CalendarDays className="h-4 w-4" />
+                        {created}
+                      </span>
+                      <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium ${isDark ? "bg-slate-800 text-slate-100 border border-slate-700" : "bg-white text-slate-800 border border-slate-200"}`}>
+                        <Phone className="h-4 w-4 text-pink-500" />
+                        <span className={metaText}>{complaint.phoneNumber || complaint.phone || t("account.complaints.phone_placeholder", "Not provided")}</span>
+                      </span>
+                    </div>
+
+                    {/* Title & subject */}
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className={`text-sm font-mono font-bold ${isDark ? "text-emerald-400" : "text-emerald-600"}`}>
-                          {complaint.ticketId || `#${complaint.id.slice(-6)}`}
-                        </span>
-                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${getStatusColor(complaint.status)}`}>
-                          {t(statusKey, complaint.status || "Pending")}
-                        </span>
-                      </div>
-                      <p className={`text-xs uppercase tracking-[0.12em] font-semibold ${isDark ? "text-emerald-200" : "text-emerald-700"}`}>
+                      <p className={`text-xs uppercase tracking-[0.14em] font-semibold ${isDark ? "text-emerald-200" : "text-emerald-700"}`}>
                         {t("account.complaints_topic_fallback", "Topic")}
                       </p>
                       <h3 className="text-xl font-semibold leading-tight">
                         {t(topicKey, complaint.category || t("account.complaints_topic_fallback", "General support"))}
                       </h3>
-                      {(complaint.originalMessage || complaint.message || complaint.description) && (
-                        <div className={`mt-2 p-3 rounded-lg border ${isDark ? "bg-slate-800 border-slate-700" : "bg-slate-50 border-slate-200"}`}>
-                          <p className={`text-sm font-medium ${isDark ? "text-slate-200" : "text-slate-700"}`}>
-                            {t("account.complaints_your_message", "Your Message")}
-                          </p>
-                          <p className={`text-sm ${metaText} mt-1`}>{complaint.originalMessage || complaint.message || complaint.description}</p>
-                        </div>
-                      )}
+                      <p className={`text-sm ${metaText}`}>
+                        {complaint.subject || complaint.title || t("account.complaints_description", "Support inquiry")}
+                      </p>
                     </div>
-                    <div className="text-right space-y-2">
-                  <div className={`flex items-center justify-end gap-2 text-xs ${metaText}`}>
-                    <CalendarDays className="h-4 w-4" />
-                    <span>{created}</span>
-                  </div>
-                </div>
-              </div>
 
-                  {/* Response Section */}
+                    {/* Replies and customer message */}
+                    <div className="grid sm:grid-cols-2 gap-3 w-full">
+                      <div className={`rounded-2xl p-3 border w-full ${isDark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"}`}>
+                        <p className={`text-xs font-semibold ${metaText}`}>
+                          {t("account.complaints_last_admin", "Last admin reply:")}
+                        </p>
+                        <p className="text-sm font-medium mt-1 leading-relaxed">
+                          {lastAdminReply?.message ? lastAdminReply.message : t("account.complaints_actions.no_response_yet", "No response yet")}
+                        </p>
+                        <p className={`text-xs mt-1 ${metaText}`}>
+                          {lastAdminReply?.timestamp ? formatDateTime(lastAdminReply.timestamp) : "—"}
+                        </p>
+                      </div>
+                      <div className={`rounded-2xl p-3 border w-full ${isDark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"}`}>
+                        <p className={`text-xs font-semibold ${metaText}`}>
+                          {t("account.complaints_last_user", "Last customer reply:")}
+                        </p>
+                        <p className="text-sm font-medium mt-1 leading-relaxed">
+                          {lastUserReply?.message ? lastUserReply.message : (complaint.originalMessage || complaint.message || complaint.description || t("account.complaints_your_message", "Your Message"))}
+                        </p>
+                        <p className={`text-xs mt-1 ${metaText}`}>
+                          {lastUserReply?.timestamp ? formatDateTime(lastUserReply.timestamp) : created}
+                        </p>
+                      </div>
+                    </div>
+
+                    {(complaint.originalMessage || complaint.message || complaint.description) && (
+                      <div className={`p-4 rounded-2xl border w-full ${isDark ? "bg-slate-900 border-slate-700" : "bg-slate-50 border-slate-200"}`}>
+                        <p className={`text-sm font-semibold ${isDark ? "text-slate-100" : "text-slate-800"}`}>
+                          {t("account.complaints_your_message", "Your Message")}
+                        </p>
+                        <p className={`text-sm ${metaText} mt-2 leading-relaxed`}>
+                          {complaint.originalMessage || complaint.message || complaint.description}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Response state notice */}
                   {complaint.status === "pending" && !complaint.adminResponse && (
-                    <div className={`flex items-start gap-3 p-3 rounded-lg border ${isDark ? "bg-blue-900/20 border-blue-800" : "bg-blue-50 border-blue-200"}`}>
+                    <div className={`flex items-start gap-3 p-4 rounded-2xl border ${isDark ? "bg-blue-900/20 border-blue-800" : "bg-blue-50 border-blue-200"}`}>
                       <MessageSquare className={`h-5 w-5 mt-0.5 ${isDark ? "text-blue-400" : "text-blue-600"}`} />
                       <div className="flex-1">
-                        <p className={`text-sm font-medium ${isDark ? "text-blue-300" : "text-blue-800"}`}>
+                        <p className={`text-sm font-semibold ${isDark ? "text-blue-200" : "text-blue-800"}`}>
                           {t("account.complaints_actions.no_response_yet", "No response yet")}
                         </p>
                         <p className={`text-xs ${metaText}`}>
@@ -587,22 +686,24 @@ export default function Complaints() {
                     </div>
                   )}
 
-                  {/* Chat-style conversation */}
-                  <div className="flex justify-end">
-                    <Button
-                      text={t("account.complaints_actions.open_chat", "عرض المحادثة")}
-                      onClick={() => setActiveChat(complaint)}
-                      className="px-4 py-2 text-sm"
-                    />
-                  </div>
-                  <div className="flex items-center justify-between gap-3">
-                    <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1 border ${isDark ? "border-slate-700" : "border-slate-200"}`}>
-                      <Phone className="h-4 w-4 text-pink-500" />
-                      <span className={metaText}>{complaint.phoneNumber || complaint.phone || t("account.complaints.phone_placeholder", "Not provided")}</span>
-                    </div>
+                  <div className="flex items-center justify-between gap-3 flex-wrap">
+                    {complaint.status !== "closed" && (
+                      <div className="flex gap-2">
+                        <Button
+                          text={t("account.complaints_actions.add_follow_up", "Add follow-up")}
+                          onClick={() => setActiveFollowUp(complaint)}
+                          variant="outline"
+                          className="px-4 py-2 text-xs rounded-xl"
+                        />
+                        <Button
+                          text={t("account.complaints_actions.open_chat", "عرض المحادثة")}
+                          onClick={() => setActiveChat(complaint)}
+                          className="px-4 py-2 text-xs rounded-xl"
+                        />
+                      </div>
+                    )}
 
-                    {/* Close Button - Only allow closing if resolved */}
-                    {complaint.status !== "closed" && complaint.status === "resolved" && (
+                    {complaint.status !== "closed" && (
                       <Button
                         text={closingComplaints.has(complaint.id)
                           ? t("account.complaints_actions.closing", "Closing...")
@@ -610,45 +711,18 @@ export default function Complaints() {
                         }
                         onClick={() => handleCloseClick(complaint.id)}
                         disabled={closingComplaints.has(complaint.id)}
-                        className="px-3 py-1 text-xs"
+                        className="px-4 py-2 text-xs rounded-xl"
                         variant="outline"
                         aria-label={t("account.complaints_actions.close_complaint", "Close Inquiry")}
                       />
                     )}
 
-                    {/* Show message for unresolved complaints */}
                     {complaint.status !== "closed" && complaint.status !== "resolved" && !complaint.adminResponse && (
                       <div className={`text-xs ${metaText} text-center`}>
                         {t("account.complaints_actions.wait_for_resolution", "Our support team is reviewing this request.")}
                       </div>
                     )}
                   </div>
-
-                  {/* Follow-up form */}
-                  {complaint.status !== "closed" && (
-                    <div className={`rounded-lg border p-3 space-y-2 ${isDark ? "border-slate-800 bg-slate-900" : "border-emerald-100 bg-emerald-50/60"}`}>
-                      <label className="text-sm font-semibold">
-                        {t("account.complaints_actions.add_follow_up", "Add follow-up")}
-                      </label>
-                      <textarea
-                        value={followUps[complaint.id] ?? ""}
-                        onChange={(e) => setFollowUps((prev) => ({ ...prev, [complaint.id]: e.target.value }))}
-                        rows={3}
-                        className={`w-full rounded-md border px-3 py-2 text-sm ${isDark ? "bg-slate-800 border-slate-700 text-white" : "bg-white border-emerald-200 text-slate-900"}`}
-                        placeholder={t("account.complaints_actions.follow_up_placeholder", "Add details to clarify your issue")}
-                      />
-                      <div className="flex justify-end">
-                        <Button
-                          text={sendingFollowUps.has(complaint.id)
-                            ? t("common.sending", "Sending...")
-                            : t("account.complaints_actions.send_follow_up", "Send follow-up")}
-                          onClick={() => handleSendFollowUp(complaint.id)}
-                          disabled={sendingFollowUps.has(complaint.id)}
-                          className="px-4 py-2 text-sm"
-                        />
-                      </div>
-                    </div>
-                  )}
                 </article>
               );
             })}
@@ -668,6 +742,8 @@ export default function Complaints() {
         )}
 
       </div>
+
+      {FollowUpModal()}
 
       {/* Confirmation Dialog for Closing Complaints */}
       {confirmClose && (
@@ -719,36 +795,9 @@ export default function Complaints() {
             ? "bg-blue-100 text-blue-700 border border-blue-200"
             : "bg-yellow-100 text-yellow-700 border border-yellow-200";
 
-        const allMessages = [
-          {
-            id: "original-customer",
-            message: activeChat.originalMessage || activeChat.message || activeChat.description,
-            sender: "user",
-            timestamp: activeChat.createdAt,
-            type: "original",
-          },
-          ...(activeChat.userMessages || []).map((msg) => ({ ...msg, sender: "user", type: "followup" })),
-          ...(activeChat.replies || []).map((reply) => ({ ...reply, sender: "admin", type: "admin" })),
-          ...(activeChat.adminResponse && (!activeChat.replies || activeChat.replies.length === 0)
-            ? [
-                {
-                  id: "legacy-admin",
-                  message: activeChat.adminResponse,
-                  sender: "admin",
-                  timestamp: activeChat.respondedAt || activeChat.updatedAt || activeChat.createdAt,
-                  type: "admin",
-                },
-              ]
-            : []),
-        ].sort((a, b) => {
-          const aTime = a.timestamp?.seconds ? a.timestamp.seconds : new Date(a.timestamp).getTime() / 1000;
-          const bTime = b.timestamp?.seconds ? b.timestamp.seconds : new Date(b.timestamp).getTime() / 1000;
-          return aTime - bTime;
-        });
-
         return (
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className={`w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden border ${isDark ? "bg-slate-950 border-slate-800" : "bg-white border-gray-100"}`}>
+          <div className="fixed inset-0 z-[2000] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 md:p-8">
+            <div className={`w-full max-w-5xl rounded-3xl shadow-2xl overflow-hidden border ${isDark ? "bg-slate-950 border-slate-800" : "bg-white border-gray-100"}`}>
               <div className={`px-6 py-4 flex items-center justify-between border-b ${isDark ? "border-slate-800" : "border-gray-200"}`}>
                 <div className="space-y-1">
                   <p className={`text-sm uppercase tracking-[0.14em] ${isDark ? "text-emerald-300" : "text-emerald-600"}`}>Conversation</p>
@@ -779,60 +828,46 @@ export default function Complaints() {
                   onClick={() => setActiveChat(null)}
                   className={`px-4 py-2 rounded-xl text-sm font-semibold shadow-sm ${isDark ? "bg-slate-800 text-slate-200 hover:bg-slate-700" : "bg-gray-100 text-gray-800 hover:bg-gray-200"}`}
                 >
-                  إغلاق
+                  {t("common.close", "Close")}
                 </button>
               </div>
 
-              <div className="max-h-[65vh] overflow-y-auto space-y-4 px-6 py-6 bg-[radial-gradient(circle_at_20%_20%,#ecfdf3,transparent_35%),radial-gradient(circle_at_80%_0%,#e0f2fe,transparent_28%)] dark:bg-[radial-gradient(circle_at_20%_20%,#0f172a,transparent_30%),radial-gradient(circle_at_80%_0%,#0b3b27,transparent_30%)]">
-                {allMessages.map((message, idx) => (
-                  <div
-                    key={message.id + idx}
-                    className={`flex w-full ${message.sender === "user" ? "justify-start" : "justify-end"}`}
-                  >
-                    <div className="flex flex-col gap-2 max-w-[75%]">
-                      <div
-                        className={`inline-flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-full w-fit ${
-                          message.sender === "user"
-                            ? isDark
-                              ? "bg-blue-900/70 text-blue-100"
-                              : "bg-blue-50 text-blue-700"
-                            : isDark
-                            ? "bg-emerald-800 text-emerald-50"
-                            : "bg-emerald-100 text-emerald-700"
-                        }`}
-                      >
-                        {message.sender === "user" ? (
-                          <>
-                            <MessageSquare className="w-4 h-4" />
-                            <span>أنت</span>
-                          </>
-                        ) : (
-                          <>
-                            <span>الدعم</span>
-                            <div className={`w-2 h-2 rounded-full ${isDark ? "bg-emerald-400" : "bg-emerald-500"}`}></div>
-                          </>
-                        )}
-                      </div>
-                      <div
-                        className={`relative rounded-2xl px-4 py-3 shadow-md border ${
-                          message.sender === "user"
-                            ? isDark
-                              ? "bg-slate-800 border-slate-700 text-slate-100"
-                              : "bg-white border-slate-200 text-slate-900"
-                            : isDark
-                            ? "bg-emerald-700 border-emerald-600 text-white"
-                            : "bg-emerald-500 border-emerald-400 text-white"
-                        }`}
-                      >
-                        <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">{message.message}</p>
-                        <p className="text-[11px] mt-2 text-right opacity-75">
-                          {formatDateTime(message.timestamp)}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+              <div className="max-h-[60vh] overflow-y-auto space-y-4 px-6 py-6 bg-[radial-gradient(circle_at_20%_20%,#ecfdf3,transparent_35%),radial-gradient(circle_at_80%_0%,#e0f2fe,transparent_28%)] dark:bg-[radial-gradient(circle_at_20%_20%,#0f172a,transparent_30%),radial-gradient(circle_at_80%_0%,#0b3b27,transparent_30%)]">
+                <ChatConversation
+                  selectedComplaint={activeChat}
+                  isDark={isDark}
+                  lastMessageRef={lastMessageRef}
+                />
               </div>
+
+              {activeChat.status !== "closed" && (
+                <div className={`px-6 py-4 border-t flex flex-col gap-3 ${isDark ? "border-slate-800 bg-slate-900" : "border-gray-200 bg-gray-50"}`}>
+                  <label className={`text-sm font-semibold ${isDark ? "text-slate-200" : "text-slate-800"}`}>
+                    {t("account.complaints_actions.add_follow_up", "Add follow-up")}
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={followUps[activeChat.id] ?? ""}
+                    onChange={(e) => setFollowUps((prev) => ({ ...prev, [activeChat.id]: e.target.value }))}
+                    placeholder={t("account.complaints_actions.follow_up_placeholder", "Add details or order reference...")}
+                    className={`w-full rounded-2xl border px-3 py-2 text-sm ${isDark ? "bg-slate-800 border-slate-700 text-white" : "bg-white border-slate-200 text-slate-900"}`}
+                  />
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      text={t("common.cancel", "Cancel")}
+                      variant="outline"
+                      onClick={() => setActiveChat(null)}
+                      className="px-4 py-2 text-sm"
+                    />
+                    <Button
+                      text={sendingFollowUps.has(activeChat.id) ? t("common.sending", "Sending...") : t("account.complaints_actions.send_follow_up", "Send follow-up")}
+                      onClick={() => handleSendFollowUp(activeChat.id)}
+                      disabled={sendingFollowUps.has(activeChat.id)}
+                      className="px-4 py-2 text-sm"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         );

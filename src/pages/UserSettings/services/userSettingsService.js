@@ -9,7 +9,7 @@ import {
 } from "firebase/auth";
 import { updateProfile, auth, db } from "../../../services/firebase";
 import { isValidEmail } from "../../../utils/validators";
-import { getErrorMessage, getSettingsMessage } from "../utils/translations";
+import { getSettingsMessage } from "../utils/translations";
 
 export const saveNotifications = async (user, notificationForm) => {
   if (!user?.uid) {
@@ -283,6 +283,12 @@ export const sendSupportMessage = async (user, messageData) => {
 
       // Contact information
       phoneNumber: messageData.phoneNumber.trim(),
+      phone: messageData.phoneNumber.trim(), // align with admin views expecting "phone"
+      contact: {
+        phone: messageData.phoneNumber.trim(),
+        email: user.email || "",
+        name: user.name || user.displayName || user.email || ""
+      },
 
       // User information
       uid: user.uid,
@@ -292,7 +298,6 @@ export const sendSupportMessage = async (user, messageData) => {
 
       // Status and tracking
       status: "pending",
-      priority: messageData.priority || "normal",
       tags: [], // For future categorization
       assignedTo: null, // For admin assignment
       sla: {
@@ -322,7 +327,7 @@ export const sendSupportMessage = async (user, messageData) => {
     const ticketId = generateTicketId();
     supportData.ticketId = ticketId;
 
-    // Save to global support collection for admin access
+    // Save to global support collection for admin access (ensure phone fields included)
     const globalSupportRef = doc(db, "support", ticketId);
     await setDoc(globalSupportRef, supportData);
 
