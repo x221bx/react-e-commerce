@@ -54,7 +54,7 @@ export default function Home() {
     excerpt: article.summary,
     img:
       article.heroImage ||
-      `https://dummyimage.com/400x300/0f172a/ffffff&text=${t(
+      `https://dummyimage.com/400x300/111827/ffffff&text=${t(
         "home.articleFallback"
       )}`,
   }));
@@ -63,12 +63,11 @@ export default function Home() {
     <main
       dir={isRTL ? "rtl" : "ltr"}
       className="
-    min-h-screen flex flex-col
-    bg-[#f9f9f9] text-slate-900
-    dark:bg-[#021a15] dark:text-slate-100
-    transition-colors duration-300
-  "
->
+        min-h-screen flex flex-col
+        bg-[var(--bg-main)] text-[var(--text-main)]
+        transition-colors duration-300
+      "
+    >
    {/* HERO VIDEO SECTION */}
 <section className="relative w-full overflow-hidden h-[450px] md:h-[520px] lg:h-[580px]">
 

@@ -5,14 +5,14 @@
    ========================= */
 :root {
   /* Light Mode */
-  --bg-main: #ffffff;
-  --bg-card: #f5f7f8;
+  --bg-main: #f6f9f7;
+  --bg-card: #f1f5f2;
   --bg-input: #ffffff;
 
-  --text-main: #1a1a1a;
-  --text-muted: #687280; /* fix */
+  --text-main: #111827;
+  --text-muted: #4b5563;
 
-  --border-color: #e3e3e3;
+  --border-color: #d7e3dc;
 
   --success: #10b981;
   --danger: #ef4444;
@@ -41,7 +41,7 @@
   --brand-accent: #0ea5e9; /* sky-500 */
   --brand-secondary: #065f46; /* teal-800 */
   --surface-header: #ffffff;
-  --surface-input: #ffffff;
+  --surface-input: #fdfefc;
 }
 
 .dark {

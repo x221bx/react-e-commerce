@@ -27,7 +27,7 @@ export default function Articles({ header, items = [] }) {
   };
 
   return (
-    <section className="flex-1 flex flex-col">
+    <section className="flex-1 flex flex-col rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 md:p-5 shadow-sm">
 
       {/* عنوان القسم */}
       <Motion.h2
@@ -36,7 +36,7 @@ export default function Articles({ header, items = [] }) {
         whileInView="show"
         viewport={{ once: true, amount: 0.3 }}
         className="text-[24px] font-bold tracking-tight pb-4 
-                   text-slate-900 dark:text-emerald-100"
+                   text-[var(--text-main)] dark:text-emerald-100"
       >
         {header}
       </Motion.h2>

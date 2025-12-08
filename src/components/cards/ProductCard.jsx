@@ -180,10 +180,10 @@ export default function ProductCard({ product, index = 0, onCompare }) {
             absolute bottom-3 rtl:left-3 ltr:right-3 z-20
             px-2 py-1 rounded-full text-[11px] font-medium
             flex items-center gap-1
-            bg-slate-900/80 text-slate-100
+            bg-emerald-800 text-white
             dark:bg-emerald-500/90 dark:text-slate-900
             backdrop-blur-md shadow
-            hover:bg-slate-800 dark:hover:bg-emerald-400
+            hover:bg-emerald-700 dark:hover:bg-emerald-400
             transition
           "
         >
@@ -302,7 +302,7 @@ export default function ProductCard({ product, index = 0, onCompare }) {
             className="
               relative w-[90%] max-w-md rounded-2xl p-5
               bg-white text-slate-900
-              dark:bg-slate-900 dark:text-slate-50
+              dark:bg-[#0c1f1a] dark:text-slate-50
               shadow-2xl border border-slate-200 dark:border-emerald-800
             "
             onClick={(e) => e.stopPropagation()}
@@ -367,8 +367,8 @@ export function ProductCardSkeleton() {
     <div
       className="
         relative flex flex-col gap-3 p-4 rounded-2xl overflow-hidden
-        bg-slate-100 dark:bg-slate-900/70
-        border border-slate-200/70 dark:border-slate-700
+        bg-slate-100 dark:bg-[#0c1f1a]/70
+        border border-slate-200/70 dark:border-emerald-900/60
         animate-pulse
       "
     >

@@ -521,7 +521,7 @@ export default function Complaints() {
   };
 
   return (
-    <div dir={isRTL ? "rtl" : "ltr"} className={`min-h-screen ${isDark ? "bg-slate-900" : "bg-white"} py-8`}>
+    <div dir={isRTL ? "rtl" : "ltr"} className={`min-h-screen ${isDark ? "bg-[#0c1f1a]" : "bg-white"} py-8`}>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Header */}
@@ -832,7 +832,7 @@ export default function Complaints() {
                 </button>
               </div>
 
-              <div className="max-h-[60vh] overflow-y-auto space-y-4 px-6 py-6 bg-[radial-gradient(circle_at_20%_20%,#ecfdf3,transparent_35%),radial-gradient(circle_at_80%_0%,#e0f2fe,transparent_28%)] dark:bg-[radial-gradient(circle_at_20%_20%,#0f172a,transparent_30%),radial-gradient(circle_at_80%_0%,#0b3b27,transparent_30%)]">
+              <div className="max-h-[60vh] overflow-y-auto space-y-4 px-6 py-6 bg-[radial-gradient(circle_at_20%_20%,#ecfdf3,transparent_35%),radial-gradient(circle_at_80%_0%,#e0f2fe,transparent_28%)] dark:bg-[radial-gradient(circle_at_20%_20%,#0c1f1a,transparent_30%),radial-gradient(circle_at_80%_0%,#0b3b27,transparent_30%)]">
                 <ChatConversation
                   selectedComplaint={activeChat}
                   isDark={isDark}

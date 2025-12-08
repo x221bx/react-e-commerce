@@ -48,13 +48,13 @@ export default function FeaturedProducts() {
   }
 
   return (
-    <section className="mt-16">
+    <section className="mt-16 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] p-5 md:p-6 shadow-sm">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold">{t("home.featuredProducts")}</h2>
+        <h2 className="text-2xl font-bold text-[var(--text-main)]">{t("home.featuredProducts")}</h2>
 
         <button 
           onClick={() => navigate("/products")}
-          className="text-primary hover:text-primary/80 font-medium transition"
+          className="text-[var(--brand-primary)] hover:text-emerald-700 font-medium transition"
         >
           {t("home.viewAll")}
         </button>

@@ -98,12 +98,12 @@ const ArticleDetails = () => {
                         <div className="flex items-center gap-4">
                             {/* Like/Dislike Buttons */}
                             {canInteract && (
-                                <div className="flex items-center gap-1 bg-slate-50 dark:bg-slate-800 rounded-lg p-1 border border-slate-200 dark:border-slate-700">
+                                <div className="flex items-center gap-1 bg-emerald-50 dark:bg-slate-800 rounded-lg p-1 border border-emerald-100 dark:border-slate-700">
                                     <button
                                         onClick={handleLike}
                                         className={`inline-flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium transition-all ${isLiked
                                                 ? "bg-emerald-100 text-emerald-700 shadow-sm dark:bg-emerald-900/30 dark:text-emerald-300"
-                                                : "text-slate-600 hover:bg-white dark:text-slate-400 dark:hover:bg-slate-700"
+                                                : "text-emerald-700 hover:bg-white dark:text-slate-400 dark:hover:bg-slate-700"
                                             }`}
                                         aria-label={isLiked ? "Remove like" : "Like this article"}
                                     >
@@ -115,7 +115,7 @@ const ArticleDetails = () => {
                                         onClick={handleDislike}
                                         className={`inline-flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium transition-all ${isDisliked
                                                 ? "bg-red-100 text-red-700 shadow-sm dark:bg-red-900/30 dark:text-red-300"
-                                                : "text-slate-600 hover:bg-white dark:text-slate-400 dark:hover:bg-slate-700"
+                                                : "text-emerald-700 hover:bg-white dark:text-slate-400 dark:hover:bg-slate-700"
                                             }`}
                                         aria-label={isDisliked ? "Remove dislike" : "Dislike this article"}
                                     >
@@ -193,7 +193,7 @@ const ArticleDetails = () => {
                 </header>
 
                 {/* Article Body */}
-                <div className="prose prose-xl max-w-none prose-headings:text-slate-900 prose-headings:  prose-p:text-slate-700 prose-p:dark:text-slate-300 prose-strong:text-slate-900 prose-strong:  prose-a:text-emerald-600 prose-a:dark:text-emerald-400 prose-blockquote:border-emerald-200 prose-blockquote:dark:border-emerald-800 prose-code:bg-slate-100 prose-code:dark:bg-slate-800 prose-pre:bg-slate-900 prose-pre:dark:bg-slate-950 mb-16">
+                <div className="prose prose-xl max-w-none prose-headings:text-slate-900 prose-headings:  prose-p:text-slate-700 prose-p:dark:text-slate-300 prose-strong:text-slate-900 prose-strong:  prose-a:text-emerald-600 prose-a:dark:text-emerald-400 prose-blockquote:border-emerald-200 prose-blockquote:dark:border-emerald-800 prose-code:bg-slate-100 prose-code:dark:bg-slate-800 prose-pre:bg-[#0c1f1a] prose-pre:dark:bg-[#0c1f1a] mb-16">
                     {localizedArticle?.content ? (
                         localizedArticle.content.split("\n\n").map((paragraph, index) => (
                             <p key={index} className="mb-8 leading-relaxed text-lg">
@@ -216,7 +216,7 @@ const ArticleDetails = () => {
                 </div>
 
                 {/* Related Articles Section */}
-                <div className="bg-gradient-to-r from-emerald-50 to-blue-50 dark:from-slate-800 dark:to-slate-700 rounded-2xl p-8 shadow-lg border border-emerald-200 dark:border-slate-600 mb-16">
+                <div className="bg-gradient-to-r from-emerald-50 via-white to-emerald-50 dark:from-slate-800 dark:to-slate-700 rounded-2xl p-8 shadow-lg border border-emerald-200 dark:border-slate-600 mb-16">
                     <div className="text-center">
                         <h3 className="text-2xl font-bold text-slate-900   mb-4">
                             Discover More Articles

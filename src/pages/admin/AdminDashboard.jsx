@@ -278,7 +278,7 @@ export default function AdminDashboard() {
                         backgroundColor: isDark ? "#1e293b" : "#ffffff",
                         border: "none",
                         borderRadius: "12px",
-                        color: isDark ? "#e2e8f0" : "#0f172a",
+                        color: isDark ? "#e2e8f0" : "#111827",
                       }}
                     />
                     <Line
@@ -303,7 +303,7 @@ export default function AdminDashboard() {
                     <YAxis
                       dataKey="name"
                       type="category"
-                      stroke={isDark ? "#FFFFFF" : "#0f172a"}
+                      stroke={isDark ? "#FFFFFF" : "#111827"}
                       width={110}
                     />
                     <Tooltip />
@@ -321,7 +321,7 @@ export default function AdminDashboard() {
                     />
                     <XAxis
                       dataKey="customer"
-                      stroke={isDark ? "#F9FAF9" : "#0f172a"}
+                      stroke={isDark ? "#F9FAF9" : "#111827"}
                       angle={-15}
                       textAnchor="end"
                     />
