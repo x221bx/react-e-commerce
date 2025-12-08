@@ -74,7 +74,7 @@ export default function Home() {
 
   {/* VIDEO BACKGROUND */}
   <video
-    src="/2758322-uhd_3840_2160_30fps.mp4"
+    src="/Video Project.mp4"
     autoPlay
     loop
     muted
