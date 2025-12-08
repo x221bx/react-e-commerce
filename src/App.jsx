@@ -56,6 +56,9 @@ const ChatBot = lazy(() => import("./components/Ai/ChatBot"));
 const AiConversations = lazy(() => import("./pages/account/AiConversations"));
 const OrderDetails = lazy(() => import("./pages/OrderDetails"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const PaypalCallback = lazy(() => import("./pages/PaypalCallback"));
+const PaymobCallback = lazy(() => import("./pages/PaymobCallback"));
+
 // Loading component for Suspense fallback
 const LoadingSpinner = ({ text }) => (
   <div className="min-h-screen flex items-center justify-center flex-col gap-4">
@@ -160,6 +163,8 @@ export default function App() {
           <Route path="/about" element={<About />} />
           <Route path="/contactus" element={<ContactUs />} />
           <Route path="/checkout" element={<Checkout />} />
+          <Route path="/paypal/callback" element={<PaypalCallback />} />
+          <Route path="/paymob/callback" element={<PaymobCallback />} />
           <Route path="/success" element={<SuccessPage />} />
           {/* Authenticated User Routes */}
           <Route element={<ProtectedRoute />}>

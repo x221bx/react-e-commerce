@@ -27,6 +27,10 @@ import { useCardValidation } from "../hooks/useCardValidation";
 import { UseTheme } from "../theme/ThemeProvider";
 import Footer from "../Authcomponents/Footer";
 
+// ✅ خدمات الدفع للويب
+import { createPaymobCardPayment } from "../services/paymob";
+import { createPaypalOrder } from "../services/paypal";
+
 const formatSavedMethod = (method) => {
   if (!method) return "";
   if (method.type === "card") {
@@ -54,9 +58,9 @@ const generatePaymentMethodId = () => {
 const hashCardNumber = async (number) => {
   const encoder = new TextEncoder();
   const data = encoder.encode(number);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 };
 
 export default function Checkout() {
@@ -110,8 +114,7 @@ export default function Checkout() {
     setSelectedSavedCardId((prev) => {
       if (
         prev &&
-        (prev === NEW_CARD_OPTION ||
-          savedCards.some((card) => card.id === prev))
+        (prev === NEW_CARD_OPTION || savedCards.some((card) => card.id === prev))
       ) {
         return prev;
       }
@@ -128,14 +131,15 @@ export default function Checkout() {
   const summary = useOrderSummary(cartItems);
 
   const cardValidation = useCardValidation();
-  const {
-    cardForm,
-    validateCard,
-    resetCard,
-    detectBrand,
-  } = cardValidation;
+  const { cardForm, validateCard, resetCard, detectBrand } = cardValidation;
 
   const [loading, setLoading] = useState(false);
+
+  // 🔸 طرق الدفع:
+  // cod = دفع عند الاستلام (زي الأول)
+  // card = الكروت المتخزنة/الجديدة (زي الأول)
+  // paymob = الدفع أونلاين عن طريق Paymob
+  // paypal = الدفع عن طريق PayPal
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [showCardModal, setShowCardModal] = useState(false);
   const [saveCardForLater, setSaveCardForLater] = useState(false);
@@ -150,14 +154,35 @@ export default function Checkout() {
         subtitle: t("checkout.payment.cod.subtitle"),
       },
       {
+        value: "paymob",
+        type: "paymob",
+        title: t(
+          "checkout.payment.paymobTitle",
+          "Pay with card (Paymob)"
+        ),
+        subtitle: t(
+          "checkout.payment.paymobSubtitle",
+          "Secure Visa/Mastercard via Paymob"
+        ),
+      },
+      {
+        value: "paypal",
+        type: "paypal",
+        title: t("checkout.payment.paypalTitle", "Pay with PayPal"),
+        subtitle: t(
+          "checkout.payment.paypalSubtitle",
+          "Use your PayPal balance or saved cards"
+        ),
+      },
+      {
         value: "card",
         type: "card",
         title: t("checkout.payment.card.title"),
         subtitle: savedCards.length
           ? t(
-            "checkout.payment.card.dropdownHint",
-            "Choose an existing card or add a new one."
-          )
+              "checkout.payment.card.dropdownHint",
+              "Choose an existing card or add a new one."
+            )
           : t("checkout.payment.card.subtitle"),
       },
     ],
@@ -165,6 +190,23 @@ export default function Checkout() {
   );
 
   const buildPaymentDetails = (cardDetailsOverride) => {
+    if (paymentMethod === "paymob") {
+      return {
+        type: "paymob",
+        label: t(
+          "checkout.payment.paymobLabel",
+          "Pay with card (Paymob)"
+        ),
+      };
+    }
+
+    if (paymentMethod === "paypal") {
+      return {
+        type: "paypal",
+        label: t("checkout.payment.paypalLabel", "PayPal"),
+      };
+    }
+
     if (
       paymentMethod === "card" &&
       selectedSavedCardId &&
@@ -202,6 +244,30 @@ export default function Checkout() {
     };
   };
 
+  // ✅ بنبني draft للأوردر (بدون تفاصيل الدفع)
+  const buildOrderDraft = () => {
+    const shipping = {
+      fullName: form.fullName.trim(),
+      addressLine1: form.address.trim(),
+      city: form.city.trim(),
+      phone: form.phone.trim(),
+      email: userEmail,
+      notes: form.notes.trim(),
+    };
+
+    return {
+      uid: user?.uid || firebaseUser?.uid,
+      userId: user?.uid || firebaseUser?.uid,
+      userEmail,
+      userName,
+      shipping,
+      totals: summary,
+      items: cartItems,
+      notes: form.notes.trim(),
+    };
+  };
+
+  // ✅ نفس منطق الأوردر القديم (لـ COD و card فقط)
   const placeOrder = async (cardDetailsOverride) => {
     if (!user?.uid && !firebaseUser?.uid) {
       toast.error(t("checkout.messages.loginRequired"));
@@ -225,27 +291,13 @@ export default function Checkout() {
     setLoading(true);
     try {
       const paymentDetails = buildPaymentDetails(cardDetailsOverride);
-      const shipping = {
-        fullName: form.fullName.trim(),
-        addressLine1: form.address.trim(),
-        city: form.city.trim(),
-        phone: form.phone.trim(),
-        email: userEmail,
-        notes: form.notes.trim(),
-      };
+      const draft = buildOrderDraft();
 
       const { id } = await createOrder({
-        uid: user?.uid || firebaseUser?.uid,
-        userId: user?.uid || firebaseUser?.uid,
-        userEmail,
-        userName,
-        shipping,
+        ...draft,
         paymentMethod: paymentDetails.type,
         paymentSummary: paymentDetails.label,
         paymentDetails,
-        totals: summary,
-        items: cartItems,
-        notes: form.notes.trim(),
       });
 
       dispatch(clearCart());
@@ -257,6 +309,82 @@ export default function Checkout() {
       console.error("Checkout error:", err);
       toast.error(
         err?.message || t("checkout.messages.failure", "Something went wrong.")
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Paymob flow (الويب) – بس بنبدأ العملية، الأوردر هيتعمل في callback
+  const startPaymobPayment = async () => {
+    setLoading(true);
+    try {
+      const orderRef = `WEB-${Date.now()}`;
+
+      const session = await createPaymobCardPayment({
+        amount: summary.total,
+        cartItems,
+        form,
+        user: {
+          email: userEmail,
+          displayName: userName,
+        },
+        merchantOrderId: orderRef,
+      });
+
+      // نخزن بيانات Paymob علشان نستخدمها في callback
+      try {
+        localStorage.setItem(
+          "farmvet_last_paymob_session",
+          JSON.stringify({
+            paymobOrderId: session.paymobOrderId,
+            paymentKey: session.paymentKey,
+            amountCents: session.amountCents,
+          })
+        );
+      } catch (e) {
+        console.warn("Failed to persist Paymob session", e);
+      }
+
+      window.location.href = session.paymentUrl;
+    } catch (err) {
+      console.error("Failed to initialize Paymob payment", err);
+      toast.error(
+        err?.message ||
+          t(
+            "checkout.payment.paymobInitError",
+            "Could not start Paymob checkout. Please try again."
+          )
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ PayPal flow – نفس فكرة الموبايل (نكمّل الكابتشر في callback)
+  const startPaypalPayment = async () => {
+    setLoading(true);
+    try {
+      const orderRef = `WEB-${Date.now()}`;
+
+      const session = await createPaypalOrder({
+        amountEGP: summary.total,
+        reference: orderRef,
+      });
+
+      if (!session?.approvalUrl) {
+        throw new Error("Missing PayPal approval link");
+      }
+
+      window.location.href = session.approvalUrl;
+    } catch (err) {
+      console.error("Failed to initialize PayPal order", err);
+      toast.error(
+        err?.message ||
+          t(
+            "checkout.payment.paypalInitError",
+            "Could not start PayPal checkout. Please try again."
+          )
       );
     } finally {
       setLoading(false);
@@ -290,12 +418,18 @@ export default function Checkout() {
     if (!cardData) return;
     if (!validateCard()) return;
 
-    // Check for duplicate card
     const sanitized = cardData.number.replace(/\s+/g, "");
     const hashed = await hashCardNumber(sanitized);
-    const isDuplicate = methods.some(m => m.type === "card" && m.cardHash === hashed);
+    const isDuplicate = methods.some(
+      (m) => m.type === "card" && m.cardHash === hashed
+    );
     if (isDuplicate) {
-      toast.error(t("payments.duplicateCardError", "This card already exists in your saved payment methods."));
+      toast.error(
+        t(
+          "payments.duplicateCardError",
+          "This card already exists in your saved payment methods."
+        )
+      );
       return;
     }
 
@@ -304,18 +438,56 @@ export default function Checkout() {
     if (shouldSave && user?.uid) {
       try {
         await addCard(cardData, detectBrand, generatePaymentMethodId);
-        toast.success(t("payments.form.saveCard", "Card saved to your payment methods"));
+        toast.success(
+          t(
+            "payments.form.saveCard",
+            "Card saved to your payment methods"
+          )
+        );
       } catch (err) {
         console.error("Failed to save card from checkout", err);
-        toast.error(t("payments.form.saveFailed", "Card used for this order but not saved."));
+        toast.error(
+          t(
+            "payments.form.saveFailed",
+            "Card used for this order but not saved."
+          )
+        );
       }
     }
 
     setShowOrderConfirm(true);
   };
 
+  // ✅ دي اللي بتقرر هنعمل إيه بعد ما اليوزر يوافق في المودال
   const handleConfirmOrder = async () => {
     setShowOrderConfirm(false);
+
+    // لو Paymob / PayPal → نخزن draft في localStorage وبعدين نروح لبوابة الدفع
+    if (paymentMethod === "paymob" || paymentMethod === "paypal") {
+      const draft = buildOrderDraft();
+
+      try {
+        localStorage.setItem(
+          "farmvet_pending_order",
+          JSON.stringify(draft)
+        );
+        localStorage.setItem(
+          "farmvet_pending_payment_method",
+          paymentMethod
+        );
+      } catch (err) {
+        console.warn("Failed to persist pending order", err);
+      }
+
+      if (paymentMethod === "paymob") {
+        await startPaymobPayment();
+      } else {
+        await startPaypalPayment();
+      }
+      return;
+    }
+
+    // COD / card العادي → نشتغل بنفس اللوجيك القديم
     await placeOrder();
   };
 
@@ -353,10 +525,11 @@ export default function Checkout() {
   if (!cartItems.length) {
     return (
       <section
-        className={`mx-auto mt-20 max-w-2xl rounded-3xl border border-dashed p-10 text-center shadow-sm ${isDark
-          ? "border-emerald-900/40 bg-[#0f1d1d]/50 text-slate-100"
-          : "border-emerald-200 bg-emerald-50/70 text-slate-800"
-          }`}
+        className={`mx-auto mt-20 max-w-2xl rounded-3xl border border-dashed p-10 text-center shadow-sm ${
+          isDark
+            ? "border-emerald-900/40 bg-[#0f1d1d]/50 text-slate-100"
+            : "border-emerald-200 bg-emerald-50/70 text-slate-800"
+        }`}
       >
         <p className="text-xl font-semibold">
           {t("checkout.empty.title", "Your cart is empty")}
@@ -379,10 +552,11 @@ export default function Checkout() {
   if (!user) {
     return (
       <section
-        className={`mx-auto mt-20 max-w-2xl rounded-3xl border p-10 text-center shadow-sm ${isDark
-          ? "border-amber-900/40 bg-[#0f1d1d]/60 text-amber-100"
-          : "border-amber-200 bg-amber-50/80 text-amber-900"
-          }`}
+        className={`mx-auto mt-20 max-w-2xl rounded-3xl border p-10 text-center shadow-sm ${
+          isDark
+            ? "border-amber-900/40 bg-[#0f1d1d]/60 text-amber-100"
+            : "border-amber-200 bg-amber-50/80 text-amber-900"
+        }`}
       >
         <p className="text-lg font-semibold">
           {t("checkout.loginRequired.title", "You need to login")}
@@ -408,8 +582,9 @@ export default function Checkout() {
         {/* Page header */}
         <header className="mb-6">
           <p
-            className={`text-xs font-semibold uppercase tracking-[0.18em] ${isDark ? "text-emerald-300" : "text-emerald-600"
-              }`}
+            className={`text-xs font-semibold uppercase tracking-[0.18em] ${
+              isDark ? "text-emerald-300" : "text-emerald-600"
+            }`}
           >
             {t("checkout.header.eyebrow", "Checkout")}
           </p>
@@ -432,10 +607,11 @@ export default function Checkout() {
           >
             {formErrors && (
               <div
-                className={`rounded-2xl border px-4 py-3 text-sm ${isDark
-                  ? "border-red-900/50 bg-red-950/60 text-red-200"
-                  : "border-red-200 bg-red-50 text-red-700"
-                  }`}
+                className={`rounded-2xl border px-4 py-3 text-sm ${
+                  isDark
+                    ? "border-red-900/50 bg-red-950/60 text-red-200"
+                    : "border-red-200 bg-red-50 text-red-700"
+                }`}
               >
                 {formErrors}
               </div>
@@ -447,7 +623,11 @@ export default function Checkout() {
               errors={errors}
               handlePhoneChange={handlePhoneChange}
             />
-            <CheckoutShippingForm form={form} setForm={setForm} errors={errors} />
+            <CheckoutShippingForm
+              form={form}
+              setForm={setForm}
+              errors={errors}
+            />
 
             <CheckoutPaymentSection
               paymentMethod={paymentMethod}
@@ -467,10 +647,11 @@ export default function Checkout() {
             <div className="flex flex-wrap gap-3 pt-3">
               <Link
                 to="/cart"
-                className={`rounded-2xl border px-5 py-2 text-sm font-semibold transition ${isDark
-                  ? "border-slate-700 text-slate-200 hover:bg-slate-800/70"
-                  : "border-slate-200 text-slate-600 hover:bg-slate-50"
-                  }`}
+                className={`rounded-2xl border px-5 py-2 text-sm font-semibold transition ${
+                  isDark
+                    ? "border-slate-700 text-slate-200 hover:bg-slate-800/70"
+                    : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                }`}
               >
                 {t("checkout.actions.backToCart", "Back to Cart")}
               </Link>
@@ -504,33 +685,76 @@ export default function Checkout() {
           {/* Order confirmation modal */}
           {showOrderConfirm && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-              <div className={`rounded-3xl border shadow-xl max-w-lg w-full p-6 ${isDark ? "bg-slate-900 border-slate-700 text-white" : "bg-white border-slate-200 text-slate-900"}`}>
+              <div
+                className={`rounded-3xl border shadow-xl max-w-lg w-full p-6 ${
+                  isDark
+                    ? "bg-slate-900 border-slate-700 text-white"
+                    : "bg-white border-slate-200 text-slate-900"
+                }`}
+              >
                 <div className="text-center">
                   <h3 className="text-lg font-semibold mb-4">
-                    {t("checkout.confirmOrder.title", "Confirm Your Order")}
+                    {t(
+                      "checkout.confirmOrder.title",
+                      "Confirm Your Order"
+                    )}
                   </h3>
                   <p className="text-sm mb-6">
-                    {t("checkout.confirmOrder.message", "Are you sure you want to place this order?")}
+                    {t(
+                      "checkout.confirmOrder.message",
+                      "Are you sure you want to place this order?"
+                    )}
                   </p>
 
                   {/* Order Summary */}
-                  <div className={`rounded-xl p-4 mb-6 ${isDark ? "bg-slate-800" : "bg-slate-50"}`}>
-                    <h4 className="font-semibold mb-3">{t("checkout.summary.title", "Order Summary")}</h4>
+                  <div
+                    className={`rounded-xl p-4 mb-6 ${
+                      isDark ? "bg-slate-800" : "bg-slate-50"
+                    }`}
+                  >
+                    <h4 className="font-semibold mb-3">
+                      {t(
+                        "checkout.summary.title",
+                        "Order Summary"
+                      )}
+                    </h4>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span>{t("checkout.summary.subtotal", "Subtotal")}:</span>
-                        <span>{summary.subtotal?.toLocaleString()} EGP</span>
+                        <span>
+                          {t(
+                            "checkout.summary.subtotal",
+                            "Subtotal"
+                          )}
+                          :
+                        </span>
+                        <span>
+                          {summary.subtotal?.toLocaleString()} EGP
+                        </span>
                       </div>
                       <div className="flex justify-between">
-                        <span>{t("checkout.summary.shipping", "Shipping")}:</span>
-                        <span>{summary.shipping?.toLocaleString()} EGP</span>
+                        <span>
+                          {t(
+                            "checkout.summary.shipping",
+                            "Shipping"
+                          )}
+                          :
+                        </span>
+                        <span>
+                          {summary.shipping?.toLocaleString()} EGP
+                        </span>
                       </div>
                       <div className="flex justify-between font-semibold border-t pt-2">
-                        <span>{t("checkout.summary.total", "Total")}:</span>
-                        <span>{summary.total?.toLocaleString()} EGP</span>
+                        <span>
+                          {t("checkout.summary.total", "Total")}:
+                        </span>
+                        <span>
+                          {summary.total?.toLocaleString()} EGP
+                        </span>
                       </div>
                       <div className="text-xs text-slate-500 mt-2">
-                        {t("checkout.summary.note", "Items: {{count}}", { count: cartItems.length })}
+                        {t("checkout.summary.note", "Items: {{count}}", {
+                          count: cartItems.length,
+                        })}
                       </div>
                     </div>
                   </div>
@@ -538,7 +762,11 @@ export default function Checkout() {
                   <div className="flex gap-3">
                     <button
                       onClick={() => setShowOrderConfirm(false)}
-                      className={`flex-1 rounded-xl px-4 py-2 text-sm font-semibold border ${isDark ? "border-slate-700 text-slate-300 hover:bg-slate-800" : "border-slate-300 text-slate-600 hover:bg-slate-50"}`}
+                      className={`flex-1 rounded-xl px-4 py-2 text-sm font-semibold border ${
+                        isDark
+                          ? "border-slate-700 text-slate-300 hover:bg-slate-800"
+                          : "border-slate-300 text-slate-600 hover:bg-slate-50"
+                      }`}
                     >
                       {t("common.cancel", "Cancel")}
                     </button>
@@ -548,11 +776,19 @@ export default function Checkout() {
                       className="flex-1 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600 disabled:opacity-70"
                     >
                       {loading
-                        ? t("checkout.actions.processing", "Processing...")
+                        ? t(
+                            "checkout.actions.processing",
+                            "Processing..."
+                          )
                         : paymentMethod === "card"
-                          ? t("checkout.confirmOrder.confirmDeduction", "Confirm Deduction")
-                          : t("checkout.actions.confirmOrder", "Confirm Order")
-                      }
+                        ? t(
+                            "checkout.confirmOrder.confirmDeduction",
+                            "Confirm Deduction"
+                          )
+                        : t(
+                            "checkout.actions.confirmOrder",
+                            "Confirm Order"
+                          )}
                     </button>
                   </div>
                 </div>
