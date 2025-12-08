@@ -1,4 +1,5 @@
-﻿import { Link } from "react-router-dom";
+﻿// src/components/layout/Footer.jsx
+import { Link } from "react-router-dom";
 import { FaFacebookF, FaInstagram, FaTwitter, FaGlobe } from "react-icons/fa";
 import { UseTheme } from "../../theme/ThemeProvider";
 import { motion as Motion } from "framer-motion";
@@ -8,14 +9,13 @@ export default function Footer() {
   const { theme } = UseTheme();
   const { t } = useTranslation();
 
-  // ✨ Animation setup
   const fadeUp = {
-    hidden: { opacity: 0, y: 40 },
-    show: {
+    hidden: { opacity: 0, y: 35 },
+    show: (d = 0) => ({
       opacity: 1,
       y: 0,
-      transition: { duration: 0.6, ease: "easeOut" },
-    },
+      transition: { duration: 0.7, delay: d, ease: "easeOut" },
+    }),
   };
 
   return (
@@ -24,83 +24,127 @@ export default function Footer() {
       initial="hidden"
       whileInView="show"
       viewport={{ once: true, amount: 0.3 }}
-      className={`transition-colors duration-300 ${
-        theme === "dark"
-          ? "bg-[#0e1b1b] text-[#B8E4E6]"
-          : "bg-[#142727] text-[#B8E4E6]"
-      } py-10 mt-16 shadow-inner`}
+      className={`
+        relative overflow-hidden mt-20
+        transition-colors duration-500
+        ${theme === "dark"
+          ? "bg-[#071412] text-[#C7EDE9]"
+          : "bg-[#0F2D2A] text-[#D4F3EE]"}
+      `}
     >
-      <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-10">
-        {/* 🌿 Brand */}
-        <div>
-          <h2 className="text-2xl font-bold tracking-wide flex items-center gap-2">
+      {/* ✨ Soft Pattern Background */}
+      <div
+        className="absolute inset-0 opacity-[0.12] pointer-events-none"
+        style={{
+          backgroundImage:
+            "url('https://www.transparenttextures.com/patterns/asfalt-light.png')",
+        }}
+      />
+
+      {/* 🌈 Gradient Glow */}
+      <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[420px] h-[420px] rounded-full bg-emerald-500/20 blur-3xl" />
+
+      <div className="relative max-w-7xl mx-auto px-6 py-14 grid grid-cols-1 md:grid-cols-3 gap-12">
+
+        {/* 🌿 BRAND SECTION */}
+        <div className="space-y-4">
+          <h2 className="text-3xl font-extrabold tracking-wide flex items-center gap-2">
             🌿 <span>{t("footer.brandName")}</span>
           </h2>
-          <p className="mt-3 text-sm opacity-80 leading-relaxed">
+
+          <p className="text-sm opacity-85 leading-relaxed">
             {t("footer.brandDescription")}
           </p>
+
+          <div className="mt-6 h-[2px] w-24 bg-gradient-to-r from-emerald-400 to-transparent rounded-full" />
         </div>
 
-        {/* 🧭 Navigation */}
+        {/* 🧭 NAVIGATION */}
         <div>
-          <h3 className="font-semibold mb-4 text-lg">{t("footer.quickLinks")}</h3>
-          <ul className="space-y-2 text-sm">
+          <h3 className="font-bold text-xl mb-4 opacity-95">
+            {t("footer.quickLinks")}
+          </h3>
+
+          <ul className="space-y-3 text-sm">
             {[
-              { labelKey: "footer.home", path: "/" },
-              { labelKey: "footer.products", path: "/products" },
-              { labelKey: "footer.about", path: "/about" },
-              { labelKey: "footer.contact", path: "/contactus" },
-            ].map((link) => (
-              <li key={link.path}>
+              { k: "footer.home", p: "/" },
+              { k: "footer.products", p: "/products" },
+              { k: "footer.about", p: "/about" },
+              { k: "footer.contact", p: "/contactus" },
+            ].map((l, i) => (
+              <li key={i}>
                 <Link
-                  to={link.path}
-                  className={`transition-colors duration-200 hover:underline ${
-                    theme === "dark"
-                      ? "hover:text-[#B8E4E6]"
-                      : "hover:text-[#f5d061]"
-                  }`}
+                  to={l.p}
+                  className="
+                    group inline-block relative
+                    transition-all duration-300
+                    hover:translate-x-1
+                  "
                 >
-                  {t(link.labelKey)}
+                  <span className="relative z-10 group-hover:text-emerald-300">
+                    {t(l.k)}
+                  </span>
+
+                  {/* Underline Animation */}
+                  <span
+                    className="
+                      absolute left-0 -bottom-0.5 h-[2px] w-0 group-hover:w-full 
+                      bg-emerald-400 transition-all duration-300
+                    "
+                  />
                 </Link>
               </li>
             ))}
           </ul>
         </div>
 
-        {/* 🌐 Social Media */}
+        {/* 🌐 SOCIAL + CONTACT */}
         <div>
-          <h3 className="font-semibold mb-4 text-lg">{t("footer.followUs")}</h3>
+          <h3 className="font-bold text-xl mb-4 opacity-95">
+            {t("footer.followUs")}
+          </h3>
+
           <div className="flex space-x-4 text-xl">
-            {[FaGlobe, FaFacebookF, FaInstagram, FaTwitter].map(
-              (Icon, idx) => (
-                <a
-                  key={idx}
-                  href="#"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`p-2 rounded-full transition-transform duration-300 hover:scale-110 ${
-                    theme === "dark"
-                      ? "hover:bg-[#B8E4E6]/10"
-                      : "hover:bg-white/20"
-                  }`}
-                >
-                  <Icon />
-                </a>
-              )
-            )}
+            {[FaGlobe, FaFacebookF, FaInstagram, FaTwitter].map((Icon, idx) => (
+              <Motion.a
+                key={idx}
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer"
+                whileHover={{ scale: 1.2, rotate: 5 }}
+                whileTap={{ scale: 0.9 }}
+                className="
+                  p-3 rounded-full backdrop-blur-md border
+                  transition-all duration-300
+                  hover:shadow-[0_0_18px_rgba(16,185,129,0.4)]
+                  hover:bg-emerald-400/20
+                "
+              >
+                <Icon />
+              </Motion.a>
+            ))}
+          </div>
+
+          {/* Contact Info */}
+          <div className="mt-6 space-y-2 text-sm opacity-80">
+            <p>📞 +20 100 000 0000</p>
+            <p>📩 support@example.com</p>
           </div>
         </div>
+
       </div>
 
-      {/* 🔸 Copy Rights */}
+      {/* COPYRIGHT */}
       <div
-        className={`mt-10 pt-5 border-t text-center text-sm transition-colors duration-300 ${
-          theme === "dark"
-            ? "border-gray-700 text-gray-400"
-            : "border-white/30 text-white/80"
-        }`}
+        className={`
+          relative text-center py-5 text-sm
+          border-t transition-colors duration-500
+          ${theme === "dark" ? "border-emerald-900/40" : "border-white/20"}
+        `}
       >
-        {t("footer.copyright", { year: new Date().getFullYear() })}
+        {t("footer.copyright", {
+          year: new Date().getFullYear(),
+        })}
       </div>
     </Motion.footer>
   );

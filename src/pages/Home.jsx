@@ -1,3 +1,4 @@
+// src/pages/Home.jsx
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import Hero from "./homeCom/hero";
@@ -16,10 +17,12 @@ export default function Home() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const isRTL = i18n.language === "ar";
+
   const { data: catData = [] } = useCategoriesSorted({ dir: "desc" });
   const { articles: allFeaturedArticles } = useArticles({ featureHome: true });
+
   const featuredArticles = allFeaturedArticles.filter(
-    (article) => article.status === "published"
+    (a) => a.status === "published"
   );
 
   const locale = i18n.language || "en";
@@ -28,34 +31,23 @@ export default function Home() {
   );
 
   const categoryIds = useMemo(
-    () => catData.map((category) => category.id).filter(Boolean),
+    () => catData.map((c) => c.id).filter(Boolean),
     [catData]
   );
+
   const { data: categoryImages = {} } =
     useCategoryRepresentativeImages(categoryIds);
 
-  const categories = catData.map((category) => {
-    const productImages =
-      categoryImages[category.id] || [];
-    const uniqueSources = [
-      ...new Set([
-        ...productImages,
-        ...(category.img ? [category.img] : []),
-      ]),
-    ].filter(Boolean);
-
-    return {
-      id: category.id,
-      title: category.name || t("home.categoryFallback"),
-      note: category.note || t("home.categoryNoteFallback"),
-      imageSources: uniqueSources,
-      onClick: () => {
-        if (category.id) {
-          navigate(`/category/${category.id}`);
-        }
-      },
-    };
-  });
+  const categories = catData.map((category) => ({
+    id: category.id,
+    title: category.name || t("home.categoryFallback"),
+    note: category.note || t("home.categoryNoteFallback"),
+    imageSources: [
+      ...(categoryImages[category.id] || []),
+      ...(category.img ? [category.img] : []),
+    ],
+    onClick: () => navigate(`/category/${category.id}`),
+  }));
 
   const articles = localizedFeatured.map((article) => ({
     title: article.title,
@@ -68,40 +60,90 @@ export default function Home() {
   }));
 
   return (
-    <main className="flex flex-col gap-12 md:gap-16 lg:gap-20" dir={isRTL ? "rtl" : "ltr"}>
-      <div className="animate-fade-in">
-        <Hero
-          title={t("home.heroTitle")}
-          subtitle={t("home.heroSubtitle")}
-          bg="https://lh3.googleusercontent.com/aida-public/AB6AXuCLKxwiP-sEyN6Rrsaj0ZEikJ7tuC3i1BDZESOUybBIq9rxpKdpWBwAoodTCjWNVaMQAejA6E7MlL9jyLRyPeR6ToPxQIN0NEaK7VTyapj1liAE8OnwYii_WMHM3_uP3RbX2z_pu5eAGPqFtdI5dqUSJ0PpZeythsCjaDCt4GBFD3TOMNChq8rIrDZFZP9o0Js4D9lI2JIHBb9ZpWutDdH1xIDLxpTzpO-XReYaYDNn3sHTvGei5avHD43XCPbZ9MnexMNeNlcVztk"
-        />
-      </div>
+    <main
+      dir={isRTL ? "rtl" : "ltr"}
+      className="
+    min-h-screen flex flex-col
+    bg-[#f9f9f9] text-slate-900
+    dark:bg-[#021a15] dark:text-slate-100
+    transition-colors duration-300
+  "
+>
+   {/* HERO VIDEO SECTION */}
+<section className="relative w-full overflow-hidden h-[450px] md:h-[520px] lg:h-[580px]">
 
-      <div className="bg-gradient-to-b from-transparent to-gray-50/50 py-12 dark:to-slate-800/30">
-        <div className="container mx-auto">
-          <CategoriesSection
-            header={t("home.shopByCategory")}
-            items={categories}
-          />
-        </div>
-      </div>
+  {/* VIDEO BACKGROUND */}
+  <video
+    src="/Video Project.mp4"
+    autoPlay
+    loop
+    muted
+    playsInline
+    className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+  />
 
-      <section className="container mx-auto px-4">
-        <FeaturedProducts />
-      </section>
+  {/* FIXED OVERLAY — الآن يتأثر بالثيم بشكل صحيح */}
+  <div className="
+    absolute inset-0 pointer-events-none
+    bg-gradient-to-b
+    from-black/20 via-black/10 to-transparent
+    dark:from-black/50 dark:via-black/40 dark:to-[#022b1b]
+    transition-colors duration-300
+  " />
 
-      {articles.length > 0 && (
-        <div className="container mx-auto px-4">
-          <Articles header={t("home.topArticles")} items={articles} />
-        </div>
-      )}
-
-      <EcoBanner
-        title={t("home.ecoBannerTitle")}
-        text={t("home.ecoBannerText")}
-        bg="https://lh3.googleusercontent.com/aida-public/AB6AXuD8A3yXLwfO6ky-87JjNALS51VJCW0bPghXtMja2AcS-Hc5lGk9yLi6rqptiT0ZWriq8XbZh7113-7bon8bjXa9ILgc17YfLL2d1pSjfLQWnkMUGmbE5U_M2ne3bK9lEKk_r03TOZC0NK903XXGf2Z4zeVqPwLxMzNl_7-FISV41iS2eLPChiJ5dz4g38q1cBEMCKS3rxf5El1xu2QTkcCSszzfd7sr9SCxUZ0DH5qtTwKY-JRLBfWSUOoqAOmnmDhvQvUg-dKKxRk"
+  {/* CONTENT */}
+  <div className="relative z-10 h-full flex items-center">
+    <div className="container mx-auto px-4">
+      <Hero
+        title={t('home.heroTitle')}
+        subtitle={t('home.heroSubtitle')}
       />
+    </div>
+  </div>
+</section>
 
+
+
+      {/* ========= MAIN CONTENT ========= */}
+      <div className="flex-1">
+        {/* CATEGORIES */}
+        <section className="py-6 md:py-10 lg:py-12">
+          <div className="container mx-auto px-4">
+            <CategoriesSection
+              header={t("home.shopByCategory")}
+              items={categories}
+            />
+          </div>
+        </section>
+
+        {/* FEATURED PRODUCTS */}
+        <section className="pb-6 md:pb-10 lg:pb-12">
+          <div className="container mx-auto px-4">
+            <FeaturedProducts />
+          </div>
+        </section>
+
+        {/* ARTICLES */}
+        {articles.length > 0 && (
+          <section className="pb-6 md:pb-10 lg:pb-12">
+            <div className="container mx-auto px-4">
+              <Articles header={t("home.topArticles")} items={articles} />
+            </div>
+          </section>
+        )}
+
+        {/* ECO / HELP BANNER */}
+        <section className="pb-10 lg:pb-14">
+          <div className="container mx-auto px-4">
+            <EcoBanner
+              title={t("home.ecoBannerTitle")}
+              text={t("home.ecoBannerText")}
+            />
+          </div>
+        </section>
+      </div>
+
+      {/* FOOTER */}
       <Footer />
     </main>
   );
