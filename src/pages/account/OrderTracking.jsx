@@ -1,7 +1,8 @@
+// src/pages/account/OrderTracking.jsx
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom"; // ⭐ تمت الإضافة هنا
 import { UseTheme } from "../../theme/ThemeProvider";
 import { selectCurrentUser } from "../../features/auth/authSlice";
 import { useOrderTracking } from "../../hooks/useOrderTracking";
@@ -16,8 +17,12 @@ export default function OrderTracking() {
   const { theme } = UseTheme();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation(); // ⭐ تمت الإضافة
   const isDark = theme === "dark";
   const user = useSelector(selectCurrentUser);
+
+  // ⭐ قراءة حالة البادج القادمة من الدفع
+  const showPaymentBadge = location.state?.showPaymentBadge;
 
   const {
     orders,
@@ -69,17 +74,14 @@ export default function OrderTracking() {
   if (ordersConnectionError || orderConnectionError) {
     return (
       <div className="space-y-4 text-center py-12">
-        <p
-          className={`text-sm font-semibold uppercase tracking-wide ${accent}`}
-        >
+        <p className={`text-sm font-semibold uppercase tracking-wide ${accent}`}>
           Connection Blocked
         </p>
         <h1 className={`text-3xl font-semibold ${headingColor}`}>
           Unable to Load Order Data
         </h1>
         <p className={`text-sm ${headerMuted}`}>
-          Real-time connections are blocked by your browser. Please disable ad
-          blockers for this site.
+          Real-time connections are blocked by your browser. Please disable ad blockers for this site.
         </p>
         <button
           onClick={() => window.location.reload()}
@@ -95,9 +97,7 @@ export default function OrderTracking() {
   if (!orders || !orders.length) {
     return (
       <div className="space-y-4 text-center py-12">
-        <p
-          className={`text-sm font-semibold uppercase tracking-wide ${accent}`}
-        >
+        <p className={`text-sm font-semibold uppercase tracking-wide ${accent}`}>
           {t("tracking.eyebrow", "Track your recent purchases")}
         </p>
         <h1 className={`text-3xl font-semibold ${headingColor}`}>
@@ -130,10 +130,7 @@ export default function OrderTracking() {
           isDark={isDark}
         />
         <p className={`text-sm ${headerMuted}`}>
-          {t(
-            "tracking.selectOrder",
-            "Select an order to display live updates."
-          )}
+          {t("tracking.selectOrder", "Select an order to display live updates.")}
         </p>
       </div>
     );
@@ -152,6 +149,31 @@ export default function OrderTracking() {
 
   return (
     <div className="space-y-8">
+
+      {/* ⭐⭐⭐ البادج الاحترافية بعد الدفع ⭐⭐⭐ */}
+      {showPaymentBadge && (
+        <div className="rounded-2xl border px-6 py-4 shadow-md bg-emerald-600/10 border-emerald-500/50 animate-in slide-in-from-top duration-300">
+          <div className="flex items-center gap-3">
+            <span className="px-4 py-1.5 rounded-full bg-emerald-600 text-white font-semibold text-sm shadow">
+              ✅ Payment Successful
+            </span>
+
+            <span className="px-4 py-1.5 rounded-full bg-emerald-700 text-white font-semibold text-sm shadow">
+              📦 Tracking Activated
+            </span>
+
+            <span className="px-4 py-1.5 rounded-full bg-slate-900 text-white font-medium text-sm shadow">
+              🕒 {new Date().toLocaleString()}
+            </span>
+          </div>
+
+          <p className={`mt-3 text-sm ${isDark ? "text-emerald-200" : "text-emerald-800"}`}>
+            Your payment has been confirmed and your order is now being tracked in real time.
+          </p>
+        </div>
+      )}
+
+      {/* Header */}
       <OrderTrackingHeader
         orders={orders}
         selectedOrder={order}
@@ -160,15 +182,18 @@ export default function OrderTracking() {
       />
 
       <div className={`rounded-3xl border shadow-sm ${shellSurface}`}>
+
         {/* Order Header Info */}
         <div
-          className={`flex flex-wrap items-center justify-between gap-4 border-b px-6 py-5 ${isDark ? "border-slate-800" : "border-slate-100"
-            }`}
+          className={`flex flex-wrap items-center justify-between gap-4 border-b px-6 py-5 ${
+            isDark ? "border-slate-800" : "border-slate-100"
+          }`}
         >
           <div>
             <p
-              className={`text-xs font-semibold uppercase tracking-wide ${isDark ? "text-slate-500" : "text-slate-400"
-                }`}
+              className={`text-xs font-semibold uppercase tracking-wide ${
+                isDark ? "text-slate-500" : "text-slate-400"
+              }`}
             >
               {t("tracking.order", "Order")}
             </p>
@@ -191,8 +216,9 @@ export default function OrderTracking() {
             </button>
             <div className="text-right">
               <p
-                className={`text-xs font-semibold uppercase tracking-wide ${isDark ? "text-slate-500" : "text-slate-400"
-                  }`}
+                className={`text-xs font-semibold uppercase tracking-wide ${
+                  isDark ? "text-slate-500" : "text-slate-400"
+                }`}
               >
                 {t("tracking.total", "Total")}
               </p>
@@ -207,7 +233,11 @@ export default function OrderTracking() {
 
         {/* Delivery Confirmation */}
         {order.status === "Shipped" && (
-          <div className={`border-b px-6 py-4 ${isDark ? "border-slate-800" : "border-slate-100"}`}>
+          <div
+            className={`border-b px-6 py-4 ${
+              isDark ? "border-slate-800" : "border-slate-100"
+            }`}
+          >
             <div className="flex items-center justify-between animate-in slide-in-from-top-2 duration-500">
               <div>
                 <p className={`text-sm font-semibold ${headingColor}`}>
@@ -222,7 +252,10 @@ export default function OrderTracking() {
                 disabled={confirmingDelivery}
                 className="flex items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600 hover:scale-105 disabled:opacity-70 transition-all duration-200 shadow-lg hover:shadow-xl active:scale-95"
               >
-                <CheckCircle size={16} className={confirmingDelivery ? "animate-spin" : ""} />
+                <CheckCircle
+                  size={16}
+                  className={confirmingDelivery ? "animate-spin" : ""}
+                />
                 {confirmingDelivery ? "Confirming..." : "Mark as Delivered"}
               </button>
             </div>

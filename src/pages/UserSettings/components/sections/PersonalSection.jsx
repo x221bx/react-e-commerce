@@ -1,3 +1,4 @@
+// src/pages/UserSettings/components/sections/PersonalSection.jsx
 import React from "react";
 import SectionCard from "../SectionCard";
 import ProfileAvatar from "../ProfileAvatar";

@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import SectionCard from "../SectionCard";
 import Input from "../../../../components/ui/Input";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, ShieldCheck, Lock, KeyRound } from "lucide-react";
 import { PasswordStrengthIndicator } from "../FormComponents";
 import { sendPasswordReset } from "../../services/userSettingsService";
 import toast from "react-hot-toast";
@@ -23,7 +23,7 @@ const SecuritySection = ({
   setShowConfirmPassword,
   passwordStrength,
   securityErrors,
-  user
+  user,
 }) => {
   const { t } = useTranslation();
   const [isSendingReset, setIsSendingReset] = useState(false);
@@ -58,7 +58,7 @@ const SecuritySection = ({
     }
   };
 
-  // Utility to wrap Input + Password toggle
+  // Password input wrapper with toggle
   const PasswordWrapper = ({
     label,
     name,
@@ -66,24 +66,40 @@ const SecuritySection = ({
     error,
     show,
     onToggle,
-    onChange
+    onChange,
+    Icon = Lock,
   }) => (
-    <div className="relative">
+    <div className="relative group">
       <Input
-        label={label}
+        label={
+          <span className="inline-flex items-center gap-2">
+            <Icon className="h-4 w-4 text-emerald-400" />
+            {label}
+          </span>
+        }
         name={name}
         type={show ? "text" : "password"}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         error={error}
+        className="!pr-12"
       />
+
+      {/* Show/Hide button */}
       <button
         type="button"
         onClick={onToggle}
-        className="absolute right-3 bottom-3 text-slate-500 hover:text-slate-700 dark:text-slate-300 dark:hover:text-white"
+        className="
+          absolute right-3 bottom-3 text-emerald-300/70 
+          hover:text-emerald-300 transition-all
+          group-hover:scale-110
+        "
       >
-        {show ? <EyeOff size={18} /> : <Eye size={18} />}
+        {show ? <EyeOff size={20} /> : <Eye size={20} />}
       </button>
+
+      {/* glow animation */}
+      <div className="pointer-events-none absolute inset-0 rounded-xl opacity-0 group-hover:opacity-20 bg-emerald-500/20 blur-xl transition-all"></div>
     </div>
   );
 
@@ -95,79 +111,113 @@ const SecuritySection = ({
       title={t("settings.securityTitle", "Keep your account protected")}
       description={t(
         "settings.securityDescription",
-        "Use a unique password and refresh it frequently."
+        "Use a strong password and refresh it frequently."
       )}
-      tone="highlight"
+      className="relative overflow-hidden rounded-3xl border border-emerald-900/40
+      bg-[#032221]/60 backdrop-blur-xl
+      shadow-[0_0_25px_rgba(16,185,129,0.25)] transition-all duration-300"
     >
-      <form onSubmit={handlePasswordSubmit} className="space-y-4" noValidate>
-        
+      {/* Floating emerald effects */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -top-10 right-0 h-40 w-40 rounded-full bg-emerald-600/20 blur-3xl animate-pulse" />
+        <div className="absolute -bottom-10 left-0 h-32 w-32 rounded-full bg-emerald-500/10 blur-2xl" />
+      </div>
+
+      {/* FORM */}
+      <form
+        onSubmit={handlePasswordSubmit}
+        className="relative z-[5] space-y-6 text-slate-100"
+        noValidate
+      >
         {/* Current Password */}
         <PasswordWrapper
-          label={t("settings.currentPassword", "Current Password")}
+          label={t("settings.currentPassword")}
           name="currentPassword"
           value={securityForm.currentPassword}
           error={securityErrors.currentPassword}
           show={showCurrentPassword}
           onToggle={() => setShowCurrentPassword(!showCurrentPassword)}
           onChange={(v) => handleSecurityChange("currentPassword", v)}
+          Icon={KeyRound}
         />
 
-        {/* Forgot Password link */}
+        {/* Forgot password link */}
         <div className="flex justify-end">
           <button
             type="button"
             onClick={handleForgotPassword}
             disabled={isSendingReset}
-            className="text-sm text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 underline disabled:opacity-50"
+            className="
+              text-sm text-emerald-400 hover:text-emerald-300 underline 
+              transition disabled:opacity-50
+            "
           >
             {isSendingReset
               ? t("settings.sendingReset", "Sending...")
-              : t("settings.forgotPassword", "Forgot password?")}
+              : t("settings.forgotPassword")}
           </button>
         </div>
 
-        {/* New + Confirm Password */}
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
+        {/* NEW + CONFIRM PASSWORD */}
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* New Password */}
+          <div className="space-y-3">
             <PasswordWrapper
-              label={t("settings.newPassword", "New Password")}
+              label={t("settings.newPassword")}
               name="newPassword"
               value={securityForm.newPassword}
               error={securityErrors.newPassword}
               show={showNewPassword}
               onToggle={() => setShowNewPassword(!showNewPassword)}
               onChange={(v) => handleSecurityChange("newPassword", v)}
+              Icon={ShieldCheck}
             />
 
+            {/* Strength meter */}
             {securityForm.newPassword && (
-              <PasswordStrengthIndicator strength={passwordStrength} />
+              <div className="animate-in fade-in slide-in-from-left-2 duration-300">
+                <PasswordStrengthIndicator strength={passwordStrength} />
+              </div>
             )}
           </div>
 
+          {/* Confirm Password */}
           <PasswordWrapper
-            label={t("settings.confirmNewPassword", "Confirm New Password")}
+            label={t("settings.confirmNewPassword")}
             name="confirmPassword"
             value={securityForm.confirmPassword}
             error={securityErrors.confirmPassword}
             show={showConfirmPassword}
             onToggle={() => setShowConfirmPassword(!showConfirmPassword)}
             onChange={(v) => handleSecurityChange("confirmPassword", v)}
+            Icon={Lock}
           />
         </div>
 
-        {/* Password Tip */}
-        <div className="rounded-2xl border px-4 py-3 text-sm border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900/40 dark:bg-[#0f1d1d]/70 dark:text-emerald-200">
+        {/* Password Tips */}
+        <div
+          className="
+          rounded-2xl border border-emerald-600/40 bg-emerald-900/20 
+          px-4 py-3 text-sm text-emerald-200 backdrop-blur-sm
+          shadow-[0_0_18px_rgba(16,185,129,0.15)]
+        "
+        >
           {t(
             "settings.passwordTip",
             "نصيحة: كوّن كلمة مرور من 12 حرفاً فأكثر مع أرقام ورموز، وتجنّب إعادة استخدام كلمات المرور."
           )}
         </div>
 
-        {/* Submit */}
+        {/* Submit Button */}
         <button
           type="submit"
           disabled={isUpdatingPassword}
-          className="inline-flex items-center rounded-xl bg-green-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-70 dark:bg-green-500 dark:hover:bg-green-600"
+          className="
+            inline-flex items-center gap-2 rounded-xl bg-emerald-600 
+            px-6 py-2.5 text-sm font-semibold text-white
+            shadow hover:bg-emerald-500 
+            active:scale-[0.97] transition disabled:opacity-60
+          "
         >
           {isUpdatingPassword
             ? t("settings.updatingPassword", "Updating...")
