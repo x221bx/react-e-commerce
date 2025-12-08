@@ -17,8 +17,9 @@ export default function OrderTimeline({ order, isDark }) {
         const toKey = (val = "") => val.toLowerCase().replace(/[\s-]+/g, "_");
         const statusOrder = BASE_STEPS.map((step) => step.key);
         const currentStatusKey = order ? toKey(order.status || "pending") : "pending";
-        const lookupIndex = statusOrder.indexOf(currentStatusKey);
-        const currentStatusIndex = lookupIndex === -1 ? 0 : lookupIndex;
+        const currentStatusIndex = statusOrder.indexOf(currentStatusKey) !== -1
+            ? statusOrder.indexOf(currentStatusKey)
+            : 0;
 
         const statusTimestamps = {};
         if (order?.statusHistory) {
@@ -28,20 +29,21 @@ export default function OrderTimeline({ order, isDark }) {
         }
 
         return BASE_STEPS.map((step, index) => {
-            let state = "pending";
-            if (index < currentStatusIndex) state = "done";
-            if (index === currentStatusIndex) state = "current";
+            const state =
+                index < currentStatusIndex
+                    ? "done"
+                    : index === currentStatusIndex
+                    ? "current"
+                    : "pending";
 
-            let actualTimestamp = null;
+            let actualTimestamp = statusTimestamps[step.key] || null;
             let estimatedTimestamp = null;
 
-            if (statusTimestamps[step.key]) {
-                actualTimestamp = statusTimestamps[step.key];
-            } else if (index > currentStatusIndex) {
+            if (!actualTimestamp && index > currentStatusIndex) {
                 const orderCreated = new Date(order?.createdAt || Date.now());
-                const estimatedDate = new Date(orderCreated);
-                estimatedDate.setDate(orderCreated.getDate() + step.estimatedDays);
-                estimatedTimestamp = estimatedDate.toISOString();
+                const estimated = new Date(orderCreated);
+                estimated.setDate(orderCreated.getDate() + step.estimatedDays);
+                estimatedTimestamp = estimated.toISOString();
             }
 
             return {
@@ -54,66 +56,75 @@ export default function OrderTimeline({ order, isDark }) {
         });
     }, [order]);
 
-    // 🎨 Colors from Products.jsx
-    const strongText = isDark ? "text-white" : "text-slate-900";
+    // UI COLORS
+    const strong = isDark ? "text-white" : "text-slate-900";
     const muted = isDark ? "text-white/60" : "text-slate-500";
 
-    const connectorColor = isDark ? "bg-slate-700" : "bg-slate-200";
+    // Glow colors
+    const connectorColor = isDark ? "bg-slate-700/50" : "bg-slate-200";
 
-    // 🎨 Indicator styling adapted visually to match Product cards
-    const timelineIndicator = (state) => {
+    // Indicator UI
+    const indicatorStyle = (state) => {
         if (state === "done" || state === "current") {
-            return "border-emerald-500 bg-emerald-500 text-white shadow-md";
+            return `
+                border-emerald-500 bg-emerald-600 text-white
+                shadow-[0_0_12px_rgba(16,185,129,0.45)]
+                hover:shadow-[0_0_18px_rgba(16,185,129,0.7)]
+            `;
         }
         return isDark
-            ? "border-amber-800/60 bg-amber-900/20 text-amber-200/80"
-            : "border-amber-200 bg-amber-50 text-amber-700/70";
+            ? "border-slate-600 bg-slate-900 text-slate-300"
+            : "border-slate-300 bg-slate-100 text-slate-600";
     };
 
-    const labelTone = (state) => {
+    const labelColor = (state) => {
         if (state === "done" || state === "current")
             return isDark ? "text-emerald-300" : "text-emerald-700";
-        if (state === "pending")
-            return isDark ? "text-amber-200" : "text-amber-700";
-        return strongText;
+        return isDark ? "text-amber-200" : "text-amber-700";
     };
 
-    const formatDateTime = (step) => {
-        if (step.actualTimestamp) {
-            return new Date(step.actualTimestamp).toLocaleString();
-        } else if (step.estimatedTimestamp) {
-            return `Est. ${new Date(step.estimatedTimestamp).toLocaleDateString()}`;
-        }
-        return t("tracking.awaitingUpdate", "Awaiting update");
-    };
+    const formatDateTime = (step) =>
+        step.actualTimestamp
+            ? new Date(step.actualTimestamp).toLocaleString()
+            : step.estimatedTimestamp
+            ? `Est. ${new Date(step.estimatedTimestamp).toLocaleDateString()}`
+            : t("tracking.awaitingUpdate", "Awaiting update");
 
-    const getDateStyle = (step) => {
-        if (step.actualTimestamp) return labelTone(step.state);
-        if (step.estimatedTimestamp)
-            return isDark ? "text-amber-200/90" : "text-amber-700";
+    const dateStyle = (step) => {
+        if (step.actualTimestamp) return labelColor(step.state);
+        if (step.isEstimated) return isDark ? "text-amber-200" : "text-amber-700";
         return muted;
     };
 
     return (
-        <section>
-            <h2 className={`text-sm font-semibold uppercase tracking-wide ${muted}`}>
+        <section className="relative">
+            <h2
+                className={`
+                    text-xs font-semibold uppercase tracking-wide mb-4
+                    ${muted}
+                `}
+            >
                 {t("tracking.trackingStatus", "Tracking Status")}
             </h2>
 
-            <ol className="mt-6 space-y-6">
+            <ol className="space-y-6">
                 {timelineSteps.map((step, index) => (
                     <li
                         key={step.key}
-                        className="flex gap-4 transition-all animate-in slide-in-from-left-4 duration-500"
-                        style={{ animationDelay: `${index * 100}ms` }}
+                        className={`
+                            flex gap-4 items-start
+                            animate-in fade-in slide-in-from-left-3 duration-500
+                        `}
+                        style={{ animationDelay: `${index * 120}ms` }}
                     >
-                        {/* Left Column: Indicator */}
+                        {/* -------- LEFT COLUMN: INDICATOR -------- */}
                         <div className="flex flex-col items-center">
                             <div
                                 className={`
-                                    flex h-10 w-10 items-center justify-center rounded-full border-2 
-                                    font-semibold transition-all duration-300 hover:scale-110
-                                    ${timelineIndicator(step.state)}
+                                    flex h-11 w-11 items-center justify-center rounded-full border-2
+                                    font-semibold transition-all duration-300
+                                    hover:scale-110
+                                    ${indicatorStyle(step.state)}
                                 `}
                             >
                                 {step.state === "done"
@@ -123,23 +134,30 @@ export default function OrderTimeline({ order, isDark }) {
                                     : index + 1}
                             </div>
 
+                            {/* Connector line */}
                             {index !== timelineSteps.length - 1 && (
-                                <div className={`mt-2 h-14 w-0.5 ${connectorColor}`} />
+                                <div
+                                    className={`mt-2 h-14 w-1 rounded-full ${connectorColor}`}
+                                />
                             )}
                         </div>
 
-                        {/* Right Column: Labels */}
-                        <div className="pt-1">
-                            <p className={`font-semibold ${labelTone(step.state)}`}>
+                        {/* -------- RIGHT COLUMN: LABELS -------- */}
+                        <div className="pt-1 space-y-1.5">
+                            <p
+                                className={`font-semibold capitalize ${labelColor(
+                                    step.state
+                                )}`}
+                            >
                                 {t(step.label)}
                                 {step.isEstimated && (
-                                    <span className={`ml-2 text-xs ${muted}`}>
-                                        Estimated
+                                    <span className="ml-2 text-xs opacity-70">
+                                        ({t("tracking.estimated", "Estimated")})
                                     </span>
                                 )}
                             </p>
 
-                            <p className={`text-sm ${getDateStyle(step)}`}>
+                            <p className={`text-sm ${dateStyle(step)}`}>
                                 {formatDateTime(step)}
                             </p>
                         </div>

@@ -26,328 +26,468 @@ export default function OrderHistory() {
   const { orders, loading } = useOrders(user?.uid);
   const [expandedId, setExpandedId] = useState(null);
 
-  if (loading)
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
-      </div>
-    );
+  // ============ THEME STYLES ============
 
-  if (!orders.length)
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center text-center p-8">
-        <FiPackage className="h-16 w-16 text-slate-400 mb-4" />
-        <h2 className="text-2xl font-bold text-slate-600 mb-2">
-          {t("account.orderHistory.noOrders")}
-        </h2>
-        <p className="text-slate-500">
-          {t("account.orderHistory.noOrdersDesc")}
-        </p>
-      </div>
-    );
+  const pageBg = isDark
+    ? "bg-slate-950"
+    : "bg-gradient-to-b from-emerald-50/80 via-white to-emerald-50/60";
 
-  const getStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
+  const headerTitle = isDark ? "text-white" : "text-emerald-950";
+  const headerMuted = isDark ? "text-slate-300" : "text-emerald-800/80";
+
+  const cardBase = isDark
+    ? `
+        relative overflow-hidden rounded-3xl
+        border border-emerald-900/40 
+        bg-[#031615]/80
+        backdrop-blur-xl
+        shadow-[0_0_25px_rgba(16,185,129,0.25)]
+        transition-all duration-300
+        hover:shadow-[0_0_35px_rgba(16,185,129,0.35)]
+        hover:border-emerald-500/60
+      `
+    : `
+        relative overflow-hidden rounded-3xl
+        border border-emerald-100 
+        bg-gradient-to-br from-white via-emerald-50/50 to-emerald-100/40
+        shadow-[0_6px_20px_rgba(16,185,129,0.16)]
+        transition-all duration-300
+        hover:shadow-[0_12px_30px_rgba(16,185,129,0.28)]
+        hover:border-emerald-400
+      `;
+
+  const smallCard = isDark
+    ? "bg-[#061b19]/90 border border-emerald-900/40"
+    : "bg-white/90 border border-emerald-100 shadow-sm";
+
+  const mainText = isDark ? "text-slate-50" : "text-slate-900";
+  const mutedText = isDark ? "text-slate-300" : "text-slate-600";
+
+  const pillBg = isDark
+    ? "bg-emerald-900/40 text-emerald-200 border border-emerald-700/60"
+    : "bg-emerald-50 text-emerald-700 border border-emerald-200";
+
+  const expandBtnBg = isDark
+    ? "hover:bg-emerald-950/50 text-slate-200"
+    : "hover:bg-emerald-50 text-emerald-800";
+
+  const statusPillBase =
+    "inline-flex items-center rounded-full px-4 py-1.5 text-xs font-semibold border shadow-sm";
+
+  const getStatusColor = (statusRaw) => {
+    const status = statusRaw?.toLowerCase();
+    if (!status) {
+      return `${statusPillBase} bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/70 dark:text-slate-200 dark:border-slate-700`;
+    }
+
+    switch (status) {
       case "pending":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+        return `${statusPillBase} bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-900/40 dark:text-amber-200 dark:border-amber-700/60`;
       case "processing":
-        return "bg-blue-100 text-blue-800 border-blue-200";
+        return `${statusPillBase} bg-sky-50 text-sky-800 border-sky-200 dark:bg-sky-900/40 dark:text-sky-200 dark:border-sky-700/60`;
       case "shipped":
-        return "bg-purple-100 text-purple-800 border-purple-200";
+        return `${statusPillBase} bg-violet-50 text-violet-800 border-violet-200 dark:bg-violet-900/40 dark:text-violet-200 dark:border-violet-700/60`;
       case "delivered":
-        return "bg-emerald-100 text-emerald-800 border-emerald-200";
+        return `${statusPillBase} bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-200 dark:border-emerald-700/60`;
       case "canceled":
-        return "bg-red-100 text-red-800 border-red-200";
+        return `${statusPillBase} bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-900/40 dark:text-rose-200 dark:border-rose-700/60`;
       default:
-        return "bg-slate-100 text-slate-800 border-slate-200";
+        return `${statusPillBase} bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/70 dark:text-slate-200 dark:border-slate-700`;
     }
   };
 
-  // Products-style theme
-  const containerBg = isDark
-    ? "bg-slate-950 text-white"
-    : "bg-white text-slate-900";
+  // ============ LOADING STATE ============
 
-  const cardBg = isDark
-    ? "bg-[#0f1d1d]/70 border border-white/10 shadow-md hover:shadow-lg"
-    : "bg-white border border-gray-200 shadow-md hover:shadow-lg";
+  if (loading) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${pageBg}`}>
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative">
+            <div className="h-14 w-14 rounded-full border-2 border-emerald-500/60 border-t-transparent animate-spin" />
+            <div className="absolute inset-2 rounded-full border border-emerald-400/30 blur-[1px]" />
+          </div>
+          <p className={`text-sm font-medium ${headerMuted}`}>
+            {t("account.orderHistory.loading", "Loading your orders...")}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
-  const smallCardBg = isDark
-    ? "bg-slate-800/50 border border-white/10"
-    : "bg-slate-50 border border-gray-200";
+  // ============ EMPTY STATE ============
 
-  const textColor = isDark ? "text-white" : "text-slate-900";
-  const mutedText = isDark ? "text-white/60" : "text-slate-600";
+  if (!orders.length) {
+    return (
+      <div
+        className={`min-h-screen flex items-center justify-center px-4 ${pageBg}`}
+      >
+        <div
+          className={`
+            max-w-md w-full text-center rounded-3xl p-8
+            border border-emerald-200/60 bg-white/80 shadow-xl
+            dark:border-emerald-900/50 dark:bg-[#031615]/90
+          `}
+        >
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+            <FiPackage className="h-8 w-8" />
+          </div>
+          <h2 className={`text-2xl font-bold mb-2 ${headerTitle}`}>
+            {t("account.orderHistory.noOrders")}
+          </h2>
+          <p className={`${headerMuted} text-sm`}>
+            {t("account.orderHistory.noOrdersDesc")}
+          </p>
+          <button
+            onClick={() => navigate("/products")}
+            className="mt-6 inline-flex items-center justify-center rounded-2xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow hover:bg-emerald-500 active:scale-[0.98] transition"
+          >
+            {t("account.orderHistory.shopNow", "Start shopping")}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ============ MAIN RENDER ============
 
   return (
-    <div className="space-y-8 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className={`text-3xl font-bold ${textColor} mb-2`}>
-            {t("account.orderHistory.title")}
-          </h1>
-          <p className={mutedText}>{t("account.orderHistory.subtitle")}</p>
-        </div>
+    <div
+      className={`min-h-screen ${pageBg} py-8 px-4 sm:px-6 lg:px-8`}
+    >
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* HEADER */}
+        <header className="space-y-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-500">
+            {t("account.orderHistory.eyebrow", "Purchase History")}
+          </p>
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h1 className={`text-3xl sm:text-4xl font-bold ${headerTitle}`}>
+                {t("account.orderHistory.title")}
+              </h1>
+              <p className={`mt-2 text-sm ${headerMuted}`}>
+                {t(
+                  "account.orderHistory.subtitle",
+                  "Review all your previous orders, invoices, and delivery progress."
+                )}
+              </p>
+            </div>
 
-        {/* Orders Grid */}
-        <div className="space-y-4">
-          {orders.map((order) => (
             <div
-              key={order.id}
-              className={`rounded-2xl overflow-hidden transition-all duration-300 ${cardBg}`}
+              className={`
+                inline-flex items-center gap-3 rounded-2xl px-4 py-2 text-xs 
+                ${pillBg}
+              `}
             >
-              {/* Order Header */}
-              <div className="p-6">
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/90 text-white text-[11px] shadow">
+                {orders.length}
+              </span>
+              <span className="font-semibold tracking-wide">
+                {t("account.orderHistory.ordersCountLabel", "Total orders")}
+              </span>
+            </div>
+          </div>
+        </header>
 
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <FiPackage className="w-6 h-6 text-emerald-600" />
-                    </div>
+        {/* ORDERS LIST */}
+        <div className="space-y-5">
+          {orders.map((order, index) => {
+            const isExpanded = expandedId === order.id;
+            const createdAtDate = order.createdAt
+              ? new Date(order.createdAt)
+              : null;
 
-                    <div>
-                      <h3 className={`text-lg font-semibold ${textColor}`}>
-                        {t("account.orderHistory.orderNumber")}{" "}
-                        {order.orderNumber || order.id.slice(-8)}
-                      </h3>
-
-                      <p className={`text-sm ${mutedText}`}>
-                        {new Date(order.createdAt).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        })}
-                      </p>
-                    </div>
+            return (
+              <div
+                key={order.id}
+                className={`${cardBase} animate-in slide-in-from-bottom-2 duration-300`}
+                style={{ animationDelay: `${index * 40}ms` }}
+              >
+                {/* Floating glow (decor) - subtle */}
+                {isDark && (
+                  <div className="pointer-events-none absolute inset-0">
+                    <div className="absolute -top-10 right-0 h-32 w-32 rounded-full bg-emerald-600/20 blur-3xl" />
                   </div>
+                )}
 
-                  <div className="flex items-center gap-4">
-                    {/* Total */}
-                    <div className="text-right">
-                      <p className={`text-sm ${mutedText}`}>
-                        {t("account.orderHistory.total")}
-                      </p>
-                      <p className={`text-xl font-bold ${textColor}`}>
-                        {order.total?.toLocaleString()} EGP
-                      </p>
+                {/* ORDER HEADER */}
+                <div className="relative z-[2] p-6">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                    {/* Left: Meta */}
+                    <div className="flex items-center gap-4">
+                      <div
+                        className={`
+                          flex h-12 w-12 items-center justify-center rounded-2xl
+                          bg-emerald-500/10 text-emerald-500
+                          ring-1 ring-emerald-400/40
+                        `}
+                      >
+                        <FiPackage className="w-6 h-6" />
+                      </div>
+
+                      <div className="space-y-1">
+                        <h3 className={`text-lg font-semibold ${mainText}`}>
+                          {t("account.orderHistory.orderNumber", "Order")}{" "}
+                          <span className="font-mono">
+                            #{order.orderNumber || order.id.slice(-8)}
+                          </span>
+                        </h3>
+
+                        <div className="flex flex-wrap items-center gap-3 text-xs">
+                          {createdAtDate && (
+                            <span className={mutedText}>
+                              {createdAtDate.toLocaleDateString("en-US", {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              })}
+                            </span>
+                          )}
+                          <span className="hidden sm:inline h-1 w-1 rounded-full bg-emerald-400/60" />
+                          <span className={`${mutedText}`}>
+                            {t("account.orderHistory.itemsCount", {
+                              count: order.items?.length || 0,
+                            })}
+                          </span>
+                        </div>
+                      </div>
                     </div>
 
-                    {/* Status */}
-                    <span
-                      className={`px-4 py-2 rounded-full text-sm font-semibold border ${getStatusColor(
-                        order.status
-                      )}`}
-                    >
-                      {order.status}
-                    </span>
+                    {/* Right: Totals + status + actions */}
+                    <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+                      {/* Total */}
+                      <div className="text-right sm:text-left sm:order-2 lg:order-1">
+                        <p className={`text-xs ${mutedText}`}>
+                          {t("account.orderHistory.total")}
+                        </p>
+                        <p className={`text-xl font-bold ${mainText}`}>
+                          {order.total?.toLocaleString()} EGP
+                        </p>
+                      </div>
 
-                    {/* Actions */}
-                    <div className="flex gap-2 card-actions">
-                      <button
-                        onClick={() =>
-                          navigate(`/account/invoice/${order.id}`)
-                        }
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-colors text-sm font-medium"
-                      >
-                        <FiFileText className="w-4 h-4" />
-                        {t("account.orderHistory.invoice")}
-                      </button>
+                      {/* Status */}
+                      <div className="sm:order-3 lg:order-2">
+                        <span className={getStatusColor(order.status)}>
+                          <span className="inline-block h-1.5 w-1.5 rounded-full bg-current/70 mr-2" />
+                          {order.status}
+                        </span>
+                      </div>
 
-                      {!["delivered", "canceled"].includes(
-                        order.status?.toLowerCase()
-                      ) && (
+                      {/* Actions */}
+                      <div className="flex items-center gap-2 sm:order-1 lg:order-3 justify-end">
+                        <button
+                          onClick={() => navigate(`/account/invoice/${order.id}`)}
+                          className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-3 py-2 text-xs sm:text-sm font-semibold text-white shadow hover:bg-emerald-400 active:scale-[0.97] transition"
+                        >
+                          <FiFileText className="w-4 h-4" />
+                          {t("account.orderHistory.invoice")}
+                        </button>
+
+                        {!["delivered", "canceled"].includes(
+                          order.status?.toLowerCase()
+                        ) && (
+                          <button
+                            onClick={() =>
+                              navigate(`/account/tracking/${order.id}`)
+                            }
+                            className="inline-flex items-center gap-2 rounded-xl bg-emerald-900 px-3 py-2 text-xs sm:text-sm font-semibold text-emerald-50 shadow hover:bg-emerald-800 active:scale-[0.97] transition"
+                          >
+                            <FiTruck className="w-4 h-4" />
+                            {t("account.orderHistory.track")}
+                          </button>
+                        )}
+
                         <button
                           onClick={() =>
-                            navigate(`/account/tracking/${order.id}`)
+                            setExpandedId(isExpanded ? null : order.id)
                           }
-                          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors text-sm font-medium"
+                          className={`inline-flex items-center justify-center rounded-xl p-2 text-sm transition ${expandBtnBg}`}
+                          aria-expanded={isExpanded}
                         >
-                          <FiTruck className="w-4 h-4" />
-                          {t("account.orderHistory.track")}
+                          {isExpanded ? (
+                            <FiChevronUp className="w-5 h-5" />
+                          ) : (
+                            <FiChevronDown className="w-5 h-5" />
+                          )}
                         </button>
-                      )}
-
-                      <button
-                        onClick={() =>
-                          setExpandedId(
-                            expandedId === order.id ? null : order.id
-                          )
-                        }
-                        className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                      >
-                        {expandedId === order.id ? (
-                          <FiChevronUp className="w-5 h-5" />
-                        ) : (
-                          <FiChevronDown className="w-5 h-5" />
-                        )}
-                      </button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Expanded Details */}
-              {expandedId === order.id && (
-                <div className="border-t border-slate-200 dark:border-slate-700 px-6 pb-6">
-                  <div className="pt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Order Items */}
-                    <div>
-                      <h4
-                        className={`text-lg font-semibold ${textColor} mb-4 flex items-center gap-2`}
-                      >
-                        <FiPackage className="w-5 h-5" />
-                        {t("account.orderHistory.orderItems")} (
-                        {order.items?.length || 0})
-                      </h4>
-
-                      <div className="space-y-3">
-                        {order.items?.map((item, idx) => (
-                          <div
-                            key={idx}
-                            className={`flex items-center gap-4 p-3 rounded-xl ${smallCardBg}`}
-                          >
-                            <img
-                              src={
-                                item.imageUrl ||
-                                item.image ||
-                                item.thumbnailUrl ||
-                                item.img ||
-                                "/placeholder.png"
-                              }
-                              alt={item.name}
-                              className="w-16 h-16 rounded-lg object-cover border border-slate-200 dark:border-slate-700"
-                            />
-
-                            <div className="flex-1">
-                              <p className={`font-medium ${textColor}`}>
-                                {item.name}
-                              </p>
-                              <p className={`text-sm ${mutedText}`}>
-                                {item.price?.toLocaleString()} EGP ×{" "}
-                                {item.quantity}
-                              </p>
-                            </div>
-
-                            <div className={`text-right ${textColor}`}>
-                              <p className="font-semibold">
-                                {(item.price * item.quantity)?.toLocaleString()}{" "}
-                                EGP
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Order Details */}
-                    <div className="space-y-6">
-                      {/* Shipping Info */}
+                {/* EXPANDED DETAILS */}
+                {isExpanded && (
+                  <div className="relative z-[1] border-t border-emerald-900/30 bg-black/5/10 dark:bg-black/20 px-6 pb-6 pt-4">
+                    <div className="pt-4 grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* ORDER ITEMS */}
                       <div>
                         <h4
-                          className={`text-lg font-semibold ${textColor} mb-4 flex items-center gap-2`}
+                          className={`mb-3 flex items-center gap-2 text-base font-semibold ${mainText}`}
                         >
-                          <FiMapPin className="w-5 h-5" />
-                          {t("account.orderHistory.shippingInfo")}
-                        </h4>
-
-                        <div
-                          className={`p-4 rounded-xl ${smallCardBg}`}
-                        >
-                          <p className={`font-medium ${textColor}`}>
-                            {order.fullName || order.shipping?.fullName}
-                          </p>
-                          <p className={mutedText}>
-                            {order.address || order.shipping?.addressLine1}
-                          </p>
-                          <p className={mutedText}>
-                            {order.city || order.shipping?.city}
-                          </p>
-                          <p className={mutedText}>
-                            {order.phone || order.shipping?.phone}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Payment Info */}
-                      <div>
-                        <h4
-                          className={`text-lg font-semibold ${textColor} mb-4 flex items-center gap-2`}
-                        >
-                          <FiCreditCard className="w-5 h-5" />
-                          {t("account.orderHistory.paymentInfo")}
-                        </h4>
-
-                        <div className={`p-4 rounded-xl ${smallCardBg}`}>
-                          <p className={`font-medium ${textColor}`}>
-                            {order.paymentSummary || order.paymentMethod}
-                          </p>
-                          <p className={mutedText}>
-                            Reference: {order.reference}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Status Timeline */}
-                      <div>
-                        <h4
-                          className={`text-lg font-semibold ${textColor} mb-4 flex items-center gap-2`}
-                        >
-                          <FiClock className="w-5 h-5" />
-                          {t("account.orderHistory.orderTimeline")}
+                          <span className="inline-flex h-7 w-7 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
+                            <FiPackage className="w-4 h-4" />
+                          </span>
+                          {t("account.orderHistory.orderItems")} (
+                          {order.items?.length || 0})
                         </h4>
 
                         <div className="space-y-3">
-                          {order.statusHistory
-                            ?.slice()
-                            .reverse()
-                            .map((history, i) => (
-                              <div
-                                key={i}
-                                className={`flex items-center gap-3 p-3 rounded-xl ${smallCardBg}`}
-                              >
-                                <div
-                                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
-                                    history.actor === "customer"
-                                      ? "bg-blue-100 text-blue-600"
-                                      : "bg-emerald-100 text-emerald-600"
-                                  }`}
-                                >
-                                  {history.actor === "customer"
-                                    ? "👤"
-                                    : "👨‍💼"}
-                                </div>
-
-                                <div className="flex-1">
-                                  <p className={`font-medium ${textColor}`}>
-                                    {history.status}
-                                  </p>
-
-                                  <p className={`text-sm ${mutedText}`}>
-                                    {new Date(
-                                      history.changedAt
-                                    ).toLocaleString()}
-                                    {history.actor && (
-                                      <span className="ml-2 text-xs">
-                                        {t("account.orderHistory.by")}{" "}
-                                        {history.actor === "customer"
-                                          ? t("common.customer")
-                                          : t("common.admin")}
-                                      </span>
-                                    )}
-                                  </p>
-                                </div>
+                          {order.items?.map((item, idx) => (
+                            <div
+                              key={idx}
+                              className={`flex items-center gap-4 p-3 rounded-2xl ${smallCard}`}
+                            >
+                              <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl">
+                                <img
+                                  src={
+                                    item.imageUrl ||
+                                    item.image ||
+                                    item.thumbnailUrl ||
+                                    item.img ||
+                                    "/placeholder.png"
+                                  }
+                                  alt={item.name}
+                                  className="h-full w-full object-cover"
+                                />
                               </div>
-                            ))}
+
+                              <div className="flex-1">
+                                <p className={`text-sm font-semibold ${mainText}`}>
+                                  {item.name}
+                                </p>
+                                <p className={`text-xs ${mutedText}`}>
+                                  {item.price?.toLocaleString()} EGP ×{" "}
+                                  {item.quantity}
+                                </p>
+                              </div>
+
+                              <div className="text-right">
+                                <p className={`text-sm font-semibold ${mainText}`}>
+                                  {(item.price * item.quantity)?.toLocaleString()}{" "}
+                                  EGP
+                                </p>
+                              </div>
+                            </div>
+                          ))}
                         </div>
+                      </div>
+
+                      {/* RIGHT SIDE PANELS */}
+                      <div className="space-y-5">
+                        {/* SHIPPING */}
+                        <div>
+                          <h4
+                            className={`mb-3 flex items-center gap-2 text-base font-semibold ${mainText}`}
+                          >
+                            <span className="inline-flex h-7 w-7 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
+                              <FiMapPin className="w-4 h-4" />
+                            </span>
+                            {t("account.orderHistory.shippingInfo")}
+                          </h4>
+
+                          <div className={`p-4 rounded-2xl ${smallCard}`}>
+                            <p className={`font-semibold ${mainText}`}>
+                              {order.fullName || order.shipping?.fullName}
+                            </p>
+                            <p className={`text-sm ${mutedText}`}>
+                              {order.address || order.shipping?.addressLine1}
+                            </p>
+                            <p className={`text-sm ${mutedText}`}>
+                              {order.city || order.shipping?.city}
+                            </p>
+                            <p className={`text-sm ${mutedText}`}>
+                              {order.phone || order.shipping?.phone}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* PAYMENT */}
+                        <div>
+                          <h4
+                            className={`mb-3 flex items-center gap-2 text-base font-semibold ${mainText}`}
+                          >
+                            <span className="inline-flex h-7 w-7 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
+                              <FiCreditCard className="w-4 h-4" />
+                            </span>
+                            {t("account.orderHistory.paymentInfo")}
+                          </h4>
+
+                          <div className={`p-4 rounded-2xl ${smallCard}`}>
+                            <p className={`font-semibold ${mainText}`}>
+                              {order.paymentSummary || order.paymentMethod}
+                            </p>
+                            <p className={`text-xs ${mutedText} mt-1`}>
+                              Reference:{" "}
+                              <span className="font-mono">{order.reference}</span>
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* TIMELINE */}
+                        {order.statusHistory && order.statusHistory.length > 0 && (
+                          <div>
+                            <h4
+                              className={`mb-3 flex items-center gap-2 text-base font-semibold ${mainText}`}
+                            >
+                              <span className="inline-flex h-7 w-7 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
+                                <FiClock className="w-4 h-4" />
+                              </span>
+                              {t("account.orderHistory.orderTimeline")}
+                            </h4>
+
+                            <div className="space-y-3">
+                              {order.statusHistory
+                                ?.slice()
+                                .reverse()
+                                .map((history, i) => (
+                                  <div
+                                    key={i}
+                                    className={`flex items-center gap-3 p-3 rounded-2xl ${smallCard}`}
+                                  >
+                                    <div
+                                      className={`
+                                        flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-xs font-semibold
+                                        ${
+                                          history.actor === "customer"
+                                            ? "bg-sky-500/15 text-sky-500"
+                                            : "bg-emerald-500/15 text-emerald-500"
+                                        }
+                                      `}
+                                    >
+                                      {history.actor === "customer" ? "U" : "Admin"}
+                                    </div>
+
+                                    <div className="flex-1">
+                                      <p className={`text-sm font-semibold ${mainText}`}>
+                                        {history.status}
+                                      </p>
+                                      <p className={`text-xs ${mutedText}`}>
+                                        {new Date(
+                                          history.changedAt
+                                        ).toLocaleString()}
+                                        {history.actor && (
+                                          <span className="ml-2">
+                                            •{" "}
+                                            {t("account.orderHistory.by")}{" "}
+                                            {history.actor === "customer"
+                                              ? t("common.customer")
+                                              : t("common.admin")}
+                                          </span>
+                                        )}
+                                      </p>
+                                    </div>
+                                  </div>
+                                ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
-
-            </div>
-          ))}
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

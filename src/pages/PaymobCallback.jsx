@@ -101,7 +101,15 @@ export default function PaymobCallback() {
           ),
         });
 
-        navigate(`/account/invoice/${id}`, { state: { orderId: id } });
+        // ⭐⭐⭐ التعديل الوحيد المطلوب ⭐⭐⭐
+        // احفظ ID علشان نستخدمه في صفحة التتبع
+        localStorage.setItem("latestOrderId", id);
+
+        // تحويل مباشر لصفحة التتبع مع تفعيل البادج
+        navigate(`/order-tracking/${id}`, {
+          state: { showPaymentBadge: true },
+        });
+
       } catch (err) {
         console.error("Paymob callback error", err);
         setState({

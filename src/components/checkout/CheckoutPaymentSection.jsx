@@ -1,98 +1,170 @@
-//  src/components/checkout/CheckoutPaymentSection.jsx
+// src/components/checkout/CheckoutPaymentSection.jsx
 import React from "react";
-import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { FaMoneyBillWave, FaPaypal, FaCreditCard } from "react-icons/fa";
+import { MdLockOutline } from "react-icons/md";
 import { UseTheme } from "../../theme/ThemeProvider";
 
 export default function CheckoutPaymentSection({
-    paymentMethod,
-    handlePaymentSelection,
-    paymentOptions,
-    savedCards,
+  paymentMethod,
+  handlePaymentSelection,
+  paymentOptions,
+  savedCards = [],
 }) {
-    const { t } = useTranslation();
-    const { theme } = UseTheme();
-    const isDark = theme === "dark";
+  const { t } = useTranslation();
+  const { theme } = UseTheme();
+  const isDark = theme === "dark";
 
-    const cardSurface = isDark
-        ? "bg-[#0f1d1d]/60 border-white/10 hover:bg-white/10"
-        : "bg-white/90 border-slate-200 hover:bg-slate-50";
+  // --------------- CARD BACKGROUND + BORDER ---------------
+  const baseCard = `
+    relative flex items-start gap-3 rounded-2xl cursor-pointer transition px-4 py-4
+    border shadow-sm
+    ${isDark
+      ? "bg-slate-800/60 border-slate-700 hover:bg-slate-800 hover:border-emerald-400/40 shadow-black/30"
+      : "bg-white/80 border-emerald-100 hover:border-emerald-300 hover:bg-emerald-50/40 shadow-[0_4px_12px_rgba(0,0,0,0.06)]"}
+  `;
 
-    const activeSurface = isDark
-        ? "border-emerald-900/40 bg-emerald-900/20 shadow-md"
-        : "border-emerald-300 bg-emerald-50 shadow-md";
+  // --------------- ICON WRAPPER ---------------
+  const iconWrapper = `
+    mt-1 flex h-10 w-10 items-center justify-center rounded-full border transition
+    ${isDark
+      ? "bg-slate-900/70 border-slate-700 text-emerald-300"
+      : "bg-emerald-50 border-emerald-200 text-emerald-600"}
+  `;
 
-    const subtitleColor = isDark ? "text-slate-400" : "text-slate-500";
-    const linkColor = isDark ? "text-emerald-300" : "text-emerald-600";
-    const titleColor = isDark ? "text-white" : "text-slate-900";
+  // --------------- RADIO STYLE ---------------
+  const radioOuter = `
+    mt-1 flex h-5 w-5 items-center justify-center rounded-full border transition
+    ${isDark ? "border-slate-400" : "border-emerald-300"}
+  `;
+  const radioInner = "h-2.5 w-2.5 rounded-full";
 
-    return (
-        <section className="space-y-4">
-            {/* Header */}
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 className={`text-lg font-semibold ${titleColor}`}>
-                    {t("checkout.sections.payment")}
-                </h2>
+  const getIcon = (type) => {
+  if (type === "cod")
+    return <FaMoneyBillWave className="text-emerald-500" />;
 
-                {savedCards.length > 0 && (
-                    <Link
-                        to="/account/payments"
-                        className={`text-sm font-semibold hover:underline ${linkColor}`}
-                    >
-                        {t("checkout.payment.manageMethods", "Manage payment methods")}
-                    </Link>
+  if (type === "paypal")
+    return <FaPaypal className="text-[#003087]" />; // PayPal Blue
+
+  if (type === "paymob")
+    return <MdLockOutline className="text-[#0f9d58]" />; // Paymob secure green
+
+  return <FaCreditCard className="text-[#1a73e8]" />; // Visa/Mastercard blue
+};
+
+
+  return (
+    <section
+      aria-labelledby="checkout-payment-heading"
+      className={`
+        space-y-4 rounded-2xl px-4 py-5 border
+        ${isDark
+          ? "bg-slate-900/50 border-slate-700 shadow-[0_20px_45px_rgba(0,0,0,0.7)]"
+          : "bg-emerald-50/40 border-emerald-200 shadow-[0_18px_40px_rgba(16,185,129,0.15)]"}
+      `}
+    >
+      <h2
+        id="checkout-payment-heading"
+        className={`
+          text-sm md:text-base font-semibold
+          ${isDark ? "text-slate-100" : "text-slate-800"}
+        `}
+      >
+        {t("checkout.payment.title", "Payment method")}
+      </h2>
+
+      <p className={`mt-1 text-xs ${isDark ? "text-slate-400" : "text-slate-600"}`}>
+        {t(
+          "checkout.payment.subtitle",
+          "Choose how you'd like to pay for your order."
+        )}
+      </p>
+
+      <div className="grid gap-3 md:grid-cols-2">
+        {paymentOptions.map((option) => {
+          const selected = paymentMethod === option.value;
+
+          return (
+            <button
+              type="button"
+              key={option.value}
+              onClick={() => handlePaymentSelection(option.value)}
+              className={`${baseCard} ${
+                selected
+                  ? isDark
+                    ? "border-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+                    : "border-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.3)]"
+                  : ""
+              }`}
+            >
+              {/* ICON */}
+              <div
+                className={`${iconWrapper} ${
+                  selected ? "ring-2 ring-emerald-400/60" : ""
+                }`}
+              >
+                {getIcon(option.type)}
+              </div>
+
+              <div className="flex-1 text-left">
+                {/* TITLE + RADIO */}
+                <div className="flex items-center justify-between gap-2">
+                  <p
+                    className={`text-sm font-semibold ${
+                      isDark ? "text-slate-100" : "text-slate-900"
+                    }`}
+                  >
+                    {option.title}
+                  </p>
+
+                  <div
+                    className={`${radioOuter} ${
+                      selected
+                        ? isDark
+                          ? "bg-emerald-500/20 border-emerald-400"
+                          : "bg-emerald-200 border-emerald-500"
+                        : ""
+                    }`}
+                  >
+                    <span
+                      className={`${radioInner} ${
+                        selected
+                          ? isDark
+                            ? "bg-emerald-400"
+                            : "bg-emerald-600"
+                          : "bg-transparent"
+                      }`}
+                    />
+                  </div>
+                </div>
+
+                {/* SUBTITLE */}
+                <p
+                  className={`mt-1 text-xs ${
+                    isDark ? "text-slate-400" : "text-slate-600"
+                  }`}
+                >
+                  {option.subtitle}
+                </p>
+
+                {/* SAVED CARDS HINT */}
+                {option.type === "card" && !!savedCards.length && (
+                  <p
+                    className={`mt-1 text-xs ${
+                      isDark ? "text-emerald-300" : "text-emerald-700"
+                    }`}
+                  >
+                    {t("checkout.payment.savedCardsHint", {
+                      defaultValue: "{{count}} saved card(s) available",
+                      count: savedCards.length,
+                    })}
+                  </p>
                 )}
-            </div>
-
-            {/* Payment Options */}
-            <div className={`grid gap-4 ${paymentOptions.length > 1 ? "sm:grid-cols-2" : ""}`}>
-                {paymentOptions.map((option) => {
-                    const isActive = paymentMethod === option.value;
-
-                    return (
-                        <label
-                            key={option.value}
-                            className={`flex cursor-pointer flex-col gap-2 rounded-2xl px-4 py-3 text-sm transition 
-                                border backdrop-blur-md 
-                                ${isActive ? activeSurface : cardSurface}`}
-                        >
-                            <div className="flex items-center gap-3">
-                                <input
-                                    type="radio"
-                                    name="payment"
-                                    checked={isActive}
-                                    onChange={() => handlePaymentSelection(option.value)}
-                                    className="accent-emerald-500"
-                                />
-
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-2">
-                                        <p className={`font-semibold ${titleColor}`}>
-                                            {option.title}
-                                        </p>
-
-                                        {option.badge && (
-                                            <span
-                                                className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide
-                                                    ${isDark
-                                                        ? "bg-emerald-900/50 text-emerald-200"
-                                                        : "bg-emerald-100 text-emerald-700"
-                                                    }`}
-                                            >
-                                                {option.badge}
-                                            </span>
-                                        )}
-                                    </div>
-
-                                    <p className={`text-xs ${subtitleColor}`}>
-                                        {option.subtitle}
-                                    </p>
-                                </div>
-                            </div>
-                        </label>
-                    );
-                })}
-            </div>
-        </section>
-    );
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
 }

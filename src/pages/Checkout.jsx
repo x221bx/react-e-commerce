@@ -506,299 +506,378 @@ export default function Checkout() {
     });
   };
 
-  // unified page background like Products
-  const pageBg = isDark
-    ? "bg-gradient-to-b from-transparent to-slate-800/30"
-    : "bg-gradient-to-b from-transparent to-gray-50/50";
-
-  const shellSurface = isDark
-    ? "bg-[#0f1d1d]/60 border-white/10 shadow-lg"
-    : "bg-white/95 border-slate-200 shadow-md";
-
-  const summarySurface = isDark
-    ? "bg-[#0f1d1d]/60 border-white/10 shadow-lg"
-    : "bg-white/95 border-slate-200 shadow-md";
-
-  const headingColor = isDark ? "text-white" : "text-slate-900";
+  const headingColor = isDark ? "text-slate-50" : "text-slate-50";
   const muted = isDark ? "text-slate-300" : "text-slate-500";
 
+  const shellSurface = isDark
+    ? "bg-slate-900/70 border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.75)] backdrop-blur-xl"
+    : "bg-white/90 border-slate-200 shadow-[0_18px_50px_rgba(15,23,42,0.12)] backdrop-blur-xl";
+
+  const summarySurface = isDark
+    ? "bg-slate-900/70 border-emerald-500/30 shadow-[0_20px_60px_rgba(0,0,0,0.8)] backdrop-blur-xl"
+    : "bg-white/95 border-emerald-200 shadow-[0_18px_55px_rgba(16,185,129,0.25)] backdrop-blur-xl";
+
+  const pillBg = isDark
+    ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"
+    : "bg-emerald-50 text-emerald-700 border border-emerald-100";
+
+  // 🧺 Cart empty state
   if (!cartItems.length) {
     return (
-      <section
-        className={`mx-auto mt-20 max-w-2xl rounded-3xl border border-dashed p-10 text-center shadow-sm ${
-          isDark
-            ? "border-emerald-900/40 bg-[#0f1d1d]/50 text-slate-100"
-            : "border-emerald-200 bg-emerald-50/70 text-slate-800"
-        }`}
+      <main
+        dir={isRTL ? "rtl" : "ltr"}
+        className="min-h-screen flex flex-col bg-[#f9f9f9] text-slate-900 dark:bg-[#021a15] dark:text-slate-100 transition-colors duration-300"
       >
-        <p className="text-xl font-semibold">
-          {t("checkout.empty.title", "Your cart is empty")}
-        </p>
-        <p className={`mt-2 text-sm ${muted}`}>
-          {t("checkout.empty.subtitle", "Please add some products first.")}
-        </p>
-        <div className="mt-6 flex justify-center gap-3">
-          <Link
-            to="/products"
-            className="rounded-2xl bg-emerald-500 px-5 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-600"
-          >
-            {t("checkout.empty.cta", "Go to Products")}
-          </Link>
-        </div>
-      </section>
-    );
-  }
-
-  if (!user) {
-    return (
-      <section
-        className={`mx-auto mt-20 max-w-2xl rounded-3xl border p-10 text-center shadow-sm ${
-          isDark
-            ? "border-amber-900/40 bg-[#0f1d1d]/60 text-amber-100"
-            : "border-amber-200 bg-amber-50/80 text-amber-900"
-        }`}
-      >
-        <p className="text-lg font-semibold">
-          {t("checkout.loginRequired.title", "You need to login")}
-        </p>
-        <p className="mt-2 text-sm">
-          {t("checkout.loginRequired.subtitle", "Please login to continue.")}
-        </p>
-        <div className="mt-6 flex justify-center gap-3">
-          <Link
-            to="/login"
-            className="rounded-2xl bg-emerald-500 px-5 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-600"
-          >
-            {t("checkout.loginRequired.cta", "Login")}
-          </Link>
-        </div>
-      </section>
-    );
-  }
-
-  return (
-    <div className={`min-h-screen ${pageBg} py-10`} dir={isRTL ? "rtl" : "ltr"}>
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        {/* Page header */}
-        <header className="mb-6">
-          <p
-            className={`text-xs font-semibold uppercase tracking-[0.18em] ${
-              isDark ? "text-emerald-300" : "text-emerald-600"
+        <div className="flex-1 flex items-center justify-center px-4 py-16">
+          <section
+            className={`mx-auto max-w-2xl rounded-3xl border border-dashed p-10 text-center shadow-sm ${
+              isDark
+                ? "border-emerald-900/40 bg-[#0f1d1d]/70 text-slate-100"
+                : "border-emerald-200 bg-emerald-50/80 text-slate-800"
             }`}
           >
-            {t("checkout.header.eyebrow", "Checkout")}
-          </p>
-          <h1 className={`mt-2 text-3xl font-semibold ${headingColor}`}>
-            {t("checkout.header.title", "Review and confirm")}
-          </h1>
-          <p className={`mt-1 text-sm ${muted}`}>
-            {t(
-              "checkout.header.subtitle",
-              "Confirm your contact info, address, and payment method to place your order."
-            )}
-          </p>
-        </header>
-
-        <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
-          {/* Left column - form */}
-          <form
-            className={`rounded-3xl border p-6 space-y-6 ${shellSurface}`}
-            onSubmit={handleSubmit}
-          >
-            {formErrors && (
-              <div
-                className={`rounded-2xl border px-4 py-3 text-sm ${
-                  isDark
-                    ? "border-red-900/50 bg-red-950/60 text-red-200"
-                    : "border-red-200 bg-red-50 text-red-700"
-                }`}
-              >
-                {formErrors}
-              </div>
-            )}
-
-            <CheckoutContactForm
-              form={form}
-              setForm={setForm}
-              errors={errors}
-              handlePhoneChange={handlePhoneChange}
-            />
-            <CheckoutShippingForm
-              form={form}
-              setForm={setForm}
-              errors={errors}
-            />
-
-            <CheckoutPaymentSection
-              paymentMethod={paymentMethod}
-              handlePaymentSelection={handlePaymentSelection}
-              paymentOptions={paymentOptions}
-              savedCards={savedCards}
-            />
-
-            <CheckoutSavedCards
-              paymentMethod={paymentMethod}
-              savedCards={savedCards}
-              selectedSavedCardId={selectedSavedCardId}
-              setSelectedSavedCardId={setSelectedSavedCardId}
-              savedPaymentLoading={savedPaymentLoading}
-            />
-
-            <div className="flex flex-wrap gap-3 pt-3">
+            <p className="text-xl font-semibold">
+              {t("checkout.empty.title", "Your cart is empty")}
+            </p>
+            <p className={`mt-2 text-sm ${muted}`}>
+              {t("checkout.empty.subtitle", "Please add some products first.")}
+            </p>
+            <div className="mt-6 flex justify-center gap-3">
               <Link
-                to="/cart"
-                className={`rounded-2xl border px-5 py-2 text-sm font-semibold transition ${
-                  isDark
-                    ? "border-slate-700 text-slate-200 hover:bg-slate-800/70"
-                    : "border-slate-200 text-slate-600 hover:bg-slate-50"
-                }`}
+                to="/products"
+                className="rounded-2xl bg-emerald-500 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-500/40 hover:bg-emerald-600"
               >
-                {t("checkout.actions.backToCart", "Back to Cart")}
+                {t("checkout.empty.cta", "Go to Products")}
               </Link>
-              <button
-                type="submit"
-                disabled={loading}
-                className="inline-flex items-center rounded-2xl bg-emerald-500 px-6 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-600 disabled:opacity-70"
-              >
-                {loading
-                  ? t("checkout.actions.processing", "Processing...")
-                  : t("checkout.actions.confirmOrder", "Confirm Order")}
-              </button>
             </div>
-          </form>
+          </section>
+        </div>
+        <Footer />
+      </main>
+    );
+  }
 
-          {/* Right column - summary */}
-          <div className={`rounded-3xl border p-6 h-fit ${summarySurface}`}>
-            <CheckoutSummary cartItems={cartItems} summary={summary} />
-          </div>
-
-          {/* Card modal */}
-          <CheckoutCardModal
-            isOpen={showCardModal}
-            onClose={() => setShowCardModal(false)}
-            onSubmit={handleCardSubmit}
-            cardValidation={cardValidation}
-            saveCardForLater={saveCardForLater}
-            onSaveCardToggle={setSaveCardForLater}
-          />
-
-          {/* Order confirmation modal */}
-          {showOrderConfirm && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-              <div
-                className={`rounded-3xl border shadow-xl max-w-lg w-full p-6 ${
-                  isDark
-                    ? "bg-slate-900 border-slate-700 text-white"
-                    : "bg-white border-slate-200 text-slate-900"
-                }`}
+  // 👤 Login required state
+  if (!user) {
+    return (
+      <main
+        dir={isRTL ? "rtl" : "ltr"}
+        className="min-h-screen flex flex-col bg-[#f9f9f9] text-slate-900 dark:bg-[#021a15] dark:text-slate-100 transition-colors duration-300"
+      >
+        <div className="flex-1 flex items-center justify-center px-4 py-16">
+          <section
+            className={`mx-auto max-w-2xl rounded-3xl border p-10 text-center shadow-sm ${
+              isDark
+                ? "border-amber-900/40 bg-slate-900/80 text-amber-100"
+                : "border-amber-200 bg-amber-50/90 text-amber-900"
+            }`}
+          >
+            <p className="text-lg font-semibold">
+              {t("checkout.loginRequired.title", "You need to login")}
+            </p>
+            <p className="mt-2 text-sm">
+              {t("checkout.loginRequired.subtitle", "Please login to continue.")}
+            </p>
+            <div className="mt-6 flex justify-center gap-3">
+              <Link
+                to="/login"
+                className="rounded-2xl bg-emerald-500 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-500/40 hover:bg-emerald-600"
               >
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold mb-4">
-                    {t(
-                      "checkout.confirmOrder.title",
-                      "Confirm Your Order"
-                    )}
-                  </h3>
-                  <p className="text-sm mb-6">
-                    {t(
-                      "checkout.confirmOrder.message",
-                      "Are you sure you want to place this order?"
-                    )}
-                  </p>
+                {t("checkout.loginRequired.cta", "Login")}
+              </Link>
+            </div>
+          </section>
+        </div>
+        <Footer />
+      </main>
+    );
+  }
 
-                  {/* Order Summary */}
-                  <div
-                    className={`rounded-xl p-4 mb-6 ${
-                      isDark ? "bg-slate-800" : "bg-slate-50"
-                    }`}
-                  >
-                    <h4 className="font-semibold mb-3">
-                      {t(
-                        "checkout.summary.title",
-                        "Order Summary"
-                      )}
-                    </h4>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span>
-                          {t(
-                            "checkout.summary.subtotal",
-                            "Subtotal"
-                          )}
-                          :
-                        </span>
-                        <span>
-                          {summary.subtotal?.toLocaleString()} EGP
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>
-                          {t(
-                            "checkout.summary.shipping",
-                            "Shipping"
-                          )}
-                          :
-                        </span>
-                        <span>
-                          {summary.shipping?.toLocaleString()} EGP
-                        </span>
-                      </div>
-                      <div className="flex justify-between font-semibold border-t pt-2">
-                        <span>
-                          {t("checkout.summary.total", "Total")}:
-                        </span>
-                        <span>
-                          {summary.total?.toLocaleString()} EGP
-                        </span>
-                      </div>
-                      <div className="text-xs text-slate-500 mt-2">
-                        {t("checkout.summary.note", "Items: {{count}}", {
-                          count: cartItems.length,
-                        })}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => setShowOrderConfirm(false)}
-                      className={`flex-1 rounded-xl px-4 py-2 text-sm font-semibold border ${
-                        isDark
-                          ? "border-slate-700 text-slate-300 hover:bg-slate-800"
-                          : "border-slate-300 text-slate-600 hover:bg-slate-50"
-                      }`}
-                    >
-                      {t("common.cancel", "Cancel")}
-                    </button>
-                    <button
-                      onClick={handleConfirmOrder}
-                      disabled={loading}
-                      className="flex-1 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600 disabled:opacity-70"
-                    >
-                      {loading
-                        ? t(
-                            "checkout.actions.processing",
-                            "Processing..."
-                          )
-                        : paymentMethod === "card"
-                        ? t(
-                            "checkout.confirmOrder.confirmDeduction",
-                            "Confirm Deduction"
-                          )
-                        : t(
-                            "checkout.actions.confirmOrder",
-                            "Confirm Order"
-                          )}
-                    </button>
-                  </div>
-                </div>
+  // 🌿 Main checkout UI
+  return (
+    <main
+      dir={isRTL ? "rtl" : "ltr"}
+      className="
+        min-h-screen flex flex-col
+        bg-[#f9f9f9] text-slate-900
+        dark:bg-[#021a15] dark:text-slate-100
+        transition-colors duration-300
+      "
+    >
+      {/* Gradient header similar to Home */}
+      <div className="bg-gradient-to-b from-emerald-500/20 via-emerald-500/5 to-transparent dark:from-emerald-400/20 dark:via-emerald-400/5">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 pt-10 pb-6">
+          <div className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-semibold tracking-[0.18em] uppercase bg-black/5 dark:bg-white/5 text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-500/20 backdrop-blur">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            {t("checkout.header.eyebrow", "Checkout")}
+          </div>
+          <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h1
+                className={`text-3xl md:text-4xl font-semibold ${headingColor}`}
+              >
+                {t("checkout.header.title", "Review and confirm")}
+              </h1>
+              <p className={`mt-2 text-sm md:text-[15px] ${muted}`}>
+                {t(
+                  "checkout.header.subtitle",
+                  "Confirm your contact info, address, and payment method to place your order."
+                )}
+              </p>
+            </div>
+            <div
+              className={`flex items-center gap-3 rounded-2xl px-3 py-2 text-xs md:text-[13px] ${pillBg}`}
+            >
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded-xl bg-emerald-500 text-white text-[11px] font-bold shadow-md shadow-emerald-500/40">
+                3
+              </span>
+              <div className="flex flex-col">
+                <span className="font-semibold">
+                  {t("checkout.progress.title", "Almost there")}
+                </span>
+                <span className="text-[11px] opacity-80">
+                  {t(
+                    "checkout.progress.caption",
+                    "Complete your details and place your order securely."
+                  )}
+                </span>
               </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
 
+      {/* MAIN CONTENT */}
+      <div className="flex-1 pb-10 pt-2">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <div className="grid gap-6 lg:grid-cols-[2fr,1fr] lg:items-start">
+            {/* Left column - form */}
+            <form
+              className={`rounded-3xl border p-6 md:p-7 space-y-6 ${shellSurface}`}
+              onSubmit={handleSubmit}
+            >
+              {formErrors && (
+                <div
+                  className={`rounded-2xl border px-4 py-3 text-sm flex items-start gap-2 ${
+                    isDark
+                      ? "border-red-900/50 bg-red-950/70 text-red-200"
+                      : "border-red-200 bg-red-50 text-red-700"
+                  }`}
+                >
+                  <span className="mt-0.5 inline-block h-2 w-2 rounded-full bg-red-500" />
+                  <span>{formErrors}</span>
+                </div>
+              )}
+
+              <CheckoutContactForm
+                form={form}
+                setForm={setForm}
+                errors={errors}
+                handlePhoneChange={handlePhoneChange}
+              />
+
+              <div className="border-t border-slate-200/60 dark:border-slate-700/60 pt-5">
+                <CheckoutShippingForm
+                  form={form}
+                  setForm={setForm}
+                  errors={errors}
+                />
+              </div>
+
+              <div className="border-t border-slate-200/60 dark:border-slate-700/60 pt-5 space-y-4">
+                <CheckoutPaymentSection
+                  paymentMethod={paymentMethod}
+                  handlePaymentSelection={handlePaymentSelection}
+                  paymentOptions={paymentOptions}
+                  savedCards={savedCards}
+                />
+
+                <CheckoutSavedCards
+                  paymentMethod={paymentMethod}
+                  savedCards={savedCards}
+                  selectedSavedCardId={selectedSavedCardId}
+                  setSelectedSavedCardId={setSelectedSavedCardId}
+                  savedPaymentLoading={savedPaymentLoading}
+                />
+              </div>
+
+              <div className="flex flex-wrap gap-3 pt-3">
+                <Link
+                  to="/cart"
+                  className={`rounded-2xl border px-5 py-2 text-sm font-semibold transition ${
+                    isDark
+                      ? "border-slate-700 text-slate-200 hover:bg-slate-800/70"
+                      : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  {t("checkout.actions.backToCart", "Back to Cart")}
+                </Link>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="inline-flex items-center rounded-2xl bg-emerald-500 px-6 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-500/40 hover:bg-emerald-600 disabled:opacity-70"
+                >
+                  {loading
+                    ? t("checkout.actions.processing", "Processing...")
+                    : t("checkout.actions.confirmOrder", "Confirm Order")}
+                </button>
+              </div>
+            </form>
+
+            {/* Right column - summary */}
+            <aside className="space-y-4">
+              <div className={`rounded-3xl border p-6 ${summarySurface}`}>
+                <CheckoutSummary cartItems={cartItems} summary={summary} />
+              </div>
+
+              {/* small reassurance box */}
+              <div
+                className={`rounded-2xl px-4 py-3 text-xs md:text-[13px] flex items-start gap-3 ${
+                  isDark
+                    ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-100"
+                    : "bg-emerald-50 border border-emerald-100 text-emerald-800"
+                }`}
+              >
+                <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white text-[10px] font-bold">
+                  ✓
+                </span>
+                <p>
+                  {t(
+                    "checkout.securityNote",
+                    "Your payment information is encrypted and processed securely. We never store full card numbers on our servers."
+                  )}
+                </p>
+              </div>
+            </aside>
+          </div>
+        </div>
+
+        {/* Card modal */}
+        <CheckoutCardModal
+          isOpen={showCardModal}
+          onClose={() => setShowCardModal(false)}
+          onSubmit={handleCardSubmit}
+          cardValidation={cardValidation}
+          saveCardForLater={saveCardForLater}
+          onSaveCardToggle={setSaveCardForLater}
+        />
+
+        {/* Order confirmation modal */}
+        {showOrderConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6 bg-black/40 backdrop-blur-sm">
+            <div
+              className={`w-full max-w-lg rounded-3xl border shadow-2xl shadow-black/40 p-6 md:p-7 transform transition-all ${
+                isDark
+                  ? "bg-slate-950/90 border-slate-700 text-white"
+                  : "bg-white border-slate-200 text-slate-900"
+              }`}
+            >
+              <div className="text-center">
+                <h3 className="text-lg font-semibold mb-3">
+                  {t(
+                    "checkout.confirmOrder.title",
+                    "Confirm Your Order"
+                  )}
+                </h3>
+                <p className="text-sm mb-6 text-slate-500 dark:text-slate-300">
+                  {t(
+                    "checkout.confirmOrder.message",
+                    "Are you sure you want to place this order?"
+                  )}
+                </p>
+
+                {/* Order Summary */}
+                <div
+                  className={`rounded-2xl p-4 mb-6 text-left ${
+                    isDark ? "bg-slate-900/80" : "bg-slate-50"
+                  }`}
+                >
+                  <h4 className="font-semibold mb-3 text-sm">
+                    {t(
+                      "checkout.summary.title",
+                      "Order Summary"
+                    )}
+                  </h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>
+                        {t(
+                          "checkout.summary.subtotal",
+                          "Subtotal"
+                        )}
+                        :
+                      </span>
+                      <span>
+                        {summary.subtotal?.toLocaleString()} EGP
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>
+                        {t(
+                          "checkout.summary.shipping",
+                          "Shipping"
+                        )}
+                        :
+                      </span>
+                      <span>
+                        {summary.shipping?.toLocaleString()} EGP
+                      </span>
+                    </div>
+                    <div className="flex justify-between font-semibold border-t pt-2 border-slate-200 dark:border-slate-700">
+                      <span>
+                        {t("checkout.summary.total", "Total")}:
+                      </span>
+                      <span>
+                        {summary.total?.toLocaleString()} EGP
+                      </span>
+                    </div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                      {t("checkout.summary.note", "Items: {{count}}", {
+                        count: cartItems.length,
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowOrderConfirm(false)}
+                    className={`flex-1 rounded-xl px-4 py-2 text-sm font-semibold border transition ${
+                      isDark
+                        ? "border-slate-700 text-slate-300 hover:bg-slate-900"
+                        : "border-slate-300 text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    {t("common.cancel", "Cancel")}
+                  </button>
+                  <button
+                    onClick={handleConfirmOrder}
+                    disabled={loading}
+                    className="flex-1 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600 disabled:opacity-70 shadow-md shadow-emerald-500/40"
+                  >
+                    {loading
+                      ? t(
+                          "checkout.actions.processing",
+                          "Processing..."
+                        )
+                      : paymentMethod === "card"
+                      ? t(
+                          "checkout.confirmOrder.confirmDeduction",
+                          "Confirm Deduction"
+                        )
+                      : t(
+                          "checkout.actions.confirmOrder",
+                          "Confirm Order"
+                        )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
       <Footer />
-    </div>
+    </main>
   );
 }
