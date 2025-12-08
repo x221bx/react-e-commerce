@@ -14,7 +14,7 @@ import { useTranslation } from "react-i18next";
 export default function ProductCard({ product, index = 0, onCompare }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { theme } = UseTheme();
+  const {Theme } = UseTheme();
   const { t } = useTranslation();
   const [showQuickView, setShowQuickView] = useState(false);
 
