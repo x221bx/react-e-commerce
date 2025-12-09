@@ -1,8 +1,7 @@
-// server.js في روت المشروع
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import fetch from "node-fetch"; // لو Node 18+ تقدر تشيله وتستخدم global.fetch
+import fetch from "node-fetch"; 
 
 dotenv.config();
 
@@ -17,6 +16,7 @@ const {
   PAYMOB_IFRAME_ID,
   PAYMOB_WALLET_IFRAME_ID,
   PAYMOB_CARD_INTEGRATION_ID,
+  PAYMOB_WALLET_INTEGRATION_ID,
   PAYMOB_HMAC,
   PAYPAL_BASE,
   PAYPAL_CLIENT_ID,
@@ -174,13 +174,172 @@ app.post("/api/paymob/card-payment", async (req, res) => {
     const [firstName = "Guest", ...rest] = fullName.split(/\s+/);
     const lastName = rest.join(" ") || "User";
 
-    const walletMsisdn = (walletNumber || form.walletNumber || "").trim();
+    const walletDigits = (walletNumber || form.walletNumber || form.phone || "")
+      .toString()
+      .replace(/\D/g, "")
+      .slice(0, 11);
+    if (wallet && (!walletDigits || walletDigits.length < 10)) {
+      throw new Error("Wallet number is required for wallet payments");
+    }
 
     const billing_data = {
       first_name: firstName,
       last_name: lastName,
       email: user?.email || "unknown@example.com",
-      phone_number: walletMsisdn || form.phone || "+201000000000",
+      phone_number:
+        wallet && walletDigits
+          ? `+2${walletDigits}`
+          : form.phone || "+201000000000",
+      apartment: "NA",
+      floor: "NA",
+      street: form.address || "NA",
+      building: "NA",
+      shipping_method: "PKG",
+      postal_code: "00000",
+      city: form.city || "Cairo",
+      state: form.city || "NA",
+      country: "EG",
+    };
+
+    const walletIntegrationId =
+      integrationId ||
+      PAYMOB_WALLET_INTEGRATION_ID ||
+      process.env.PAYMOB_WALLET_INTEGRATION_ID;
+    const cardIntegrationId =
+      PAYMOB_CARD_INTEGRATION_ID || process.env.PAYMOB_CARD_INTEGRATION_ID;
+
+    const integrationToUse = wallet
+      ? walletIntegrationId
+      : integrationId || cardIntegrationId;
+
+    if (!integrationToUse) {
+      const hint = wallet ? "PAYMOB_WALLET_INTEGRATION_ID" : "PAYMOB_CARD_INTEGRATION_ID";
+      throw new Error(`Missing Paymob integration id. Please set ${hint}.`);
+    }
+
+    const payment = await paymobRequest("/acceptance/payment_keys", {
+      auth_token: authToken,
+      amount_cents: amountCents,
+      currency,
+      order_id: order?.id,
+      integration_id: Number(integrationToUse),
+      billing_data,
+      lock_order_when_paid: true,
+    });
+
+    if (wallet) {
+      // Wallet flow requires an extra pay call to get a redirect URL, not the card iframe
+      const walletPay = await paymobRequest("/acceptance/payments/pay", {
+        source: {
+          identifier: walletDigits,
+          subtype: "WALLET",
+        },
+        payment_token: payment?.token,
+      });
+
+      const walletRedirect =
+        walletPay?.redirect_url ||
+        walletPay?.redirection_url ||
+        walletPay?.iframe_redirection_url;
+
+      if (!walletRedirect) {
+        throw new Error("Failed to obtain Paymob wallet redirect URL");
+      }
+
+      return res.json({
+        paymentUrl: walletRedirect,
+        paymentKey: payment?.token,
+        paymobOrderId: order?.id,
+        amountCents,
+        wallet: true,
+      });
+    }
+
+    const iframeId = PAYMOB_IFRAME_ID;
+    if (!iframeId) {
+      throw new Error("PAYMOB_IFRAME_ID is not configured");
+    }
+
+    const paymentUrl = `${PAYMOB_API_BASE}/acceptance/iframes/${iframeId}?payment_token=${payment?.token}`;
+
+    res.json({
+      paymentUrl,
+      paymentKey: payment?.token,
+      paymobOrderId: order?.id,
+      amountCents,
+    });
+  } catch (err) {
+    console.error("Paymob error:", err);
+    res.status(400).json({ message: err.message, payload: err.payload });
+  }
+});
+
+// Dedicated wallet endpoint (closer to the native flow)
+app.post("/api/paymob/wallet-payment", async (req, res) => {
+  try {
+    const {
+      amount,
+      currency = "EGP",
+      cartItems = [],
+      form = {},
+      user = {},
+      merchantOrderId,
+      walletNumber,
+    } = req.body;
+
+    const walletDigits = (walletNumber || form.walletNumber || form.phone || "")
+      .toString()
+      .replace(/\D/g, "")
+      .slice(0, 11);
+
+    if (!walletDigits || walletDigits.length < 10) {
+      return res.status(400).json({ message: "Wallet number is required" });
+    }
+
+    const amountCents = Math.max(100, Math.round(Number(amount || 0) * 100));
+
+    const auth = await paymobRequest("/auth/tokens", { api_key: PAYMOB_API_KEY });
+    const authToken = auth?.token;
+    if (!authToken) throw new Error("Failed to obtain Paymob auth token");
+
+    const order = await paymobRequest("/ecommerce/orders", {
+      auth_token: authToken,
+      delivery_needed: "false",
+      amount_cents: amountCents,
+      currency,
+      items:
+        Array.isArray(cartItems) && cartItems.length
+          ? cartItems.map((item) => ({
+              name: item.name || item.title || "Item",
+              amount_cents: Math.round(Number(item.price || 0) * 100),
+              description: item.description || item.name || "Cart item",
+              quantity: Number(item.quantity || 1),
+            }))
+          : [
+              {
+                name: "Order",
+                amount_cents: amountCents,
+                description: "Cart order",
+                quantity: 1,
+              },
+            ],
+      merchant_order_id: merchantOrderId,
+    });
+
+    const fullName = (form.fullName || user?.displayName || "Guest User").trim();
+    const [firstName = "Guest", ...rest] = fullName.split(/\s+/);
+    const lastName = rest.join(" ") || "User";
+
+    const walletIntegrationId = PAYMOB_WALLET_INTEGRATION_ID || process.env.PAYMOB_WALLET_INTEGRATION_ID;
+    if (!walletIntegrationId) {
+      throw new Error("PAYMOB_WALLET_INTEGRATION_ID is not configured");
+    }
+
+    const billing_data = {
+      first_name: firstName,
+      last_name: lastName,
+      email: user?.email || "unknown@example.com",
+      phone_number: `+2${walletDigits}`,
       apartment: "NA",
       floor: "NA",
       street: form.address || "NA",
@@ -197,24 +356,37 @@ app.post("/api/paymob/card-payment", async (req, res) => {
       amount_cents: amountCents,
       currency,
       order_id: order?.id,
-      integration_id: Number(integrationId || PAYMOB_CARD_INTEGRATION_ID),
+      integration_id: Number(walletIntegrationId),
       billing_data,
       lock_order_when_paid: true,
     });
 
-    const iframeId = wallet
-      ? PAYMOB_WALLET_IFRAME_ID || process.env.PAYMOB_WALLET_IFRAME_ID || PAYMOB_IFRAME_ID
-      : PAYMOB_IFRAME_ID;
-    const paymentUrl = `${PAYMOB_API_BASE}/acceptance/iframes/${iframeId}?payment_token=${payment?.token}`;
+    const walletPay = await paymobRequest("/acceptance/payments/pay", {
+      source: {
+        identifier: walletDigits,
+        subtype: "WALLET",
+      },
+      payment_token: payment?.token,
+    });
+
+    const walletRedirect =
+      walletPay?.redirect_url ||
+      walletPay?.redirection_url ||
+      walletPay?.iframe_redirection_url;
+
+    if (!walletRedirect) {
+      throw new Error("Failed to obtain Paymob wallet redirect URL");
+    }
 
     res.json({
-      paymentUrl,
+      paymentUrl: walletRedirect,
       paymentKey: payment?.token,
       paymobOrderId: order?.id,
       amountCents,
+      wallet: true,
     });
   } catch (err) {
-    console.error("Paymob error:", err);
+    console.error("Paymob wallet error:", err);
     res.status(400).json({ message: err.message, payload: err.payload });
   }
 });

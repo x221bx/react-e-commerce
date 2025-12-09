@@ -30,7 +30,7 @@ import PayPalButton from "../components/payment/PayPalButton";
 import paymobLogo from "../assets/paymob.png";
 
 // ✅ خدمات الدفع للويب
-import { createPaymobCardPayment } from "../services/paymob";
+import { createPaymobCardPayment, createPaymobWalletPayment } from "../services/paymob";
 
 const formatSavedMethod = (method) => {
   if (!method) return "";
@@ -356,7 +356,8 @@ export default function Checkout() {
     try {
       const orderRef = `WEB-${Date.now()}`;
 
-      const session = await createPaymobCardPayment({
+      const isWallet = paymentMethod === "paymob_wallet";
+      const basePayload = {
         amount: summary.total,
         cartItems,
         form,
@@ -365,13 +366,14 @@ export default function Checkout() {
           displayName: userName,
         },
         merchantOrderId: orderRef,
-        integrationId:
-          paymentMethod === "paymob_wallet"
-            ? import.meta.env.VITE_PAYMOB_WALLET_INTEGRATION_ID
-            : undefined,
-        walletNumber: paymentMethod === "paymob_wallet" ? walletNumber : undefined,
-        wallet: paymentMethod === "paymob_wallet",
-      });
+      };
+
+      const session = isWallet
+        ? await createPaymobWalletPayment({
+            ...basePayload,
+            walletNumber,
+          })
+        : await createPaymobCardPayment(basePayload);
 
       // نخزن بيانات Paymob علشان نستخدمها في callback
       try {
@@ -391,11 +393,11 @@ export default function Checkout() {
         url: session.paymentUrl,
         orderId: session.paymobOrderId,
         label:
-          paymentMethod === "paymob_wallet"
+          isWallet
             ? t("checkout.payment.paymobWalletTitle", "Paymob Wallet")
             : t("checkout.payment.paymobTitle", "Pay with card (Paymob)"),
         integrationId:
-          paymentMethod === "paymob_wallet"
+          isWallet
             ? import.meta.env.VITE_PAYMOB_WALLET_INTEGRATION_ID
             : null,
       });
