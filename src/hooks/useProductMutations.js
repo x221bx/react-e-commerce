@@ -5,7 +5,6 @@ import {
   doc,
   addDoc,
   updateDoc,
-  deleteDoc,
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "../services/firebase";
@@ -57,6 +56,7 @@ export function useAddProduct() {
 
       // default fields
       payload.createdAt = serverTimestamp();
+      payload.isDeleted = false;
       // keep a canonical "stock" number
       payload.stock = Number(payload.stock ?? 0);
 
@@ -96,7 +96,12 @@ export function useUpdateProduct() {
 export function useDeleteProduct() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (productId) => deleteDoc(doc(db, "products", productId)),
+    mutationFn: async (productId) =>
+      updateDoc(doc(db, "products", productId), {
+        isDeleted: true,
+        deletedAt: serverTimestamp(),
+        isAvailable: false,
+      }),
     onSuccess: (_res, productId) => {
       qc.invalidateQueries({ queryKey: [PRODUCTS_QUERY_KEY] });
       qc.invalidateQueries({ queryKey: ["productsSorted"] });

@@ -51,7 +51,7 @@ export default function PaypalCallback() {
       }
 
       const storedOrderId = localStorage.getItem("lastPaypalOrderId");
-      const orderId = storedOrderId || meta.token;
+      const orderId = meta.token || storedOrderId;
 
       try {
         const capture = await capturePaypalOrder({

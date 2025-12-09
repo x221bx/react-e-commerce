@@ -56,9 +56,17 @@ export default function OrderTracking() {
   const headerMuted = isDark ? "text-slate-400" : "text-slate-500";
   const accent = isDark ? "text-emerald-300" : "text-emerald-600";
   const shellSurface = isDark
-    ? "bg-[#0f1d1d]/70 border-emerald-900/30 backdrop-blur"
-    : "bg-white border-emerald-200";
+    ? "bg-gradient-to-br from-emerald-950/60 via-slate-900/50 to-slate-950/60 border-emerald-900/40 shadow-[0_20px_60px_rgba(0,0,0,0.45)] backdrop-blur"
+    : "bg-gradient-to-br from-white via-emerald-50/60 to-slate-50 border-emerald-100 shadow-[0_20px_60px_rgba(16,185,129,0.18)]";
 
+
+  const Shell = ({ children }) => (
+    <div
+      className={`min-h-screen ${isDark ? "bg-gradient-to-b from-slate-950 via-emerald-950/40 to-slate-950 text-white" : "bg-gradient-to-b from-emerald-50 via-white to-slate-50 text-slate-900"}`}
+    >
+      <div className="max-w-6xl mx-auto px-4 py-10 space-y-6">{children}</div>
+    </div>
+  );
 
   // ...loading state...
   if (loading) {

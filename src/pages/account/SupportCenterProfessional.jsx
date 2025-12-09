@@ -9,7 +9,94 @@ import { HeadphonesIcon } from "lucide-react";
 import { UseTheme } from "../../theme/ThemeProvider";
 import toast from "react-hot-toast";
 
-// (same extractResponseText & moderateMessage code — unchanged)
+// Helpers: AI moderation (copied from Complaints.jsx)
+const extractResponseText = (payload) => {
+  if (!payload) return "";
+
+  // OpenAI "responses" API shape
+  if (typeof payload.output_text === "string") return payload.output_text;
+  if (Array.isArray(payload.output)) {
+    for (const item of payload.output) {
+      const textValue =
+        item?.content?.[0]?.text?.value ||
+        item?.content?.[0]?.text ||
+        item?.content?.[0]?.value;
+      if (typeof textValue === "string") return textValue;
+    }
+  }
+
+  // Chat completions shape (OpenRouter/OpenAI compatible)
+  if (Array.isArray(payload.choices)) {
+    const choice = payload.choices[0];
+    if (typeof choice?.message?.content === "string")
+      return choice.message.content;
+    if (Array.isArray(choice?.message?.content))
+      return choice.message.content
+        .map((part) => part?.text || part)
+        .join(" ");
+    if (typeof choice?.text === "string") return choice.text;
+  }
+
+  return "";
+};
+
+const moderateMessage = async (text) => {
+  const API_KEY =
+    import.meta.env.VITE_OR_KEY || import.meta.env.VITE_OPENAI_KEY;
+  if (!API_KEY) return { allowed: true };
+
+  const prompt = `
+You are a strict content moderator. Review the following message and respond with either:
+- "ALLOW" (if the text is safe to send)
+- "REJECT: <short reason>" (if it contains harassment, hate speech, sexual or violent content, or personal attacks).
+Message:
+"""${text}"""
+`;
+
+  try {
+    const headers = {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${API_KEY}`,
+      "X-Title": "Farm-Vet E-Shop Support",
+    };
+
+    if (typeof window !== "undefined" && window.location?.origin) {
+      headers["HTTP-Referer"] = window.location.origin;
+    }
+
+    const response = await fetch(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [{ role: "user", content: prompt }],
+          max_tokens: 200,
+        }),
+      }
+    );
+
+    if (!response.ok) throw new Error("Moderation request failed");
+
+    const data = await response.json();
+    const verdictRaw = extractResponseText(data).trim();
+    const verdict = verdictRaw.toUpperCase();
+    if (!verdict) return { allowed: true };
+    if (verdict.startsWith("ALLOW")) return { allowed: true };
+    if (verdict.startsWith("REJECT")) {
+      const reason = verdictRaw.split(":").slice(1).join(":").trim();
+      return {
+        allowed: false,
+        reason: reason || "Message contains inappropriate content",
+      };
+    }
+    return { allowed: true };
+  } catch (error) {
+    console.error("AI moderation failed", error);
+    return { allowed: false, reason: "Moderation failed, please try again" };
+  }
+};
 
 import SupportFormStep1 from "./components/SupportFormStep1";
 import SupportFormStep2 from "./components/SupportFormStep2";

@@ -79,7 +79,9 @@ export const useOrderTracking = (userId) => {
     }, [ordersConnectionError, orderConnectionError]);
 
     const handleSelectOrder = (id) => {
-        navigate(`/account/tracking/${id}`);
+        // Preserve current context: if already on /order-tracking use that, otherwise use account route
+        const isPublicTracking = location.pathname.startsWith("/order-tracking");
+        navigate(isPublicTracking ? `/order-tracking/${id}` : `/account/tracking/${id}`);
     };
 
     return {
