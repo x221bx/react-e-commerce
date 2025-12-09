@@ -1,381 +1,284 @@
-// src/components/cards/ProductCard.jsx
+// =========================================
+// Ultra Premium 3D Glass Product Card v6
+// Polished UI for Light + Dark Mode
+// =========================================
+
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toggleFavourite } from "../../features/favorites/favoritesSlice";
 import { addToCart } from "../../features/cart/cartSlice";
 import { motion as Motion } from "framer-motion";
-import { Heart, Star, Eye, Scale, Sparkles } from "lucide-react";
+import { Heart, Eye, Sparkles } from "lucide-react";
 import Button from "../ui/Button";
 import { UseTheme } from "../../theme/ThemeProvider";
 import { useTranslation } from "react-i18next";
 
-// 🔹 كارت المنتج الرئيسي
-export default function ProductCard({ product, index = 0, onCompare }) {
+export default function ProductCard({ product, index = 0 }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const {Theme } = UseTheme();
+  const { theme } = UseTheme();
+  const isDark = theme === "dark";
   const { t } = useTranslation();
-  const [showQuickView, setShowQuickView] = useState(false);
 
-  // صورة fallback
-  const imageUrl =
-    product?.img ||
-    product?.thumbnailUrl ||
-    "/placeholder.png";
+  const [quickView, setQuickView] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
-  const safeProduct = (p) => {
-    const clean = { ...p };
-    if (clean.createdAt?.seconds) {
-      clean.createdAt = clean.createdAt.seconds * 1000;
-    }
-    if (clean.updatedAt?.seconds) {
-      clean.updatedAt = clean.updatedAt.seconds * 1000;
-    }
-    return clean;
-  };
+  const favorites = useSelector((s) => s.favorites.items ?? []);
+  const isFav = favorites.some((f) => String(f.id) === String(product.id));
 
-  const favorites = useSelector(
-    (state) => state.favorites?.items ?? state.favorites ?? []
+  const inCart = useSelector((s) =>
+    s.cart.items.some((c) => c.id === product.id)
   );
 
-  const isFav = Array.isArray(favorites)
-    ? favorites.some((f) => String(f?.id) === String(product?.id))
-    : false;
+  const imageUrl = product?.thumbnailUrl || product?.img || "/placeholder.png";
 
-  const inCart = useSelector((state) =>
-    state.cart.items.some((c) => c.id === product.id)
-  );
-
-  // ⭐ Badge logic (ممكن تزود في الفايرستور)
   const badge =
     product.badge ||
-    (product.onSale && "Sale") ||
-    (product.isTrending && "Trending") ||
-    (product.isNew && "New");
+    (product.isNew && "New") ||
+    (product.isTrending && "Hot") ||
+    (product.onSale && "Sale");
 
-  // ⭐ Rating logic
-  const rating = Number(product.rating || product.stars || 4.5);
-  const maxStars = 5;
-
-  const fadeUp = {
-    hidden: { opacity: 0, y: 40, scale: 0.95 },
+  const fadeIn = {
+    hidden: { opacity: 0, y: 45, scale: 0.9 },
     show: (delay = 0) => ({
       opacity: 1,
       y: 0,
       scale: 1,
-      transition: { duration: 0.6, delay, ease: "easeOut" },
+      transition: { duration: 0.55, delay, ease: "easeOut" },
     }),
   };
 
   return (
     <>
       <Motion.div
+        onMouseMove={(e) => {
+          const rect = e.currentTarget.getBoundingClientRect();
+          setMousePos({
+            x: e.clientX - rect.left,
+            y: e.clientY - rect.top,
+          });
+        }}
         initial="hidden"
         animate="show"
-        variants={fadeUp}
-        custom={index * 0.12}
+        variants={fadeIn}
+        custom={index * 0.1}
         whileHover={{
-          y: -6,
-          scale: 1.03,
-          rotateX: 4,
-          rotateY: -4,
-          transition: { duration: 0.4 },
+          y: -8,
+          scale: 1.04,
+          rotateX: 3,
+          rotateY: -3,
+          transition: { duration: 0.35, ease: "easeOut" },
         }}
         className={`
-          group relative flex flex-col gap-3 p-4 rounded-2xl overflow-hidden
-          cursor-pointer transition-all duration-500
-          
-          /* Light mode */
-          bg-white/80 text-slate-900
-          shadow-[0_10px_30px_rgba(15,23,42,0.16)]
-          border border-slate-200
+          relative group p-4 rounded-2xl cursor-pointer select-none 
+          transition-all duration-500 overflow-hidden
 
-          /* Dark mode */
-          dark:bg-[#0f1a1a]/60 dark:text-emerald-100
-          dark:shadow-[0_16px_40px_rgba(16,185,129,0.25)]
-          dark:border-emerald-900/60
+          ${isDark
+            ? "bg-[#0f1a1a]/70 border border-emerald-900/50 shadow-[0_20px_40px_rgba(16,185,129,0.28)]"
+            : "bg-white border border-slate-200 shadow-[0_10px_28px_rgba(0,0,0,0.06)]"}
         `}
         onClick={() => navigate(`/product/${product.id}`)}
       >
-        {/* ✨ Glass reflection أعلى الكارت */}
+        {/* Glass Hover Effect */}
         <div
-          className="
-            pointer-events-none absolute -top-16 -left-16
-            h-40 w-40 rounded-full
-            bg-white/15 dark:bg-emerald-300/10
-            blur-3xl
-          "
+          className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition duration-300"
+          style={{
+            background: `radial-gradient(
+              350px circle at ${mousePos.x}px ${mousePos.y}px,
+              rgba(255,255,255,0.35),
+              transparent 65%
+            )`,
+          }}
         />
 
-        {/* ✨ Gradient edge glow عند الـ hover */}
+        {/* Shine Sweep */}
         <div
           className="
             pointer-events-none absolute inset-0 rounded-2xl
-            border border-transparent
-            group-hover:border-emerald-400/60 dark:group-hover:border-emerald-300/60
-            transition-all duration-500
-          "
-        />
-
-        {/* ✨ Shine sweep */}
-        <div
-          className="
-            pointer-events-none absolute inset-0 rounded-2xl
-            bg-gradient-to-r from-transparent via-white/25 to-transparent
-            dark:via-emerald-200/20
+            bg-gradient-to-r from-transparent via-white/20 to-transparent
+            dark:via-emerald-200/10
             opacity-0 group-hover:opacity-100
-            translate-x-[-200%] group-hover:translate-x-[200%]
-            transition-transform duration-[1200ms] ease-out
+            translate-x-[-180%] group-hover:translate-x-[180%]
+            transition-all duration-[1200ms] ease-out
           "
         />
 
-        {/* 🔼 Badge أعلى اليسار */}
+        {/* BADGE */}
         {badge && (
           <div
             className="
-              absolute top-3 left-3 z-20
-              inline-flex items-center gap-1 rounded-full px-3 py-1
-              text-[11px] font-semibold uppercase tracking-wide
-              bg-emerald-500/90 text-white shadow-lg
+              absolute top-3 left-3 z-20 flex items-center gap-1 px-3 py-1
+              rounded-full text-[11px] font-bold uppercase tracking-wide
+              bg-emerald-600 text-white shadow
               dark:bg-emerald-300 dark:text-slate-900
             "
           >
             <Sparkles size={14} />
-            <span>{badge}</span>
+            {badge}
           </div>
         )}
 
-        {/* ❤️ Favorite button */}
-        <Motion.button
-          whileTap={{ scale: 0.9 }}
-          onClick={(e) => {
-            e.stopPropagation();
-            dispatch(toggleFavourite({ ...product }));
-          }}
-          aria-label="favorite"
+        {/* ACTION BUTTONS */}
+        <div
           className="
-            absolute top-3 rtl:left-3 ltr:right-3 z-20 
-            p-2 rounded-full shadow-md border
-            backdrop-blur-md bg-white/80 dark:bg-black/60 
-            border-gray-200/70 dark:border-emerald-800
-            hover:bg-white dark:hover:bg-black
-            transition
+            absolute top-3 right-3 flex flex-col gap-2 z-30
+            opacity-0 group-hover:opacity-100 transition-all duration-300
           "
         >
-          <Heart
-            size={20}
-            className={isFav ? "text-red-600" : "text-gray-400 dark:text-gray-200"}
-          />
-        </Motion.button>
+          {/* Favorite */}
+          <Motion.button
+            whileTap={{ scale: 0.85 }}
+            onClick={(e) => {
+              e.stopPropagation();
+              dispatch(toggleFavourite(product));
+            }}
+            className={`
+              p-2 rounded-full backdrop-blur-md shadow-lg border
+              ${isDark ? "bg-black/40 border-emerald-900" : "bg-white/90 border-slate-200"}
+            `}
+          >
+            <Heart
+              size={18}
+              className={
+                isFav
+                  ? "text-red-600"
+                  : isDark
+                  ? "text-emerald-200"
+                  : "text-slate-600"
+              }
+            />
+          </Motion.button>
 
-        {/* 🧪 زرار المقارنة */}
-        <Motion.button
-          whileTap={{ scale: 0.9 }}
-          onClick={(e) => {
-            e.stopPropagation();
-            onCompare && onCompare(product);
-          }}
-          className="
-            absolute bottom-3 rtl:left-3 ltr:right-3 z-20
-            px-2 py-1 rounded-full text-[11px] font-medium
-            flex items-center gap-1
-            bg-slate-900/80 text-slate-100
-            dark:bg-emerald-500/90 dark:text-slate-900
-            backdrop-blur-md shadow
-            hover:bg-slate-800 dark:hover:bg-emerald-400
-            transition
-          "
-        >
-          <Scale size={14} />
-          <span>{t("products.compare", "Compare")}</span>
-        </Motion.button>
+          {/* Quick View */}
+          <Motion.button
+            whileTap={{ scale: 0.85 }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setQuickView(true);
+            }}
+            className={`
+              p-2 rounded-full backdrop-blur-md shadow-lg border
+              ${isDark ? "bg-black/40 border-emerald-900" : "bg-white/90 border-slate-200"}
+            `}
+          >
+            <Eye
+              size={18}
+              className={isDark ? "text-emerald-200" : "text-blue-600"}
+            />
+          </Motion.button>
+        </div>
 
-        {/* 🖼 صورة المنتج – Parallax hover */}
+        {/* IMAGE */}
         <Motion.div
-          whileHover={{ scale: 1.08 }}
+          whileHover={{ scale: 1.1 }}
           transition={{ duration: 0.45 }}
           className="
-            relative z-10 w-full aspect-square bg-center bg-cover rounded-xl 
-            shadow-inner overflow-hidden
+            w-full aspect-square rounded-xl overflow-hidden shadow-inner
+            bg-center bg-cover relative
           "
           style={{ backgroundImage: `url('${imageUrl}')` }}
+        />
+
+        {/* PRODUCT NAME */}
+        <h3
+          className={`
+            text-center text-[16px] font-bold mt-3 line-clamp-2
+            ${isDark ? "text-emerald-100" : "text-slate-800"}
+          `}
         >
-          {/* Overlay طفيف لتحسين الكونتراست */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-transparent dark:from-black/40" />
-        </Motion.div>
+          {product.name || product.title}
+        </h3>
 
-        {/* ⭐ Rating stars */}
-        <div className="relative z-10 flex items-center justify-center gap-1 mt-1">
-          {Array.from({ length: maxStars }).map((_, i) => {
-            const filled = i + 1 <= Math.round(rating);
-            return (
-              <Star
-                key={i}
-                size={16}
-                className={
-                  filled
-                    ? "text-amber-400 fill-amber-400"
-                    : "text-slate-300 dark:text-slate-600"
-                }
-              />
-            );
-          })}
-          <span className="ml-1 text-xs text-slate-500 dark:text-emerald-200/80">
-            {rating.toFixed(1)}
-          </span>
-        </div>
+        {/* PRICE */}
+        <p
+          className={`
+            text-center text-[20px] font-extrabold mt-1
+            ${isDark ? "text-emerald-300" : "text-emerald-700"}
+          `}
+        >
+          {Number(product.price).toLocaleString()} EGP
+        </p>
 
-        {/* 📝 اسم + سعر + زرار */}
-        <div className="flex flex-col gap-2 text-center relative z-10 mt-1">
-          <Motion.p
-            variants={fadeUp}
-            custom={0.2}
-            className="text-sm md:text-base font-semibold tracking-tight line-clamp-2"
-          >
-            {product.name || product.title}
-          </Motion.p>
+        {/* ADD TO CART */}
+        <Button
+          text={inCart ? t("products.inCart") : t("products.addToCart")}
+          full
+          disabled={inCart}
+          onClick={(e) => {
+            e.stopPropagation();
+            !inCart && dispatch(addToCart(product));
+          }}
+          className={`mt-3 rounded-xl font-semibold ${
+            inCart ? "opacity-50 cursor-not-allowed" : ""
+          }`}
+        />
 
-          <Motion.p
-            variants={fadeUp}
-            custom={0.3}
-            className="
-              text-lg md:text-xl font-bold
-              text-emerald-600 dark:text-emerald-300
-            "
-          >
-            {Number(product.price).toLocaleString()} EGP
-          </Motion.p>
-
-          <Motion.div variants={fadeUp} custom={0.4} className="flex flex-col gap-2">
-            <Button
-              text={
-                inCart
-                  ? t("products.inCart", "In Cart")
-                  : t("products.addToCart", "Add to Cart")
-              }
-              full
-              disabled={inCart}
-              onClick={(e) => {
-                e.stopPropagation();
-                !inCart && dispatch(addToCart(safeProduct(product)));
-              }}
-              className={`mt-1 rounded-xl ${
-                inCart ? "opacity-60 cursor-not-allowed" : ""
-              }`}
-            />
-
-            {/* 👁 Quick view / Quick add popup trigger */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowQuickView(true);
-              }}
-              className="
-                mx-auto inline-flex items-center gap-1 text-[12px] font-medium
-                text-emerald-700 hover:text-emerald-900
-                dark:text-emerald-200 dark:hover:text-emerald-100
-                transition
-              "
-            >
-              <Eye size={14} />
-              <span>{t("products.quickView", "Quick view")}</span>
-            </button>
-          </Motion.div>
-        </div>
+        {/* QUICK VIEW LINK */}
+        <button
+          className={`
+            text-[12px] font-medium mt-2 mx-auto block
+            ${isDark ? "text-emerald-200 hover:text-emerald-100" : "text-emerald-700 hover:text-emerald-900"}
+          `}
+          onClick={(e) => {
+            e.stopPropagation();
+            setQuickView(true);
+          }}
+        >
+          Quick View
+        </button>
       </Motion.div>
 
-      {/* 🪟 Quick View Popup / Modal صغير جوة الكارت */}
-      {showQuickView && (
+      {/* QUICK VIEW MODAL */}
+      {quickView && (
         <Motion.div
-          initial={{ opacity: 0, scale: 0.9, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="
-            fixed inset-0 z-50 flex items-center justify-center
-            bg-black/40 backdrop-blur-sm
-          "
-          onClick={() => setShowQuickView(false)}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center"
+          onClick={() => setQuickView(false)}
         >
-          <div
+          <Motion.div
+            initial={{ scale: 0.85, y: 30 }}
+            animate={{ scale: 1, y: 0 }}
+            transition={{ duration: 0.35 }}
             className="
-              relative w-[90%] max-w-md rounded-2xl p-5
-              bg-white text-slate-900
-              dark:bg-slate-900 dark:text-slate-50
-              shadow-2xl border border-slate-200 dark:border-emerald-800
+              w-[90%] max-w-lg bg-white dark:bg-slate-900 
+              rounded-2xl p-6 shadow-2xl border border-slate-200 dark:border-slate-800
             "
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Close */}
-            <button
-              className="absolute top-3 right-3 text-sm text-slate-500 hover:text-slate-800 dark:hover:text-white"
-              onClick={() => setShowQuickView(false)}
-            >
-              ✕
-            </button>
+            <img src={imageUrl} className="rounded-xl w-full" />
 
-            {/* محتوى الكويك فيو */}
-            <div className="flex flex-col gap-4">
-              <div
-                className="w-full aspect-video rounded-xl bg-center bg-cover"
-                style={{ backgroundImage: `url('${imageUrl}')` }}
+            <h3 className="mt-4 text-xl font-bold dark:text-white">
+              {product.name}
+            </h3>
+
+            <p className="text-emerald-600 dark:text-emerald-300 text-2xl font-bold mt-2">
+              {Number(product.price).toLocaleString()} EGP
+            </p>
+
+            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300 line-clamp-3">
+              {product.description}
+            </p>
+
+            <div className="mt-4">
+              <Button
+                text={inCart ? "In Cart" : "Add to Cart"}
+                full
+                disabled={inCart}
+                onClick={() => dispatch(addToCart(product))}
               />
-              <div className="space-y-2 text-center">
-                <h3 className="text-lg font-semibold">
-                  {product.name || product.title}
-                </h3>
-                <p className="text-emerald-600 dark:text-emerald-300 font-bold text-xl">
-                  {Number(product.price).toLocaleString()} EGP
-                </p>
-                {product?.description && (
-                  <p className="text-xs text-slate-500 dark:text-slate-300 line-clamp-3">
-                    {product.description}
-                  </p>
-                )}
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <Button
-                  text={
-                    inCart
-                      ? t("products.inCart", "In Cart")
-                      : t("products.addToCart", "Add to Cart")
-                  }
-                  full
-                  disabled={inCart}
-                  onClick={() => {
-                    if (!inCart) {
-                      dispatch(addToCart(safeProduct(product)));
-                    }
-                    setShowQuickView(false);
-                  }}
-                />
-              </div>
             </div>
-          </div>
+
+            <button
+              onClick={() => setQuickView(false)}
+              className="mt-4 w-full text-sm text-slate-600 dark:text-slate-300"
+            >
+              Close
+            </button>
+          </Motion.div>
         </Motion.div>
       )}
     </>
-  );
-}
-
-/* 🩻 Skeleton loader بنفس شكل الكارت */
-
-export function ProductCardSkeleton() {
-  return (
-    <div
-      className="
-        relative flex flex-col gap-3 p-4 rounded-2xl overflow-hidden
-        bg-slate-100 dark:bg-slate-900/70
-        border border-slate-200/70 dark:border-slate-700
-        animate-pulse
-      "
-    >
-      <div className="w-full aspect-square rounded-xl bg-slate-200 dark:bg-slate-800" />
-      <div className="h-4 rounded bg-slate-200 dark:bg-slate-800" />
-      <div className="h-4 w-1/2 rounded bg-slate-200 dark:bg-slate-800" />
-      <div className="h-10 rounded-lg bg-slate-200 dark:bg-slate-800" />
-    </div>
   );
 }

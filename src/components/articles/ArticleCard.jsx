@@ -1,148 +1,187 @@
-// src/components/articles/ArticleCard.jsx
-import React from "react";
+// =========================================
+// Ultra Premium Article Card v6 (Glass + 3D + Glow)
+// =========================================
+
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { motion as Motion } from "framer-motion";
 import { UseTheme } from "../../theme/ThemeProvider";
-import { FiHeart, FiBookmark, FiThumbsUp, FiThumbsDown } from "react-icons/fi";
+import { FiHeart } from "react-icons/fi";
 
-const ArticleCard = ({
+export default function ArticleCard({
   article,
   showFavorite = true,
   showStats = false,
   showComments = false,
   onFavoriteToggle,
   favoriteIds = [],
-  isCompact = false,
-  className = ""
-}) => {
+  className = "",
+}) {
   const { t } = useTranslation();
   const { theme } = UseTheme();
+  const isDark = theme === "dark";
+
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const isFav = favoriteIds.includes(article.id);
+
+  const fade = {
+    hidden: { opacity: 0, y: 40 },
+    show: (d = 0) => ({
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.55, delay: d, ease: "easeOut" },
+    }),
+  };
 
   const handleFavoriteClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (onFavoriteToggle) {
-      onFavoriteToggle(article.id);
-    }
-  };
-
-  const fadeUp = {
-    hidden: { opacity: 0, y: 40 },
-    show: (delay = 0) => ({
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.6, delay, ease: "easeOut" },
-    }),
+    if (onFavoriteToggle) onFavoriteToggle(article.id);
   };
 
   return (
     <Motion.div
-      initial={{ opacity: 0, y: 40 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -4, scale: 1.02 }}
-      transition={{ type: "spring", stiffness: 200, damping: 15 }}
-      className={`relative flex flex-col gap-3 p-4 rounded-xl transition-all duration-500 overflow-hidden
+      onMouseMove={(e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        setMousePos({
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top,
+        });
+      }}
+      initial="hidden"
+      animate="show"
+      variants={fade}
+      className={`
+        relative p-4 rounded-2xl overflow-hidden cursor-pointer group 
+        transition-all duration-500 backdrop-blur-xl
         ${
-          theme === "dark"
-            ? "bg-[var(--bg-input)]/95 text-[#B8E4E6] shadow-[0_4px_20px_rgba(184,228,230,0.08)] hover:shadow-[0_6px_25px_rgba(184,228,230,0.15)]"
-            : "bg-[var(--bg-card)] text-[#1a1a1a] shadow-[0_3px_15px_rgba(0,0,0,0.1)] hover:shadow-[0_5px_20px_rgba(0,0,0,0.15)]"
-        } ${className}`}
+          isDark
+            ? "bg-[#0f1a1a]/80 border border-emerald-900/40 shadow-[0_18px_45px_rgba(0,255,150,0.12)] hover:shadow-[0_25px_55px_rgba(0,255,150,0.2)]"
+            : "bg-white/80 border border-emerald-100 shadow-[0_12px_35px_rgba(0,0,0,0.08)] hover:shadow-[0_18px_50px_rgba(0,0,0,0.12)]"
+        }
+        ${className}
+      `}
     >
-      {/* Image */}
-      {article.heroImage && (
-        <Motion.div
-          whileHover={{ scale: 1.05 }}
-          transition={{ duration: 0.4 }}
-          className="relative z-10 w-full aspect-square bg-center bg-cover rounded-lg shadow-inner"
-          style={{
-            backgroundImage: `url('${article.heroImage}')`,
-          }}
-        />
-      )}
 
-      {/* Favorite Button */}
+      {/* 🔆 Mouse Light Effect */}
+      <div
+        className="absolute inset-0 rounded-2xl pointer-events-none opacity-0 group-hover:opacity-100 transition duration-300"
+        style={{
+          background: `radial-gradient(400px circle at ${mousePos.x}px ${mousePos.y}px,
+            rgba(255,255,255,0.35),
+            transparent 65%
+          )`,
+        }}
+      />
+
+      {/* ✨ Shine Sweep */}
+      <div
+        className="
+          absolute inset-0 rounded-2xl pointer-events-none 
+          bg-gradient-to-r from-transparent via-white/20 to-transparent
+          dark:via-emerald-200/15
+          opacity-0 group-hover:opacity-100
+          translate-x-[-180%] group-hover:translate-x-[180%]
+          transition-all duration-[1400ms] ease-out
+        "
+      />
+
+      {/* ❤️ Favorite Button */}
       {showFavorite && (
         <Motion.button
-          whileTap={{ scale: 0.9 }}
+          whileTap={{ scale: 0.85 }}
           onClick={handleFavoriteClick}
-          aria-label="favorite"
-          className="absolute top-3 rtl:left-3 ltr:right-3 z-20 p-2 rounded-full shadow-md border backdrop-blur-md bg-white/70 border-gray-200 hover:bg-gray-100 transition"
+          className={`
+            absolute top-3 z-20 rounded-full p-2 shadow-lg border
+            backdrop-blur-md transition
+            rtl:left-3 ltr:right-3
+            ${
+              isDark
+                ? "bg-black/40 border-emerald-900 hover:bg-black/60"
+                : "bg-white/80 border-slate-200 hover:bg-white"
+            }
+          `}
         >
-          <FiHeart size={20} className={favoriteIds.includes(article.id) ? "text-red-600" : "icon-muted"} />
+          <FiHeart
+            size={20}
+            className={isFav ? "text-red-600" : isDark ? "text-white" : "text-slate-600"}
+          />
         </Motion.button>
       )}
 
-      {/* Content */}
-      <div className="flex flex-col gap-2 text-center relative z-10">
-        <span className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
-          {article.tag || t("articles.tag.insights", "Insights")}
-        </span>
+      {/* 🖼 Article Image */}
+      <Motion.div
+        whileHover={{ scale: 1.05 }}
+        transition={{ duration: 0.4 }}
+        className="
+          w-full aspect-square rounded-xl bg-center bg-cover shadow-inner
+        "
+        style={{ backgroundImage: `url('${article.heroImage}')` }}
+      />
 
-        <Motion.p variants={fadeUp} custom={0.2} className="text-base font-semibold">
-          {article.title}
-        </Motion.p>
-
-        <Motion.p variants={fadeUp} custom={0.3} className="text-sm leading-relaxed text-[var(--text-muted)] line-clamp-3">
-          {article.summary}
-        </Motion.p>
-
-        {/* Stats */}
-        {showStats && (
-          <div className="flex items-center gap-3 text-xs text-[var(--text-muted)]">
-            <span className="flex items-center gap-1">
-              <span className="text-green-600">👍</span>
-              {article.likes || 0}
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="text-red-600">👎</span>
-              {article.dislikes || 0}
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="text-blue-600">👁️</span>
-              {article.views || 0}
-            </span>
-          </div>
-        )}
-
-        {/* Comments Preview */}
-        {showComments && article.comments && article.comments.length > 0 && (
-          <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-            <h5 className="text-xs font-semibold text-blue-800 dark:text-blue-200 mb-2">
-              💬 Comments ({article.comments.length})
-            </h5>
-            <div className="space-y-2 max-h-32 overflow-y-auto">
-              {article.comments.slice(0, 2).map((comment, idx) => (
-                <div key={idx} className="text-xs bg-white dark:bg-slate-800 p-2 rounded border">
-                  <div className="font-medium text-blue-600 dark:text-blue-400">
-                    {comment.userName}
-                  </div>
-                  <div className="text-slate-700 dark:text-slate-300 mt-1 line-clamp-2">
-                    {comment.comment}
-                  </div>
-                </div>
-              ))}
-              {article.comments.length > 2 && (
-                <div className="text-xs text-blue-600 dark:text-blue-400">
-                  +{article.comments.length - 2} more comments
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Read More Link */}
-        <Motion.div variants={fadeUp} custom={0.4}>
-          <Link
-            to={`/articles/${article.id}`}
-            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-500"
-          >
-            {t("articles.list.readMore", "Continue reading →")}
-          </Link>
-        </Motion.div>
+      {/* 🏷 Tag */}
+      <div
+        className="
+          mt-3 inline-flex items-center justify-center mx-auto
+          bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200
+          px-3 py-1 rounded-full text-xs font-semibold
+        "
+      >
+        {article.tag || t("articles.tag.insights", "Insights")}
       </div>
+
+      {/* 🔤 Title */}
+      <Motion.h3
+        variants={fade}
+        custom={0.15}
+        className={`mt-3 text-lg font-bold text-center ${
+          isDark ? "text-white" : "text-slate-900"
+        }`}
+      >
+        {article.title}
+      </Motion.h3>
+
+      {/* ✍ Summary */}
+      <Motion.p
+        variants={fade}
+        custom={0.25}
+        className={`text-sm text-center line-clamp-3 ${
+          isDark ? "text-emerald-100/70" : "text-slate-600"
+        }`}
+      >
+        {article.summary}
+      </Motion.p>
+
+      {/* 📊 Stats */}
+      {showStats && (
+        <div
+          className={`mt-3 flex justify-center gap-4 text-xs ${
+            isDark ? "text-emerald-200/70" : "text-slate-500"
+          }`}
+        >
+          <span>👍 {article.likes || 0}</span>
+          <span>👎 {article.dislikes || 0}</span>
+          <span>👁 {article.views || 0}</span>
+        </div>
+      )}
+
+      {/* 🔗 Read More */}
+      <Motion.div variants={fade} custom={0.35} className="mt-4 text-center">
+        <Link
+          to={`/articles/${article.id}`}
+          className={`
+            inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold shadow-md transition
+            ${
+              isDark
+                ? "bg-emerald-500 text-slate-900 hover:bg-emerald-400"
+                : "bg-emerald-600 text-white hover:bg-emerald-500"
+            }
+          `}
+        >
+          {t("articles.list.readMore", "Continue reading →")}
+        </Link>
+      </Motion.div>
     </Motion.div>
   );
-};
-
-export default ArticleCard;
+}
