@@ -249,7 +249,19 @@ export default function UserSettings({ variant = "standalone" }) {
   // ───────────────── LOADING STATE ─────────────────
   if (!user || isLoadingUserData) {
     return (
-      <div dir={isRTL ? "rtl" : "ltr"} className="min-h-screen bg-white py-10 transition-colors dark:bg-[#020f0f]">
+      <div
+  dir={isRTL ? "rtl" : "ltr"}
+  className={`
+    min-h-screen py-12 px-0 transition-all duration-500
+
+    /* 🌞 Light */
+    bg-gradient-to-b from-white via-[#eef7f5] to-[#d8eee8]
+
+    /* 🌙 Dark */
+    dark:bg-gradient-to-b dark:from-[#071a1a] dark:via-[#0c2626] dark:to-[#0f302d]
+  `}
+>
+
         <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 sm:px-6 lg:flex-row lg:gap-10 lg:px-8">
           {/* Sidebar skeleton */}
           <aside className="space-y-4 lg:w-64">

@@ -1,7 +1,12 @@
+// src/pages/homeCom/CategoriesSection.jsx
 import { motion as Motion } from "framer-motion";
+import { UseTheme } from "../../theme/ThemeProvider";
 
 export default function CategoriesSection({ header, items }) {
   
+  const { theme } = UseTheme();
+  const isDark = theme === "dark";
+
   const container = {
     hidden: { opacity: 0, y: 30 },
     show: {
@@ -36,45 +41,50 @@ export default function CategoriesSection({ header, items }) {
             whileHover={{ scale: 1.06 }}
             whileTap={{ scale: 0.95 }}
             onClick={item.onClick}
-            className="
+            className={`
               group relative overflow-hidden
               w-full h-28 md:h-32 rounded-2xl px-4
               flex items-center justify-center text-center font-semibold
-
-              bg-white/70 text-slate-900 
-              border border-slate-200 shadow-[0_4px_15px_-3px_rgba(0,0,0,0.08)]
-              backdrop-blur-[2px]
-
-              dark:bg-slate-800/50 dark:text-emerald-100
-              dark:border-slate-700 dark:shadow-[0_4px_20px_-3px_rgba(0,255,150,0.15)]
-              dark:backdrop-blur-[2px]
-
               transition-all duration-500
-            "
+
+              ${
+                isDark
+                  ? `
+                      bg-slate-800/60 text-emerald-100
+                      border border-slate-700
+                      shadow-[0_4px_20px_-3px_rgba(0,255,150,0.15)]
+                    `
+                  : `
+                      bg-[#e8f5e9] text-[#1b4332]
+                      border border-[#b7e4c7]
+                      shadow-[0_4px_15px_-3px_rgba(27,94,52,0.15)]
+                    `
+              }
+            `}
           >
-            {/* النص الآن فوق كل الطبقات */}
+            {/* النص */}
             <span className="text-lg md:text-xl relative z-[5]">
               {item.title}
             </span>
 
-            {/* pattern — الآن z-index منخفض */}
+            {/* Pattern */}
             <div
-              className="
-                absolute inset-0 opacity-30 dark:opacity-20 z-[1]
+              className={`
+                absolute inset-0 opacity-25 z-[1]
                 bg-[url('/patterns/pattern-light.svg')] 
-                dark:bg-[url('/patterns/pattern-dark.svg')]
+                ${isDark ? "dark:bg-[url('/patterns/pattern-dark.svg')]" : ""}
                 bg-cover bg-center
-              "
+              `}
             ></div>
 
-            {/* Glow Hover */}
+            {/* Hover Glow */}
             <div
-              className="
+              className={`
                 absolute inset-0 rounded-2xl opacity-0 
                 group-hover:opacity-100 transition-all duration-500
-                bg-emerald-300/10 dark:bg-emerald-400/10 blur-xl
-                z-[2]
-              "
+                ${isDark ? "bg-emerald-400/10" : "bg-emerald-200/20"} 
+                blur-xl z-[2]
+              `}
             ></div>
 
             {/* Border Glow */}
@@ -88,7 +98,7 @@ export default function CategoriesSection({ header, items }) {
               "
             ></div>
 
-            {/* Sweep Shine */}
+            {/* Shine Sweep */}
             <div
               className="
                 absolute inset-0 rounded-2xl z-[4]

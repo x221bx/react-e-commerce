@@ -34,11 +34,14 @@ export default function CategoryCard({
   onClick = () => {},
 }) {
   const { theme } = UseTheme();
+  const isDark = theme === "dark";
+
   const sanitizedImages = useMemo(
     () => [...new Set((imageSources || []).filter(Boolean))],
     [imageSources]
   );
   const hasImages = sanitizedImages.length > 0;
+
   const [activeIndex, setActiveIndex] = useState(0);
   const imagesKey = sanitizedImages.join("|");
 
@@ -68,14 +71,20 @@ export default function CategoryCard({
       variants={fadeUp}
       whileHover={{ scale: 1.03 }}
       whileTap={{ scale: 0.97 }}
-      className={`text-left w-full rounded-xl overflow-hidden shadow-lg transition-all duration-500
+      className={`
+        text-left w-full rounded-xl overflow-hidden shadow-lg transition-all duration-500
+
         ${
-          theme === "dark"
-            ? "bg-[var(--bg-input)] text-[#B8E4E6] shadow-[0_4px_20px_rgba(184,228,230,0.08)] hover:shadow-[0_6px_25px_rgba(184,228,230,0.15)]"
-            : "bg-[var(--bg-card)] text-[#1a1a1a] shadow-[0_3px_15px_rgba(0,0,0,0.1)] hover:shadow-[0_5px_20px_rgba(0,0,0,0.15)]"
-        }`}
+          isDark
+            ? // 🌙 DARK MODE (زي ما هو)
+              "bg-[var(--bg-input)] text-[#B8E4E6] shadow-[0_4px_20px_rgba(184,228,230,0.08)] hover:shadow-[0_6px_25px_rgba(184,228,230,0.15)]"
+            : // ☀ LIGHT MODE (أخضر محسّن)
+              "bg-[#e6f8ef] text-[#2e7d5e] shadow-[0_4px_18px_rgba(46,125,94,0.12)] hover:shadow-[0_6px_25px_rgba(46,125,94,0.18)] border border-[#c6eedb]"
+        }
+      `}
       aria-label={`Explore ${title || "category"}`}
     >
+      {/* IMAGE */}
       <Motion.div
         whileHover={{ scale: 1.05 }}
         transition={{ duration: 0.4 }}
@@ -93,22 +102,26 @@ export default function CategoryCard({
         )}
       </Motion.div>
 
+      {/* TEXT BLOCK */}
       <div className="p-4">
         <Motion.p
           variants={fadeUp}
           custom={0.2}
-          className={`text-lg font-semibold mb-1 ${
-            theme === "dark" ? "text-[#B8E4E6]" : "text-[#2F7E80]"
-          }`}
+          className={`
+            text-lg font-semibold mb-1
+            ${isDark ? "text-[#B8E4E6]" : "text-[#2e7d5e]"}
+          `}
         >
           {title}
         </Motion.p>
+
         <Motion.p
           variants={fadeUp}
           custom={0.3}
-          className={`text-sm ${
-            theme === "dark" ? "text-[#B8E4E6]/80" : "text-[#142727]/80"
-          }`}
+          className={`
+            text-sm
+            ${isDark ? "text-[#B8E4E6]/80" : "text-[#3f8b6d]/80"}
+          `}
         >
           {note}
         </Motion.p>

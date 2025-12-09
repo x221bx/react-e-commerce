@@ -12,11 +12,14 @@ import { localizeArticleRecord } from "../data/articles";
 import useArticles from "../hooks/useArticles";
 import { useTranslation } from "react-i18next";
 import { useCategoryRepresentativeImages } from "../hooks/useCategoryRepresentativeImages";
+import { UseTheme } from "../theme/ThemeProvider";
 
 export default function Home() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const isRTL = i18n.language === "ar";
+  const { theme } = UseTheme();
+  const isDark = theme === "dark";
 
   const { data: catData = [] } = useCategoriesSorted({ dir: "desc" });
   const { articles: allFeaturedArticles } = useArticles({ featureHome: true });
@@ -62,52 +65,54 @@ export default function Home() {
   return (
     <main
       dir={isRTL ? "rtl" : "ltr"}
-      className="
-    min-h-screen flex flex-col
-    bg-[#f9f9f9] text-slate-900
-    dark:bg-[#021a15] dark:text-slate-100
-    transition-colors duration-300
-  "
->
-   {/* HERO VIDEO SECTION */}
-<section className="relative w-full overflow-hidden h-[450px] md:h-[520px] lg:h-[580px]">
+      className={`
+        min-h-screen flex flex-col transition-colors duration-500
+        ${
+          isDark
+            ? "bg-[#02130f] bg-gradient-to-b from-[#02130f] via-[#022519] to-[#033624] text-slate-100"
+            : "bg-white text-slate-900"
+        }
+      `}
+    >
+      {/* ===================== HERO VIDEO SECTION ===================== */}
+      <section className="relative w-full overflow-hidden h-[450px] md:h-[520px] lg:h-[580px]">
+        {/* VIDEO BG */}
+        <video
+          src="/VideoProject.mp4"
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+        />
 
-  {/* VIDEO BACKGROUND */}
-  <video
-    src="/VideoProject.mp4"
-    autoPlay
-    loop
-    muted
-    playsInline
-    className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-  />
+        {/* THEMED OVERLAY */}
+        <div
+          className={`
+            absolute inset-0 pointer-events-none transition-opacity duration-500
+            ${
+              isDark
+                ? "bg-gradient-to-b from-black/60 via-black/40 to-[#022b1b]/80"
+                : "bg-gradient-to-b from-black/10 via-black/5 to-transparent"
+            }
+          `}
+        />
 
-  {/* FIXED OVERLAY — الآن يتأثر بالثيم بشكل صحيح */}
-  <div className="
-    absolute inset-0 pointer-events-none
-    bg-gradient-to-b
-    from-black/20 via-black/10 to-transparent
-    dark:from-black/50 dark:via-black/40 dark:to-[#022b1b]
-    transition-colors duration-300
-  " />
+        {/* CONTENT */}
+        <div className="relative z-10 h-full flex items-center">
+          <div className="container mx-auto px-4">
+            <Hero
+              title={t("home.heroTitle")}
+              subtitle={t("home.heroSubtitle")}
+            />
+          </div>
+        </div>
+      </section>
 
-  {/* CONTENT */}
-  <div className="relative z-10 h-full flex items-center">
-    <div className="container mx-auto px-4">
-      <Hero
-        title={t('home.heroTitle')}
-        subtitle={t('home.heroSubtitle')}
-      />
-    </div>
-  </div>
-</section>
-
-
-
-      {/* ========= MAIN CONTENT ========= */}
+      {/* ===================== MAIN CONTENT ===================== */}
       <div className="flex-1">
         {/* CATEGORIES */}
-        <section className="py-6 md:py-10 lg:py-12">
+        <section className={isDark ? "py-10" : "py-12"}>
           <div className="container mx-auto px-4">
             <CategoriesSection
               header={t("home.shopByCategory")}
@@ -117,7 +122,7 @@ export default function Home() {
         </section>
 
         {/* FEATURED PRODUCTS */}
-        <section className="pb-6 md:pb-10 lg:pb-12">
+        <section className="pb-10">
           <div className="container mx-auto px-4">
             <FeaturedProducts />
           </div>
@@ -125,15 +130,15 @@ export default function Home() {
 
         {/* ARTICLES */}
         {articles.length > 0 && (
-          <section className="pb-6 md:pb-10 lg:pb-12">
+          <section className="pb-10">
             <div className="container mx-auto px-4">
               <Articles header={t("home.topArticles")} items={articles} />
             </div>
           </section>
         )}
 
-        {/* ECO / HELP BANNER */}
-        <section className="pb-10 lg:pb-14">
+        {/* ECO BANNER */}
+        <section className="pb-14">
           <div className="container mx-auto px-4">
             <EcoBanner
               title={t("home.ecoBannerTitle")}
