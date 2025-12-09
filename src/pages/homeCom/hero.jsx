@@ -80,7 +80,7 @@ export default function Hero({ title, subtitle }) {
   custom={0.15}
   className={`
     text-3xl md:text-5xl lg:text-6xl font-extrabold tracking-tight
-    ${theme === "dark" ? "text-emerald-100" : "text-emerald-300"}
+    ${theme === "dark" ? "text-emerald-100" : "text-emerald-50"}
   `}
 >
 
