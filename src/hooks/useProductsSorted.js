@@ -20,7 +20,9 @@ export function useProductsSorted({
     queryFn: async () => {
       const q = buildProductsQuery({ sortBy, dir, qText, status, category });
       const snap = await getDocs(q);
-      return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      return snap.docs
+        .map((d) => ({ id: d.id, ...d.data() }))
+        .filter((p) => !p.isDeleted);
     },
     staleTime: 15_000,
     keepPreviousData: true,

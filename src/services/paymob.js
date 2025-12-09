@@ -16,9 +16,8 @@ export const parsePaymobRedirect = (url) => {
   const successCodes = ["APPROVED", "00", "0"];
   const pendingCodes = ["10"];
 
-  const isSuccess = successFlag === "true" && successCodes.includes(txnCode);
-  const isPending = pendingCodes.includes(txnCode);
-  const isFailed = !isSuccess && !isPending;
+  const isSuccess = successFlag === "true" || successCodes.includes(txnCode);
+  const isPending = pendingFlag === "true" || pendingCodes.includes(txnCode);
 
   return {
     status: isSuccess ? "success" : isPending ? "pending" : "failed",
@@ -35,11 +34,23 @@ export const createPaymobCardPayment = async ({
   form = {},
   user = {},
   merchantOrderId,
+  integrationId,
+  walletNumber,
+  wallet = false,
 }) => {
   const res = await fetch(`${API_BASE}/paymob/card-payment`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ amount, cartItems, form, user, merchantOrderId }),
+    body: JSON.stringify({
+      amount,
+      cartItems,
+      form,
+      user,
+      merchantOrderId,
+      integrationId,
+      walletNumber,
+      wallet,
+    }),
   });
 
   const data = await res.json();

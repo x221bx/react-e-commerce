@@ -5,6 +5,20 @@ import tailwindcss from "@tailwindcss/vite";
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  server: {
+    host: "0.0.0.0",
+    allowedHosts: [
+      // Allow local dev over ngrok tunnel
+      "al-preevident-nonatheistically.ngrok-free.dev",
+    ],
+    proxy: {
+      // Forward frontend /api calls to local backend during dev/tunnel usage
+      "/api": {
+        target: "http://localhost:5000",
+        changeOrigin: true,
+      },
+    },
+  },
   build: {
     rollupOptions: {
       output: {

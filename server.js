@@ -15,13 +15,16 @@ const {
   PAYMOB_API_BASE,
   PAYMOB_API_KEY,
   PAYMOB_IFRAME_ID,
+  PAYMOB_WALLET_IFRAME_ID,
   PAYMOB_CARD_INTEGRATION_ID,
+  PAYMOB_HMAC,
   PAYPAL_BASE,
   PAYPAL_CLIENT_ID,
   PAYPAL_SECRET,
   PAYPAL_CURRENCY,
   PAYPAL_RETURN_URL,
   PAYPAL_CANCEL_URL,
+  PAYPAL_EGP_TO_USD_RATE,
 } = process.env;
 
 const jsonHeaders = { "Content-Type": "application/json" };
@@ -88,11 +91,54 @@ async function getPaypalAccessToken() {
   return data?.access_token;
 }
 
+function convertEgpToUsd(amountEgp) {
+  const rate = Number(PAYPAL_EGP_TO_USD_RATE || 0.02);
+  return Number((Number(amountEgp || 0) * rate).toFixed(2));
+}
+
+function computePaymobHmac(body = {}) {
+  const src = [
+    body.amount_cents ?? "",
+    body.created_at ?? "",
+    body.currency ?? "",
+    body.error_occured ?? "",
+    body.has_parent_transaction ?? "",
+    body.id ?? "",
+    body.integration_id ?? "",
+    body.is_3d_secure ?? "",
+    body.is_auth ?? "",
+    body.is_capture ?? "",
+    body.is_refunded ?? "",
+    body.is_standalone_payment ?? "",
+    body.is_voided ?? "",
+    body.order?.id ?? "",
+    body.owner ?? "",
+    body.pending ?? "",
+    body.source_data?.pan ?? "",
+    body.source_data?.sub_type ?? "",
+    body.source_data?.type ?? "",
+    body.success ?? "",
+  ]
+    .map((v) => `${v}`)
+    .join("");
+
+  return crypto.createHmac("sha512", PAYMOB_HMAC || "").update(src).digest("hex");
+}
+
 // ================ Paymob API ================
 app.post("/api/paymob/card-payment", async (req, res) => {
   try {
-    const { amount, currency = "EGP", cartItems = [], form = {}, user = {}, merchantOrderId } =
-      req.body;
+    const {
+      amount,
+      currency = "EGP",
+      cartItems = [],
+      form = {},
+      user = {},
+      merchantOrderId,
+      integrationId, // allow wallet/card switching from frontend
+      walletNumber,
+      wallet = false,
+    } = req.body;
 
     const amountCents = Math.max(100, Math.round(Number(amount || 0) * 100));
 
@@ -128,11 +174,13 @@ app.post("/api/paymob/card-payment", async (req, res) => {
     const [firstName = "Guest", ...rest] = fullName.split(/\s+/);
     const lastName = rest.join(" ") || "User";
 
+    const walletMsisdn = (walletNumber || form.walletNumber || "").trim();
+
     const billing_data = {
       first_name: firstName,
       last_name: lastName,
       email: user?.email || "unknown@example.com",
-      phone_number: form.phone || "+201000000000",
+      phone_number: walletMsisdn || form.phone || "+201000000000",
       apartment: "NA",
       floor: "NA",
       street: form.address || "NA",
@@ -149,12 +197,15 @@ app.post("/api/paymob/card-payment", async (req, res) => {
       amount_cents: amountCents,
       currency,
       order_id: order?.id,
-      integration_id: Number(PAYMOB_CARD_INTEGRATION_ID),
+      integration_id: Number(integrationId || PAYMOB_CARD_INTEGRATION_ID),
       billing_data,
       lock_order_when_paid: true,
     });
 
-    const paymentUrl = `${PAYMOB_API_BASE}/acceptance/iframes/${PAYMOB_IFRAME_ID}?payment_token=${payment?.token}`;
+    const iframeId = wallet
+      ? PAYMOB_WALLET_IFRAME_ID || process.env.PAYMOB_WALLET_IFRAME_ID || PAYMOB_IFRAME_ID
+      : PAYMOB_IFRAME_ID;
+    const paymentUrl = `${PAYMOB_API_BASE}/acceptance/iframes/${iframeId}?payment_token=${payment?.token}`;
 
     res.json({
       paymentUrl,
@@ -168,6 +219,42 @@ app.post("/api/paymob/card-payment", async (req, res) => {
   }
 });
 
+// Paymob webhook to receive transaction status
+app.post("/api/paymob/webhook", (req, res) => {
+  try {
+    if (!PAYMOB_HMAC) {
+      return res.status(500).json({ message: "PAYMOB_HMAC is not configured" });
+    }
+
+    const body = req.body || {};
+    const sentHmac = (body.hmac || "").toLowerCase();
+    const computed = computePaymobHmac(body);
+
+    if (!sentHmac || sentHmac !== computed) {
+      return res.status(400).json({ message: "Invalid HMAC" });
+    }
+
+    const status = body.success ? "paid" : body.pending ? "pending" : "failed";
+    const txnId = body.id;
+    const paymobOrderId = body.order?.id;
+
+    console.log("Paymob webhook:", {
+      status,
+      txnId,
+      paymobOrderId,
+      amount: body.amount_cents,
+      integration: body.integration_id,
+    });
+
+    // TODO: update your local order in DB using paymobOrderId / merchant_order_id
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("Paymob webhook error:", err);
+    res.status(500).json({ message: "Webhook processing failed" });
+  }
+});
+
 // ================ PayPal API ================
 app.post("/api/paypal/create-order", async (req, res) => {
   try {
@@ -175,14 +262,18 @@ app.post("/api/paypal/create-order", async (req, res) => {
 
     const accessToken = await getPaypalAccessToken();
 
+    // PayPal sandbox expects USD; align with native app by converting EGP -> USD using a simple rate
+    const amountEgp = Number(amount || 0);
+    const amountUsd = convertEgpToUsd(amountEgp);
+
     const body = JSON.stringify({
       intent: "CAPTURE",
       purchase_units: [
         {
           reference_id: reference,
           amount: {
-            value: Number(amount || 0).toFixed(2),
-            currency_code: currency,
+            value: amountUsd.toFixed(2),
+            currency_code: "USD",
           },
         },
       ],
@@ -217,28 +308,23 @@ app.post("/api/paypal/capture-order", async (req, res) => {
   try {
     const { orderId, token, payerId } = req.body;
     if (!orderId) throw new Error("Missing order id");
-    if (!token || !payerId) throw new Error("Missing token or payerId");
 
     const accessToken = await getPaypalAccessToken();
+
+    console.log("PayPal capture request", { orderId, token, payerId });
 
     const capture = await paypalRequest(`/v2/checkout/orders/${orderId}/capture`, {
       method: "POST",
       headers: { ...jsonHeaders },
       token: accessToken,
-      body: JSON.stringify({
-        payment_source: {
-          paypal: {
-            token,
-            payer_id: payerId,
-          },
-        },
-      }),
     });
 
     const status = capture?.status;
     const captureId =
       capture?.purchase_units?.[0]?.payments?.captures?.[0]?.id ||
       capture?.purchase_units?.[0]?.payments?.authorizations?.[0]?.id;
+
+    console.log("PayPal capture response", { status, captureId, details: capture?.details, raw: capture });
 
     res.json({ status, captureId, raw: capture });
   } catch (err) {

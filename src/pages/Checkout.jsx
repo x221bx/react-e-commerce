@@ -26,10 +26,11 @@ import { useOrderSummary } from "../hooks/useOrderSummary";
 import { useCardValidation } from "../hooks/useCardValidation";
 import { UseTheme } from "../theme/ThemeProvider";
 import Footer from "../Authcomponents/Footer";
+import PayPalButton from "../components/payment/PayPalButton";
+import paymobLogo from "../assets/paymob.png";
 
 // ✅ خدمات الدفع للويب
 import { createPaymobCardPayment } from "../services/paymob";
-import { createPaypalOrder } from "../services/paypal";
 
 const formatSavedMethod = (method) => {
   if (!method) return "";
@@ -144,6 +145,24 @@ export default function Checkout() {
   const [showCardModal, setShowCardModal] = useState(false);
   const [saveCardForLater, setSaveCardForLater] = useState(false);
   const [showOrderConfirm, setShowOrderConfirm] = useState(false);
+  const [showPaypalSheet, setShowPaypalSheet] = useState(false);
+  const [paypalOrderRef, setPaypalOrderRef] = useState("");
+  const [paypalError, setPaypalError] = useState("");
+  const [pendingPaypalDraft, setPendingPaypalDraft] = useState(null);
+  const [showPaymobSheet, setShowPaymobSheet] = useState(false);
+  const [paymobSession, setPaymobSession] = useState({
+    url: "",
+    orderId: "",
+    label: "",
+    integrationId: null,
+  });
+  const [walletNumber, setWalletNumber] = useState("");
+
+  const paypalClientId =
+    import.meta.env.VITE_PAYPAL_CLIENT_ID ||
+    import.meta.env.PAYPAL_CLIENT_ID ||
+    "";
+  const paypalCurrency = import.meta.env.VITE_PAYPAL_CURRENCY || "USD";
 
   const paymentOptions = useMemo(
     () => [
@@ -163,6 +182,15 @@ export default function Checkout() {
         subtitle: t(
           "checkout.payment.paymobSubtitle",
           "Secure Visa/Mastercard via Paymob"
+        ),
+      },
+      {
+        value: "paymob_wallet",
+        type: "paymob_wallet",
+        title: t("checkout.payment.paymobWalletTitle", "Paymob Wallet"),
+        subtitle: t(
+          "checkout.payment.paymobWalletSubtitle",
+          "Pay using your Paymob-supported mobile wallet"
         ),
       },
       {
@@ -190,13 +218,20 @@ export default function Checkout() {
   );
 
   const buildPaymentDetails = (cardDetailsOverride) => {
-    if (paymentMethod === "paymob") {
+    if (paymentMethod === "paymob" || paymentMethod === "paymob_wallet") {
       return {
-        type: "paymob",
-        label: t(
-          "checkout.payment.paymobLabel",
-          "Pay with card (Paymob)"
-        ),
+        type: paymentMethod,
+        label:
+          paymentMethod === "paymob_wallet"
+            ? t("checkout.payment.paymobWalletTitle", "Paymob Wallet")
+            : t("checkout.payment.paymobLabel", "Pay with card (Paymob)"),
+      };
+    }
+
+    if (paymentMethod === "paymob_wallet") {
+      return {
+        type: "paymob_wallet",
+        label: t("checkout.payment.paymobWalletTitle", "Paymob Wallet"),
       };
     }
 
@@ -330,6 +365,12 @@ export default function Checkout() {
           displayName: userName,
         },
         merchantOrderId: orderRef,
+        integrationId:
+          paymentMethod === "paymob_wallet"
+            ? import.meta.env.VITE_PAYMOB_WALLET_INTEGRATION_ID
+            : undefined,
+        walletNumber: paymentMethod === "paymob_wallet" ? walletNumber : undefined,
+        wallet: paymentMethod === "paymob_wallet",
       });
 
       // نخزن بيانات Paymob علشان نستخدمها في callback
@@ -346,7 +387,19 @@ export default function Checkout() {
         console.warn("Failed to persist Paymob session", e);
       }
 
-      window.location.href = session.paymentUrl;
+      setPaymobSession({
+        url: session.paymentUrl,
+        orderId: session.paymobOrderId,
+        label:
+          paymentMethod === "paymob_wallet"
+            ? t("checkout.payment.paymobWalletTitle", "Paymob Wallet")
+            : t("checkout.payment.paymobTitle", "Pay with card (Paymob)"),
+        integrationId:
+          paymentMethod === "paymob_wallet"
+            ? import.meta.env.VITE_PAYMOB_WALLET_INTEGRATION_ID
+            : null,
+      });
+      setShowPaymobSheet(true);
     } catch (err) {
       console.error("Failed to initialize Paymob payment", err);
       toast.error(
@@ -361,34 +414,188 @@ export default function Checkout() {
     }
   };
 
-  // ✅ PayPal flow – نفس فكرة الموبايل (نكمّل الكابتشر في callback)
-  const startPaypalPayment = async () => {
-    setLoading(true);
-    try {
-      const orderRef = `WEB-${Date.now()}`;
+  const closePaymobSheet = () => {
+    setShowPaymobSheet(false);
+    setPaymobSession({ url: "", orderId: "" });
+  };
 
-      const session = await createPaypalOrder({
-        amountEGP: summary.total,
-        reference: orderRef,
-      });
+  // Listen for Paymob result messages from the callback inside the iframe
+  useEffect(() => {
+    const onPaymobMessage = async (event) => {
+      if (!event?.data || event.origin !== window.location.origin) return;
+      if (event.data.provider !== "paymob") return;
 
-      if (!session?.approvalUrl) {
-        throw new Error("Missing PayPal approval link");
+      const meta = event.data;
+      setShowPaymobSheet(false);
+
+      if (meta.status !== "success") {
+        const codeText = meta.txnCode ? ` (code ${meta.txnCode})` : "";
+        toast.error(
+          t(
+            "checkout.payment.paymobFailed",
+            "Payment was not completed. Please try again."
+          ) + codeText
+        );
+        localStorage.removeItem("farmvet_pending_order");
+        localStorage.removeItem("farmvet_pending_payment_method");
+        return;
       }
 
-      window.location.href = session.approvalUrl;
+      try {
+        const rawDraft = localStorage.getItem("farmvet_pending_order");
+        if (!rawDraft) {
+          toast.error(
+            t(
+              "checkout.payment.orderDraftMissing",
+              "Payment approved but no pending order data was found."
+            )
+          );
+          return;
+        }
+
+        const draft = JSON.parse(rawDraft);
+        const pendingMethod = localStorage.getItem(
+          "farmvet_pending_payment_method"
+        );
+        const isWalletPayment = pendingMethod === "paymob_wallet";
+        const storedWalletNumber =
+          localStorage.getItem("farmvet_paymob_wallet_number") || "";
+
+        let session = null;
+        try {
+          const rawSession = localStorage.getItem("farmvet_last_paymob_session");
+          if (rawSession) session = JSON.parse(rawSession);
+        } catch (err) {
+          console.warn("Failed to parse Paymob session", err);
+        }
+
+        const paymentDetails = {
+          type: isWalletPayment ? "paymob_wallet" : "paymob",
+          label: isWalletPayment
+            ? t("checkout.payment.paymobWalletTitle", "Paymob Wallet")
+            : t("checkout.payment.paymobLabel", "Pay with card (Paymob)"),
+          provider: "paymob",
+          paymobOrderId: session?.paymobOrderId,
+          paymentKey: session?.paymentKey,
+          amountCents: session?.amountCents,
+          transactionId: meta.transactionId,
+          txnCode: meta.txnCode,
+          status: meta.status,
+          walletNumber: isWalletPayment ? storedWalletNumber : undefined,
+        };
+
+        const { id } = await createOrder({
+          ...draft,
+          paymentMethod: isWalletPayment ? "paymob_wallet" : "paymob",
+          paymentSummary: paymentDetails.label,
+          paymentDetails,
+        });
+
+        localStorage.removeItem("farmvet_pending_order");
+        localStorage.removeItem("farmvet_pending_payment_method");
+        localStorage.removeItem("farmvet_last_paymob_session");
+        localStorage.removeItem("farmvet_paymob_wallet_number");
+
+        dispatch(clearCart());
+
+        toast.success(
+          t(
+            "checkout.payment.paymobSuccess",
+            "Payment approved and your order has been created."
+          )
+        );
+
+        navigate(`/account/invoice/${id}`, { state: { orderId: id } });
+      } catch (err) {
+        console.error("Paymob completion error", err);
+        toast.error(
+          err?.message ||
+            t(
+              "checkout.payment.paymobCaptureError",
+              "Could not finalize order after Paymob payment."
+            )
+        );
+      }
+    };
+
+    window.addEventListener("message", onPaymobMessage);
+    return () => window.removeEventListener("message", onPaymobMessage);
+  }, [dispatch, navigate, t]);
+
+  // PayPal inline flow (smart buttons instead of redirect)
+  const closePaypalSheet = () => {
+    setShowPaypalSheet(false);
+    setPendingPaypalDraft(null);
+    setPaypalError("");
+  };
+
+  const handlePaypalSuccess = async (capture) => {
+    setShowPaypalSheet(false);
+    setLoading(true);
+    try {
+      const paypalOrderId =
+        capture?.orderId || capture?.token || capture?.raw?.id || null;
+      const paypalCaptureId =
+        capture?.captureId ??
+        capture?.id ??
+        capture?.raw?.id ??
+        capture?.raw?.purchase_units?.[0]?.payments?.captures?.[0]?.id ??
+        null;
+
+      const paymentDetails = {
+        type: "paypal",
+        label: t("checkout.payment.paypalLabel", "PayPal"),
+        provider: "paypal",
+        paypalOrderId,
+        paypalCaptureId,
+        status: capture?.status || capture?.raw?.status || null,
+        payerEmail:
+          capture?.raw?.payer?.email_address ||
+          capture?.payer?.email_address ||
+          null,
+      };
+
+      const draft = pendingPaypalDraft || buildOrderDraft();
+
+      const { id } = await createOrder({
+        ...draft,
+        paymentMethod: "paypal",
+        paymentSummary: paymentDetails.label,
+        paymentDetails,
+      });
+
+      dispatch(clearCart());
+      toast.success(
+        t(
+          "checkout.payment.paypalSuccess",
+          "Payment completed and your order has been created."
+        )
+      );
+      navigate(`/account/invoice/${id}`, { state: { orderId: id } });
     } catch (err) {
-      console.error("Failed to initialize PayPal order", err);
+      console.error("PayPal completion error", err);
       toast.error(
         err?.message ||
           t(
-            "checkout.payment.paypalInitError",
-            "Could not start PayPal checkout. Please try again."
+            "checkout.payment.paypalCaptureError",
+            "Could not confirm PayPal payment."
           )
       );
     } finally {
       setLoading(false);
+      setPendingPaypalDraft(null);
     }
+  };
+
+  const handlePaypalError = (message) => {
+    const msg =
+      message ||
+      t(
+        "checkout.payment.paypalInitError",
+        "Could not start PayPal checkout. Please try again."
+      );
+    setPaypalError(msg);
+    toast.error(msg);
   };
 
   const handleSubmit = async (event) => {
@@ -462,8 +669,22 @@ export default function Checkout() {
   const handleConfirmOrder = async () => {
     setShowOrderConfirm(false);
 
-    // لو Paymob / PayPal → نخزن draft في localStorage وبعدين نروح لبوابة الدفع
-    if (paymentMethod === "paymob" || paymentMethod === "paypal") {
+    if (paymentMethod === "paymob_wallet") {
+      const digits = walletNumber.replace(/\D/g, "");
+      const isValidEgyptian = /^01[0-9]{9}$/.test(digits);
+      if (!isValidEgyptian) {
+        toast.error(
+          t(
+            "checkout.payment.paymobWalletNumberError",
+            "Please enter a valid wallet number."
+          )
+        );
+        return;
+      }
+    }
+
+    // Paymob flow keeps old redirect/iframe logic
+    if (paymentMethod === "paymob" || paymentMethod === "paymob_wallet") {
       const draft = buildOrderDraft();
 
       try {
@@ -475,15 +696,33 @@ export default function Checkout() {
           "farmvet_pending_payment_method",
           paymentMethod
         );
+        if (paymentMethod === "paymob_wallet") {
+          localStorage.setItem("farmvet_paymob_wallet_number", walletNumber);
+        }
       } catch (err) {
         console.warn("Failed to persist pending order", err);
       }
 
-      if (paymentMethod === "paymob") {
-        await startPaymobPayment();
-      } else {
-        await startPaypalPayment();
+      await startPaymobPayment();
+      return;
+    }
+
+    // PayPal now uses inline smart buttons
+    if (paymentMethod === "paypal") {
+      if (!paypalClientId) {
+        toast.error(
+          t(
+            "checkout.payment.paypalMissingClient",
+            "PayPal client ID is missing in environment config."
+          )
+        );
+        return;
       }
+
+      setPendingPaypalDraft(buildOrderDraft());
+      setPaypalOrderRef(`WEB-${Date.now()}`);
+      setPaypalError("");
+      setShowPaypalSheet(true);
       return;
     }
 
@@ -520,6 +759,108 @@ export default function Checkout() {
   const pillBg = isDark
     ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"
     : "bg-emerald-50 text-emerald-700 border border-emerald-100";
+
+  // استقبل نتائج Paymob من صفحة callback داخل الـ overlay عبر postMessage
+  useEffect(() => {
+    const handler = async (event) => {
+      if (event.origin !== window.location.origin) return;
+      const data = event.data || {};
+      if (data.provider !== "paymob") return;
+
+      try {
+        if (!data.status) return;
+        if (data.status !== "success") {
+          const codeText = data.txnCode ? ` (code ${data.txnCode})` : "";
+          toast.error(
+            t(
+              "checkout.payment.paymobFailed",
+              "Payment was not completed. Please try again."
+            ) + codeText
+          );
+          localStorage.removeItem("farmvet_pending_order");
+          localStorage.removeItem("farmvet_pending_payment_method");
+          setPaymentOverlay({ visible: false, url: "", provider: "" });
+          return;
+        }
+
+        const rawDraft = localStorage.getItem("farmvet_pending_order");
+        if (!rawDraft) {
+          toast.error(
+            t(
+              "checkout.payment.orderDraftMissing",
+              "Payment approved but no pending order data was found."
+            )
+          );
+          setPaymentOverlay({ visible: false, url: "", provider: "" });
+          return;
+        }
+
+        const draft = JSON.parse(rawDraft);
+
+        let session = null;
+        try {
+          const rawSession = localStorage.getItem("farmvet_last_paymob_session");
+          if (rawSession) session = JSON.parse(rawSession);
+        } catch (err) {
+          console.warn("Failed to parse Paymob session", err);
+        }
+
+        const paymentDetails = {
+          type: "paymob",
+          label: t(
+            "checkout.payment.paymobLabel",
+            "Pay with card (Paymob)"
+          ),
+          provider: "paymob",
+          paymobOrderId: session?.paymobOrderId,
+          paymentKey: session?.paymentKey,
+          amountCents: session?.amountCents,
+          transactionId: data.transactionId,
+          txnCode: data.txnCode,
+          status: data.status,
+        };
+
+        const { id } = await createOrder({
+          ...draft,
+          paymentMethod: "paymob",
+          paymentSummary: paymentDetails.label,
+          paymentDetails,
+        });
+
+        localStorage.removeItem("farmvet_pending_order");
+        localStorage.removeItem("farmvet_pending_payment_method");
+        localStorage.removeItem("farmvet_last_paymob_session");
+
+        dispatch(clearCart());
+        setPaymentOverlay({ visible: false, url: "", provider: "" });
+
+        toast.success(
+          t(
+            "checkout.payment.paymobSuccess",
+            "Payment approved and your order has been created."
+          )
+        );
+
+        localStorage.setItem("latestOrderId", id);
+        navigate(`/order-tracking/${id}`, {
+          state: { showPaymentBadge: true },
+        });
+      } catch (err) {
+        console.error("Paymob overlay callback error", err);
+        toast.error(
+          err?.message ||
+            t(
+              "checkout.payment.paymobCaptureError",
+              "Could not finalize order after Paymob payment."
+            )
+        );
+        setPaymentOverlay({ visible: false, url: "", provider: "" });
+      }
+    };
+
+    window.addEventListener("message", handler);
+    return () => window.removeEventListener("message", handler);
+  }, [dispatch, navigate, t]);
 
   // 🧺 Cart empty state
   if (!cartItems.length) {
@@ -690,6 +1031,8 @@ export default function Checkout() {
                   handlePaymentSelection={handlePaymentSelection}
                   paymentOptions={paymentOptions}
                   savedCards={savedCards}
+                  walletNumber={walletNumber}
+                  onWalletNumberChange={setWalletNumber}
                 />
 
                 <CheckoutSavedCards
@@ -878,6 +1221,98 @@ export default function Checkout() {
       </div>
 
       <Footer />
+
+      {showPaymobSheet && paymobSession.url && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6 bg-black/50 backdrop-blur-sm">
+          <div
+            className={`w-full max-w-3xl rounded-3xl border p-6 shadow-2xl ${
+              isDark
+                ? "bg-slate-950/90 border-slate-700 text-white"
+                : "bg-white border-slate-200 text-slate-900"
+            }`}
+          >
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <div className="flex items-start gap-3">
+                <img src={paymobLogo} alt="Paymob" className="h-8 w-auto object-contain" />
+                <div>
+                  <h3 className="text-lg font-semibold">
+                    {paymobSession.label ||
+                      t("checkout.payment.paymobTitle", "Pay with card (Paymob)")}
+                  </h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-300">
+                    {t(
+                      "checkout.payment.paymobInlineNote",
+                      "Complete your card payment securely without leaving the page."
+                    )}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={closePaymobSheet}
+                className="rounded-lg px-3 py-1 text-sm border border-slate-300 text-slate-600 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+              >
+                {t("common.close", "Close")}
+              </button>
+            </div>
+
+            <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-inner">
+              <iframe
+                src={paymobSession.url}
+                title="Paymob"
+                className="w-full h-[70vh] border-0"
+                allow="payment *; fullscreen; clipboard-write"
+                sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-top-navigation allow-top-navigation-by-user-activation"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showPaypalSheet && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6 bg-black/50 backdrop-blur-sm">
+          <div
+            className={`w-full max-w-xl rounded-3xl border p-6 shadow-2xl ${
+              isDark
+                ? "bg-slate-950/90 border-slate-700 text-white"
+                : "bg-white border-slate-200 text-slate-900"
+            }`}
+          >
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <div>
+                <h3 className="text-lg font-semibold">
+                  {t("checkout.payment.paypalTitle", "Pay with PayPal")}
+                </h3>
+                <p className="text-sm text-slate-500 dark:text-slate-300">
+                  {t(
+                    "checkout.payment.paypalInlineNote",
+                    "Complete your payment with the PayPal button below."
+                  )}
+                </p>
+              </div>
+              <button
+                onClick={closePaypalSheet}
+                className="rounded-lg px-3 py-1 text-sm border border-slate-300 text-slate-600 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+              >
+                {t("common.close", "Close")}
+              </button>
+            </div>
+
+            <PayPalButton
+              clientId={paypalClientId}
+              amount={Number(summary.total || 0)}
+              currency={paypalCurrency}
+              orderRef={paypalOrderRef}
+              onSuccess={handlePaypalSuccess}
+              onError={handlePaypalError}
+            />
+
+            {paypalError && (
+              <p className="mt-3 text-sm text-red-500">{paypalError}</p>
+            )}
+          </div>
+        </div>
+      )}
+
     </main>
   );
 }
