@@ -7,16 +7,13 @@ import {
   FiArrowUp,
   FiArrowDown,
   FiEdit2,
-  FiTrash2,
   FiPackage,
 } from "react-icons/fi";
 import PageHeader from "../../admin/PageHeader";
 import { useProductsSorted } from "../../hooks/useProductsSorted";
-import { useDeleteProduct } from "../../hooks/useProductMutations";
 import { usePagination } from "../../hooks/usePagination";
 import { useCategoriesSorted } from "../../hooks/useCategoriesSorted";
 import Pager from "../../admin/Pager";
-import ConfirmDialog from "../../admin/ConfirmDialog";
 import { useTranslation } from "react-i18next";
 import { localizeProduct, localizeCategory } from "../../utils/localizeContent";
 import { UseTheme } from "../../theme/ThemeProvider";
@@ -83,9 +80,6 @@ export default function AdminProducts() {
   const actionBtnClass = isDark
     ? "rounded-md border border-slate-700 bg-slate-900 p-2 text-slate-100 shadow-sm transition hover:bg-slate-800"
     : "rounded-md border border-gray-300 bg-white p-2 text-gray-700 shadow-sm transition hover:bg-gray-50";
-  const actionDeleteClass = isDark
-    ? "rounded-md border border-rose-800 bg-slate-900 p-2 text-rose-300 shadow-sm transition hover:bg-rose-950/40 disabled:opacity-50"
-    : "rounded-md border border-rose-200 bg-white p-2 text-rose-600 shadow-sm transition hover:bg-rose-50 disabled:opacity-50";
 
   const {
     paginatedData,
@@ -107,6 +101,16 @@ export default function AdminProducts() {
     },
   });
 
+  const normalizedPaginated = useMemo(
+    () =>
+      paginatedData.map((p) => {
+        const stock = Number(p.stock ?? 0);
+        const isAvailable = p.isAvailable !== false && stock > 0;
+        return { ...p, stock, isAvailable };
+      }),
+    [paginatedData]
+  );
+
   useEffect(() => {
     const next = new URLSearchParams(params.toString());
     next.set("filter", status);
@@ -116,10 +120,6 @@ export default function AdminProducts() {
     next.set("pageSize", String(pageSize));
     setParams(next, { replace: true });
   }, [status, q, sortBy, dir, pageSize]);
-
-  const { mutateAsync: deleteProduct, isPending: deleting } =
-    useDeleteProduct();
-  const [toDelete, setToDelete] = useState(null);
 
   const actions = (
     <NavLink
@@ -224,7 +224,7 @@ export default function AdminProducts() {
       {/* Mobile Cards */}
       {!isLoading && !isError && all.length > 0 && (
         <div className="space-y-3 md:hidden">
-          {paginatedData.map((p) => (
+          {normalizedPaginated.map((p) => (
             <div
               key={p.id}
               className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900"
@@ -273,14 +273,14 @@ export default function AdminProducts() {
                   >
                     <FiEdit2 />
                   </button>
-                  <button
-                    disabled={deleting}
-                    onClick={() => setToDelete({ id: p.id, name: p.name })}
-                    className={actionDeleteClass}
-                    title="Delete"
-                  >
-                    <FiTrash2 />
-                  </button>
+                  {!p.isAvailable && (
+                    <span
+                      className="inline-flex items-center rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-200"
+                      title="Product unavailable"
+                    >
+                      Product unavailable
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -325,7 +325,7 @@ export default function AdminProducts() {
                 </tr>
               </thead>
               <tbody className={isDark ? "text-slate-100" : "text-gray-900"}>
-                {paginatedData.map((p) => (
+                {normalizedPaginated.map((p) => (
                   <tr
                     key={p.id}
                     className={`group transition-colors ${
@@ -374,15 +374,13 @@ export default function AdminProducts() {
                       >
                         <FiEdit2 />
                       </button>
-                      <button
-                        disabled={deleting}
-                        onClick={() =>
-                          setToDelete({ id: p.id, name: p.name })
-                        }
-                        className={actionDeleteClass}
-                      >
-                        <FiTrash2 />
-                      </button>
+                      {!p.isAvailable && (
+                        <span
+                          className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-amber-700 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-200"
+                        >
+                          Product unavailable
+                        </span>
+                      )}
                     </div>
                   </Td>
                   </tr>
@@ -404,31 +402,6 @@ export default function AdminProducts() {
         </div>
       )}
 
-      {/* Delete Confirmation */}
-      <ConfirmDialog
-        open={!!toDelete}
-        title={t("confirm.delete_product_title", {
-          defaultValue: "Delete product?",
-        })}
-        message={
-          toDelete
-            ? t("confirm.delete_product_body", {
-                defaultValue:
-                  "“{{name}}” will be permanently deleted. This action cannot be undone.",
-                name: toDelete.name,
-              })
-            : ""
-        }
-        confirmText={t("common.delete", { defaultValue: "Delete" })}
-        confirmTone="danger"
-        loading={deleting}
-        onCancel={() => setToDelete(null)}
-        onConfirm={async () => {
-          if (!toDelete) return;
-          await deleteProduct(toDelete.id);
-          setToDelete(null);
-        }}
-      />
     </>
   );
 }

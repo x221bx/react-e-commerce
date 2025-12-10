@@ -51,8 +51,10 @@ export default function ProductDetails() {
 
   const handleToggleFavorite = () =>
     product && dispatch(toggleFavourite(product));
-  const handleAddToCart = () =>
-    product && !inCart && dispatch(addToCart({ ...product, quantity: 1 }));
+  const handleAddToCart = () => {
+    if (!product || inCart || !inStock) return;
+    dispatch(addToCart({ ...product, quantity: 1 }));
+  };
 
   const handleAskAi = () => {
     if (!product) return;
@@ -185,15 +187,18 @@ export default function ProductDetails() {
               <div className="flex flex-wrap gap-3 pt-2">
                 <button
                   onClick={handleAddToCart}
-                  disabled={inCart}
-                  className={`flex-1 min-w-[180px] py-3 rounded-xl text-white text-sm font-semibold transition ${inCart
+                  disabled={inCart || !inStock}
+                  className={`flex-1 min-w-[180px] py-3 rounded-xl text-white text-sm font-semibold transition ${
+                    inCart || !inStock
                       ? "bg-gray-400 cursor-not-allowed"
                       : "bg-emerald-600 hover:bg-emerald-700"
-                    }`}
+                  }`}
                 >
-                  {inCart
-                    ? t("products.details.inCart", "Already in cart")
-                    : t("products.details.addToCart", "Add to Cart")}
+                  {inStock
+                    ? inCart
+                      ? t("products.details.inCart", "Already in cart")
+                      : t("products.details.addToCart", "Add to Cart")
+                    : t("products.details.outOfStock", "Out of Stock")}
                 </button>
 
                 <button

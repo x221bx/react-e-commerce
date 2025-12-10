@@ -32,7 +32,7 @@ export function useProductsAvailableCount() {
     queryFn: async () => {
       const q = query(
         collection(db, "products"),
-        where("isAvailable", "==", true)
+        where("stock", ">", 0)
       );
       const snapshot = await getCountFromServer(q);
       return snapshot.data().count || 0;

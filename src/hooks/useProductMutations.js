@@ -26,6 +26,13 @@ function normalizeProductPayload(p) {
   else if (payload.quantity !== undefined)
     payload.stock = Number(payload.quantity) || 0;
 
+  // auto-toggle availability based on stock unless explicitly disabled
+  if (payload.stock !== undefined) {
+    const stock = Number(payload.stock) || 0;
+    if (stock <= 0) payload.isAvailable = false;
+    else if (payload.isAvailable === undefined) payload.isAvailable = true;
+  }
+
   // ensure booleans are booleans
   if (payload.isAvailable !== undefined)
     payload.isAvailable = Boolean(payload.isAvailable);

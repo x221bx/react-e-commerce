@@ -34,4 +34,7 @@ export default defineConfig({
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-router-dom'],
   },
+  server: {
+    allowedHosts: ['al-preevident-nonatheistically.ngrok-free.dev'],
+  },
 });

@@ -38,7 +38,8 @@
       "walletProvider": "Provider",
       "walletEmail": "Account email",
       "linking": "Linking...",
-      "linkWallet": "Link wallet"
+      "linkWallet": "Link wallet",
+      "saveForLater": "Save this card for next time"
     },
     "errors": {
       "holder": "Please enter the card holder name.",
@@ -591,8 +592,43 @@
       },
       "card": {
         "title": "Card payment",
-        "subtitle": "Pay securely online."
-      }
+        "subtitle": "Pay securely online.",
+        "dropdownHint": "Choose an existing card or add a new one.",
+        "savedHint": "The selected saved card will be used for this order."
+      },
+      "title": "Payment method",
+      "subtitle": "Choose how you'd like to pay for your order.",
+      "loadingSuggestion": "Looking for saved cards...",
+      "savedCardsHint": "The selected saved card will be used for this order.",
+      "paymobTitle": "Pay with card (Paymob)",
+      "paymobSubtitle": "Secure Visa/Mastercard via Paymob",
+      "paymobWalletTitle": "Paymob Wallet",
+      "paymobWalletSubtitle": "Pay using your Paymob-supported mobile wallet",
+      "paymobWalletHintList": "Wallets: Vodafone Cash, Orange, Etisalat, WE",
+      "paymobCardSecure": "Secured by Paymob Accept",
+      "paymobWalletNumber": "Wallet phone",
+      "paymobWalletPlaceholder": "Wallet phone",
+      "paymobWalletNumberError": "Enter a valid wallet number.",
+      "paymobLabel": "Pay with card (Paymob)",
+      "paymobInlineNote": "Complete your card details securely via Paymob.",
+      "paymobSuccess": "Payment confirmed",
+      "paymobChecking": "Confirming payment",
+      "paymobFailed": "Payment issue",
+      "paymobCaptureError": "We couldn't capture this payment. Please contact support.",
+      "paymobInitError": "Could not start Paymob payment.",
+      "orderDraftMissing": "We couldn't find this order. Please try again.",
+      "paypalTitle": "Pay with PayPal",
+      "paypalSubtitle": "Use your PayPal balance or saved cards",
+      "paypalLabel": "PayPal",
+      "paypalInlineNote": "You'll be redirected to PayPal to complete payment.",
+      "paypalSuccess": "Payment confirmed",
+      "paypalChecking": "Confirming payment",
+      "paypalCancelled": "Payment was cancelled.",
+      "paypalMissingInfo": "Missing PayPal information.",
+      "paypalNotCompleted": "Payment not completed.",
+      "paypalCaptureError": "We couldn't capture this PayPal payment. Please contact support.",
+      "paypalInitError": "Could not start PayPal payment.",
+      "paypalMissingClient": "PayPal client configuration is missing."
     },
     "actions": {
       "backToCart": "Back to cart",
@@ -620,6 +656,10 @@
       "shipping": "Shipping",
       "total": "Total",
       "note": "You will receive an email confirmation with tracking information."
+    },
+    "confirm": {
+      "title": "Confirm your order",
+      "message": "Are you sure you want to place this order?"
     }
   },
   "notifications": {
@@ -979,7 +1019,16 @@
       "fix_errors_short": "Check these fields to continue:",
       "photo_link_toggle": "Use an image link (optional)",
       "photo_link_toggle_hide": "Hide image link"
-    }
+    },
+    "hub_eyebrow": "Unified settings hub",
+    "hi_message": "Hi {{name}}, keep everything aligned",
+    "hi_fallback": "there",
+    "hub_description": "Personal info, preferences, notifications, and account safety share the same design in /settings and /account/settings.",
+    "edit_profile": "Edit profile",
+    "review_security": "Review security",
+    "account_status": "Account Status",
+    "interface_language": "Interface language",
+    "notifications": "Notifications"
   },
   "products": {
     "title": "Products",
@@ -1034,6 +1083,8 @@
   "home": {
     "heroTitle": "Smarter Farming Starts Here",
     "heroSubtitle": "Your one-stop shop for quality products, expert resources, and AI-powered farming advice.",
+    "heroBadge": "Trusted by thousands of farmers",
+    "heroSecondaryCta": "Explore products",
     "shopByCategory": "Shop by Category",
     "categoryFallback": "Category",
     "categoryNoteFallback": "Browse products",
@@ -1089,5 +1140,17 @@
     "contact": "Contact",
     "followUs": "Follow Us",
     "copyright": "© {{year}} Farm Vet Shop. All rights reserved."
+  },
+  "cart": {
+    "title": "Your shopping cart",
+    "subtitle": "Review items and adjust quantities.",
+    "itemsCountLabel": "Items in your basket",
+    "empty": {
+      "subtitle": "Browse products and add them to your cart."
+    },
+    "outOfStock": "Out of stock",
+    "lowStock": "Only {{count}} left",
+    "inStock": "In stock",
+    "lineTotal": "Line total"
   }
 }

@@ -3,7 +3,7 @@ import { db } from "../../services/firebase";
 
 /**
  * Build a Firestore query for products with:
- * - availability filter (isAvailable)
+ * - client-side availability handling (stock/isAvailable)
  * - optional categoryId filter
  * - optional prefix search on name_lc
  * - sorting (createdAt by default)
@@ -20,10 +20,6 @@ export function buildProductsQuery({
 } = {}) {
   const col = collection(db, "products");
   const cons = [];
-
-  // availability filter only (no isDeleted filter to avoid index requirement)
-  if (status === "available") cons.push(where("isAvailable", "==", true));
-  if (status === "unavailable") cons.push(where("isAvailable", "==", false));
 
   // category filter (may need index if heavily used with sorting)
   if (category && category !== "all") {
