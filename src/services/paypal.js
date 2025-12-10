@@ -1,7 +1,7 @@
 // src/services/paypal.js
 import { getEnv } from "../utils/env";
 
-const API_BASE = getEnv("VITE_API_BASE", "http://localhost:5000/api");
+const API_BASE = getEnv("VITE_API_BASE", "/api");
 const PAYPAL_CURRENCY = getEnv("VITE_PAYPAL_CURRENCY", "USD");
 
 export const createPaypalOrder = async ({ amountEGP, reference }) => {

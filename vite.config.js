@@ -7,14 +7,10 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     host: "0.0.0.0",
-    allowedHosts: [
-      // Allow local dev over ngrok tunnel
-      "al-preevident-nonatheistically.ngrok-free.dev",
-    ],
+    allowedHosts: ['al-preevident-nonatheistically.ngrok-free.dev'],
     proxy: {
-      // Forward frontend /api calls to local backend during dev/tunnel usage
-      "/api": {
-        target: "http://localhost:5000",
+      '/api': {
+        target: 'http://localhost:5000',
         changeOrigin: true,
       },
     },
@@ -33,8 +29,5 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-router-dom'],
-  },
-  server: {
-    allowedHosts: ['al-preevident-nonatheistically.ngrok-free.dev'],
   },
 });

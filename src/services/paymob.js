@@ -1,7 +1,7 @@
 // src/services/paymob.js
 import { getEnv } from "../utils/env";
 
-const API_BASE = getEnv("VITE_API_BASE", "http://localhost:5000/api");
+const API_BASE = getEnv("VITE_API_BASE", "/api");
 
 async function parseJsonSafe(res) {
   const text = await res.text();
