@@ -1,13 +1,29 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import fetch from "node-fetch"; 
+import fetch from "node-fetch";
+import crypto from "crypto";
 
 dotenv.config();
 
 const app = express();
-app.use(cors());
-app.use(express.json());
+// Optional CORS allowlist via ALLOWED_ORIGINS="https://a.com,https://b.com"
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
+app.use(
+  cors({
+    origin:
+      allowedOrigins.length === 0
+        ? true
+        : (origin, cb) => {
+            if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+            return cb(new Error("Not allowed by CORS"));
+          },
+  })
+);
+app.use(express.json({ limit: "1mb" }));
 
 const {
   PORT = 5000,
@@ -28,6 +44,21 @@ const {
 } = process.env;
 
 const jsonHeaders = { "Content-Type": "application/json" };
+
+// Ensure we never charge less than the cart total if items are provided
+function calculateAmountCents({ amount, cartItems = [] }) {
+  const cartTotalCents = Array.isArray(cartItems)
+    ? cartItems.reduce(
+        (sum, item) =>
+          sum + Math.max(0, Math.round(Number(item.price || 0) * 100)) * Number(item.quantity || 1),
+        0
+      )
+    : 0;
+
+  const requested = Math.round(Number(amount || 0) * 100);
+  const base = cartTotalCents > 0 ? cartTotalCents : requested;
+  return Math.max(100, base); // minimum 1 EGP
+}
 
 // ================ Helpers ================
 async function paymobRequest(path, payload) {
@@ -92,8 +123,24 @@ async function getPaypalAccessToken() {
 }
 
 function convertEgpToUsd(amountEgp) {
-  const rate = Number(PAYPAL_EGP_TO_USD_RATE || 0.02);
+  const rate = Number(PAYPAL_EGP_TO_USD_RATE || 0);
+  if (!rate || rate <= 0) throw new Error("PAYPAL_EGP_TO_USD_RATE is not configured or invalid");
   return Number((Number(amountEgp || 0) * rate).toFixed(2));
+}
+
+// Simple in-memory order store placeholder (replace with DB)
+const orders = new Map();
+
+function saveOrderDraft({ reference, amountCents, provider, meta = {} }) {
+  const id = reference || `draft-${Date.now()}`;
+  orders.set(id, { id, amountCents, provider, status: "pending", meta });
+  return id;
+}
+
+function updateOrderStatus(id, status, payload = {}) {
+  if (!orders.has(id)) return;
+  const current = orders.get(id);
+  orders.set(id, { ...current, status, payload, updatedAt: Date.now() });
 }
 
 function computePaymobHmac(body = {}) {
@@ -140,7 +187,10 @@ app.post("/api/paymob/card-payment", async (req, res) => {
       wallet = false,
     } = req.body;
 
-    const amountCents = Math.max(100, Math.round(Number(amount || 0) * 100));
+    const amountCents = calculateAmountCents({ amount, cartItems });
+    if (!Number.isFinite(amountCents) || amountCents <= 0) {
+      return res.status(400).json({ message: "Invalid amount" });
+    }
 
     const auth = await paymobRequest("/auth/tokens", { api_key: PAYMOB_API_KEY });
     const authToken = auth?.token;
@@ -262,7 +312,17 @@ app.post("/api/paymob/card-payment", async (req, res) => {
 
     const paymentUrl = `${PAYMOB_API_BASE}/acceptance/iframes/${iframeId}?payment_token=${payment?.token}`;
 
+    const reference = merchantOrderId || `paymob-${order?.id}`;
+
+    saveOrderDraft({
+      reference,
+      amountCents,
+      provider: wallet ? "paymob_wallet" : "paymob_card",
+      meta: { paymobOrderId: order?.id },
+    });
+
     res.json({
+      reference,
       paymentUrl,
       paymentKey: payment?.token,
       paymobOrderId: order?.id,
@@ -378,7 +438,17 @@ app.post("/api/paymob/wallet-payment", async (req, res) => {
       throw new Error("Failed to obtain Paymob wallet redirect URL");
     }
 
+    const reference = merchantOrderId || `paymob-${order?.id}`;
+
+    saveOrderDraft({
+      reference,
+      amountCents,
+      provider: "paymob_wallet",
+      meta: { paymobOrderId: order?.id },
+    });
+
     res.json({
+      reference,
       paymentUrl: walletRedirect,
       paymentKey: payment?.token,
       paymobOrderId: order?.id,
@@ -419,6 +489,7 @@ app.post("/api/paymob/webhook", (req, res) => {
     });
 
     // TODO: update your local order in DB using paymobOrderId / merchant_order_id
+    // Example stub: updateOrderStatus(paymobOrderId, status, body);
 
     res.json({ ok: true });
   } catch (err) {
@@ -430,12 +501,25 @@ app.post("/api/paymob/webhook", (req, res) => {
 // ================ PayPal API ================
 app.post("/api/paypal/create-order", async (req, res) => {
   try {
-    const { amount, currency = PAYPAL_CURRENCY, reference } = req.body;
+    const { amount, currency = PAYPAL_CURRENCY, reference, cartItems = [] } = req.body;
+
+    const rate = Number(PAYPAL_EGP_TO_USD_RATE || 0);
+    if (!rate || rate <= 0) {
+      throw new Error("PAYPAL_EGP_TO_USD_RATE is not configured or invalid");
+    }
+    const amountCents = calculateAmountCents({ amount, cartItems });
+    if (!Number.isFinite(amountCents) || amountCents <= 0) {
+      throw new Error("Invalid amount");
+    }
+
+    if (!PAYPAL_CLIENT_ID || !PAYPAL_SECRET) {
+      throw new Error("PayPal credentials are not configured");
+    }
 
     const accessToken = await getPaypalAccessToken();
 
     // PayPal sandbox expects USD; align with native app by converting EGP -> USD using a simple rate
-    const amountEgp = Number(amount || 0);
+    const amountEgp = amountCents / 100;
     const amountUsd = convertEgpToUsd(amountEgp);
 
     const body = JSON.stringify({
@@ -464,11 +548,19 @@ app.post("/api/paypal/create-order", async (req, res) => {
       body,
     });
 
+    const draftId = saveOrderDraft({
+      reference: reference || order?.id,
+      amountCents,
+      provider: "paypal",
+      meta: { paypalOrderId: order?.id },
+    });
+
     const approvalLink = order?.links?.find?.((l) => l.rel === "approve")?.href;
 
     res.json({
       paypalOrderId: order?.id,
       approvalUrl: approvalLink,
+      reference: draftId,
     });
   } catch (err) {
     console.error("PayPal create error:", err);
@@ -478,7 +570,7 @@ app.post("/api/paypal/create-order", async (req, res) => {
 
 app.post("/api/paypal/capture-order", async (req, res) => {
   try {
-    const { orderId, token, payerId } = req.body;
+    const { orderId, token, payerId, reference } = req.body;
     if (!orderId) throw new Error("Missing order id");
 
     const accessToken = await getPaypalAccessToken();
@@ -495,6 +587,15 @@ app.post("/api/paypal/capture-order", async (req, res) => {
     const captureId =
       capture?.purchase_units?.[0]?.payments?.captures?.[0]?.id ||
       capture?.purchase_units?.[0]?.payments?.authorizations?.[0]?.id;
+
+    if (reference) {
+      updateOrderStatus(reference, status?.toLowerCase?.() || status, {
+        captureId,
+        token,
+        payerId,
+        raw: capture,
+      });
+    }
 
     console.log("PayPal capture response", { status, captureId, details: capture?.details, raw: capture });
 

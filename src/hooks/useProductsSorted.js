@@ -21,8 +21,25 @@ export function useProductsSorted({
       const q = buildProductsQuery({ sortBy, dir, qText, status, category });
       const snap = await getDocs(q);
       return snap.docs
-        .map((d) => ({ id: d.id, ...d.data() }))
-        .filter((p) => !p.isDeleted);
+        .map((d) => {
+          const data = d.data();
+          const stock = Number(data.stock ?? data.quantity ?? 0) || 0;
+          const isAvailable =
+            data.isAvailable === false ? false : stock > 0;
+
+          return {
+            id: d.id,
+            ...data,
+            stock,
+            isAvailable,
+          };
+        })
+        .filter((p) => {
+          if (p.isDeleted) return false;
+          if (status === "available") return p.isAvailable;
+          if (status === "unavailable") return !p.isAvailable;
+          return true;
+        });
     },
     staleTime: 15_000,
     keepPreviousData: true,

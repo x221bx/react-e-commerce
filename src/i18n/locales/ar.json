@@ -23,7 +23,23 @@
       "delete": "حذف"
     },
     "form": {
-      "saveForLater": "احفظ هذه البطاقة في طرق الدفع للمرة القادمة"
+      "saveForLater": "احفظ هذه البطاقة في طرق الدفع للمرة القادمة",
+      "cardHolder": "اسم صاحب البطاقة",
+      "cardNumber": "رقم البطاقة",
+      "cardPreview": "معاينة البطاقة",
+      "cardTitle": "إضافة بطاقة جديدة",
+      "cvv": "رمز CVV",
+      "expiry": "تاريخ الانتهاء (شهر/سنة)",
+      "linkWallet": "ربط المحفظة",
+      "linking": "جارٍ الربط...",
+      "nickname": "اسم مختصر (اختياري)",
+      "nicknamePlaceholder": "مشتريات المزرعة",
+      "reset": "إعادة تعيين",
+      "saveCard": "حفظ البطاقة",
+      "saving": "جارٍ الحفظ...",
+      "walletEmail": "البريد الإلكتروني للحساب",
+      "walletProvider": "المزو-د",
+      "walletTitle": "ربط المحفظة"
     },
     "errors": {
       "holder": "أدخل اسم حامل البطاقة.",
@@ -64,7 +80,10 @@
     "account": "الحساب",
     "logout": "تسجيل الخروج",
     "login": "تسجيل الدخول",
-    "register": "إنشاء حساب"
+    "register": "إنشاء حساب",
+    "toggle_language": "تبديل اللغة",
+    "toggle_menu": "تبديل القائمة",
+    "toggle_theme": "تبديل المظهر"
   },
   "nav": {
     "home": "الرئيسية",
@@ -187,7 +206,10 @@
     "valid": "صالح",
     "total": "الإجمالي",
     "customer": "العميل",
-    "admin": "المسؤول"
+    "admin": "المسؤول",
+    "remove": "إزالة الصورة",
+    "reset": "إعادة تعيين",
+    "uploading": "جارٍ الرفع..."
   },
   "settings": {
     "language_display": "اللغة والعرض",
@@ -341,7 +363,21 @@
       "callDesc": "تحدث مع فريق الدعم",
       "email": "بريد الدعم",
       "emailDesc": "أرسل لنا بريداً لمساعدة مفصلة"
-    }
+    },
+    "account_status": "حالة الحساب",
+    "edit_profile": "تعديل الملف الشخصي",
+    "email": "البريد الإلكتروني",
+    "email_placeholder": "john@example.com",
+    "hi_fallback": "صديقي",
+    "hi_message": "مرحباً {{name}}، دعنا نحافظ على كل شيء متناسقاً",
+    "hub_description": "المعلومات الشخصية، التفضيلات، الإشعارات، وأمان الحساب تتبع نفس تصميم الإعدادات في /settings و /account/settings.",
+    "hub_eyebrow": "لوحة إعدادات موحدة",
+    "location": "الموقع",
+    "notifications": "الإشعارات",
+    "photo_formats_desc": "اسحب وأفلت أو اضغط للتصفح",
+    "review_security": "مراجعة الأمان",
+    "username": "اسم المستخدم",
+    "username_placeholder": "your.username"
   },
   "account": {
     "profile_preferences": "الملف الشخصي والتفضيلات",
@@ -489,7 +525,8 @@
       "notFoundTitle": "الطلب غير موجود",
       "notFoundDesc": "الطلب الذي تبحث عنه غير موجود أو ليس لديك صلاحية لعرضه.",
       "backToOrders": "العودة للطلبات"
-    }
+    },
+    "complaints_your_message": "رسالتك"
   },
   "checkout": {
     "errors": {
@@ -548,8 +585,43 @@
       },
       "card": {
         "title": "الدفع بالبطاقة",
-        "subtitle": "ادفع بأمان عبر الإنترنت."
-      }
+        "subtitle": "ادفع بأمان عبر الإنترنت.",
+        "dropdownHint": "اختر بطاقة محفوظة أو أضف بطاقة جديدة.",
+        "savedHint": "سيتم استخدام البطاقة المحفوظة المحددة لهذا الطلب."
+      },
+      "title": "طريقة الدفع",
+      "subtitle": "اختر الطريقة التي تفضل الدفع بها لطلبك.",
+      "loadingSuggestion": "جارٍ البحث عن البطاقات المحفوظة...",
+      "savedCardsHint": "سيتم استخدام البطاقة المحفوظة المختارة لهذا الطلب.",
+      "paymobTitle": "ادفع بالبطاقة (Paymob)",
+      "paymobSubtitle": "فيزا/ماستركارد آمنة عبر Paymob",
+      "paymobWalletTitle": "محفظة بايموب",
+      "paymobWalletSubtitle": "ادفع باستخدام محفظتك المدعومة من Paymob",
+      "paymobWalletHintList": "المحافظ: فودافون كاش، أورانج، اتصالات، WE",
+      "paymobCardSecure": "محمية عبر Paymob Accept",
+      "paymobWalletNumber": "رقم المحفظة",
+      "paymobWalletPlaceholder": "رقم المحفظة",
+      "paymobWalletNumberError": "أدخل رقم محفظة صالحاً.",
+      "paymobLabel": "ادفع بالبطاقة (Paymob)",
+      "paymobInlineNote": "أكمل بيانات البطاقة بأمان عبر Paymob.",
+      "paymobSuccess": "تم تأكيد الدفع",
+      "paymobChecking": "جارٍ تأكيد الدفع",
+      "paymobFailed": "حدثت مشكلة في الدفع",
+      "paymobCaptureError": "تعذر تحصيل هذا الدفع. يرجى التواصل مع الدعم.",
+      "paymobInitError": "تعذر بدء دفع Paymob.",
+      "orderDraftMissing": "تعذر العثور على هذا الطلب. حاول مرة أخرى.",
+      "paypalTitle": "ادفع عبر PayPal",
+      "paypalSubtitle": "استخدم رصيد PayPal أو بطاقاتك المحفوظة",
+      "paypalLabel": "PayPal",
+      "paypalInlineNote": "سيتم تحويلك إلى PayPal لإتمام الدفع.",
+      "paypalSuccess": "تم تأكيد الدفع",
+      "paypalChecking": "جارٍ تأكيد الدفع",
+      "paypalCancelled": "تم إلغاء عملية الدفع.",
+      "paypalMissingInfo": "معلومات PayPal غير مكتملة.",
+      "paypalNotCompleted": "لم يتم إتمام الدفع.",
+      "paypalCaptureError": "تعذر تحصيل هذا الدفع عبر PayPal. يرجى التواصل مع الدعم.",
+      "paypalInitError": "تعذر بدء دفع PayPal.",
+      "paypalMissingClient": "إعدادات عميل PayPal غير متوفرة."
     },
     "actions": {
       "backToCart": "العودة للسلة",
@@ -576,6 +648,11 @@
     "confirm": {
       "title": "تأكيد طلبك",
       "message": "هل أنت متأكد من رغبتك في تقديم هذا الطلب؟"
+    },
+    "confirmOrder": {
+      "title": "تأكيد طلبك",
+      "message": "هل أنت متأكد أنك تريد إتمام هذا الطلب؟",
+      "confirmDeduction": "تأكيد الخصم"
     }
   },
   "orders": {
@@ -992,11 +1069,15 @@
       "askAiCta": "هل لديك سؤال حول هذا المنتج؟ اسأل الذكاء الاصطناعي الآن",
       "askAiButton": "اسأل الذكاء الاصطناعي",
       "noImage": "لا توجد صورة متاحة"
-    }
+    },
+    "noProductsFound": "لا توجد منتجات.",
+    "shopProducts": "تسوق المنتجات"
   },
   "home": {
     "heroTitle": "التسوق الذكي يبدأ من هنا",
     "heroSubtitle": "متجرك المتكامل للمنتجات عالية الجودة، والموارد الخبيرة، ونصائح زراعية مدعومة بالذكاء الاصطناعي.",
+    "heroBadge": "موثوق من آلاف المزارعين",
+    "heroSecondaryCta": "استكشف المنتجات",
     "shopByCategory": "تسوق حسب الفئة",
     "categoryFallback": "فئة",
     "categoryNoteFallback": "تصفح المنتجات",
@@ -1052,5 +1133,24 @@
     "contact": "تواصل معنا",
     "followUs": "تابعنا",
     "copyright": "© {{year}} متجر فارم فيت. جميع الحقوق محفوظة."
+  },
+  "favorites": {
+    "title": "مفضلاتي",
+    "emptyTitle": "لا توجد مفضلات بعد.",
+    "browseProducts": "تصفح المنتجات",
+    "clearAll": "مسح الكل",
+    "buy": "شراء"
+  },
+  "cart": {
+    "title": "سلة التسوق",
+    "subtitle": "راجع المنتجات وعد-ل الكميات.",
+    "itemsCountLabel": "العناصر في سلتك",
+    "empty": {
+      "subtitle": "تصفح المنتجات وأضفها إلى السلة."
+    },
+    "outOfStock": "غير متوفر",
+    "lowStock": "متبقي {{count}} فقط",
+    "inStock": "متوفر في المخزون",
+    "lineTotal": "إجمالي العنصر"
   }
 }

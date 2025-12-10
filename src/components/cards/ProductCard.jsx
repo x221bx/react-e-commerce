@@ -32,12 +32,15 @@ export default function ProductCard({ product, index = 0 }) {
   );
 
   const imageUrl = product?.thumbnailUrl || product?.img || "/placeholder.png";
+  const stock = Number(product?.stock ?? product?.quantity ?? 0);
+  const isAvailable = product?.isAvailable !== false && stock > 0;
 
   const badge =
     product.badge ||
     (product.isNew && "New") ||
     (product.isTrending && "Hot") ||
     (product.onSale && "Sale");
+  const unavailableLabel = t("products.details.outOfStock", "Out of Stock");
 
   const fadeIn = {
     hidden: { opacity: 0, y: 45, scale: 0.9 },
@@ -80,6 +83,13 @@ export default function ProductCard({ product, index = 0 }) {
         `}
         onClick={() => navigate(`/product/${product.id}`)}
       >
+        {!isAvailable && (
+          <div className="pointer-events-none absolute inset-0 z-20 grid place-items-center bg-black/40">
+            <span className="rounded-full bg-amber-200 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-800 shadow">
+              {unavailableLabel}
+            </span>
+          </div>
+        )}
         {/* Glass Hover Effect */}
         <div
           className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition duration-300"
@@ -200,17 +210,30 @@ export default function ProductCard({ product, index = 0 }) {
           {Number(product.price).toLocaleString()} EGP
         </p>
 
+        {!isAvailable && (
+          <p className="text-center text-xs font-semibold text-amber-600 dark:text-amber-300 mt-1">
+            {unavailableLabel}
+          </p>
+        )}
+
         {/* ADD TO CART */}
         <Button
-          text={inCart ? t("products.inCart") : t("products.addToCart")}
+          text={
+            !isAvailable
+              ? unavailableLabel
+              : inCart
+              ? t("products.inCart")
+              : t("products.addToCart")
+          }
           full
-          disabled={inCart}
+          disabled={inCart || !isAvailable}
           onClick={(e) => {
             e.stopPropagation();
-            !inCart && dispatch(addToCart(product));
+            if (inCart || !isAvailable) return;
+            dispatch(addToCart(product));
           }}
           className={`mt-3 rounded-xl font-semibold ${
-            inCart ? "opacity-50 cursor-not-allowed" : ""
+            inCart || !isAvailable ? "opacity-50 cursor-not-allowed" : ""
           }`}
         />
 
@@ -263,10 +286,19 @@ export default function ProductCard({ product, index = 0 }) {
 
             <div className="mt-4">
               <Button
-                text={inCart ? "In Cart" : "Add to Cart"}
+                text={
+                  !isAvailable
+                    ? unavailableLabel
+                    : inCart
+                    ? t("products.details.inCart", "Already in cart")
+                    : t("products.details.addToCart", "Add to Cart")
+                }
                 full
-                disabled={inCart}
-                onClick={() => dispatch(addToCart(product))}
+                disabled={inCart || !isAvailable}
+                onClick={() => {
+                  if (inCart || !isAvailable) return;
+                  dispatch(addToCart(product));
+                }}
               />
             </div>
 

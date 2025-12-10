@@ -43,7 +43,7 @@ const OverviewCard = ({ user, profileForm, preferenceForm, scrollToSection }) =>
       tone: "solid",
     });
     chips.push({
-      label: preferenceForm.locale === 'ar' ? t('languages.arabic', 'العربية') : t('languages.english', 'English'),
+      label: preferenceForm.locale === "ar" ? t("languages.ar", "Arabic") : t("languages.en", "English"),
       tone: "outline",
     });
     chips.push({
@@ -69,7 +69,7 @@ const OverviewCard = ({ user, profileForm, preferenceForm, scrollToSection }) =>
       },
       {
         label: t('userSettings.interface_language', 'Interface Language'),
-        value: preferenceForm.locale === 'ar' ? t('languages.arabic', 'العربية') : t('languages.english', 'English'),
+        value: preferenceForm.locale === "ar" ? t("languages.ar", "Arabic") : t("languages.en", "English"),
       },
       {
         label: t('userSettings.notifications', 'Notifications'),

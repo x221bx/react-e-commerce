@@ -9,7 +9,7 @@ const Input = (
     error,
     value = "",
     onChange,
-    placeholder = "Type something...",
+    placeholder = "",
     type = "text",
     ...props
   },
