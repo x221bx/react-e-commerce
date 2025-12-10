@@ -165,6 +165,8 @@ export default function App() {
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/paypal/callback" element={<PaypalCallback />} />
           <Route path="/paymob/callback" element={<PaymobCallback />} />
+          <Route path="/paymob-result" element={<PaymobCallback />} />
+          <Route path="/order-tracking/:orderId" element={<OrderTracking />} />
           <Route path="/success" element={<SuccessPage />} />
           {/* Authenticated User Routes */}
           <Route element={<ProtectedRoute />}>

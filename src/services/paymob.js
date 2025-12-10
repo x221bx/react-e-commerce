@@ -3,6 +3,21 @@ import { getEnv } from "../utils/env";
 
 const API_BASE = getEnv("VITE_API_BASE", "http://localhost:5000/api");
 
+async function parseJsonSafe(res) {
+  const text = await res.text();
+  try {
+    return text ? JSON.parse(text) : {};
+  } catch (err) {
+    // Return a structured object so callers can surface a meaningful error
+    return {
+      __raw: text,
+      message:
+        text?.slice(0, 140) ||
+        `Unexpected response (status ${res.status || "?"})`,
+    };
+  }
+}
+
 export const parsePaymobRedirect = (url) => {
   if (!url) return { status: "unknown" };
   const parts = url.split("?");
@@ -16,9 +31,8 @@ export const parsePaymobRedirect = (url) => {
   const successCodes = ["APPROVED", "00", "0"];
   const pendingCodes = ["10"];
 
-  const isSuccess = successFlag === "true" && successCodes.includes(txnCode);
-  const isPending = pendingCodes.includes(txnCode);
-  const isFailed = !isSuccess && !isPending;
+  const isSuccess = successFlag === "true" || successCodes.includes(txnCode);
+  const isPending = pendingFlag === "true" || pendingCodes.includes(txnCode);
 
   return {
     status: isSuccess ? "success" : isPending ? "pending" : "failed",
@@ -35,17 +49,58 @@ export const createPaymobCardPayment = async ({
   form = {},
   user = {},
   merchantOrderId,
+  integrationId,
+  walletNumber,
+  wallet = false,
 }) => {
   const res = await fetch(`${API_BASE}/paymob/card-payment`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ amount, cartItems, form, user, merchantOrderId }),
+    body: JSON.stringify({
+      amount,
+      cartItems,
+      form,
+      user,
+      merchantOrderId,
+      integrationId,
+      walletNumber,
+      wallet,
+    }),
   });
 
-  const data = await res.json();
+  const data = await parseJsonSafe(res);
   if (!res.ok) {
     throw new Error(data?.message || "Failed to initialize Paymob payment");
   }
 
   return data; // { paymentUrl, paymentKey, paymobOrderId, amountCents }
+};
+
+export const createPaymobWalletPayment = async ({
+  amount,
+  cartItems = [],
+  form = {},
+  user = {},
+  merchantOrderId,
+  walletNumber,
+}) => {
+  const res = await fetch(`${API_BASE}/paymob/wallet-payment`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      amount,
+      cartItems,
+      form,
+      user,
+      merchantOrderId,
+      walletNumber,
+    }),
+  });
+
+  const data = await parseJsonSafe(res);
+  if (!res.ok) {
+    throw new Error(data?.message || "Failed to initialize Paymob wallet payment");
+  }
+
+  return data; // { paymentUrl, paymentKey, paymobOrderId, amountCents, wallet: true }
 };

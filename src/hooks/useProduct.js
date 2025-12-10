@@ -13,9 +13,11 @@ export function useProduct(id) {
 
       const data = snap.data();
 
-      // حل مشكلة Timestamp
+      // normalize timestamps
       if (data.createdAt?.toMillis) data.createdAt = data.createdAt.toDate();
       if (data.updatedAt?.toMillis) data.updatedAt = data.updatedAt.toDate();
+
+      if (data.isDeleted) return null;
 
       return { id: snap.id, ...data };
     },

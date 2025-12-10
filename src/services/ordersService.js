@@ -25,6 +25,7 @@ const sanitizeItems = (items = []) =>
       item.id ||
       item.productId ||
       `prod_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const stockKey = item.productId || item.id;
     return {
       productId,
       id: productId,
@@ -35,6 +36,7 @@ const sanitizeItems = (items = []) =>
       total: Number((quantity * price).toFixed(2)),
       image,
       imageUrl: image,
+      stockKey,
     };
   });
 
@@ -57,8 +59,9 @@ const updateInventoryCounts = async (items) => {
   if (!items.length) return;
   const batch = writeBatch(db);
   items.forEach((item) => {
-    if (!item.productId && !item.id) return;
-    const productRef = doc(db, "products", item.productId || item.id);
+    const pid = item.stockKey || item.productId || item.id;
+    if (!pid) return;
+    const productRef = doc(db, "products", pid);
     const qty = Math.abs(Number(item.quantity || 0));
     if (!qty) return;
     batch.update(productRef, {
