@@ -19,7 +19,7 @@ export default function ProductCard({ product, index = 0 }) {
   const navigate = useNavigate();
   const { theme } = UseTheme();
   const isDark = theme === "dark";
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const [quickView, setQuickView] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -34,6 +34,11 @@ export default function ProductCard({ product, index = 0 }) {
   const imageUrl = product?.thumbnailUrl || product?.img || "/placeholder.png";
   const stock = Number(product?.stock ?? product?.quantity ?? 0);
   const isAvailable = product?.isAvailable !== false && stock > 0;
+
+  const displayTitle =
+    i18n.language?.startsWith("ar")
+      ? product.titleAr || product.title || product.name
+      : product.titleEn || product.title || product.name;
 
   const badge =
     product.badge ||
@@ -197,8 +202,8 @@ export default function ProductCard({ product, index = 0 }) {
             ${isDark ? "text-emerald-100" : "text-slate-800"}
           `}
         >
-          {product.name || product.title}
-        </h3>
+            {displayTitle}
+          </h3>
 
         {/* PRICE */}
         <p
@@ -273,7 +278,7 @@ export default function ProductCard({ product, index = 0 }) {
             <img src={imageUrl} className="rounded-xl w-full" />
 
             <h3 className="mt-4 text-xl font-bold dark:text-white">
-              {product.name}
+              {displayTitle}
             </h3>
 
             <p className="text-emerald-600 dark:text-emerald-300 text-2xl font-bold mt-2">

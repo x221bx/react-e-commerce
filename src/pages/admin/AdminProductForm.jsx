@@ -1,485 +1,440 @@
-// src/pages/AdminProductForm.jsx
+// src/pages/admin/AdminProductForm.jsx
+import React, { useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
+import { useTranslation } from "react-i18next";
+import { FiArrowLeft, FiExternalLink, FiZap } from "react-icons/fi";
+import toast from "react-hot-toast";
 import PageHeader from "../../admin/PageHeader";
 import { useProduct } from "../../hooks/useProduct";
-import {
-  useAddProduct,
-  useUpdateProduct,
-} from "../../hooks/useProductMutations";
+import { useAddProduct, useUpdateProduct } from "../../hooks/useProductMutations";
 import { useCategoriesSorted } from "../../hooks/useCategoriesSorted";
 import { UseTheme } from "../../theme/ThemeProvider";
+import { translateText as aiTranslate } from "../../utils/aiHelpers";
 
-// Validation Schema
-const createSchema = (t) =>
-  Yup.object({
-    titleEn: Yup.string()
-      .min(3, "Title (EN) must be at least 3 characters")
-      .required("Title (EN) is required"),
-    titleAr: Yup.string()
-      .min(3, "Title (AR) must be at least 3 characters")
-      .required("Title (AR) is required"),
-    descriptionEn: Yup.string()
-      .min(10, "Description (EN) must be at least 10 characters")
-      .required("Description (EN) is required"),
-    descriptionAr: Yup.string()
-      .min(10, "Description (AR) must be at least 10 characters")
-      .required("Description (AR) is required"),
-    thumbnailUrl: Yup.string()
-      .url("Thumbnail must be a valid URL")
-      .required("Thumbnail URL is required"),
-    price: Yup.string()
-      .test('is-valid-price', 'Price must be a valid positive number', (value) => {
-        if (!value && value !== 0) return false;
-        const numValue = parseFloat(value);
-        return !isNaN(numValue) && numValue >= 0 && numValue <= 999999999;
-      })
-      .required("Price is required"),
-    stock: Yup.number()
-      .typeError("Stock must be a number")
-      .integer("Stock must be an integer")
-      .min(0, "Stock cannot be negative")
-      .required("Stock is required"),
-    currency: Yup.string()
-      .oneOf(["USD", "EGP"])
-      .required("Currency is required"),
-    categoryId: Yup.string().required(
-      "Category is required"
-    ),
-    isAvailable: Yup.boolean(),
-  });
+const schema = Yup.object({
+  titleEn: Yup.string().min(3, "Title (EN) must be at least 3 characters").required("Title (EN) is required"),
+  titleAr: Yup.string().min(3, "Title (AR) must be at least 3 characters").required("Title (AR) is required"),
+  descriptionEn: Yup.string().min(10, "Description (EN) must be at least 10 characters").required("Description (EN) is required"),
+  descriptionAr: Yup.string().min(10, "Description (AR) must be at least 10 characters").required("Description (AR) is required"),
+  thumbnailUrl: Yup.string().url("Thumbnail must be a valid URL").required("Thumbnail URL is required"),
+  price: Yup.string()
+    .test("is-valid-price", "Price must be a valid positive number", (value) => {
+      if (!value && value !== 0) return false;
+      const num = parseFloat(value);
+      return !Number.isNaN(num) && num >= 0 && num <= 999999999;
+    })
+    .required("Price is required"),
+  stock: Yup.number().typeError("Stock must be a number").integer("Stock must be an integer").min(0, "Stock cannot be negative").required("Stock is required"),
+  featureHome: Yup.boolean(),
+  currency: Yup.string().oneOf(["USD", "EGP"]).required("Currency is required"),
+  categoryId: Yup.string().required("Category is required"),
+  isAvailable: Yup.boolean(),
+});
 
 export default function AdminProductForm() {
-  const { theme } = UseTheme();
-  const dark = theme === "dark";
-
   const { id } = useParams();
-  const isEdit = !!id;
   const navigate = useNavigate();
+  const { t } = useTranslation();
+  const { theme } = UseTheme();
+  const isDark = theme === "dark";
+  const isEdit = Boolean(id);
 
-  const { data: product, isLoading } = useProduct(id);
-  const { data: categories = [] } = useCategoriesSorted({});
+  const { data: product, isLoading: loadingProduct, isError } = useProduct(id);
+  const { data: categories = [] } = useCategoriesSorted({ dir: "asc" });
   const addProduct = useAddProduct();
   const updateProduct = useUpdateProduct();
+  const [translating, setTranslating] = useState("");
 
-  // initial values
-  const initial =
-    isEdit && product
-      ? {
-          titleEn: product.titleEn ?? product.title ?? "",
-          titleAr: product.titleAr ?? "",
-          descriptionEn: product.descriptionEn ?? product.description ?? "",
-          descriptionAr: product.descriptionAr ?? "",
-          thumbnailUrl: product.thumbnailUrl ?? "",
-          price: product.price ?? "",
-          currency: product.currency ?? "USD",
-          categoryId: product.categoryId ?? "",
-          stock:
-            product.stock !== undefined
-              ? Number(product.stock)
-              : product.quantity !== undefined
-              ? Number(product.quantity)
-              : 0,
-          isAvailable: !!product.isAvailable,
-        }
-      : {
-          titleEn: "",
-          titleAr: "",
-          descriptionEn: "",
-          descriptionAr: "",
-          thumbnailUrl: "",
-          price: "",
-          currency: "USD",
-          categoryId: "",
-          stock: 0,
-          isAvailable: true,
-        };
+  const surfaceClass = isDark
+    ? "bg-slate-900 border border-slate-800 text-slate-100"
+    : "bg-white border border-gray-200 text-gray-900";
+  const inputClass = `w-full rounded-lg border px-3 py-2.5 text-sm shadow-sm transition focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 ${
+    isDark
+      ? "bg-slate-900 border-slate-700 text-slate-100 placeholder:text-slate-400"
+      : "bg-white border-gray-200 text-gray-900 placeholder:text-gray-500"
+  }`;
+  const translateBtnClass = `inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold shadow-sm transition ${
+    isDark
+      ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-100 hover:bg-emerald-500/20"
+      : "border-emerald-600 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+  } disabled:opacity-60 disabled:cursor-not-allowed`;
 
-  // Custom validation for price to prevent symbols
-  const validatePrice = (value) => {
-    if (!value && value !== 0) return "Price is required";
-    if (isNaN(value) || value < 0) return "Price must be a valid positive number";
-    if (value > 999999999) return "Price is too high";
-    return undefined;
+  const initialValues = useMemo(
+    () => ({
+      titleEn: product?.titleEn || product?.title || "",
+      titleAr: product?.titleAr || "",
+      descriptionEn: product?.descriptionEn || product?.description || "",
+      descriptionAr: product?.descriptionAr || "",
+      thumbnailUrl: product?.thumbnailUrl || "",
+      price: product?.price ?? "",
+      stock: Number(product?.stock ?? product?.quantity ?? 0) || 0,
+      currency: product?.currency || "EGP",
+      categoryId: product?.categoryId || "",
+      isAvailable:
+        product?.isAvailable !== false &&
+        (Number(product?.stock ?? product?.quantity ?? 0) > 0),
+      featureHome: !!product?.featureHome,
+    }),
+    [product]
+  );
+
+  const handleTranslate = async ({ targetLang, values, setFieldValue }) => {
+    const sourceLang = targetLang === "ar" ? "en" : "ar";
+    const sourceTitle = targetLang === "ar" ? values.titleEn : values.titleAr;
+    const sourceDesc =
+      targetLang === "ar" ? values.descriptionEn : values.descriptionAr;
+
+    if (!sourceTitle && !sourceDesc) {
+      toast.error("Add content to translate first.");
+      return;
+    }
+
+    setTranslating(targetLang);
+    try {
+      const [translatedTitle, translatedDesc] = await Promise.all([
+        sourceTitle
+          ? aiTranslate({ text: sourceTitle, targetLang, sourceLang })
+          : Promise.resolve(""),
+        sourceDesc
+          ? aiTranslate({ text: sourceDesc, targetLang, sourceLang })
+          : Promise.resolve(""),
+      ]);
+
+      if (targetLang === "ar") {
+        if (translatedTitle) setFieldValue("titleAr", translatedTitle);
+        if (translatedDesc) setFieldValue("descriptionAr", translatedDesc);
+      } else {
+        if (translatedTitle) setFieldValue("titleEn", translatedTitle);
+        if (translatedDesc) setFieldValue("descriptionEn", translatedDesc);
+      }
+      toast.success(
+        targetLang === "ar"
+          ? "Translated to Arabic"
+          : "Translated to English"
+      );
+    } catch (error) {
+      console.error("translate error", error);
+      toast.error("Translation failed. Please try again.");
+    } finally {
+      setTranslating("");
+    }
   };
 
-  // Handle price input to prevent symbols
-  const handlePriceChange = (e, setFieldValue) => {
-    const value = e.target.value;
-    // Allow only numbers and decimal point
-    const cleanValue = value.replace(/[^0-9.]/g, '');
-    // Only allow one decimal point
-    const finalValue = cleanValue.replace(/(\..*)\./g, '$1');
-    setFieldValue('price', finalValue);
+  const handleSubmit = async (values, helpers) => {
+    const { setSubmitting } = helpers;
+    const stockValue = Math.max(0, Number(values.stock) || 0);
+    const payload = {
+      titleEn: values.titleEn.trim(),
+      titleAr: values.titleAr.trim(),
+      title: values.titleEn.trim(),
+      descriptionEn: values.descriptionEn.trim(),
+      descriptionAr: values.descriptionAr.trim(),
+      description: values.descriptionEn.trim(),
+      thumbnailUrl: values.thumbnailUrl.trim(),
+      price: Number(values.price) || 0,
+      stock: stockValue,
+      quantity: stockValue,
+      currency: values.currency,
+      categoryId: values.categoryId,
+      isAvailable: stockValue > 0 && values.isAvailable !== false,
+      featureHome: !!values.featureHome,
+    };
+
+    try {
+      if (isEdit) {
+        await updateProduct.mutateAsync({ id, ...payload });
+        toast.success("Product updated");
+      } else {
+        await addProduct.mutateAsync(payload);
+        toast.success("Product created");
+      }
+      navigate("/admin/products");
+    } catch (error) {
+      console.error("submit error", error);
+      toast.error("Failed to save product");
+    } finally {
+      setSubmitting(false);
+    }
   };
+
+  if (isEdit && loadingProduct) {
+    return (
+      <div className="p-6 text-center text-sm text-gray-500">
+        Loading product...
+      </div>
+    );
+  }
+
+  if (isEdit && !product && !loadingProduct) {
+    return (
+      <div className="p-6 text-center text-sm text-red-500">
+        {isError
+          ? "Failed to load this product."
+          : "Product not found or deleted."}
+      </div>
+    );
+  }
 
   return (
     <div
-      className={`
-        min-h-screen w-full pt-4 pb-10 px-4 md:px-6
-        transition-all duration-300
-        ${dark ? "bg-[#0d1a1a] text-[#cfecec]" : "bg-gray-50 text-gray-900"}
-      `}
+      className={`min-h-screen w-full pb-12 ${
+        isDark ? "bg-[#0d1a1a]" : "bg-[#f8faf9]"
+      }`}
     >
-      <PageHeader
-        title={
-          isEdit
-            ? "Edit product"
-            : "New product"
-        }
-        actions={[]}
-      />
+      <div className="mx-auto max-w-5xl px-4 md:px-6">
+        <PageHeader
+          title={
+            isEdit
+              ? t("admin.edit_product", { defaultValue: "Edit product" })
+              : t("admin.new_product", { defaultValue: "New product" })
+          }
+          actions={
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => navigate("/admin/products")}
+                className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+              >
+                <FiArrowLeft /> {t("back", { defaultValue: "Back" })}
+              </button>
+              {isEdit && (
+                <a
+                  href={`/product/${id}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 rounded-lg border border-emerald-500 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700 shadow-sm transition hover:bg-emerald-100 dark:border-emerald-400 dark:bg-emerald-500/10 dark:text-emerald-100 dark:hover:bg-emerald-500/20"
+                >
+                  <FiExternalLink />
+                  {t("products.view_live", { defaultValue: "View live" })}
+                </a>
+              )}
+            </div>
+          }
+        />
 
-      {isEdit && isLoading ? (
-        <div className="text-sm opacity-70">
-          "Loading product..."
-        </div>
-      ) : (
-        <div
-          className={`
-            rounded-xl border p-4 shadow-sm sm:p-6
-            ${
-              dark
-                ? "bg-[#0f2222] border-[#1e3a3a]"
-                : "bg-white border-gray-200"
-            }
-          `}
+        <Formik
+          initialValues={initialValues}
+          enableReinitialize
+          validationSchema={schema}
+          onSubmit={handleSubmit}
         >
-          <Formik
-            initialValues={initial}
-            enableReinitialize
-            validationSchema={createSchema()}
-            onSubmit={async (values, { setSubmitting }) => {
-              try {
-                const payload = {
-                  title: values.titleEn || values.titleAr || "",
-                  titleEn: values.titleEn,
-                  titleAr: values.titleAr,
-                  description: values.descriptionEn || values.descriptionAr || "",
-                  descriptionEn: values.descriptionEn,
-                  descriptionAr: values.descriptionAr,
-                  thumbnailUrl: values.thumbnailUrl || undefined,
-                  price: Number(values.price) || 0,
-                  currency: values.currency,
-                  categoryId: values.categoryId,
-                  stock: Number(values.stock) || 0,
-                  isAvailable: !!values.isAvailable,
-                };
-
-                if (isEdit) {
-                  await updateProduct.mutateAsync({ id, ...payload });
-                } else {
-                  const ref = await addProduct.mutateAsync(payload);
-                  if (ref?.id) {
-                    navigate(`/admin/products/${ref.id}/edit`, {
-                      replace: true,
-                    });
-                    return;
-                  }
-                }
-
-                navigate("/admin/products", { replace: true });
-              } catch (err) {
-              } finally {
-                setSubmitting(false);
-              }
-            }}
-          >
-            {({ values }) => (
-              <Form id="productForm" className="grid gap-4">
-                {/* Titles (EN/AR) */}
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="block text-sm font-medium">
-                      Product name (English)
-                    </label>
-                    <Field
-                      name="titleEn"
-                      className={`
-                        w-full rounded-lg px-3 py-2 border
-                        ${
-                          dark
-                            ? "bg-[#0c1919] border-[#1e3a3a] text-[#cfecec]"
-                            : "bg-white border-gray-300 text-gray-800"
-                        }
-                      `}
-                    />
-                    <ErrorMessage
-                      name="titleEn"
-                      component="p"
-                      className="text-xs text-red-500 mt-1"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium">
-                      Product name (Arabic)
-                    </label>
-                    <Field
-                      name="titleAr"
-                      className={`
-                        w-full rounded-lg px-3 py-2 border
-                        ${
-                          dark
-                            ? "bg-[#0c1919] border-[#1e3a3a] text-[#cfecec]"
-                            : "bg-white border-gray-300 text-gray-800"
-                        }
-                      `}
-                    />
-                    <ErrorMessage
-                      name="titleAr"
-                      component="p"
-                      className="text-xs text-red-500 mt-1"
-                    />
-                  </div>
+          {({ values, isSubmitting, setFieldValue }) => (
+            <Form
+              className={`rounded-2xl ${surfaceClass} shadow-sm`}
+            >
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-5 py-4 dark:border-slate-800">
+                <div className="flex items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-200">
+                  <FiZap />
+                  {t("admin.translation_helpers", {
+                    defaultValue: "AI translation helpers",
+                  })}
                 </div>
-
-                {/* Descriptions (EN/AR) */}
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="block text-sm font-medium">
-                      Description (English)
-                    </label>
-                    <Field
-                      as="textarea"
-                      name="descriptionEn"
-                      rows={4}
-                      className={`
-                        w-full rounded-lg px-3 py-2 border
-                        ${
-                          dark
-                            ? "bg-[#0c1919] border-[#1e3a3a] text-[#cfecec]"
-                            : "bg-white border-gray-300 text-gray-800"
-                        }
-                      `}
-                    />
-                    <ErrorMessage
-                      name="descriptionEn"
-                      component="p"
-                      className="text-xs text-red-500 mt-1"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium">
-                      Description (Arabic)
-                    </label>
-                    <Field
-                      as="textarea"
-                      name="descriptionAr"
-                      rows={4}
-                      className={`
-                        w-full rounded-lg px-3 py-2 border
-                        ${
-                          dark
-                            ? "bg-[#0c1919] border-[#1e3a3a] text-[#cfecec]"
-                            : "bg-white border-gray-300 text-gray-800"
-                        }
-                      `}
-                    />
-                    <ErrorMessage
-                      name="descriptionAr"
-                      component="p"
-                      className="text-xs text-red-500 mt-1"
-                    />
-                  </div>
-                </div>
-
-                {/* Image + Category */}
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="block text-sm font-medium">
-                      Image URL
-                    </label>
-                    <Field
-                      name="thumbnailUrl"
-                      className={`
-                        w-full rounded-lg px-3 py-2 border
-                        ${
-                          dark
-                            ? "bg-[#0c1919] border-[#1e3a3a] text-[#cfecec]"
-                            : "bg-white border-gray-300 text-gray-800"
-                        }
-                      `}
-                    />
-                    <ErrorMessage
-                      name="thumbnailUrl"
-                      component="p"
-                      className="text-xs text-red-500 mt-1"
-                    />
-
-                    {values.thumbnailUrl && (
-                      <img
-                        src={values.thumbnailUrl}
-                        className="mt-2 h-24 w-full rounded-lg object-cover border"
-                        onError={(e) =>
-                          (e.currentTarget.style.display = "none")
-                        }
-                      />
-                    )}
-                  </div>
-
-                  {/* Category */}
-                  <div>
-                    <label className="block text-sm font-medium">
-                      Category
-                    </label>
-                    <Field
-                      as="select"
-                      name="categoryId"
-                      className={`
-                        w-full rounded-lg px-3 py-2 border
-                        ${
-                          dark
-                            ? "bg-[#0c1919] border-[#1e3a3a] text-[#cfecec]"
-                            : "bg-white border-gray-300 text-gray-800"
-                        }
-                      `}
-                    >
-                      <option value="">
-                        Select category
-                      </option>
-                      {categories.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name}
-                        </option>
-                      ))}
-                    </Field>
-                    <ErrorMessage
-                      name="categoryId"
-                      component="p"
-                      className="text-xs text-red-500 mt-1"
-                    />
-                  </div>
-                </div>
-
-                {/* Price / Stock / Currency */}
-                <div className="grid gap-4 sm:grid-cols-3">
-                  {/* Price */}
-                  <div>
-                    <label className="block text-sm font-medium">
-                      Price
-                    </label>
-                    <Field name="price">
-                      {({ field, form, meta }) => (
-                        <>
-                          <input
-                            {...field}
-                            type="text"
-                            inputMode="decimal"
-                            min="0"
-                            step="0.01"
-                            placeholder="0.00"
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              // Allow only numbers and decimal point
-                              const cleanValue = value.replace(/[^0-9.]/g, '');
-                              // Only allow one decimal point
-                              const finalValue = cleanValue.replace(/(\..*)\./g, '$1');
-                              form.setFieldValue("price", finalValue);
-                            }}
-                            className={`
-                              w-full rounded-lg px-3 py-2 border
-                              ${
-                                dark
-                                  ? "bg-[#0c1919] border-[#1e3a3a] text-[#cfecec]"
-                                  : "bg-white border-gray-300 text-gray-800"
-                              }
-                              ${meta.touched && meta.error ? 'border-red-500' : ''}
-                            `}
-                          />
-                          {meta.touched && meta.error && (
-                            <p className="text-xs text-red-500 mt-1">{meta.error}</p>
-                          )}
-                        </>
-                      )}
-                    </Field>
-                    <ErrorMessage
-                      name="price"
-                      component="p"
-                      className="text-xs text-red-500 mt-1"
-                    />
-                  </div>
-
-                  {/* Stock */}
-                  <div>
-                    <label className="block text-sm font-medium">
-                      Stock
-                    </label>
-                    <Field
-                      name="stock"
-                      type="number"
-                      min="0"
-                      className={`
-                        w-full rounded-lg px-3 py-2 border
-                        ${
-                          dark
-                            ? "bg-[#0c1919] border-[#1e3a3a] text-[#cfecec]"
-                            : "bg-white border-gray-300 text-gray-800"
-                        }
-                      `}
-                    />
-                    <ErrorMessage
-                      name="stock"
-                      component="p"
-                      className="text-xs text-red-500 mt-1"
-                    />
-                  </div>
-
-                  {/* Currency */}
-                  <div>
-                    <label className="block text-sm font-medium">
-                      Currency
-                    </label>
-                    <Field
-                      as="select"
-                      name="currency"
-                      className={`
-                        w-full rounded-lg px-3 py-2 border
-                        ${
-                          dark
-                            ? "bg-[#0c1919] border-[#1e3a3a] text-[#cfecec]"
-                            : "bg-white border-gray-300 text-gray-800"
-                        }
-                      `}
-                    >
-                      <option value="USD">USD</option>
-                      <option value="EGP">EGP</option>
-                    </Field>
-                    <ErrorMessage
-                      name="currency"
-                      component="p"
-                      className="text-xs text-red-500 mt-1"
-                    />
-                  </div>
-                </div>
-
-                {/* Checkbox */}
-                <label className="flex items-center gap-2">
-                  <Field name="isAvailable" type="checkbox" />
-                  <span className="text-sm font-medium">Available</span>
-                </label>
-
-                {/* Actions */}
-                <div className="flex gap-3 pt-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <button
-                    type="submit"
-                    className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700"
+                    type="button"
+                    onClick={() =>
+                      handleTranslate({
+                        targetLang: "ar",
+                        values,
+                        setFieldValue,
+                      })
+                    }
+                    disabled={translating === "ar"}
+                    className={translateBtnClass}
                   >
-                    {isEdit ? "Update product" : "Create product"}
+                    {translating === "ar" ? "Translating..." : "EN → AR"}
                   </button>
                   <button
                     type="button"
-                    onClick={() => navigate(-1)}
-                    className="px-4 py-2 rounded-lg border border-gray-300 text-sm font-semibold hover:bg-gray-50 dark:border-white/20 dark:text-white/80"
+                    onClick={() =>
+                      handleTranslate({
+                        targetLang: "en",
+                        values,
+                        setFieldValue,
+                      })
+                    }
+                    disabled={translating === "en"}
+                    className={translateBtnClass}
                   >
-                    Cancel
+                    {translating === "en" ? "Translating..." : "AR → EN"}
                   </button>
                 </div>
-              </Form>
-            )}
-          </Formik>
-        </div>
-      )}
+              </div>
+
+              <div className="grid gap-6 px-5 py-6 md:grid-cols-3">
+                <div className="space-y-4 md:col-span-2">
+                  <LabeledField label="Title (English)" name="titleEn">
+                    <Field
+                      name="titleEn"
+                      className={inputClass}
+                      placeholder="Farm product title in English"
+                    />
+                  </LabeledField>
+                  <LabeledField label="Title (Arabic)" name="titleAr">
+                    <Field
+                      name="titleAr"
+                      className={inputClass}
+                      placeholder="عنوان المنتج بالعربية"
+                    />
+                  </LabeledField>
+                  <LabeledField label="Description (English)" name="descriptionEn">
+                    <Field
+                      as="textarea"
+                      rows={4}
+                      name="descriptionEn"
+                      className={inputClass}
+                      placeholder="Clear English description for customers"
+                    />
+                  </LabeledField>
+                  <LabeledField label="Description (Arabic)" name="descriptionAr">
+                    <Field
+                      as="textarea"
+                      rows={4}
+                      name="descriptionAr"
+                      className={inputClass}
+                      placeholder="وصف المنتج باللغة العربية"
+                    />
+                  </LabeledField>
+                </div>
+
+                <div className="space-y-4">
+                  <LabeledField label="Thumbnail URL" name="thumbnailUrl">
+                    <Field
+                      name="thumbnailUrl"
+                      className={inputClass}
+                      placeholder="https://..."
+                    />
+                    {values.thumbnailUrl && (
+                      <div className="mt-2 overflow-hidden rounded-lg border border-gray-100 bg-gray-50 dark:border-slate-700 dark:bg-slate-800/70">
+                        <img
+                          src={values.thumbnailUrl}
+                          alt="Preview"
+                          className="h-40 w-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src = "/placeholder.png";
+                          }}
+                        />
+                      </div>
+                    )}
+                  </LabeledField>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <LabeledField label="Price" name="price">
+                      <Field
+                        name="price"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        className={inputClass}
+                      />
+                    </LabeledField>
+                    <LabeledField label="Currency" name="currency">
+                      <Field as="select" name="currency" className={inputClass}>
+                        <option value="EGP">EGP</option>
+                        <option value="USD">USD</option>
+                      </Field>
+                    </LabeledField>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <LabeledField label="Stock" name="stock">
+                      <Field
+                        name="stock"
+                        type="number"
+                        min="0"
+                        className={inputClass}
+                      />
+                    </LabeledField>
+                    <LabeledField label="Category" name="categoryId">
+                      <Field as="select" name="categoryId" className={inputClass}>
+                        <option value="">Select category</option>
+                        {categories.map((cat) => (
+                          <option key={cat.id} value={cat.id}>
+                            {cat.name || cat.title || cat.titleEn || "Category"}
+                          </option>
+                        ))}
+                      </Field>
+                    </LabeledField>
+                  </div>
+
+                  <div className="space-y-2 rounded-xl border border-gray-100 bg-gray-50 p-3 dark:border-slate-700 dark:bg-slate-800/70">
+                    <label className="flex items-center justify-between gap-2">
+                      <div>
+                        <div className="text-sm font-semibold">Availability</div>
+                        <p className="text-xs text-gray-500 dark:text-slate-300">
+                          Turns off automatically if stock is zero.
+                        </p>
+                      </div>
+                      <Field
+                        type="checkbox"
+                        name="isAvailable"
+                        className="h-5 w-5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                      />
+                    </label>
+                    <label className="flex items-center justify-between gap-2">
+                      <div>
+                        <div className="text-sm font-semibold">Show on home</div>
+                        <p className="text-xs text-gray-500 dark:text-slate-300">
+                          Only featured items appear on the home grid.
+                        </p>
+                      </div>
+                      <Field
+                        type="checkbox"
+                        name="featureHome"
+                        className="h-5 w-5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                      />
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between gap-3 rounded-b-2xl border-t border-gray-100 bg-gray-50 px-5 py-4 dark:border-slate-800 dark:bg-slate-900/60">
+                <div className="text-xs text-gray-500 dark:text-slate-300">
+                  Keep translations in sync before saving.
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => navigate("/admin/products")}
+                    className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+                  >
+                    {t("cancel", { defaultValue: "Cancel" })}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-60"
+                  >
+                    {isSubmitting
+                      ? t("saving", { defaultValue: "Saving..." })
+                      : isEdit
+                      ? t("admin.save_changes", { defaultValue: "Save changes" })
+                      : t("admin.create_product", { defaultValue: "Create product" })}
+                  </button>
+                </div>
+              </div>
+            </Form>
+          )}
+        </Formik>
+      </div>
     </div>
+  );
+}
+
+function LabeledField({ label, name, children }) {
+  return (
+    <label className="block space-y-1.5">
+      <span className="text-sm font-semibold text-gray-800 dark:text-slate-100">
+        {label}
+      </span>
+      {children}
+      <ErrorMessage
+        name={name}
+        component="div"
+        className="text-xs font-semibold text-rose-500"
+      />
+    </label>
   );
 }

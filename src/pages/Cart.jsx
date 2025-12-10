@@ -367,7 +367,11 @@ export default function Cart() {
                     totaltext={t("checkout.summary.total", "Total")}
                     onCheckout={handleGoToCheckout}
                     itemCount={items.length}
-                    textitem={t("checkout.summary.quantity_plural", "items")}
+                    textitem={
+                      items.length === 1
+                        ? t("checkout.summary.itemLabel", "item")
+                        : t("checkout.summary.itemsLabel", "items")
+                    }
                   />
                 </div>
               </>

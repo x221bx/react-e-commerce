@@ -638,6 +638,8 @@
     "summary": {
       "title": "ملخص الطلب",
       "subtitle": "المنتجات في سلتك",
+      "itemLabel": "عنصر",
+      "itemsLabel": "عناصر",
       "quantity": "{{count}} منتج",
       "quantity_plural": "{{count}} منتجات",
       "subtotal": "الإجمالي الفرعي",
@@ -1151,6 +1153,7 @@
     "outOfStock": "غير متوفر",
     "lowStock": "متبقي {{count}} فقط",
     "inStock": "متوفر في المخزون",
-    "lineTotal": "إجمالي العنصر"
+    "lineTotal": "إجمالي العنصر",
+    "lastPiece": "??? ????"
   }
 }

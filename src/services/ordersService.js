@@ -57,19 +57,27 @@ const buildOrderNumber = () => {
 
 const updateInventoryCounts = async (items) => {
   if (!items.length) return;
-  const batch = writeBatch(db);
-  items.forEach((item) => {
+  for (const item of items) {
     const pid = item.stockKey || item.productId || item.id;
-    if (!pid) return;
-    const productRef = doc(db, "products", pid);
+    if (!pid) continue;
     const qty = Math.abs(Number(item.quantity || 0));
-    if (!qty) return;
+    if (!qty) continue;
+
+    const productRef = doc(db, "products", pid);
+    const snap = await getDoc(productRef);
+    if (!snap.exists()) continue;
+
+    const current = snap.data() || {};
+    const currentStock = Number(current.stock ?? current.quantity ?? 0) || 0;
+    const nextStock = Math.max(0, currentStock - qty);
+
+    const batch = writeBatch(db);
     batch.update(productRef, {
-      stock: increment(-qty),
-      quantity: increment(-qty),
+      stock: nextStock,
+      quantity: nextStock,
     });
-  });
-  await batch.commit();
+    await batch.commit();
+  }
 };
 
 export const createOrder = async ({

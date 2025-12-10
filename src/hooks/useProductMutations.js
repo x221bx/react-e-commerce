@@ -36,6 +36,7 @@ function normalizeProductPayload(p) {
   // ensure booleans are booleans
   if (payload.isAvailable !== undefined)
     payload.isAvailable = Boolean(payload.isAvailable);
+  if (payload.stock !== undefined && payload.stock < 0) payload.stock = 0;
 
   // create a lower-cased name helper
   if (payload.name || payload.title) {
