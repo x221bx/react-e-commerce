@@ -20,12 +20,14 @@ import Footer from "../Authcomponents/Footer";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { UseTheme } from "../theme/ThemeProvider";
+import { getLocalizedProductTitle, ensureProductLocalization } from "../utils/productLocalization";
 
 export default function Cart() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === "ar";
+  const lang = i18n.language || "en";
   const { theme } = UseTheme();
   const isDark = theme === "dark";
 
@@ -56,7 +58,7 @@ export default function Cart() {
         };
       });
 
-      dispatch(updateCartStock(products));
+      dispatch(updateCartStock(products.map((p) => ensureProductLocalization(p))));
     } catch (err) {
       console.error("fetchLatestStock failed:", err);
     }
@@ -71,7 +73,8 @@ export default function Cart() {
     const stock = Number(item.stock || 0);
 
     if (qty >= stock) {
-      showToast(`Max stock reached for "${item.title || item.name}"`);
+      const name = getLocalizedProductTitle(item, lang) || item.title || item.name || "";
+      showToast(`Max stock reached for "${name}"`);
       return;
     }
     dispatch(addToCart({ ...item }));
@@ -247,7 +250,7 @@ export default function Cart() {
                           <div className="flex flex-wrap justify-between gap-3">
                             <div>
                               <h3 className={`font-semibold text-lg ${isDark ? "text-white" : "text-slate-900"}`}>
-                                {item.name || item.title}
+                                {getLocalizedProductTitle(item, lang)}
                               </h3>
 
                               <p className="text-emerald-500 font-bold mt-1">

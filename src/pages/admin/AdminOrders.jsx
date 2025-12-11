@@ -1,10 +1,14 @@
 // src/pages/AdminOrders.jsx
-import React, { useState, useMemo } from "react";
-import { FiRefreshCw, FiClock, FiTrash2 } from "react-icons/fi";
+import React, { useState, useMemo, useEffect } from "react";
+import { FiRefreshCw, FiClock, FiTrash2, FiTruck } from "react-icons/fi";
 import { MdHistory, MdNotifications } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import useOrders from "../../hooks/useOrders";
 import { UseTheme } from "../../theme/ThemeProvider";
+import { listDeliveryAccounts } from "../../services/deliveryService";
+import { db } from "../../services/firebase";
+import { doc, updateDoc, Timestamp } from "firebase/firestore";
+import toast from "react-hot-toast";
 
 export default function AdminOrders() {
   const { theme } = UseTheme();
@@ -24,6 +28,21 @@ export default function AdminOrders() {
   const [sortDesc, setSortDesc] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
+  const [deliveryUsers, setDeliveryUsers] = useState([]);
+  const [assigning, setAssigning] = useState(null);
+
+  useEffect(() => {
+    const loadDelivery = async () => {
+      try {
+        const list = await listDeliveryAccounts();
+        setDeliveryUsers(list);
+      } catch (err) {
+        console.error("Failed to load delivery accounts", err);
+        toast.error("Failed to load delivery accounts");
+      }
+    };
+    loadDelivery();
+  }, []);
 
   const navigate = useNavigate();
   const filters = ["All", ...STATUS_FLOW, "Canceled"];
@@ -71,6 +90,28 @@ export default function AdminOrders() {
     setRefreshing(true);
     await refreshOrders();
     setRefreshing(false);
+  };
+
+  const handleAssignDelivery = async (order, driverId) => {
+    if (!order?.id) return;
+    setAssigning(order.id);
+    const driver = deliveryUsers.find((d) => d.id === driverId);
+    try {
+      await updateDoc(doc(db, "orders", order.id), {
+        assignedDeliveryId: driverId || null,
+        deliveryId: driverId || null,
+        assignedDeliveryName: driver?.name || null,
+        assignedDeliveryEmail: driver?.email || null,
+        assignedDeliveryPhone: driver?.phone || null,
+        assignedAt: driverId ? Timestamp.now() : null,
+      });
+      toast.success(driverId ? "Assigned to delivery" : "Assignment cleared");
+    } catch (err) {
+      console.error("Assign delivery failed", err);
+      toast.error(err.message || "Failed to assign");
+    } finally {
+      setAssigning(null);
+    }
   };
 
   const statusColorClass = (order) => {
@@ -279,6 +320,18 @@ export default function AdminOrders() {
                       >
                         Total: {order.total} EGP
                       </span>
+                      <span
+                        className={`flex items-center gap-2 text-sm px-2 py-1 rounded-md ${
+                          isDark
+                            ? "bg-slate-800 text-slate-200"
+                            : "bg-emerald-50 text-emerald-800"
+                        }`}
+                      >
+                        <FiTruck />
+                        {order.assignedDeliveryName || order.assignedDeliveryEmail
+                          ? `Assigned to ${order.assignedDeliveryName || order.assignedDeliveryEmail}`
+                          : "Unassigned"}
+                      </span>
                     </div>
                   </div>
 
@@ -327,6 +380,28 @@ export default function AdminOrders() {
                         .map((s) => (
                           <option key={s} value={s}>
                             {s}
+                          </option>
+                        ))}
+                    </select>
+
+                    <select
+                      value={order.assignedDeliveryId || ""}
+                      onChange={(e) =>
+                        handleAssignDelivery(order, e.target.value || null)
+                      }
+                      disabled={assigning === order.id}
+                      className={`p-2 border rounded-md ${
+                        isDark
+                          ? "bg-slate-900 border-slate-700 text-slate-100"
+                          : "bg-white border-gray-300 text-gray-800"
+                      }`}
+                    >
+                      <option value="">Assign delivery</option>
+                      {deliveryUsers
+                        .filter((u) => u.active !== false)
+                        .map((u) => (
+                          <option key={u.id} value={u.id}>
+                            {u.name || u.email} {u.zone ? `(${u.zone})` : ""}
                           </option>
                         ))}
                     </select>

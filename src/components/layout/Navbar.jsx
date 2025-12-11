@@ -19,6 +19,8 @@ import {
   FiLogIn,
   FiUserPlus,
   FiFeather,
+  FiTruck,
+  FiSettings,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
 import i18n from "../../i18n";
@@ -42,6 +44,7 @@ export default function Navbar() {
   const location = useLocation();
   const { t } = useTranslation();
   const isAdminUser = user?.role === "admin" || user?.isAdmin;
+  const isDeliveryUser = user?.role === "delivery" || user?.isDelivery;
   const isRTL = currentLang === "ar";
 
   const { unreadCount } = useUserNotifications(user?.uid);
@@ -114,7 +117,8 @@ export default function Navbar() {
 
   const hideNavbar =
     ["/login", "/register", "/reset"].includes(location.pathname) ||
-    location.pathname.startsWith("/admin");
+    location.pathname.startsWith("/admin") ||
+    location.pathname.startsWith("/delivery");
 
   if (hideNavbar) return null;
 
@@ -208,6 +212,15 @@ export default function Navbar() {
                 </span>
               )}
             </NavLink>
+
+            {(isDeliveryUser || isAdminUser) && (
+              <NavLink
+                className={`${navLinkBase} ${navLinkIdle}`}
+                to="/delivery"
+              >
+                {t("delivery.portal", "Delivery Hub")}
+              </NavLink>
+            )}
 
             {isAdminUser && (
               <NavLink
@@ -454,6 +467,38 @@ export default function Navbar() {
                   </span>
                 )}
               </button>
+
+              {(isDeliveryUser || isAdminUser) && (
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setMobileOpen(false);
+                    navigate("/delivery");
+                  }}
+                  className={`py-2 w-full ${
+                    isRTL ? "text-right" : "text-left"
+                  } inline-flex items-center gap-2`}
+                >
+                  <FiTruck className="w-4 h-4" />
+                  {t("delivery.portal", "Delivery Hub")}
+                </button>
+              )}
+
+              {isAdminUser && (
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setMobileOpen(false);
+                    navigate("/admin");
+                  }}
+                  className={`py-2 w-full ${
+                    isRTL ? "text-right" : "text-left"
+                  } inline-flex items-center gap-2`}
+                >
+                  <FiSettings className="w-4 h-4" />
+                  {t("admin.dashboard")}
+                </button>
+              )}
 
               {user && (
                 <>

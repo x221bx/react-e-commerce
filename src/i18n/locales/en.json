@@ -1155,5 +1155,10 @@
     "inStock": "In stock",
     "lineTotal": "Line total",
     "lastPiece": "Last piece"
+  },
+  "delivery": {
+    "portal": "Delivery Hub",
+    "dashboard": "Delivery Control",
+    "accounts": "Delivery Accounts"
   }
 }

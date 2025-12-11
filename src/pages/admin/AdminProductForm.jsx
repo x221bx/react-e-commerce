@@ -426,7 +426,7 @@ export default function AdminProductForm() {
 function LabeledField({ label, name, children }) {
   return (
     <label className="block space-y-1.5">
-      <span className="text-sm font-semibold text-gray-800 dark:text-slate-100">
+      <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 opacity-100">
         {label}
       </span>
       {children}

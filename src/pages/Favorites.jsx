@@ -1,12 +1,12 @@
 // src/pages/Favorites.jsx
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
   removeFavourite,
   clearFavourites,
 } from "../features/favorites/favoritesSlice";
 import { addToCart } from "../features/cart/cartSlice";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   FiTrash2,
   FiArrowLeft,
@@ -16,27 +16,82 @@ import {
 import Footer from "../Authcomponents/Footer";
 import { UseTheme } from "../theme/ThemeProvider";
 import { useTranslation } from "react-i18next";
+import toast from "react-hot-toast";
+import { db } from "../services/firebase";
+import { collection, getDocs, query, where, documentId } from "firebase/firestore";
+import { getLocalizedProductTitle, ensureProductLocalization } from "../utils/productLocalization";
 
 export default function Favorites() {
   const { theme } = UseTheme();
   const isDark = theme === "dark";
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === "ar";
+  const lang = i18n.language || "en";
   const favorites = useSelector((state) => state.favorites.items ?? []);
   const cart = useSelector((state) => state.cart.items ?? []);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const [latestProducts, setLatestProducts] = useState({});
+  const normalizedFavorites = useMemo(
+    () => favorites.map((f) => ensureProductLocalization(f)),
+    [favorites]
+  );
 
   const cartItemIds = useMemo(
     () => new Set(cart.map((item) => item.id)),
     [cart]
   );
 
+  const isUnavailable = (item) => {
+    const live = latestProducts[item.id] || {};
+    const stock = Number(live.stock ?? live.quantity ?? item.stock ?? item.quantity ?? 0);
+    const availableFlag = live.isAvailable ?? item.isAvailable;
+    return availableFlag === false || stock <= 0;
+  };
+
+  // Fetch live product data for favorites to reflect availability changes
+  useEffect(() => {
+  const fetchLiveProducts = async () => {
+    if (!normalizedFavorites.length) {
+      setLatestProducts({});
+      return;
+    }
+      const batches = [];
+      for (let i = 0; i < normalizedFavorites.length; i += 10) {
+        batches.push(normalizedFavorites.slice(i, i + 10).map((f) => f.id));
+      }
+      const results = {};
+      try {
+        for (const batch of batches) {
+          const snap = await getDocs(
+            query(collection(db, "products"), where(documentId(), "in", batch))
+          );
+          snap.forEach((d) => {
+            const data = d.data() || {};
+            results[d.id] = ensureProductLocalization({ id: d.id, ...data });
+          });
+        }
+        setLatestProducts(results);
+      } catch (err) {
+        console.warn("Failed to refresh favorites availability", err);
+      }
+    };
+    fetchLiveProducts();
+  }, [normalizedFavorites]);
+
   const handleAddToCart = (item) => {
-    if (!cartItemIds.has(item.id)) dispatch(addToCart({ ...item }));
+    if (isUnavailable(item)) {
+      toast.error(
+        t("favorites.unavailable", "This product is unavailable right now.")
+      );
+      return;
+    }
+    if (!cartItemIds.has(item.id))
+      dispatch(addToCart(ensureProductLocalization({ ...item })));
   };
 
   const handleRemoveFromFavorites = (item) => {
-    dispatch(removeFavourite({ ...item }));
+    dispatch(removeFavourite(ensureProductLocalization({ ...item })));
   };
 
   return (
@@ -84,7 +139,7 @@ export default function Favorites() {
             </p>
           </div>
 
-          {favorites.length > 0 && (
+          {normalizedFavorites.length > 0 && (
             <button
               onClick={() => dispatch(clearFavourites())}
               className={`
@@ -104,7 +159,7 @@ export default function Favorites() {
         </header>
 
         {/* EMPTY STATE */}
-        {favorites.length === 0 ? (
+        {normalizedFavorites.length === 0 ? (
           <div
             className={`
               rounded-3xl border p-12 text-center shadow-2xl backdrop-blur-xl
@@ -150,7 +205,10 @@ export default function Favorites() {
         ) : (
           // GRID
           <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
-            {favorites.map((item) => (
+            {normalizedFavorites.map((item) => {
+              const live = latestProducts[item.id] || {};
+              const mergedItem = ensureProductLocalization({ ...item, ...live });
+              return (
               <li
                 key={item.id}
                 className={`
@@ -206,7 +264,10 @@ export default function Favorites() {
                 </div>
 
                 {/* PRODUCT IMAGE */}
-                <div className="relative z-[2] px-4 pt-3">
+                <button
+                    className="relative z-[2] px-4 pt-3 w-full text-left"
+                  onClick={() => navigate(`/product/${item.id}`)}
+                >
                   <div
                     className={`
                       rounded-2xl border overflow-hidden shadow-md 
@@ -217,36 +278,41 @@ export default function Favorites() {
                           : "border-slate-200 group-hover:border-emerald-400/80"
                       }
                     `}
-                  >
-                    <img
-                      src={item.thumbnailUrl || item.img}
-                      alt={item.name || item.title}
+                    >
+                      <img
+                      src={mergedItem.thumbnailUrl || mergedItem.img}
+                      alt={getLocalizedProductTitle(mergedItem, lang)}
                       className={`
                         h-60 w-full object-cover
                         transition-all duration-500 group-hover:scale-105
                       `}
                     />
                   </div>
-                </div>
+                </button>
 
                 {/* CONTENT */}
                 <div className="relative z-[3] p-6 flex flex-col gap-4">
                   {/* Title + optional small meta */}
                   <div className="space-y-1">
-                    <h2
-                      className={`text-lg font-bold tracking-wide ${
-                        isDark ? "text-white" : "text-slate-900"
-                      }`}
+                    <button
+                      onClick={() => navigate(`/product/${item.id}`)}
+                      className="text-left w-full"
                     >
-                      {item.name || item.title}
-                    </h2>
-                    {item.category && (
+                      <h2
+                        className={`text-lg font-bold tracking-wide ${
+                          isDark ? "text-white" : "text-slate-900"
+                        }`}
+                      >
+                        {getLocalizedProductTitle(mergedItem, lang)}
+                      </h2>
+                    </button>
+                    {(mergedItem.category || mergedItem.categoryName) && (
                       <p
                         className={`text-xs ${
                           isDark ? "text-emerald-200/80" : "text-emerald-700/80"
                         }`}
                       >
-                        {item.category}
+                        {mergedItem.category || mergedItem.categoryName}
                       </p>
                     )}
                   </div>
@@ -254,15 +320,20 @@ export default function Favorites() {
                   {/* PRICE */}
                   <div className="flex items-center justify-between">
                     <span className="text-emerald-500 text-xl font-extrabold tracking-tight drop-shadow-sm">
-                      {Number(item.price).toLocaleString()} EGP
+                      {Number(mergedItem.price).toLocaleString()} EGP
                     </span>
+                    {isUnavailable(mergedItem) && (
+                      <span className="text-xs font-semibold text-amber-600 dark:text-amber-300">
+                        {t("products.outOfStock", "Out of Stock")}
+                      </span>
+                    )}
                   </div>
 
                   {/* ACTION BUTTONS */}
                   <div className="flex items-center justify-between mt-2">
                     {/* Remove */}
                     <button
-                      onClick={() => handleRemoveFromFavorites(item)}
+                      onClick={() => handleRemoveFromFavorites(mergedItem)}
                       className={`
                         p-2 rounded-xl transition-all duration-300
                         hover:scale-110 active:scale-95
@@ -282,14 +353,14 @@ export default function Favorites() {
 
                     {/* Add to cart */}
                     <button
-                      onClick={() => handleAddToCart(item)}
-                      disabled={cartItemIds.has(item.id)}
+                      onClick={() => handleAddToCart(mergedItem)}
+                      disabled={cartItemIds.has(item.id) || isUnavailable(mergedItem)}
                       className={`
                         flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-semibold shadow-lg 
                         transition-all duration-300 active:scale-95 border
                         ${
-                          cartItemIds.has(item.id)
-                            ? "bg-emerald-900/30 text-emerald-200 border-emerald-700/60 cursor-not-allowed"
+                          cartItemIds.has(item.id) || isUnavailable(mergedItem)
+                            ? "bg-slate-200 text-slate-500 border-slate-300 cursor-not-allowed dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700"
                             : "bg-emerald-600 text-white hover:bg-emerald-500 border-emerald-400/70"
                         }
                       `}
@@ -297,12 +368,14 @@ export default function Favorites() {
                       <FiShoppingCart size={18} />
                       {cartItemIds.has(item.id)
                         ? t("favorites.inCart", "In Cart")
+                        : isUnavailable(mergedItem)
+                        ? t("favorites.unavailableShort", "Unavailable")
                         : t("favorites.addToCart", "Add to Cart")}
                     </button>
                   </div>
                 </div>
               </li>
-            ))}
+            )})}
           </ul>
         )}
       </div>
