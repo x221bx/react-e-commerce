@@ -2,9 +2,11 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { UseTheme } from "../../theme/ThemeProvider";
+import { getLocalizedProductTitle } from "../../utils/productLocalization";
 
 export default function CheckoutSummary({ cartItems, summary }) {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const lang = i18n.language || "en";
     const { theme } = UseTheme();
     const isDark = theme === "dark";
 
@@ -51,13 +53,13 @@ export default function CheckoutSummary({ cartItems, summary }) {
                         >
                             <img
                                 src={item.thumbnailUrl || item.img}
-                                alt={item.name || item.title}
+                                alt={getLocalizedProductTitle(item, lang)}
                                 className="h-16 w-16 rounded-xl object-cover shadow-sm"
                             />
 
                             <div className="flex-1">
                                 <p className="text-sm font-semibold">
-                                    {item.name || item.title}
+                                    {getLocalizedProductTitle(item, lang)}
                                 </p>
 
                                 <p className={`text-xs ${muted}`}>
@@ -126,11 +128,13 @@ export default function CheckoutSummary({ cartItems, summary }) {
                     >
                         <img
                             src={item.thumbnailUrl || item.img}
-                            alt={item.name || item.title}
+                            alt={getLocalizedProductTitle(item, lang)}
                             className="h-14 w-14 rounded-xl object-cover shadow-sm"
                         />
                         <div className="flex-1">
-                            <p className="text-sm font-semibold">{item.name}</p>
+                            <p className="text-sm font-semibold">
+                                {getLocalizedProductTitle(item, lang)}
+                            </p>
                             <p className={`text-xs ${muted}`}>
                                 {t("checkout.summary.qty", { count: item.quantity ?? 1 })}
                             </p>

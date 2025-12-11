@@ -1,5 +1,6 @@
 // src/features/cart/cartSlice.js
 import { createSlice } from "@reduxjs/toolkit";
+import { ensureProductLocalization } from "../../utils/productLocalization";
 
 // Pick saved cart for current user (if logged in) or guest key
 const getCurrentUserId = () => {
@@ -17,10 +18,14 @@ const getCartStorageKey = () => {
 };
 
 const rawSavedCart = JSON.parse(localStorage.getItem(getCartStorageKey()) || "[]");
+const normalizeList = (items = []) =>
+  Array.isArray(items)
+    ? items.map((item) => ensureProductLocalization({ ...(item || {}) }))
+    : [];
 
 // Deep clone initial cart items to prevent reference sharing with favorites
 const savedCart = Array.isArray(rawSavedCart)
-  ? rawSavedCart.map(item => JSON.parse(JSON.stringify(item)))
+  ? normalizeList(rawSavedCart).map((item) => JSON.parse(JSON.stringify(item)))
   : [];
 
 const cartSlice = createSlice({
@@ -31,10 +36,11 @@ const cartSlice = createSlice({
 
   reducers: {
     addToCart: (state, action) => {
-      const product = action.payload;
+      const product = ensureProductLocalization(action.payload);
 
       // store a deep-cloned product to avoid retaining references
       const prod = JSON.parse(JSON.stringify(product || {}));
+      prod.name = prod.name || prod.titleEn || prod.titleAr || prod.title || prod.productName;
 
       const exists = state.items.find((i) => i.id === prod.id);
 
@@ -116,9 +122,23 @@ const cartSlice = createSlice({
         const prod = products.find((p) => p.id === item.id);
         if (!prod) return item;
 
+        const normalized = ensureProductLocalization(prod);
+
         return {
           ...item,
-          stock: prod.stock ?? prod.quantity ?? 0,
+          stock: normalized.stock ?? normalized.quantity ?? 0,
+          titleEn: normalized.titleEn,
+          titleAr: normalized.titleAr,
+          nameEn: normalized.nameEn,
+          nameAr: normalized.nameAr,
+          name:
+            item.name ||
+            normalized.titleEn ||
+            normalized.titleAr ||
+            normalized.nameEn ||
+            normalized.nameAr ||
+            normalized.title ||
+            normalized.name,
         };
       });
 

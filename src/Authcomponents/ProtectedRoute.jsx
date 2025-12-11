@@ -5,11 +5,15 @@ import {
   selectIsAuthInitialized,
 } from "../features/auth/authSlice";
 
-export default function ProtectedRoute({ requireAdmin = false }) {
+export default function ProtectedRoute({
+  requireAdmin = false,
+  allowedRoles = null,
+  allowAdminOverride = true,
+}) {
   const user = useSelector(selectCurrentUser);
   const isInitialized = useSelector(selectIsAuthInitialized);
 
-  // أثناء تحميل حالة المستخدم
+  // Wait for auth state to resolve before deciding on access
   if (!isInitialized) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -18,12 +22,17 @@ export default function ProtectedRoute({ requireAdmin = false }) {
     );
   }
 
-  // لو المستخدم مش داخل أصلاً
   if (!user) return <Navigate to="/login" replace />;
 
-  // لو الصفحة للأدمن فقط والمستخدم مش أدمن
   if (requireAdmin && user?.isAdmin !== true) return <Navigate to="/403" replace />;
 
-  // عرض الصفحة المطلوبة
+  if (Array.isArray(allowedRoles) && allowedRoles.length > 0) {
+    const userRole = user?.role || (user?.isAdmin ? "admin" : null);
+    const hasRole = allowedRoles.includes(userRole);
+    if (!hasRole && !(allowAdminOverride && user?.isAdmin)) {
+      return <Navigate to="/403" replace />;
+    }
+  }
+
   return <Outlet />;
 }

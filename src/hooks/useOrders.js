@@ -136,7 +136,13 @@ export default function useOrders(uid = null, isAdmin = false) {
    * updateOrderStatus
    * - if status becomes "Canceled", optionally restore stock via restoreStockFn
    */
-  const updateOrderStatus = async (orderId, newStatus, restoreStockFn, actor = 'admin') => {
+  const updateOrderStatus = async (
+    orderId,
+    newStatus,
+    restoreStockFn,
+    actor = "admin",
+    metadata = {}
+  ) => {
     const order = orders.find((o) => o.id === orderId);
     if (!order) throw new Error("Order not found");
 
@@ -153,33 +159,61 @@ export default function useOrders(uid = null, isAdmin = false) {
     const statusEntry = {
       status: newStatus,
       changedAt: new Date().toISOString(),
-      actor: actor, // 'admin' or 'customer'
+      actor, // 'admin' | 'customer' | 'delivery'
+      ...(metadata.note ? { note: metadata.note } : {}),
+      ...(metadata.actorName ? { actorName: metadata.actorName } : {}),
+      ...(metadata.actorId ? { actorId: metadata.actorId } : {}),
     };
 
     // For customer actions, add additional metadata
-    if (actor === 'customer') {
-      if (newStatus === 'Delivered') {
-        statusEntry.confirmedBy = 'customer';
+    if (actor === "customer") {
+      if (newStatus === "Delivered") {
+        statusEntry.confirmedBy = "customer";
       }
     }
 
-    await updateDoc(doc(db, "orders", orderId), {
+    if (actor === "delivery") {
+      statusEntry.handledBy = metadata.actorName || "delivery";
+      statusEntry.driverId = metadata.actorId || null;
+    }
+
+    const updatePayload = {
       status: newStatus,
-      statusHistory: [
-        ...(order.statusHistory || []),
-        statusEntry,
-      ],
-    });
+      statusHistory: [...(order.statusHistory || []), statusEntry],
+    };
+
+    if (newStatus === "Canceled" && metadata.note) {
+      updatePayload.cancellationNote = metadata.note;
+      updatePayload.cancellationBy = actor;
+      updatePayload.cancellationAt = new Date().toISOString();
+    }
+
+    await updateDoc(doc(db, "orders", orderId), updatePayload);
 
     // Create notification for user if admin updated status
     if (isAdmin && order.uid && newStatus !== order.status) {
       try {
+        const isCash =
+          (order.paymentMethod || "").toLowerCase() === "cod" ||
+          (order.paymentMethod || "").toLowerCase() === "cash";
+        const reason = metadata.note
+          ? ` Reason: ${metadata.note}`
+          : "";
+        const refundNote =
+          newStatus === "Canceled" && !isCash
+            ? " We will refund the amount to your original payment method."
+            : "";
+        const message =
+          newStatus === "Canceled"
+            ? `Your order was canceled.${reason}${refundNote}`
+            : `Your order status has been updated to ${newStatus}${reason}`;
+
         await addDoc(collection(db, "notifications"), {
           uid: order.uid,
           type: "order-status",
           category: "orders",
           title: `Order #${order.orderNumber} Update`,
-          message: `Your order status has been updated to ${newStatus}`,
+          message,
           createdAt: Timestamp.now(),
           read: false,
           target: "/account/tracking",

@@ -1,9 +1,11 @@
 // src/components/orderTracking/OrderItemsList.jsx
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { getLocalizedProductTitle } from "../../utils/productLocalization";
 
 export default function OrderItemsList({ items, isDark }) {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const lang = i18n.language || "en";
 
     if (!items || items.length === 0) return null;
 
@@ -61,7 +63,7 @@ export default function OrderItemsList({ items, isDark }) {
                                         item.image ||
                                         item.imageUrl
                                     }
-                                    alt={item.name || item.title}
+                                    alt={getLocalizedProductTitle(item, lang)}
                                     className="
                                         h-16 w-16 rounded-xl object-cover
                                         shadow-inner shadow-black/30
@@ -92,7 +94,7 @@ export default function OrderItemsList({ items, isDark }) {
                                     ${strong}
                                 `}
                             >
-                                {item.name || item.title}
+                                {getLocalizedProductTitle(item, lang)}
                             </p>
 
                             <p className={`text-sm ${muted}`}>

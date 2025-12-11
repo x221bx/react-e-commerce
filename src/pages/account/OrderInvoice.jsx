@@ -17,6 +17,8 @@ import {
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
+import { ensureProductLocalization, getLocalizedProductTitle } from "../../utils/productLocalization";
 
 export default function OrderInvoice() {
   const { orderId } = useParams();
@@ -24,12 +26,17 @@ export default function OrderInvoice() {
   const { theme } = UseTheme();
   const isDark = theme === "dark";
   const user = useSelector(selectCurrentUser);
+  const { i18n } = useTranslation();
+  const lang = i18n.language || "en";
 
   const { orders, order, loading } = useOrderTracking(user?.uid);
 
   // Find the order by ID if not the selected one
   const currentOrder =
     order?.id === orderId ? order : orders.find((o) => o.id === orderId);
+  const orderItems = (currentOrder?.items || []).map((item) =>
+    ensureProductLocalization(item)
+  );
 
   if (loading) {
     return (
@@ -217,8 +224,8 @@ export default function OrderInvoice() {
       yPosition += 15;
 
       // Items
-      currentOrder.items?.forEach((item) => {
-        pdf.text(item.name || "", 25, yPosition);
+      orderItems.forEach((item) => {
+        pdf.text(getLocalizedProductTitle(item, lang) || "", 25, yPosition);
         pdf.text(item.quantity?.toString() || "1", 125, yPosition);
         pdf.text(
           `${item.price?.toLocaleString() || 0} EGP`,
@@ -514,7 +521,7 @@ export default function OrderInvoice() {
                     isDark ? "divide-emerald-900/60" : "divide-emerald-100"
                   }`}
                 >
-                  {currentOrder.items?.map((item, index) => (
+                  {orderItems.map((item, index) => (
                     <div
                       key={index}
                       className="px-6 py-4 flex items-center gap-4"
@@ -528,7 +535,7 @@ export default function OrderInvoice() {
                             item.img ||
                             "/placeholder.png"
                           }
-                          alt={item.name}
+                          alt={getLocalizedProductTitle(item, lang)}
                           className={`w-14 h-14 sm:w-16 sm:h-16 rounded-xl object-cover border ${
                             isDark
                               ? "border-emerald-900/60"
@@ -541,7 +548,7 @@ export default function OrderInvoice() {
                       </div>
                       <div className="flex-1">
                         <h4 className={`text-sm font-semibold ${textColor}`}>
-                          {item.name}
+                          {getLocalizedProductTitle(item, lang)}
                         </h4>
                         <p className={`text-xs ${mutedText}`}>
                           {item.price?.toLocaleString()} EGP / unit

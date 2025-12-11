@@ -13,6 +13,7 @@ import { Heart, Eye, Sparkles } from "lucide-react";
 import Button from "../ui/Button";
 import { UseTheme } from "../../theme/ThemeProvider";
 import { useTranslation } from "react-i18next";
+import { getLocalizedProductTitle, ensureProductLocalization } from "../../utils/productLocalization";
 
 export default function ProductCard({ product, index = 0 }) {
   const dispatch = useDispatch();
@@ -35,10 +36,7 @@ export default function ProductCard({ product, index = 0 }) {
   const stock = Number(product?.stock ?? product?.quantity ?? 0);
   const isAvailable = product?.isAvailable !== false && stock > 0;
 
-  const displayTitle =
-    i18n.language?.startsWith("ar")
-      ? product.titleAr || product.title || product.name
-      : product.titleEn || product.title || product.name;
+  const displayTitle = getLocalizedProductTitle(product, i18n.language || "en");
 
   const badge =
     product.badge ||
@@ -146,7 +144,9 @@ export default function ProductCard({ product, index = 0 }) {
             whileTap={{ scale: 0.85 }}
             onClick={(e) => {
               e.stopPropagation();
-              dispatch(toggleFavourite(product));
+              dispatch(
+                toggleFavourite(ensureProductLocalization(product))
+              );
             }}
             className={`
               p-2 rounded-full backdrop-blur-md shadow-lg border
@@ -232,11 +232,11 @@ export default function ProductCard({ product, index = 0 }) {
           }
           full
           disabled={inCart || !isAvailable}
-          onClick={(e) => {
-            e.stopPropagation();
-            if (inCart || !isAvailable) return;
-            dispatch(addToCart(product));
-          }}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (inCart || !isAvailable) return;
+              dispatch(addToCart(ensureProductLocalization(product)));
+            }}
           className={`mt-3 rounded-xl font-semibold ${
             inCart || !isAvailable ? "opacity-50 cursor-not-allowed" : ""
           }`}
@@ -302,7 +302,7 @@ export default function ProductCard({ product, index = 0 }) {
                 disabled={inCart || !isAvailable}
                 onClick={() => {
                   if (inCart || !isAvailable) return;
-                  dispatch(addToCart(product));
+                  dispatch(addToCart(ensureProductLocalization(product)));
                 }}
               />
             </div>

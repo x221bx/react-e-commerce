@@ -15,13 +15,15 @@ import { useTranslation } from "react-i18next";
 import { auth } from "../../services/firebase";
 import useOrders from "../../hooks/useOrders";
 import { UseTheme } from "../../theme/ThemeProvider";
+import { ensureProductLocalization, getLocalizedProductTitle } from "../../utils/productLocalization";
 
 export default function OrderHistory() {
   const { theme } = UseTheme();
   const isDark = theme === "dark";
 
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language || "en";
   const user = auth.currentUser;
   const { orders, loading } = useOrders(user?.uid);
   const [expandedId, setExpandedId] = useState(null);
@@ -196,6 +198,9 @@ export default function OrderHistory() {
             const createdAtDate = order.createdAt
               ? new Date(order.createdAt)
               : null;
+            const orderItems = (order.items || []).map((item) =>
+              ensureProductLocalization(item)
+            );
 
             return (
               <div
@@ -246,7 +251,7 @@ export default function OrderHistory() {
                           <span className="hidden sm:inline h-1 w-1 rounded-full bg-emerald-400/60" />
                           <span className={`${mutedText}`}>
                             {t("account.orderHistory.itemsCount", {
-                              count: order.items?.length || 0,
+                              count: orderItems.length || 0,
                             })}
                           </span>
                         </div>
@@ -328,11 +333,11 @@ export default function OrderHistory() {
                             <FiPackage className="w-4 h-4" />
                           </span>
                           {t("account.orderHistory.orderItems")} (
-                          {order.items?.length || 0})
+                          {orderItems.length || 0})
                         </h4>
 
                         <div className="space-y-3">
-                          {order.items?.map((item, idx) => (
+                          {orderItems.map((item, idx) => (
                             <div
                               key={idx}
                               className={`flex items-center gap-4 p-3 rounded-2xl ${smallCard}`}
@@ -346,14 +351,14 @@ export default function OrderHistory() {
                                     item.img ||
                                     "/placeholder.png"
                                   }
-                                  alt={item.name}
+                                  alt={getLocalizedProductTitle(item, lang)}
                                   className="h-full w-full object-cover"
                                 />
                               </div>
 
                               <div className="flex-1">
                                 <p className={`text-sm font-semibold ${mainText}`}>
-                                  {item.name}
+                                  {getLocalizedProductTitle(item, lang)}
                                 </p>
                                 <p className={`text-xs ${mutedText}`}>
                                   {item.price?.toLocaleString()} EGP ×{" "}

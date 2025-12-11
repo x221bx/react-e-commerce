@@ -16,6 +16,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { RiChatSmileLine } from "react-icons/ri";
 import Footer from "../Authcomponents/Footer";
+import { ensureProductLocalization, getLocalizedProductTitle } from "../utils/productLocalization";
 
 export default function OrderDetails() {
   const { id } = useParams();
@@ -25,6 +26,7 @@ export default function OrderDetails() {
 
   const { i18n } = useTranslation();
   const isRTL = i18n.language === "ar";
+  const lang = i18n.language || "en";
 
   // Convert ANY Firestore / JS time format → Date object
   const toDateObj = (ts) => {
@@ -127,6 +129,10 @@ export default function OrderDetails() {
         Order not found.
       </div>
     );
+
+  const orderItems = (order.items || []).map((item) =>
+    ensureProductLocalization(item)
+  );
 
   return (
     <div dir={isRTL ? "rtl" : "ltr"} className="max-w-5xl mx-auto py-10 px-4">
@@ -232,20 +238,22 @@ export default function OrderDetails() {
           <FiTruck /> Items
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {order.items?.map((item, i) => (
+          {orderItems?.map((item, i) => (
             <div
               key={i}
               className="flex gap-4 border rounded-xl p-4 bg-green-50 hover:bg-green-100 transition"
             >
               <img
                 src={item.imageUrl || item.image || item.thumbnailUrl || item.img || "/placeholder.png"}
-                alt={item.name}
+                alt={getLocalizedProductTitle(item, lang)}
                 className="w-20 h-20 rounded-lg object-cover"
               />
               <div className="flex-1">
-                <p className="font-semibold text-green-900">{item.name}</p>
+                <p className="font-semibold text-green-900">
+                  {getLocalizedProductTitle(item, lang)}
+                </p>
                 <p className="text-sm text-green-700 flex items-center gap-1">
-                  <FiLayers /> {item.category || "Uncategorized"}
+                  <FiLayers /> {item.category || item.categoryName || "Uncategorized"}
                 </p>
                 <p className="text-gray-700 mt-1 text-sm">
                   Qty: {item.quantity} × {item.price} EGP

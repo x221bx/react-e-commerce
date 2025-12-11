@@ -8,6 +8,7 @@ import { BsHeart, BsHeartFill, BsArrowLeft } from "react-icons/bs";
 import { FiCheckCircle, FiAlertTriangle, FiTag, FiBox } from "react-icons/fi";
 import { useProduct } from "../hooks/useProduct";
 import Footer from "../Authcomponents/Footer";
+import { ensureProductLocalization, getLocalizedProductTitle } from "../utils/productLocalization";
 
 const cleanDescription = (raw = "") => {
   let text = raw || "";
@@ -50,15 +51,15 @@ export default function ProductDetails() {
   );
 
   const handleToggleFavorite = () =>
-    product && dispatch(toggleFavourite(product));
+    product && dispatch(toggleFavourite(ensureProductLocalization(product)));
   const handleAddToCart = () => {
-    if (!product || inCart || !inStock) return;
-    dispatch(addToCart({ ...product, quantity: 1 }));
+    if (!product || inCart || !isPurchasable) return;
+    dispatch(addToCart({ ...ensureProductLocalization(product), quantity: 1 }));
   };
 
   const handleAskAi = () => {
     if (!product) return;
-    const title = pickLocalized(product, "title", isAr) || product.name || "";
+    const title = displayTitle || normalizedProduct.name || "";
     const prompt = isAr
       ? `أريد نصيحة حول المنتج: ${title}، مناسبته واستخدامه الآمن؟`
       : `Advice about the product: ${title}, suitability and safe usage?`;
@@ -69,18 +70,28 @@ export default function ProductDetails() {
     );
   };
 
-  const imageSrc = product?.thumbnailUrl || product?.img || product?.image;
-  const displayTitle =
-    pickLocalized(product, "title", isAr) || product?.name || "";
+  const normalizedProduct = ensureProductLocalization(product || {});
+  const imageSrc =
+    normalizedProduct?.thumbnailUrl ||
+    normalizedProduct?.img ||
+    normalizedProduct?.image;
+  const displayTitle = getLocalizedProductTitle(
+    normalizedProduct,
+    i18n.language || "en"
+  );
   const displayDescription = cleanDescription(
-    pickLocalized(product, "description", isAr) || product?.summary || ""
+    pickLocalized(normalizedProduct, "description", isAr) ||
+      normalizedProduct?.summary ||
+      ""
   );
   const skuValue =
-    product?.sku && product?.sku !== product?.id ? product.sku : null;
+    normalizedProduct?.sku && normalizedProduct?.sku !== normalizedProduct?.id
+      ? normalizedProduct.sku
+      : null;
   const displayCategory =
-    pickLocalized(product, "category", isAr) ||
-    product?.category ||
-    product?.categoryName;
+    pickLocalized(normalizedProduct, "category", isAr) ||
+    normalizedProduct?.category ||
+    normalizedProduct?.categoryName;
   const specs = [];
 
   /* Loading */
@@ -121,6 +132,7 @@ export default function ProductDetails() {
   }
 
   const inStock = Number(product?.stock ?? product?.quantity ?? 0) > 0;
+  const isPurchasable = inStock && product?.isAvailable !== false;
   const price =
     product?.price != null
       ? `${Number(product.price).toLocaleString()} ${t(
@@ -162,7 +174,7 @@ export default function ProductDetails() {
 
               {/* Availability */}
               <div className="flex items-center gap-2">
-                {inStock ? (
+                {isPurchasable ? (
                   <span className="inline-flex items-center gap-2 text-xs font-medium bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full">
                     <FiCheckCircle /> {t("products.details.inStock", "In Stock")}
                   </span>
@@ -187,14 +199,14 @@ export default function ProductDetails() {
               <div className="flex flex-wrap gap-3 pt-2">
                 <button
                   onClick={handleAddToCart}
-                  disabled={inCart || !inStock}
+                  disabled={inCart || !isPurchasable}
                   className={`flex-1 min-w-[180px] py-3 rounded-xl text-white text-sm font-semibold transition ${
-                    inCart || !inStock
+                    inCart || !isPurchasable
                       ? "bg-gray-400 cursor-not-allowed"
                       : "bg-emerald-600 hover:bg-emerald-700"
                   }`}
                 >
-                  {inStock
+                  {isPurchasable
                     ? inCart
                       ? t("products.details.inCart", "Already in cart")
                       : t("products.details.addToCart", "Add to Cart")
