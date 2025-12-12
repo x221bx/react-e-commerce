@@ -1,6 +1,7 @@
 // src/pages/admin/AdminProducts.jsx
 import { useEffect, useMemo, useState } from "react";
 import { NavLink, useNavigate, useSearchParams } from "react-router-dom";
+import toast from "react-hot-toast";
 import {
   FiPlus,
   FiSearch,
@@ -8,6 +9,7 @@ import {
   FiArrowDown,
   FiEdit2,
   FiPackage,
+  FiSettings,
 } from "react-icons/fi";
 import PageHeader from "../../admin/PageHeader";
 import { useProductsSorted } from "../../hooks/useProductsSorted";
@@ -17,6 +19,7 @@ import Pager from "../../admin/Pager";
 import { useTranslation } from "react-i18next";
 import { localizeProduct, localizeCategory } from "../../utils/localizeContent";
 import { UseTheme } from "../../theme/ThemeProvider";
+import { getShippingCost, setShippingCost } from "../../services/shippingService";
 
 /* ------------------------ constants ------------------------ */
 const SORT_FIELDS = [
@@ -44,6 +47,7 @@ export default function AdminProducts() {
   const [pageSize, setPageSize] = useState(
     Number(params.get("pageSize") || 10)
   );
+  const [shippingCost, setShippingCost] = useState(50);
   const pageFromUrl = Math.max(1, Number(params.get("page") || 1));
 
   const {
@@ -112,6 +116,19 @@ export default function AdminProducts() {
   );
 
   useEffect(() => {
+    const fetchShippingCost = async () => {
+      try {
+        const cost = await getShippingCost();
+        setShippingCost(cost);
+      } catch (error) {
+        console.error("Error fetching shipping cost:", error);
+      }
+    };
+
+    fetchShippingCost();
+  }, []);
+
+  useEffect(() => {
     const next = new URLSearchParams(params.toString());
     next.set("filter", status);
     q ? next.set("q", q) : next.delete("q");
@@ -121,17 +138,112 @@ export default function AdminProducts() {
     setParams(next, { replace: true });
   }, [status, q, sortBy, dir, pageSize]);
 
+  const [showShippingModal, setShowShippingModal] = useState(false);
+  const [newShippingCost, setNewShippingCost] = useState(shippingCost.toString());
+  const [savingShipping, setSavingShipping] = useState(false);
+  const [shippingError, setShippingError] = useState("");
+
+  const handleSaveShipping = async () => {
+    setSavingShipping(true);
+    setShippingError("");
+    try {
+      const cost = parseFloat(newShippingCost);
+      if (isNaN(cost) || cost < 0) {
+        setShippingError(t("shipping.error.invalid", "Shipping cost must be a positive number"));
+        return;
+      }
+
+      await setShippingCost(cost);
+      setShippingCost(cost);
+      setShowShippingModal(false);
+      toast.success(t("shipping.success", "Shipping cost updated successfully"));
+    } catch (err) {
+      setShippingError(t("shipping.error.save", "Failed to save shipping cost"));
+      console.error("Error saving shipping cost:", err);
+    } finally {
+      setSavingShipping(false);
+    }
+  };
+
+  useEffect(() => {
+    setNewShippingCost(shippingCost.toString());
+  }, [shippingCost]);
+
   const actions = (
-    <NavLink
-      to="/admin/products/new"
-      className="inline-flex items-center gap-2 rounded-lg bg-[#2B7A0B] px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#205F09]"
-    >
-      <FiPlus /> {t("admin.new_product", { defaultValue: "New product" })}
-    </NavLink>
+    <>
+      <button
+        type="button"
+        onClick={() => setShowShippingModal(true)}
+        className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+        title="Shipping Settings"
+      >
+        <FiSettings /> {t("shipping.settings", "Shipping")}
+      </button>
+      <NavLink
+        to="/admin/products/new"
+        className="inline-flex items-center gap-2 rounded-lg bg-[#2B7A0B] px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#205F09]"
+      >
+        <FiPlus /> {t("admin.new_product", { defaultValue: "New product" })}
+      </NavLink>
+    </>
   );
 
   return (
     <>
+      {/* Shipping Modal */}
+      {showShippingModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className={`w-full max-w-md rounded-lg bg-white p-6 shadow-2xl dark:bg-slate-900 ${surfaceClass}`}>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              {t("shipping.settings", "Shipping Settings")}
+            </h3>
+            <p className="mt-1 text-sm text-gray-600 dark:text-slate-300">
+              {t("shipping.description", "Configure the shipping cost for all orders")}
+            </p>
+
+            <div className="mt-4">
+              <label htmlFor="shippingCost" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
+                {t("shipping.costLabel", "Shipping Cost (EGP)")}
+              </label>
+              <input
+                type="number"
+                id="shippingCost"
+                value={newShippingCost}
+                onChange={(e) => setNewShippingCost(e.target.value)}
+                min="0"
+                step="0.01"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+                required
+              />
+            </div>
+
+            {shippingError && (
+              <div className="mt-3 p-3 bg-red-50 border border-red-200 text-red-700 rounded">
+                {shippingError}
+              </div>
+            )}
+
+            <div className="mt-6 flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={() => setShowShippingModal(false)}
+                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+              >
+                {t("common.cancel", "Cancel")}
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveShipping}
+                disabled={savingShipping}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {savingShipping ? t("common.saving", "Saving...") : t("common.save", "Save")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <PageHeader
         title={t("admin.products", { defaultValue: "Products" })}
         actions={actions}
@@ -403,9 +515,9 @@ export default function AdminProducts() {
       )}
 
     </>
+
   );
 }
-
 /* ------------------- small components & helpers ------------------- */
 function ResponsiveStatusFilter({ value, onChange }) {
   const { t } = useTranslation();

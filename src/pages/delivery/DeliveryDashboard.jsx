@@ -25,15 +25,15 @@ import { UseTheme } from "../../theme/ThemeProvider";
 
 const statusTone = {
   "Out for delivery":
-    "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-100 dark:border-amber-700/40",
+    "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30  -amber-100 dark:border-amber-700/40",
   Delivered:
-    "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-100 dark:border-emerald-700/40",
+    "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30  -emerald-100 dark:border-emerald-700/40",
   Canceled:
-    "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-100 dark:border-rose-700/40",
+    "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/30  -rose-100 dark:border-rose-700/40",
   Processing:
-    "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-900/30 dark:text-sky-100 dark:border-sky-700/40",
+    "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-900/30  -sky-100 dark:border-sky-700/40",
   Pending:
-    "bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-800/40 dark:text-slate-100 dark:border-slate-700/50",
+    "bg-slate-50 text-slate-800 border-slate-300 dark:bg-slate-800/40  -slate-100 dark:border-slate-700/50",
 };
 
 export default function DeliveryDashboard() {
@@ -133,7 +133,7 @@ export default function DeliveryDashboard() {
             Delivery workspace
           </p>
           <h1 className="text-3xl font-extrabold">Delivery Control</h1>
-          <p className="text-sm text-slate-600 dark:text-slate-300">
+          <p className="text-sm text-slate-800  -slate-300">
             Search by order number, phone, or name. Update status or cancel with a
             note the admin can see.
           </p>
@@ -148,7 +148,7 @@ export default function DeliveryDashboard() {
           >
             <div className="text-left leading-tight">
               <div className="font-semibold">{driver?.name || "Courier"}</div>
-              <div className="text-xs text-slate-500">{driver?.email}</div>
+              <div className="text-xs text-slate-700">{driver?.email}</div>
             </div>
           </div>
           <button
@@ -159,7 +159,7 @@ export default function DeliveryDashboard() {
             </button>
             <Link
               to="/delivery/profile"
-              className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50 dark:bg-slate-900 dark:text-emerald-200 dark:border-slate-700"
+              className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50 dark:bg-slate-900  -emerald-200 dark:border-slate-700"
             >
               Profile
             </Link>
@@ -184,7 +184,7 @@ export default function DeliveryDashboard() {
       >
         <div className="flex flex-col md:flex-row gap-3 items-center">
           <div className="flex-1 w-full relative">
-            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500  -slate-400" />
             <input
               type="text"
               value={query}
@@ -192,8 +192,8 @@ export default function DeliveryDashboard() {
               placeholder="Search order number, phone, or customer name"
               className={`w-full rounded-xl pl-10 pr-4 py-3 border focus:outline-none focus:ring-2 focus:ring-emerald-500/60 ${
                 isDark
-                  ? "bg-slate-950 border-slate-800 text-slate-100"
-                  : "bg-white border-slate-200 text-slate-900"
+                  ? "bg-slate-950 border-slate-800 text-slate-100 placeholder:text-slate-400"
+                  : "bg-white border-slate-200 text-slate-900 placeholder:text-slate-500"
               }`}
             />
           </div>
@@ -205,7 +205,7 @@ export default function DeliveryDashboard() {
             <FiTruck className="text-emerald-500" />
             <div className="text-sm">
               <div className="font-semibold">Assigned to you</div>
-              <div className="text-xs text-slate-500">
+              <div className="text-xs text-slate-700">
                 {filteredOrders.length} active orders
               </div>
             </div>
@@ -216,7 +216,7 @@ export default function DeliveryDashboard() {
       {loading ? (
         <div className="text-center py-10">Loading orders...</div>
       ) : filteredOrders.length === 0 ? (
-        <div className="text-center py-12 text-slate-500">
+        <div className="text-center py-12 text-slate-700">
           No active deliveries assigned to you.
         </div>
       ) : (
@@ -224,7 +224,7 @@ export default function DeliveryDashboard() {
           {filteredOrders.map((order) => {
             const badge =
               statusTone[order.status] ||
-              "bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-800/50 dark:text-slate-100 dark:border-slate-700";
+              "bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-800/50  -slate-100 dark:border-slate-700";
             return (
               <div
                 key={order.id}
@@ -236,9 +236,9 @@ export default function DeliveryDashboard() {
               >
                 <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm text-slate-500">
+                    <div className="flex items-center gap-2 text-sm text-slate-700">
                       <FiPackage />
-                      <span className="font-semibold text-slate-700 dark:text-slate-100">
+                      <span className="font-bold text-base md:text-lg text-slate-900  -slate-100">
                         #{order.orderNumber}
                       </span>
                       <span
@@ -252,13 +252,13 @@ export default function DeliveryDashboard() {
                       <FiUser />
                       {order.fullName || "Customer"}
                     </div>
-                    <div className="text-sm text-slate-500 flex items-center gap-2">
+                    <div className="text-sm text-slate-800 flex items-center gap-2">
                       <FiPhone /> {order.phone || "No phone"}
                     </div>
-                    <div className="text-sm text-slate-500 flex items-center gap-2">
+                    <div className="text-sm text-slate-800 flex items-center gap-2">
                       <FiMail /> {order.userEmail || "No email"}
                     </div>
-                    <div className="text-xs text-slate-400 flex items-center gap-2">
+                    <div className="text-xs text-slate-700 flex items-center gap-2">
                       <FiMapPin />
                       {order.address || order.shipping?.addressLine1 || "-"}
                     </div>
@@ -290,13 +290,13 @@ export default function DeliveryDashboard() {
                 </div>
 
                 {/* Order meta + items */}
-                <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-slate-600 dark:text-slate-300">
+                <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-slate-700  -slate-300">
                   <div className={`rounded-lg px-3 py-2 border ${badge}`}>
                     {order.items?.length || 0} item(s)
                   </div>
                   <button
                     onClick={() => toggleExpand(order.id)}
-                    className="inline-flex items-center gap-1 rounded-lg px-3 py-2 bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                    className="inline-flex items-center gap-1 rounded-lg px-3 py-2 bg-slate-100 text-slate-700 dark:bg-slate-800  -slate-100"
                   >
                     {expanded[order.id] ? <FiChevronUp /> : <FiChevronDown />}
                     {expanded[order.id] ? "Hide details" : "View details"}
@@ -304,32 +304,32 @@ export default function DeliveryDashboard() {
                 </div>
 
                 {expanded[order.id] && (
-                  <div className="mt-3 space-y-3 rounded-xl border border-slate-200 dark:border-slate-700 p-3 bg-slate-50/60 dark:bg-slate-800/40">
+                  <div className="mt-3 space-y-3 rounded-xl border border-slate-200 dark:border-slate-700 p-3 bg-white dark:bg-slate-800/40 text-slate-800  -slate-200">
                     <div className="space-y-1">
-                      <p className="text-sm font-semibold">Items</p>
+                      <p className="text-sm font-semibold text-slate-800">Items</p>
                       {(order.items || []).map((it, idx) => (
                         <div
                           key={idx}
-                          className="flex items-center justify-between text-xs border-b border-slate-200 dark:border-slate-700 py-2"
+                          className="flex items-center justify-between text-sm border-b border-slate-200 dark:border-slate-700 py-2"
                         >
-                          <span className="font-semibold text-slate-800 dark:text-slate-100">
+                          <span className="font-semibold text-slate-800  -slate-100">
                             {it.name || it.title}
                           </span>
-                          <span className="text-slate-600 dark:text-slate-300">
+                          <span className="text-slate-700  -slate-300">
                             {it.quantity} x {Number(it.price).toLocaleString()} EGP
                           </span>
                         </div>
                       ))}
                     </div>
                     <div className="space-y-1">
-                      <p className="text-sm font-semibold">Status history</p>
+                      <p className="text-sm font-semibold text-slate-800">Status history</p>
                       {(order.statusHistory || []).map((h, idx) => (
                         <div
                           key={idx}
-                          className="text-xs text-slate-600 dark:text-slate-300 flex items-center gap-2"
+                          className="text-sm text-slate-800  -slate-300 flex items-center gap-3"
                         >
                           <span className="font-semibold">{h.status}</span>
-                          <span className="text-slate-500">
+                          <span className="text-slate-700">
                             {h.changedAt ? new Date(h.changedAt).toLocaleString() : "-"}
                           </span>
                           {h.note && (
@@ -369,7 +369,7 @@ export default function DeliveryDashboard() {
       <div className="mt-10">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-xl font-bold">Activity log</h2>
-          <span className="text-sm text-slate-500 dark:text-slate-300">
+          <span className="text-sm text-slate-700  -slate-300">
             Delivered / canceled orders you handled
           </span>
         </div>
@@ -391,10 +391,10 @@ export default function DeliveryDashboard() {
                 }`}
               >
                 <div className="space-y-1">
-                  <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-                    #{order.orderNumber} — {order.fullName || "Customer"}
-                  </div>
-                  <div className="text-xs text-slate-500 dark:text-slate-300 flex items-center gap-2">
+                    <div className="text-base font-bold text-slate-900  -slate-100">
+                      #{order.orderNumber} — {order.fullName || "Customer"}
+                    </div>
+                  <div className="text-xs text-slate-500  -slate-300 flex items-center gap-2">
                     <FiClock />{" "}
                     {order.statusHistory?.length
                       ? new Date(
@@ -405,11 +405,11 @@ export default function DeliveryDashboard() {
                 </div>
                 <div className="text-sm font-semibold">
                   {order.status === "Delivered" ? (
-                    <span className="text-emerald-600 dark:text-emerald-300">
+                    <span className="text-emerald-600  -emerald-300">
                       Delivered
                     </span>
                   ) : (
-                    <span className="text-rose-600 dark:text-rose-300">
+                    <span className="text-rose-600  -rose-300">
                       Canceled
                     </span>
                   )}
@@ -437,7 +437,7 @@ export default function DeliveryDashboard() {
                 <h3 className="text-xl font-bold mt-1">
                   #{cancelTarget.orderNumber} — {cancelTarget.fullName}
                 </h3>
-                <p className="text-sm text-slate-500 dark:text-slate-300">
+                <p className="text-sm text-slate-500  -slate-300">
                   Add a clear reason. Customer will see it, and admin notes will
                   store it.
                 </p>
@@ -462,7 +462,7 @@ export default function DeliveryDashboard() {
                 value={cancelNote}
                 onChange={(e) => setCancelNote(e.target.value)}
               />
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-slate-500  -slate-400">
                 If prepaid: tell the customer their amount will be refunded to
                 the original account. If COD: mention the delivery was canceled
                 due to unclear details.
@@ -506,7 +506,7 @@ function ActionButton({ label, onClick, loading, variant = "solid", icon }) {
 
   const styles =
     variant === "ghost"
-      ? "bg-amber-100 text-amber-800 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-100"
+      ? "bg-amber-100 text-amber-800 hover:bg-amber-200 dark:bg-amber-900/30  -amber-100"
       : variant === "danger"
       ? "bg-rose-600 text-white hover:bg-rose-700"
       : "bg-emerald-600 text-white hover:bg-emerald-700";

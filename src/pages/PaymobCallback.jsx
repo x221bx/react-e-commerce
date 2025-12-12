@@ -1,5 +1,4 @@
-// src/pages/PaymobCallback.jsx
-import React, { useEffect, useState } from "react";
+ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { useTranslation } from "react-i18next";
@@ -26,8 +25,7 @@ export default function PaymobCallback() {
     const run = async () => {
       const meta = parsePaymobRedirect(window.location.href);
 
-      // إذا كان الدفع مفتوح داخل overlay أو popup، أرسل النتيجة للصفحة الأصلية واتركها تتولى إنشاء الطلب
-      const targetOrigin = window.location.origin;
+       const targetOrigin = window.location.origin;
       if (window.opener || window.parent !== window) {
         try {
           window.opener?.postMessage({ provider: "paymob", ...meta }, targetOrigin);
@@ -40,8 +38,7 @@ export default function PaymobCallback() {
         return;
       }
 
-      // أي حاجة غير success → مفيش أوردر
-      if (meta.status !== "success") {
+       if (meta.status !== "success") {
         const codeText = meta.txnCode ? ` (code ${meta.txnCode})` : "";
         setState({
           status: "failed",
@@ -84,7 +81,9 @@ export default function PaymobCallback() {
         try {
           const createdFlagRaw = localStorage.getItem("paymob_created_order");
           const createdFlag = createdFlagRaw ? JSON.parse(createdFlagRaw) : null;
-          if (createdFlag?.paymobOrderId && createdFlag.paymobOrderId === session?.paymobOrderId) {
+          if (createdFlag) {
+            // If ANY paymob_created_order flag exists, don't create another order
+            // This prevents duplicates regardless of paymobOrderId
             setState({
               status: "success",
               message: t(
@@ -116,40 +115,88 @@ export default function PaymobCallback() {
           status: meta.status,
         };
 
-        const { id } = await createOrder({
-          ...draft,
-          paymentMethod: "paymob",
-          paymentSummary: paymentDetails.label,
-          paymentDetails,
-        });
+        // Prevent concurrent handlers from creating duplicate orders
+        const inflight = localStorage.getItem("paymob_inflight");
+        if (inflight) {
+          // If another handler is already processing, wait for created flag or bail
+          try {
+            const createdFlagRaw = localStorage.getItem("paymob_created_order");
+            const createdFlag = createdFlagRaw ? JSON.parse(createdFlagRaw) : null;
+            if (createdFlag && createdFlag.orderId) {
+              setState({
+                status: "success",
+                message: t(
+                  "checkout.payment.paymobSuccess",
+                  "Payment approved and your order has been created."
+                ),
+              });
+              navigate(`/account/tracking/${createdFlag.orderId}`, {
+                state: { showPaymentBadge: true },
+              });
+              return;
+            }
+          } catch (err) {
+            console.warn("paymob created flag parse error", err);
+          }
+          // No created flag yet — show pending and bail
+          setState({
+            status: "pending",
+            message: t(
+              "checkout.payment.paymobChecking",
+              "Confirming card payment..."
+            ),
+          });
+          return;
+        }
 
-        localStorage.setItem(
-          "paymob_created_order",
-          JSON.stringify({ paymobOrderId: session?.paymobOrderId, orderId: id })
-        );
+        // mark inflight so other handlers won't attempt creation
+        try {
+          localStorage.setItem(
+            "paymob_inflight",
+            JSON.stringify({ paymobOrderId: session?.paymobOrderId, ts: Date.now() })
+          );
 
-        localStorage.removeItem("farmvet_pending_order");
-        localStorage.removeItem("farmvet_pending_payment_method");
-        localStorage.removeItem("farmvet_last_paymob_session");
+          const { id } = await createOrder({
+            ...draft,
+            paymentMethod: "paymob",
+            paymentSummary: paymentDetails.label,
+            paymentDetails,
+          });
 
-        dispatch(clearCart());
+          localStorage.setItem(
+            "paymob_created_order",
+            JSON.stringify({ paymobOrderId: session?.paymobOrderId, orderId: id })
+          );
 
-        setState({
-          status: "success",
-          message: t(
-            "checkout.payment.paymobSuccess",
-            "Payment approved and your order has been created."
-          ),
-        });
+          // Clear the created flag after 5 minutes to handle edge cases
+          setTimeout(() => {
+            localStorage.removeItem("paymob_created_order");
+          }, 5 * 60 * 1000);
 
-        // ⭐⭐⭐ التعديل الوحيد المطلوب ⭐⭐⭐
-        // احفظ ID علشان نستخدمه في صفحة التتبع
-        localStorage.setItem("latestOrderId", id);
+          localStorage.removeItem("farmvet_pending_order");
+          localStorage.removeItem("farmvet_pending_payment_method");
+          localStorage.removeItem("farmvet_last_paymob_session");
 
-        // تحويل مباشر لصفحة التتبع مع تفعيل البادج
-        navigate(`/account/tracking/${id}`, {
-          state: { showPaymentBadge: true },
-        });
+          dispatch(clearCart());
+
+          setState({
+            status: "success",
+            message: t(
+              "checkout.payment.paymobSuccess",
+              "Payment approved and your order has been created."
+            ),
+          });
+
+          localStorage.setItem("latestOrderId", id);
+
+          navigate(`/account/tracking/${id}`, {
+            state: { showPaymentBadge: true },
+          });
+        } finally {
+          try {
+            localStorage.removeItem("paymob_inflight");
+          } catch (e) {}
+        }
 
       } catch (err) {
         console.error("Paymob callback error", err);

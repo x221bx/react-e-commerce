@@ -485,71 +485,86 @@ export default function Checkout() {
           console.warn("Failed to parse Paymob session", err);
         }
 
-        // Guard against double creation (iframe postMessage + redirect callback)
+        // Prevent concurrent handlers from creating duplicate orders
         try {
-          const createdFlagRaw = localStorage.getItem("paymob_created_order");
-          const createdFlag = createdFlagRaw ? JSON.parse(createdFlagRaw) : null;
-          if (
-            createdFlag?.paymobOrderId &&
-            createdFlag.paymobOrderId === session?.paymobOrderId
-          ) {
-            toast.success(
-              t(
-                "checkout.payment.paymobSuccess",
-                "Payment approved and your order has been created."
-              )
-            );
-            navigate(`/account/tracking/${createdFlag.orderId}`, {
-              state: { showPaymentBadge: true },
-            });
+          const inflight = localStorage.getItem("paymob_inflight");
+          if (inflight) {
+            const createdFlagRaw = localStorage.getItem("paymob_created_order");
+            const createdFlag = createdFlagRaw ? JSON.parse(createdFlagRaw) : null;
+            if (createdFlag && createdFlag.orderId) {
+              toast.success(
+                t(
+                  "checkout.payment.paymobSuccess",
+                  "Payment approved and your order has been created."
+                )
+              );
+              navigate(`/account/tracking/${createdFlag.orderId}`, {
+                state: { showPaymentBadge: true },
+              });
+              return;
+            }
+            // Another handler is processing — bail for now
+            toast(t("checkout.payment.paymobChecking", "Confirming payment..."));
             return;
           }
-        } catch (err) {
-          console.warn("Paymob duplicate guard parse error", err);
+
+          localStorage.setItem(
+            "paymob_inflight",
+            JSON.stringify({ paymobOrderId: session?.paymobOrderId, ts: Date.now() })
+          );
+
+          const paymentDetails = {
+            type: isWalletPayment ? "paymob_wallet" : "paymob",
+            label: isWalletPayment
+              ? t("checkout.payment.paymobWalletTitle", "Paymob Wallet")
+              : t("checkout.payment.paymobLabel", "Pay with card (Paymob)"),
+            provider: "paymob",
+            paymobOrderId: session?.paymobOrderId,
+            paymentKey: session?.paymentKey,
+            amountCents: session?.amountCents,
+            transactionId: meta.transactionId,
+            txnCode: meta.txnCode,
+            status: meta.status,
+            walletNumber: isWalletPayment ? storedWalletNumber : undefined,
+          };
+
+          const { id } = await createOrder({
+            ...draft,
+            paymentMethod: isWalletPayment ? "paymob_wallet" : "paymob",
+            paymentSummary: paymentDetails.label,
+            paymentDetails,
+          });
+
+          localStorage.setItem(
+            "paymob_created_order",
+            JSON.stringify({ paymobOrderId: session?.paymobOrderId, orderId: id })
+          );
+
+          // Clear the created flag after 5 minutes to handle edge cases
+          setTimeout(() => {
+            localStorage.removeItem("paymob_created_order");
+          }, 5 * 60 * 1000);
+
+          localStorage.removeItem("farmvet_pending_order");
+          localStorage.removeItem("farmvet_pending_payment_method");
+          localStorage.removeItem("farmvet_last_paymob_session");
+          localStorage.removeItem("farmvet_paymob_wallet_number");
+
+          dispatch(clearCart());
+
+          toast.success(
+            t(
+              "checkout.payment.paymobSuccess",
+              "Payment approved and your order has been created."
+            )
+          );
+
+          navigate(`/account/invoice/${id}`, { state: { orderId: id } });
+        } finally {
+          try {
+            localStorage.removeItem("paymob_inflight");
+          } catch (e) {}
         }
-
-        const paymentDetails = {
-          type: isWalletPayment ? "paymob_wallet" : "paymob",
-          label: isWalletPayment
-            ? t("checkout.payment.paymobWalletTitle", "Paymob Wallet")
-            : t("checkout.payment.paymobLabel", "Pay with card (Paymob)"),
-          provider: "paymob",
-          paymobOrderId: session?.paymobOrderId,
-          paymentKey: session?.paymentKey,
-          amountCents: session?.amountCents,
-          transactionId: meta.transactionId,
-          txnCode: meta.txnCode,
-          status: meta.status,
-          walletNumber: isWalletPayment ? storedWalletNumber : undefined,
-        };
-
-        const { id } = await createOrder({
-          ...draft,
-          paymentMethod: isWalletPayment ? "paymob_wallet" : "paymob",
-          paymentSummary: paymentDetails.label,
-          paymentDetails,
-        });
-
-        localStorage.setItem(
-          "paymob_created_order",
-          JSON.stringify({ paymobOrderId: session?.paymobOrderId, orderId: id })
-        );
-
-        localStorage.removeItem("farmvet_pending_order");
-        localStorage.removeItem("farmvet_pending_payment_method");
-        localStorage.removeItem("farmvet_last_paymob_session");
-        localStorage.removeItem("farmvet_paymob_wallet_number");
-
-        dispatch(clearCart());
-
-        toast.success(
-          t(
-            "checkout.payment.paymobSuccess",
-            "Payment approved and your order has been created."
-          )
-        );
-
-        navigate(`/account/invoice/${id}`, { state: { orderId: id } });
       } catch (err) {
         console.error("Paymob completion error", err);
         toast.error(

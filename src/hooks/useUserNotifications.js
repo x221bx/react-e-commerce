@@ -68,6 +68,8 @@ export function useUserNotifications(uid) {
   const markRead = async (id) => {
     if (!id) return;
     try {
+      // Optimistically update local state for snappier UI
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
       await updateDoc(doc(db, "notifications", id), { read: true });
     } catch (error) {
       console.error("Failed to mark notification as read:", error);
@@ -76,7 +78,14 @@ export function useUserNotifications(uid) {
 
   const markAllRead = async () => {
     const unread = notifications.filter((n) => !n.read);
-    await Promise.all(unread.map((n) => markRead(n.id)));
+    if (!unread.length) return;
+    // Optimistically mark all as read locally
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    try {
+      await Promise.all(unread.map((n) => updateDoc(doc(db, "notifications", n.id), { read: true })));
+    } catch (err) {
+      console.error("Failed to mark all notifications as read:", err);
+    }
   };
 
   const unreadCount = useMemo(

@@ -1,13 +1,12 @@
 // src/pages/AdminOrders.jsx
 import React, { useState, useMemo, useEffect } from "react";
 import { FiRefreshCw, FiClock, FiTrash2, FiTruck } from "react-icons/fi";
-import { MdHistory, MdNotifications } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import useOrders from "../../hooks/useOrders";
 import { UseTheme } from "../../theme/ThemeProvider";
 import { listDeliveryAccounts } from "../../services/deliveryService";
 import { db } from "../../services/firebase";
-import { doc, updateDoc, Timestamp } from "firebase/firestore";
+import { doc, updateDoc, Timestamp, arrayUnion } from "firebase/firestore";
 import toast from "react-hot-toast";
 
 export default function AdminOrders() {
@@ -360,11 +359,26 @@ export default function AdminOrders() {
                           return;
                         }
                         try {
-                          await updateOrderStatus(
-                            order.id,
-                            val,
-                            val === "Canceled" ? restoreStock : undefined
-                          );
+                          if (val === "Canceled") {
+                            const reason = window.prompt("Cancellation reason (required):");
+                            if (!reason || !reason.trim()) {
+                              alert("Cancellation requires a reason");
+                              return;
+                            }
+                            await updateOrderStatus(
+                              order.id,
+                              val,
+                              restoreStock,
+                              "admin",
+                              { note: reason, actorName: "Admin" }
+                            );
+                          } else {
+                            await updateOrderStatus(
+                              order.id,
+                              val,
+                              val === "Canceled" ? restoreStock : undefined
+                            );
+                          }
                         } catch (err) {
                           alert(err.message || "Failed");
                         }
@@ -418,8 +432,10 @@ export default function AdminOrders() {
                           : "bg-white border-gray-300 text-gray-800 hover:bg-gray-100"
                       }`}
                     >
-                      <MdHistory /> History
+                      <FiClock /> History
                     </button>
+
+                    {/* Comment button removed from Orders Dashboard - use Order Details page to add comments */}
 
                     <button
                       onClick={async () => {
@@ -470,9 +486,27 @@ export default function AdminOrders() {
                             <span>
                               {new Date(h.changedAt).toLocaleString()}
                             </span>
+                            {h.note && (
+                              <div className="text-sm text-slate-500 mt-1 italic">
+                                Reason: {h.note}
+                              </div>
+                            )}
                           </li>
                         ))}
                       </ul>
+                      {order.comments && order.comments.length > 0 && (
+                        <div className="mt-3">
+                          <h5 className={`font-semibold ${isDark?"text-emerald-200":"text-green-800"}`}>Comments</h5>
+                          <ul className="mt-2 space-y-2 text-sm">
+                            {order.comments.map((c, i) => (
+                              <li key={i} className="border p-2 rounded-md bg-white/60 dark:bg-slate-800">
+                                <div className="text-xs text-slate-500">{c.authorName || c.author} • {c.createdAt?.toDate ? new Date(c.createdAt.toDate()).toLocaleString() : (c.createdAt ? new Date(c.createdAt).toLocaleString() : "-")}</div>
+                                <div className="mt-1">{c.text}</div>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                     </div>
                   )}
               </div>

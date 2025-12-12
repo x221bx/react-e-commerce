@@ -21,6 +21,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { UseTheme } from "../theme/ThemeProvider";
 import { getLocalizedProductTitle, ensureProductLocalization } from "../utils/productLocalization";
+import { getShippingCost, subscribeShippingCost } from "../services/shippingService";
 
 export default function Cart() {
   const dispatch = useDispatch();
@@ -33,6 +34,7 @@ export default function Cart() {
 
   const { items = [] } = useSelector((state) => state.cart || {});
   const [toast, setToast] = useState("");
+  const [shippingCost, setShippingCost] = useState(50);
 
   const showToast = (msg) => {
     setToast(msg);
@@ -68,6 +70,31 @@ export default function Cart() {
     fetchLatestStock();
   }, []);
 
+  useEffect(() => {
+    // subscribe to shipping cost so changes in admin reflect immediately
+    let unsub = null;
+    const start = async () => {
+      try {
+        // initial fetch (keeps existing behavior)
+        const cost = await getShippingCost();
+        setShippingCost(cost);
+      } catch (error) {
+        console.error("Error fetching shipping cost:", error);
+      }
+
+      // real-time updates
+      unsub = subscribeShippingCost((cost) => {
+        setShippingCost(cost);
+      });
+    };
+
+    start();
+
+    return () => {
+      if (typeof unsub === "function") unsub();
+    };
+  }, []);
+
   const handleAdd = (item) => {
     const qty = Number(item.quantity || 0);
     const stock = Number(item.stock || 0);
@@ -88,7 +115,7 @@ export default function Cart() {
     (sum, i) => sum + Number(i.price || 0) * Number(i.quantity || 0),
     0
   );
-  const shipping = items.length ? 50 : 0;
+  const shipping = items.length ? shippingCost : 0;
   const total = subtotal + shipping;
 
   const handleGoToCheckout = () => {
