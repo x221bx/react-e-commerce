@@ -1,13 +1,13 @@
 // src/services/firebase.js
 
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, updateProfile } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL, uploadBytesResumable } from "firebase/storage";
 import { getFunctions } from "firebase/functions";
 
 // ✅ إعدادات Firebase الخاصة بمشروعك
-const firebaseConfig = {
+export const firebaseConfig = {
   apiKey: "REDACTED",
   authDomain: "farm-vet-shop.firebaseapp.com",
   projectId: "farm-vet-shop",
@@ -17,7 +17,7 @@ const firebaseConfig = {
 };
 
 // ✅ تشغيل Firebase
-const app = initializeApp(firebaseConfig);
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
 // ✅ تصدير الخدمات الأساسية
 export const auth = getAuth(app);

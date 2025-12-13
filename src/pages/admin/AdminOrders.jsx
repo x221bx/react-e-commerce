@@ -1,10 +1,13 @@
 // src/pages/AdminOrders.jsx
-import React, { useState, useMemo } from "react";
-import { FiRefreshCw, FiClock, FiTrash2 } from "react-icons/fi";
-import { MdHistory, MdNotifications } from "react-icons/md";
+import React, { useState, useMemo, useEffect } from "react";
+import { FiRefreshCw, FiClock, FiTrash2, FiTruck } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import useOrders from "../../hooks/useOrders";
 import { UseTheme } from "../../theme/ThemeProvider";
+import { listDeliveryAccounts } from "../../services/deliveryService";
+import { db } from "../../services/firebase";
+import { doc, updateDoc, Timestamp, arrayUnion } from "firebase/firestore";
+import toast from "react-hot-toast";
 
 export default function AdminOrders() {
   const { theme } = UseTheme();
@@ -24,6 +27,21 @@ export default function AdminOrders() {
   const [sortDesc, setSortDesc] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
+  const [deliveryUsers, setDeliveryUsers] = useState([]);
+  const [assigning, setAssigning] = useState(null);
+
+  useEffect(() => {
+    const loadDelivery = async () => {
+      try {
+        const list = await listDeliveryAccounts();
+        setDeliveryUsers(list);
+      } catch (err) {
+        console.error("Failed to load delivery accounts", err);
+        toast.error("Failed to load delivery accounts");
+      }
+    };
+    loadDelivery();
+  }, []);
 
   const navigate = useNavigate();
   const filters = ["All", ...STATUS_FLOW, "Canceled"];
@@ -71,6 +89,28 @@ export default function AdminOrders() {
     setRefreshing(true);
     await refreshOrders();
     setRefreshing(false);
+  };
+
+  const handleAssignDelivery = async (order, driverId) => {
+    if (!order?.id) return;
+    setAssigning(order.id);
+    const driver = deliveryUsers.find((d) => d.id === driverId);
+    try {
+      await updateDoc(doc(db, "orders", order.id), {
+        assignedDeliveryId: driverId || null,
+        deliveryId: driverId || null,
+        assignedDeliveryName: driver?.name || null,
+        assignedDeliveryEmail: driver?.email || null,
+        assignedDeliveryPhone: driver?.phone || null,
+        assignedAt: driverId ? Timestamp.now() : null,
+      });
+      toast.success(driverId ? "Assigned to delivery" : "Assignment cleared");
+    } catch (err) {
+      console.error("Assign delivery failed", err);
+      toast.error(err.message || "Failed to assign");
+    } finally {
+      setAssigning(null);
+    }
   };
 
   const statusColorClass = (order) => {
@@ -279,6 +319,18 @@ export default function AdminOrders() {
                       >
                         Total: {order.total} EGP
                       </span>
+                      <span
+                        className={`flex items-center gap-2 text-sm px-2 py-1 rounded-md ${
+                          isDark
+                            ? "bg-slate-800 text-slate-200"
+                            : "bg-emerald-50 text-emerald-800"
+                        }`}
+                      >
+                        <FiTruck />
+                        {order.assignedDeliveryName || order.assignedDeliveryEmail
+                          ? `Assigned to ${order.assignedDeliveryName || order.assignedDeliveryEmail}`
+                          : "Unassigned"}
+                      </span>
                     </div>
                   </div>
 
@@ -307,11 +359,26 @@ export default function AdminOrders() {
                           return;
                         }
                         try {
-                          await updateOrderStatus(
-                            order.id,
-                            val,
-                            val === "Canceled" ? restoreStock : undefined
-                          );
+                          if (val === "Canceled") {
+                            const reason = window.prompt("Cancellation reason (required):");
+                            if (!reason || !reason.trim()) {
+                              alert("Cancellation requires a reason");
+                              return;
+                            }
+                            await updateOrderStatus(
+                              order.id,
+                              val,
+                              restoreStock,
+                              "admin",
+                              { note: reason, actorName: "Admin" }
+                            );
+                          } else {
+                            await updateOrderStatus(
+                              order.id,
+                              val,
+                              val === "Canceled" ? restoreStock : undefined
+                            );
+                          }
                         } catch (err) {
                           alert(err.message || "Failed");
                         }
@@ -331,6 +398,28 @@ export default function AdminOrders() {
                         ))}
                     </select>
 
+                    <select
+                      value={order.assignedDeliveryId || ""}
+                      onChange={(e) =>
+                        handleAssignDelivery(order, e.target.value || null)
+                      }
+                      disabled={assigning === order.id}
+                      className={`p-2 border rounded-md ${
+                        isDark
+                          ? "bg-slate-900 border-slate-700 text-slate-100"
+                          : "bg-white border-gray-300 text-gray-800"
+                      }`}
+                    >
+                      <option value="">Assign delivery</option>
+                      {deliveryUsers
+                        .filter((u) => u.active !== false)
+                        .map((u) => (
+                          <option key={u.id} value={u.id}>
+                            {u.name || u.email} {u.zone ? `(${u.zone})` : ""}
+                          </option>
+                        ))}
+                    </select>
+
                     <button
                       onClick={() =>
                         setSelectedOrderId(
@@ -343,8 +432,10 @@ export default function AdminOrders() {
                           : "bg-white border-gray-300 text-gray-800 hover:bg-gray-100"
                       }`}
                     >
-                      <MdHistory /> History
+                      <FiClock /> History
                     </button>
+
+                    {/* Comment button removed from Orders Dashboard - use Order Details page to add comments */}
 
                     <button
                       onClick={async () => {
@@ -395,9 +486,27 @@ export default function AdminOrders() {
                             <span>
                               {new Date(h.changedAt).toLocaleString()}
                             </span>
+                            {h.note && (
+                              <div className="text-sm text-slate-500 mt-1 italic">
+                                Reason: {h.note}
+                              </div>
+                            )}
                           </li>
                         ))}
                       </ul>
+                      {order.comments && order.comments.length > 0 && (
+                        <div className="mt-3">
+                          <h5 className={`font-semibold ${isDark?"text-emerald-200":"text-green-800"}`}>Comments</h5>
+                          <ul className="mt-2 space-y-2 text-sm">
+                            {order.comments.map((c, i) => (
+                              <li key={i} className="border p-2 rounded-md bg-white/60 dark:bg-slate-800">
+                                <div className="text-xs text-slate-500">{c.authorName || c.author} • {c.createdAt?.toDate ? new Date(c.createdAt.toDate()).toLocaleString() : (c.createdAt ? new Date(c.createdAt).toLocaleString() : "-")}</div>
+                                <div className="mt-1">{c.text}</div>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                     </div>
                   )}
               </div>

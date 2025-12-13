@@ -68,7 +68,8 @@ const AdminComplaintsDashboard = () => {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map(doc => {
         const raw = doc.data();
-        const normalizedStatus = (raw.status || "pending").toLowerCase();
+        const normalizedStatus = (raw.status || "pending") + "";
+        const normalizedStatusTrim = normalizedStatus.trim().toLowerCase();
         const repliesArray = Array.isArray(raw.replies)
           ? raw.replies
           : Array.isArray(raw.adminResponses)
@@ -90,7 +91,7 @@ const AdminComplaintsDashboard = () => {
         return {
           id: doc.id,
           ...raw,
-          status: normalizedStatus,
+          status: normalizedStatusTrim,
           replies: repliesArray,
           createdAt: raw.createdAt?.toDate?.() || new Date(raw.createdAt),
           updatedAt: raw.updatedAt?.toDate?.() || new Date(raw.updatedAt)

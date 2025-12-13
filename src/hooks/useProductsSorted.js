@@ -39,7 +39,11 @@ export function useProductsSorted({
           if (status === "available") return p.isAvailable;
           if (status === "unavailable") return !p.isAvailable;
           return true;
-        });
+        })
+        .map((p) => ({
+          ...p,
+          isFeatured: !!p.featureHome,
+        }));
     },
     staleTime: 15_000,
     keepPreviousData: true,

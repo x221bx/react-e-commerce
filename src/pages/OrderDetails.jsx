@@ -1,7 +1,8 @@
 // src/pages/OrderDetails.jsx
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { doc, onSnapshot, updateDoc } from "firebase/firestore";
+import { doc, onSnapshot, updateDoc, arrayUnion, Timestamp } from "firebase/firestore";
+import Modal from "../components/ui/Modal";
 import { db } from "../services/firebase";
 import {
   FiPackage,
@@ -16,15 +17,20 @@ import {
 import { useTranslation } from "react-i18next";
 import { RiChatSmileLine } from "react-icons/ri";
 import Footer from "../Authcomponents/Footer";
+import { ensureProductLocalization, getLocalizedProductTitle } from "../utils/productLocalization";
 
 export default function OrderDetails() {
   const { id } = useParams();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
+  const [isCommentOpen, setIsCommentOpen] = useState(false);
+  const [commentText, setCommentText] = useState("");
+  const [savingComment, setSavingComment] = useState(false);
 
   const { i18n } = useTranslation();
   const isRTL = i18n.language === "ar";
+  const lang = i18n.language || "en";
 
   // Convert ANY Firestore / JS time format → Date object
   const toDateObj = (ts) => {
@@ -67,15 +73,24 @@ export default function OrderDetails() {
   const cancelOrder = async () => {
     if (!order) return;
     if (!window.confirm("Are you sure you want to cancel this order?")) return;
+    const reason = window.prompt("Cancellation reason (required):");
+    if (!reason || !reason.trim()) {
+      alert("Cancellation requires a reason");
+      return;
+    }
     try {
       setCancelling(true);
       const orderRef = doc(db, "orders", order.id);
+      const now = Timestamp.now ? Timestamp.now() : new Date();
       await updateDoc(orderRef, {
         status: "Cancelled",
         statusHistory: [
           ...(order.statusHistory || []),
-          { status: "Cancelled", changedAt: new Date() },
+          { status: "Cancelled", changedAt: now, note: reason, actor: "admin", actorName: "Admin" },
         ],
+        cancellationNote: reason,
+        cancellationBy: "admin",
+        cancellationAt: now,
       });
       setCancelling(false);
       alert("Order cancelled successfully.");
@@ -83,6 +98,32 @@ export default function OrderDetails() {
       console.error(err);
       setCancelling(false);
       alert("Failed to cancel order.");
+    }
+  };
+
+  const addComment = async () => {
+    // deprecated: use modal flow
+    return;
+  };
+  const openCommentModal = () => {
+    setCommentText("");
+    setIsCommentOpen(true);
+  };
+
+  const submitComment = async () => {
+    if (!order) return;
+    if (!commentText || !commentText.trim()) return;
+    setSavingComment(true);
+    try {
+      await updateDoc(doc(db, "orders", order.id), {
+        comments: arrayUnion({ text: commentText.trim(), author: "admin", authorName: "Admin", createdAt: Timestamp.now() }),
+      });
+      setIsCommentOpen(false);
+    } catch (err) {
+      console.error("Add comment failed", err);
+      alert("Failed to add comment");
+    } finally {
+      setSavingComment(false);
     }
   };
 
@@ -127,6 +168,10 @@ export default function OrderDetails() {
         Order not found.
       </div>
     );
+
+  const orderItems = (order.items || []).map((item) =>
+    ensureProductLocalization(item)
+  );
 
   return (
     <div dir={isRTL ? "rtl" : "ltr"} className="max-w-5xl mx-auto py-10 px-4">
@@ -177,6 +222,11 @@ export default function OrderDetails() {
             >
               {order.status}
             </span>
+            {order.cancellationNote && (order.status === "Cancelled" || order.status === "Canceled") && (
+              <div className="mt-2 p-3 bg-rose-50 rounded-md text-sm text-rose-700">
+                <strong>Cancellation reason:</strong> {order.cancellationNote}
+              </div>
+            )}
           </div>
           {order.status !== "Shipped" &&
             order.status !== "Delivered" &&
@@ -225,6 +275,61 @@ export default function OrderDetails() {
           })}
         </div>
       </div>
+      {/* Status History + notes */}
+      <div className="mb-10">
+        <h3 className="text-lg font-bold text-green-700 flex items-center gap-2 mb-4">
+          <FiClock /> Status History
+        </h3>
+        <div className="space-y-3">
+          {(order.statusHistory || []).map((h, idx) => (
+            <div key={idx} className="p-3 rounded-lg border bg-white">
+              <div className="flex items-center justify-between">
+                <div className="font-semibold">{h.status}</div>
+                <div className="text-sm text-gray-600">{formatDateOnly(h.changedAt)} {formatTimeOnly(h.changedAt)}</div>
+              </div>
+              {h.note && <div className="mt-2 text-sm text-slate-700 italic">Reason: {h.note}</div>}
+              {h.actorName && <div className="mt-1 text-xs text-slate-500">By: {h.actorName} ({h.actor || "system"})</div>}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Admin comments section */}
+      <div className="mb-10">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-lg font-bold text-green-700">Comments</h3>
+          <div>
+            <button onClick={openCommentModal} className="px-3 py-2 bg-emerald-600 text-white rounded-md">Add comment</button>
+          </div>
+        </div>
+        {(!order.comments || order.comments.length === 0) ? (
+          <div className="p-4 rounded-lg border bg-green-50 text-sm text-gray-700">No comments yet.</div>
+        ) : (
+          <div className="space-y-3">
+            {order.comments.map((c, i) => (
+              <div key={i} className="p-3 rounded-lg border bg-white">
+                <div className="text-xs text-slate-500">{c.authorName || c.author} • {c.createdAt?.toDate ? new Date(c.createdAt.toDate()).toLocaleString() : (c.createdAt ? new Date(c.createdAt).toLocaleString() : "-")}</div>
+                <div className="mt-1">{c.text}</div>
+              </div>
+            ))}
+          </div>
+        )}
+        <Modal isOpen={isCommentOpen} onClose={() => setIsCommentOpen(false)} title="Add comment">
+          <div>
+            <textarea
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              rows={5}
+              className="w-full rounded-xl border px-3 py-2 text-sm"
+              placeholder="Write your comment here..."
+            />
+            <div className="mt-4 flex items-center justify-end gap-2">
+              <button onClick={() => setIsCommentOpen(false)} className="px-3 py-2 rounded-xl border">Cancel</button>
+              <button onClick={submitComment} disabled={savingComment} className="px-3 py-2 rounded-xl bg-emerald-600 text-white">{savingComment ? 'Saving...' : 'Add comment'}</button>
+            </div>
+          </div>
+        </Modal>
+      </div>
 
       {/* Product Grid */}
       <div className="bg-white p-5 rounded-xl shadow border border-green-100 mb-10">
@@ -232,20 +337,22 @@ export default function OrderDetails() {
           <FiTruck /> Items
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {order.items?.map((item, i) => (
+          {orderItems?.map((item, i) => (
             <div
               key={i}
               className="flex gap-4 border rounded-xl p-4 bg-green-50 hover:bg-green-100 transition"
             >
               <img
                 src={item.imageUrl || item.image || item.thumbnailUrl || item.img || "/placeholder.png"}
-                alt={item.name}
+                alt={getLocalizedProductTitle(item, lang)}
                 className="w-20 h-20 rounded-lg object-cover"
               />
               <div className="flex-1">
-                <p className="font-semibold text-green-900">{item.name}</p>
+                <p className="font-semibold text-green-900">
+                  {getLocalizedProductTitle(item, lang)}
+                </p>
                 <p className="text-sm text-green-700 flex items-center gap-1">
-                  <FiLayers /> {item.category || "Uncategorized"}
+                  <FiLayers /> {item.category || item.categoryName || "Uncategorized"}
                 </p>
                 <p className="text-gray-700 mt-1 text-sm">
                   Qty: {item.quantity} × {item.price} EGP

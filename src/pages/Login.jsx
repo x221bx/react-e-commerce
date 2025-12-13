@@ -43,6 +43,8 @@ export default function Login() {
   useEffect(() => {
     if (user?.isAdmin && location.pathname !== "/admin") {
       navigate("/admin", { replace: true });
+    } else if ((user?.role === "delivery" || user?.isDelivery) && location.pathname !== "/delivery") {
+      navigate("/delivery", { replace: true });
     }
   }, [user, navigate, location.pathname]);
 
@@ -70,6 +72,8 @@ export default function Login() {
             const user = resultAction.payload;
             if (user?.isAdmin) {
               navigate("/admin", { replace: true });
+            } else if (user?.role === "delivery" || user?.isDelivery) {
+              navigate("/delivery", { replace: true });
             } else {
               navigate(redirectTo, { replace: true });
             }

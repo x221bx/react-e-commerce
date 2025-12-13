@@ -20,7 +20,7 @@ export default function FeaturedProducts() {
     status: "available",
   });
 
-  const featured = data.slice(0, 4);
+  const featured = data.filter((p) => p.isFeatured).slice(0, 4);
 
   return (
     <section className="mt-16">
@@ -72,11 +72,17 @@ export default function FeaturedProducts() {
       )}
 
       {/* Products */}
-      {!isLoading && !isError && (
+      {!isLoading && !isError && featured.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
           {featured.map((p, i) => (
             <ProductCard key={p.id} product={p} index={i} />
           ))}
+        </div>
+      )}
+
+      {!isLoading && !isError && featured.length === 0 && (
+        <div className="text-sm text-slate-500 dark:text-slate-300">
+          {t("home.featuredProductsEmpty", "No featured products yet.")}
         </div>
       )}
     </section>

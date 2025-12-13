@@ -20,17 +20,21 @@ import Footer from "../Authcomponents/Footer";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { UseTheme } from "../theme/ThemeProvider";
+import { getLocalizedProductTitle, ensureProductLocalization } from "../utils/productLocalization";
+import { getShippingCost, subscribeShippingCost } from "../services/shippingService";
 
 export default function Cart() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === "ar";
+  const lang = i18n.language || "en";
   const { theme } = UseTheme();
   const isDark = theme === "dark";
 
   const { items = [] } = useSelector((state) => state.cart || {});
   const [toast, setToast] = useState("");
+  const [shippingCost, setShippingCost] = useState(50);
 
   const showToast = (msg) => {
     setToast(msg);
@@ -56,7 +60,7 @@ export default function Cart() {
         };
       });
 
-      dispatch(updateCartStock(products));
+      dispatch(updateCartStock(products.map((p) => ensureProductLocalization(p))));
     } catch (err) {
       console.error("fetchLatestStock failed:", err);
     }
@@ -66,12 +70,38 @@ export default function Cart() {
     fetchLatestStock();
   }, []);
 
+  useEffect(() => {
+    // subscribe to shipping cost so changes in admin reflect immediately
+    let unsub = null;
+    const start = async () => {
+      try {
+        // initial fetch (keeps existing behavior)
+        const cost = await getShippingCost();
+        setShippingCost(cost);
+      } catch (error) {
+        console.error("Error fetching shipping cost:", error);
+      }
+
+      // real-time updates
+      unsub = subscribeShippingCost((cost) => {
+        setShippingCost(cost);
+      });
+    };
+
+    start();
+
+    return () => {
+      if (typeof unsub === "function") unsub();
+    };
+  }, []);
+
   const handleAdd = (item) => {
     const qty = Number(item.quantity || 0);
     const stock = Number(item.stock || 0);
 
     if (qty >= stock) {
-      showToast(`Max stock reached for "${item.title || item.name}"`);
+      const name = getLocalizedProductTitle(item, lang) || item.title || item.name || "";
+      showToast(`Max stock reached for "${name}"`);
       return;
     }
     dispatch(addToCart({ ...item }));
@@ -85,7 +115,7 @@ export default function Cart() {
     (sum, i) => sum + Number(i.price || 0) * Number(i.quantity || 0),
     0
   );
-  const shipping = items.length ? 50 : 0;
+  const shipping = items.length ? shippingCost : 0;
   const total = subtotal + shipping;
 
   const handleGoToCheckout = () => {
@@ -247,7 +277,7 @@ export default function Cart() {
                           <div className="flex flex-wrap justify-between gap-3">
                             <div>
                               <h3 className={`font-semibold text-lg ${isDark ? "text-white" : "text-slate-900"}`}>
-                                {item.name || item.title}
+                                {getLocalizedProductTitle(item, lang)}
                               </h3>
 
                               <p className="text-emerald-500 font-bold mt-1">
@@ -367,7 +397,11 @@ export default function Cart() {
                     totaltext={t("checkout.summary.total", "Total")}
                     onCheckout={handleGoToCheckout}
                     itemCount={items.length}
-                    textitem={t("checkout.summary.quantity_plural", "items")}
+                    textitem={
+                      items.length === 1
+                        ? t("checkout.summary.itemLabel", "item")
+                        : t("checkout.summary.itemsLabel", "items")
+                    }
                   />
                 </div>
               </>

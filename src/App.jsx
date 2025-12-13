@@ -51,6 +51,7 @@ const AdminComplaints = lazy(() => import("./pages/admin/AdminComplaintsDashboar
 const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
 const AdminOrderDetails = lazy(() => import("./pages/admin/AdminOrderDetails"));
 const AdminMessages = lazy(() => import("./pages/admin/AdminMessages"));
+const AdminDelivery = lazy(() => import("./pages/admin/DeliveryAccounts"));
 const Notifications = lazy(() => import("./pages/Notifications"));
 const ChatBot = lazy(() => import("./components/Ai/ChatBot"));
 const AiConversations = lazy(() => import("./pages/account/AiConversations"));
@@ -58,6 +59,8 @@ const OrderDetails = lazy(() => import("./pages/OrderDetails"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const PaypalCallback = lazy(() => import("./pages/PaypalCallback"));
 const PaymobCallback = lazy(() => import("./pages/PaymobCallback"));
+const DeliveryDashboard = lazy(() => import("./pages/delivery/DeliveryDashboard"));
+const DeliveryProfile = lazy(() => import("./pages/delivery/DeliveryProfile"));
 
 // Loading component for Suspense fallback
 const LoadingSpinner = ({ text }) => (
@@ -97,6 +100,8 @@ export default function App() {
             }
 
             const isAdmin = userData.isAdmin || userData.role === "admin";
+            const isDelivery = userData.isDelivery || userData.role === "delivery";
+            const role = isAdmin ? "admin" : isDelivery ? "delivery" : userData.role || "user";
 
             const userPayload = {
               uid: firebaseUser.uid,
@@ -104,7 +109,8 @@ export default function App() {
               name: userData.name || firebaseUser.displayName,
               username,
               isAdmin,
-              role: isAdmin ? "admin" : "user",
+              isDelivery,
+              role,
             };
 
             dispatch(setCurrentUser(userPayload));
@@ -194,6 +200,15 @@ export default function App() {
               <Route path="complaints" element={<Complaints />} />
             </Route>
           </Route>
+          {/* Delivery Routes */}
+          <Route
+            element={
+              <ProtectedRoute allowedRoles={["delivery"]} allowAdminOverride={true} />
+            }
+          >
+            <Route path="/delivery" element={<DeliveryDashboard />} />
+            <Route path="/delivery/profile" element={<DeliveryProfile />} />
+          </Route>
           {/* Admin Routes */}
           <Route element={<ProtectedRoute requireAdmin={true} />}>
             <Route path="/admin" element={<AdminLayout />}>
@@ -208,6 +223,7 @@ export default function App() {
               <Route path="categories" element={<AdminCategories />} />
               <Route path="articles" element={<AdminArticles />} />
               <Route path="complaints" element={<AdminComplaints />} />
+              <Route path="delivery" element={<AdminDelivery />} />
             </Route>
           </Route>
           {/* Forbidden */}

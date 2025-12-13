@@ -226,7 +226,8 @@ export default function Complaints() {
         try {
           const data = snapshot.docs.map((docSnap) => {
             const raw = docSnap.data();
-            const normalizedStatus = (raw.status || "pending").toLowerCase();
+            const normalizedStatus = (raw.status || "pending") + "";
+            const normalizedStatusTrim = normalizedStatus.trim().toLowerCase();
 
             const repliesArray = Array.isArray(raw.replies)
               ? raw.replies
@@ -276,7 +277,7 @@ export default function Complaints() {
             return {
               id: docSnap.id,
               ...raw,
-              status: normalizedStatus,
+              status: normalizedStatusTrim,
               replies: repliesArray,
               userMessages: userMessagesArray,
             };
@@ -315,7 +316,8 @@ export default function Complaints() {
         try {
           const data = snapshot.docs.map((docSnap) => {
             const raw = docSnap.data();
-            const normalizedStatus = (raw.status || "pending").toLowerCase();
+            const normalizedStatus = (raw.status || "pending") + "";
+            const normalizedStatusTrim = normalizedStatus.trim().toLowerCase();
 
             const repliesArray = Array.isArray(raw.replies)
               ? raw.replies
@@ -365,7 +367,7 @@ export default function Complaints() {
             return {
               id: docSnap.id,
               ...raw,
-              status: normalizedStatus,
+              status: normalizedStatusTrim,
               replies: repliesArray,
               userMessages: userMessagesArray,
             };

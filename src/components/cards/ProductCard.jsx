@@ -13,13 +13,14 @@ import { Heart, Eye, Sparkles } from "lucide-react";
 import Button from "../ui/Button";
 import { UseTheme } from "../../theme/ThemeProvider";
 import { useTranslation } from "react-i18next";
+import { getLocalizedProductTitle, ensureProductLocalization } from "../../utils/productLocalization";
 
 export default function ProductCard({ product, index = 0 }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { theme } = UseTheme();
   const isDark = theme === "dark";
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const [quickView, setQuickView] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -34,6 +35,8 @@ export default function ProductCard({ product, index = 0 }) {
   const imageUrl = product?.thumbnailUrl || product?.img || "/placeholder.png";
   const stock = Number(product?.stock ?? product?.quantity ?? 0);
   const isAvailable = product?.isAvailable !== false && stock > 0;
+
+  const displayTitle = getLocalizedProductTitle(product, i18n.language || "en");
 
   const badge =
     product.badge ||
@@ -141,7 +144,9 @@ export default function ProductCard({ product, index = 0 }) {
             whileTap={{ scale: 0.85 }}
             onClick={(e) => {
               e.stopPropagation();
-              dispatch(toggleFavourite(product));
+              dispatch(
+                toggleFavourite(ensureProductLocalization(product))
+              );
             }}
             className={`
               p-2 rounded-full backdrop-blur-md shadow-lg border
@@ -197,8 +202,8 @@ export default function ProductCard({ product, index = 0 }) {
             ${isDark ? "text-emerald-100" : "text-slate-800"}
           `}
         >
-          {product.name || product.title}
-        </h3>
+            {displayTitle}
+          </h3>
 
         {/* PRICE */}
         <p
@@ -227,11 +232,11 @@ export default function ProductCard({ product, index = 0 }) {
           }
           full
           disabled={inCart || !isAvailable}
-          onClick={(e) => {
-            e.stopPropagation();
-            if (inCart || !isAvailable) return;
-            dispatch(addToCart(product));
-          }}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (inCart || !isAvailable) return;
+              dispatch(addToCart(ensureProductLocalization(product)));
+            }}
           className={`mt-3 rounded-xl font-semibold ${
             inCart || !isAvailable ? "opacity-50 cursor-not-allowed" : ""
           }`}
@@ -273,7 +278,7 @@ export default function ProductCard({ product, index = 0 }) {
             <img src={imageUrl} className="rounded-xl w-full" />
 
             <h3 className="mt-4 text-xl font-bold dark:text-white">
-              {product.name}
+              {displayTitle}
             </h3>
 
             <p className="text-emerald-600 dark:text-emerald-300 text-2xl font-bold mt-2">
@@ -297,7 +302,7 @@ export default function ProductCard({ product, index = 0 }) {
                 disabled={inCart || !isAvailable}
                 onClick={() => {
                   if (inCart || !isAvailable) return;
-                  dispatch(addToCart(product));
+                  dispatch(addToCart(ensureProductLocalization(product)));
                 }}
               />
             </div>

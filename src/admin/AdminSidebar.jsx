@@ -9,6 +9,7 @@ import {
   FiFileText,
   FiMessageSquare,
   FiShoppingCart,
+  FiTruck,
 } from "react-icons/fi";
 import { createPortal } from "react-dom";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -65,6 +66,7 @@ const links = useMemo(
     { to: "/admin/products", label: "Products", icon: <FiPackage /> },
     { to: "/admin/products/new", label: "Add Product", icon: <FiPlusCircle /> },
     { to: "/admin/orders", end: true, label: "Orders", icon: <FiShoppingCart /> },
+    { to: "/admin/delivery", label: "Delivery", icon: <FiTruck /> },
     { to: "/admin/messages", label: "Messages", icon: <FiMail />, badge: true },
     { to: "/admin/categories", label: "Categories", icon: <FiTag /> },
     { to: "/admin/articles", label: "Articles", icon: <FiFileText /> },

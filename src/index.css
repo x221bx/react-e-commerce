@@ -9,8 +9,9 @@
   --bg-card: #f5f7f8;
   --bg-input: #ffffff;
 
-  --text-main: #1a1a1a;
-  --text-muted: #687280; /* fix */
+  --text-main: #111827; /* slate-900 for stronger contrast */
+  --text-muted: #334155; /* slate-700 for readable hints */
+  --text-placeholder: #94a3b8; /* slate-400/500 for lighter placeholder */
 
   --border-color: #e3e3e3;
 
@@ -23,10 +24,11 @@
   /* Dark Mode */
   --bg-main: #0b1217;
   --bg-card: #111a20;
-  --bg-input: #0d1b1b;
+  --bg-input: #f8fafc; /* keep inputs light for readability */
 
-  --text-main: #e7f3eb;
-  --text-muted: #b6c7c2;
+  --text-main: #e2e8f0; /* slate-200 */
+  --text-muted: #cbd5e1; /* slate-300 */
+  --text-placeholder: #94a3b8; /* slate-400 for subtle placeholders */
 
   --border-color: #1f2a33;
 
@@ -49,7 +51,7 @@
   --brand-accent: #60a5fa;
   --brand-secondary: #0b5f4a;
   --surface-header: rgba(17,44,37,0.7);
-  --surface-input: #0d1b1b;
+  --surface-input: #f8fafc; /* light surface even in dark shell */
 }
 
 /* Header / shell surface (use across Home / Products / Articles / Account pages) */
@@ -147,15 +149,42 @@ svg.icon-thin {
   color: var(--text-muted);
 }
 
-select {
-  background: var(--bg-input);
+
+select,
+textarea {
+  background: var(--surface-input);
   color: var(--text-main);
   border-color: var(--border-color);
 }
 
+label,
+.form-label {
+  color: var(--text-main) !important;
+  font-weight: 700;
+  opacity: 1 !important;
+}
+
+.form-hint,
+.field-hint {
+  color: var(--text-muted);
+}
+
+legend,
+.form-section-title,
+.field-label {
+  color: var(--text-main) !important;
+  font-weight: 700;
+  opacity: 1 !important;
+}
+
+/* Force nested label spans (common in form wrappers) to inherit strong color */
+label span {
+  color: var(--text-main) !important;
+  opacity: 1 !important;
+}
 input::placeholder,
 textarea::placeholder {
-  color: var(--text-muted);
+  color: var(--text-placeholder);
 }
 
 /* Cards / Panels */

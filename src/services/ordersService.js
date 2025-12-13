@@ -12,11 +12,13 @@ import {
   increment,
 } from "firebase/firestore";
 import { db } from "./firebase";
+import { ensureProductLocalization } from "../utils/productLocalization";
 
 const ordersCollection = collection(db, "orders");
 
 const sanitizeItems = (items = []) =>
   items.map((item) => {
+    const normalized = ensureProductLocalization(item);
     const quantity = Number(item.quantity || 1);
     const price = Number(item.price || 0);
     const image =
@@ -29,8 +31,28 @@ const sanitizeItems = (items = []) =>
     return {
       productId,
       id: productId,
-      name: item.name || item.title || "Item",
-      category: item.category || item.type || "General",
+      name:
+        normalized.name ||
+        normalized.titleEn ||
+        normalized.titleAr ||
+        normalized.title ||
+        normalized.productName ||
+        "Item",
+      titleEn:
+        normalized.titleEn ||
+        normalized.nameEn ||
+        normalized.name ||
+        normalized.title ||
+        "",
+      titleAr:
+        normalized.titleAr ||
+        normalized.nameAr ||
+        normalized.name ||
+        normalized.title ||
+        "",
+      nameEn: normalized.nameEn || normalized.titleEn || normalized.name || "",
+      nameAr: normalized.nameAr || normalized.titleAr || normalized.name || "",
+      category: normalized.category || item.category || item.type || "General",
       price,
       quantity,
       total: Number((quantity * price).toFixed(2)),
@@ -57,19 +79,27 @@ const buildOrderNumber = () => {
 
 const updateInventoryCounts = async (items) => {
   if (!items.length) return;
-  const batch = writeBatch(db);
-  items.forEach((item) => {
+  for (const item of items) {
     const pid = item.stockKey || item.productId || item.id;
-    if (!pid) return;
-    const productRef = doc(db, "products", pid);
+    if (!pid) continue;
     const qty = Math.abs(Number(item.quantity || 0));
-    if (!qty) return;
+    if (!qty) continue;
+
+    const productRef = doc(db, "products", pid);
+    const snap = await getDoc(productRef);
+    if (!snap.exists()) continue;
+
+    const current = snap.data() || {};
+    const currentStock = Number(current.stock ?? current.quantity ?? 0) || 0;
+    const nextStock = Math.max(0, currentStock - qty);
+
+    const batch = writeBatch(db);
     batch.update(productRef, {
-      stock: increment(-qty),
-      quantity: increment(-qty),
+      stock: nextStock,
+      quantity: nextStock,
     });
-  });
-  await batch.commit();
+    await batch.commit();
+  }
 };
 
 export const createOrder = async ({

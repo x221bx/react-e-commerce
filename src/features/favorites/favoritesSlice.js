@@ -1,6 +1,7 @@
 // src/features/favorites/favoritesSlice.js
 import { createSlice } from "@reduxjs/toolkit";
 import { saveUserFavorites } from "../../services/userDataService";
+import { ensureProductLocalization } from "../../utils/productLocalization";
 
 // Helper function to get user-specific favorites key
 const getFavoritesKey = (userId) => {
@@ -25,7 +26,9 @@ const rawInitialFavorites = JSON.parse(
 
 // Deep clone initial favorites to prevent reference sharing with cart
 const initialFavorites = Array.isArray(rawInitialFavorites)
-  ? rawInitialFavorites.map(item => JSON.parse(JSON.stringify(item)))
+  ? rawInitialFavorites
+      .map((item) => ensureProductLocalization({ ...(item || {}) }))
+      .map((item) => JSON.parse(JSON.stringify(item)))
   : [];
 
 const favouritesSlice = createSlice({
@@ -43,7 +46,9 @@ const favouritesSlice = createSlice({
     setFavoritesItems: (state, action) => {
       // Deep clone to avoid reference sharing with cart
       state.items = Array.isArray(action.payload) 
-        ? action.payload.map(item => JSON.parse(JSON.stringify(item)))
+        ? action.payload
+            .map((item) => ensureProductLocalization({ ...(item || {}) }))
+            .map((item) => JSON.parse(JSON.stringify(item)))
         : [];
       state.loading = false;
     },
@@ -55,7 +60,7 @@ const favouritesSlice = createSlice({
     },
 
     toggleFavourite: (state, action) => {
-      const payload = action.payload || {};
+      const payload = ensureProductLocalization(action.payload || {});
       const productId = String(payload?.id || '');
 
       // Check if already in favorites by id only

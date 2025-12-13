@@ -476,7 +476,7 @@
       "addToCart": "Add to cart",
       "remove": "Remove",
       "inStock": "In stock",
-      "unavailable": "Currently unavailable",
+      "unavailable": "Unavailable",
       "priceUnknown": "Price unavailable",
       "noImage": "No image"
     },
@@ -650,6 +650,8 @@
     "summary": {
       "title": "Order summary",
       "subtitle": "Products in your cart",
+      "itemLabel": "item",
+      "itemsLabel": "items",
       "quantity": "{{count}} item",
       "quantity_plural": "{{count}} items",
       "subtotal": "Subtotal",
@@ -1151,6 +1153,12 @@
     "outOfStock": "Out of stock",
     "lowStock": "Only {{count}} left",
     "inStock": "In stock",
-    "lineTotal": "Line total"
+    "lineTotal": "Line total",
+    "lastPiece": "Last piece"
+  },
+  "delivery": {
+    "portal": "Delivery Hub",
+    "dashboard": "Delivery Control",
+    "accounts": "Delivery Accounts"
   }
 }

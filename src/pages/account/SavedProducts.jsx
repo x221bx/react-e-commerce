@@ -61,15 +61,16 @@ export default function SavedProducts() {
         id: product.id,
         title: product.title || product.name || "Unnamed product",
         category: product.category || product.productType || "General",
+        stock: Number(product.stock ?? product.quantity ?? 0) || 0,
         price:
           typeof product.price === "number"
             ? currency.format(product.price)
             : product.price ||
               t("account.savedProducts.priceUnknown", "N/A"),
         isAvailable:
-          typeof product.isAvailable === "boolean"
+          (typeof product.isAvailable === "boolean"
             ? product.isAvailable
-            : true,
+            : true) && (Number(product.stock ?? product.quantity ?? 0) || 0) > 0,
         thumbnail:
           product.img ||
           product.thumbnailUrl ||
@@ -84,7 +85,15 @@ export default function SavedProducts() {
   );
 
   const handleRemove = (original) => dispatch(toggleFavourite({ ...original }));
-  const handleAddToCart = (original) => dispatch(addToCart({ ...original }));
+  const handleAddToCart = (original) => {
+    const stock = Number(original.stock ?? original.quantity ?? 0) || 0;
+    const available =
+      (typeof original.isAvailable === "boolean"
+        ? original.isAvailable
+        : true) && stock > 0;
+    if (!available) return;
+    dispatch(addToCart({ ...original }));
+  };
   const handleViewProduct = (id) => id && navigate(`/product/${id}`);
 
   const headingColor = isDark ? "text-white" : "text-slate-900";

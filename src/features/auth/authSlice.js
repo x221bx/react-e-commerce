@@ -53,6 +53,10 @@ const mapAuthError = (e, ctx = "generic") => {
       return build("Password is too weak.", { password: "Too weak" });
     case "auth/username-taken":
       return build("Username is taken.", { username: "Taken" });
+    case "auth/user-disabled":
+      return build("This account has been disabled. Please contact support.", {
+        identifier: "Disabled",
+      });
     case "auth/invalid-email":
       return build("Invalid email format.", { email: "Invalid" });
     default:
@@ -75,6 +79,9 @@ export const signInWithIdentifier = createAsyncThunk(
       }
 
       const userData = userSnap.data();
+      if (userData.active === false) {
+        throw { code: "auth/user-disabled" };
+      }
       let username = userData.username || "";
       if (!username) {
         const usernameQuery = query(
@@ -88,6 +95,8 @@ export const signInWithIdentifier = createAsyncThunk(
       }
 
       const isAdmin = userData.isAdmin || userData.role === "admin";
+      const isDelivery = userData.isDelivery || userData.role === "delivery";
+      const role = isAdmin ? "admin" : isDelivery ? "delivery" : userData.role || "user";
 
       return {
         uid: cred.user.uid,
@@ -95,7 +104,8 @@ export const signInWithIdentifier = createAsyncThunk(
         name: userData.name || cred.user.displayName,
         username,
         isAdmin,
-        role: isAdmin ? "admin" : "user",
+        isDelivery,
+        role,
       };
     } catch (e) {
       return rejectWithValue(mapAuthError(e, "login"));
@@ -118,6 +128,9 @@ export const signUp = createAsyncThunk(
         name,
         username: normalizedUsername,
         isAdmin: false,
+        isDelivery: false,
+        role: "user",
+        active: true,
       });
 
       await setDoc(doc(db, "usernames", normalizedUsername), {

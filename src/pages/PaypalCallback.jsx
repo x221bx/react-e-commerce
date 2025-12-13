@@ -95,35 +95,79 @@ export default function PaypalCallback() {
           status: capture.status,
         };
 
-        const { id } = await createOrder({
-          ...draft,
-          paymentMethod: "paypal",
-          paymentSummary: paymentDetails.label,
-          paymentDetails,
-        });
+        // Prevent duplicate creation (in case redirect and inline handlers both run)
+        const inflightPaypal = localStorage.getItem("paypal_inflight");
+        if (inflightPaypal) {
+          try {
+            const createdFlagRaw = localStorage.getItem("paypal_created_order");
+            const createdFlag = createdFlagRaw ? JSON.parse(createdFlagRaw) : null;
+            if (createdFlag && createdFlag.orderId) {
+              setState({
+                status: "success",
+                message: t(
+                  "checkout.payment.paypalSuccess",
+                  "Payment completed and your order has been created."
+                ),
+              });
+              navigate(`/order-tracking/${createdFlag.orderId}`, {
+                state: { showPaymentBadge: true },
+              });
+              return;
+            }
+          } catch (err) {
+            console.warn("paypal created flag parse error", err);
+          }
+          setState({ status: "pending", message: t("checkout.payment.paypalChecking", "Confirming PayPal payment...") });
+          return;
+        }
 
-        localStorage.removeItem("farmvet_pending_order");
-        localStorage.removeItem("farmvet_pending_payment_method");
-        localStorage.removeItem("lastPaypalOrderId");
+        try {
+          localStorage.setItem(
+            "paypal_inflight",
+            JSON.stringify({ paypalOrderId: orderId, ts: Date.now() })
+          );
 
-        dispatch(clearCart());
+          const { id } = await createOrder({
+            ...draft,
+            paymentMethod: "paypal",
+            paymentSummary: paymentDetails.label,
+            paymentDetails,
+          });
 
-        setState({
-          status: "success",
-          message: t(
-            "checkout.payment.paypalSuccess",
-            "Payment completed and your order has been created."
-          ),
-        });
+          localStorage.setItem(
+            "paypal_created_order",
+            JSON.stringify({ paypalOrderId: orderId, orderId: id })
+          );
 
-        // ⭐⭐⭐ التعديل الوحيد المطلوب ⭐⭐⭐
-        // احفظ ID علشان نستخدمه في صفحة التتبع
-        localStorage.setItem("latestOrderId", id);
+          // cleanup created flag after 5 minutes
+          setTimeout(() => {
+            localStorage.removeItem("paypal_created_order");
+          }, 5 * 60 * 1000);
 
-        // تحويل مباشر لصفحة التتبع مع تفعيل البادج
-        navigate(`/order-tracking/${id}`, {
-          state: { showPaymentBadge: true },
-        });
+          localStorage.removeItem("farmvet_pending_order");
+          localStorage.removeItem("farmvet_pending_payment_method");
+          localStorage.removeItem("lastPaypalOrderId");
+
+          dispatch(clearCart());
+
+          setState({
+            status: "success",
+            message: t(
+              "checkout.payment.paypalSuccess",
+              "Payment completed and your order has been created."
+            ),
+          });
+
+          localStorage.setItem("latestOrderId", id);
+
+          navigate(`/order-tracking/${id}`, {
+            state: { showPaymentBadge: true },
+          });
+        } finally {
+          try {
+            localStorage.removeItem("paypal_inflight");
+          } catch (e) {}
+        }
 
       } catch (err) {
         console.error("PayPal callback error", err);
