@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -9,6 +9,7 @@ import { useUserNotifications } from "../hooks/useUserNotifications";
 import Button from "../components/ui/Button";
 import { UseTheme } from "../theme/ThemeProvider";
 import Footer from "../Authcomponents/Footer";
+import { playFullNotification } from "../utils/voiceNotification";
 
 const categoryIconMap = {
   orders: FiPackage,
@@ -33,6 +34,7 @@ export default function Notifications() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const isRTL = i18n.language === "ar";
+  const previousUnreadCountRef = useRef(0);
 
   const {
     notifications,
@@ -42,8 +44,22 @@ export default function Notifications() {
     markAllRead,
   } = useUserNotifications(user?.uid);
 
+  // Play voice notification when new unread notifications arrive
+  useEffect(() => {
+    if (unreadCount > previousUnreadCountRef.current) {
+      const newNotifications = notifications.filter(n => !n.read);
+      if (newNotifications.length > 0) {
+        // Play notification for the most recent unread notification
+        const latestNotification = newNotifications[0];
+        const message = latestNotification.message || latestNotification.title || "You have a new notification";
+        playFullNotification(message, i18n.language === "ar" ? "ar-EG" : "en-US");
+      }
+    }
+    previousUnreadCountRef.current = unreadCount;
+  }, [unreadCount, notifications, i18n.language]);
+
   const isDark = theme === "dark";
-  const baseSurface = isDark ? "bg-slate-900 text-white" : "bg-white text-slate-900";
+
   const cardSurface = isDark
     ? "bg-slate-900 border-slate-800"
     : "bg-white border-slate-200";
@@ -95,8 +111,8 @@ export default function Notifications() {
             <div className="flex flex-wrap items-center gap-3">
               <div
                 className={`rounded-full px-4 py-2 text-sm font-semibold ${unreadCount
-                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-300"
-                    : "bg-slate-200/50 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
+                    ? "bg-emerald-500/10 text-emerald-600  -emerald-300"
+                    : "bg-slate-200/50 text-slate-500   -slate-400"
                   }`}
               >
                 {unreadCount
@@ -124,10 +140,10 @@ export default function Notifications() {
                 key={idx}
                 className="animate-pulse flex items-center gap-4"
               >
-                <div className="h-10 w-10 rounded-full bg-slate-200 dark:bg-slate-800" />
+                <div className="h-10 w-10 rounded-full bg-slate-200  " />
                 <div className="flex-1 space-y-2">
-                  <div className="h-3 w-1/3 rounded bg-slate-200 dark:bg-slate-800" />
-                  <div className="h-3 w-2/3 rounded bg-slate-200 dark:bg-slate-800" />
+                  <div className="h-3 w-1/3 rounded bg-slate-200  " />
+                  <div className="h-3 w-2/3 rounded bg-slate-200  " />
                 </div>
               </div>
             ))}
@@ -138,7 +154,7 @@ export default function Notifications() {
             <h3 className="text-xl font-semibold mb-2">
               {t("notifications.empty_title", "No notifications yet")}
             </h3>
-            <p className={isDark ? "text-slate-300" : "text-slate-600"}>
+            <p className={isDark ? "text-slate-300" : " "}>
               {t("notifications.empty_description", "Important updates about your orders and inquiries will appear here.")}
             </p>
           </div>
@@ -163,7 +179,7 @@ export default function Notifications() {
                           ? t("notifications.groups.support", "Support")
                           : t("notifications.groups.system", "System")}
                     </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                    <p className="text-xs text-slate-500  -slate-400">
                       {t("notifications.group_count", "{{count}} updates", {
                         count: items.length,
                       })}
@@ -187,7 +203,7 @@ export default function Notifications() {
                         <div className="flex items-start gap-4">
                           <div
                             className={`mt-1 h-9 w-9 rounded-full grid place-items-center ${notification.read
-                                ? "bg-slate-200/40 dark:bg-slate-800"
+                                ? "bg-slate-200/40  "
                                 : "bg-emerald-500/20 text-emerald-500"
                               }`}
                           >
@@ -197,10 +213,10 @@ export default function Notifications() {
                             <p className="text-base font-semibold">
                               {notification.title}
                             </p>
-                            <p className="text-sm text-slate-600 dark:text-slate-300">
+                            <p className="text-sm text-slate-600  -slate-300">
                               {notification.message}
                             </p>
-                            <p className="text-xs mt-2 text-slate-500 dark:text-slate-400">
+                            <p className="text-xs mt-2 text-slate-500  -slate-400">
                               {formatTimestamp(notification.timestamp, i18n.language)}
                             </p>
                           </div>
@@ -208,7 +224,7 @@ export default function Notifications() {
 
                         <div className="flex items-center gap-2">
                           {!notification.read && (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-300">
+                            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-emerald-500/20 text-emerald-600  ">
                               <FiBell size={12} />
                               {t("notifications.new_badge", "New")}
                             </span>

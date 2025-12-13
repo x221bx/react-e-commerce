@@ -25,7 +25,8 @@ export default function PaypalCallback() {
   useEffect(() => {
     const run = async () => {
       const meta = parsePaypalRedirect(window.location.href);
-
+      
+      // Only proceed with capture if status is success AND we have payer ID
       if (meta.status === "cancel") {
         setState({
           status: "cancel",
@@ -38,26 +39,29 @@ export default function PaypalCallback() {
         localStorage.removeItem("farmvet_pending_payment_method");
         return;
       }
-
+      
+      // If no payer ID, the order was not approved
       if (!meta.token || !meta.payer) {
         setState({
           status: "error",
           message: t(
             "checkout.payment.paypalMissingInfo",
-            "Missing approval information from PayPal."
+            "Payment was not approved. Please try again."
           ),
         });
+        localStorage.removeItem("farmvet_pending_order");
+        localStorage.removeItem("farmvet_pending_payment_method");
         return;
       }
 
       const storedOrderId = localStorage.getItem("lastPaypalOrderId");
+      const storedReference = localStorage.getItem("lastPaypalReference");
       const orderId = meta.token || storedOrderId;
 
       try {
         const capture = await capturePaypalOrder({
           orderId,
-          token: meta.token,
-          payerId: meta.payer,
+          reference: storedReference,
         });
 
         if (capture.status !== "COMPLETED") {

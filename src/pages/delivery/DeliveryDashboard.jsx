@@ -112,9 +112,21 @@ export default function DeliveryDashboard() {
   const submitCancel = () => {
     if (!cancelTarget) return;
     if (!cancelNote.trim()) {
-      toast.error("Please add a cancellation reason.");
+      toast.error("Please add a detailed cancellation reason.");
       return;
     }
+    if (cancelNote.trim().length < 20) {
+      toast.error("Please provide more details (minimum 20 characters).");
+      return;
+    }
+    
+    // Check if payment method is specified in the note
+    const isPrepaid = cancelTarget.paymentMethod !== "cod";
+    if (isPrepaid && !cancelNote.toLowerCase().includes("refund")) {
+      toast.error("For prepaid orders, please mention the refund process in your reason.");
+      return;
+    }
+    
     handleUpdate(cancelTarget, "Canceled", cancelNote.trim());
   };
 
@@ -451,7 +463,7 @@ export default function DeliveryDashboard() {
             </div>
 
             <div className="mt-4 space-y-3">
-              <label className="text-sm font-semibold">Reason</label>
+              <label className="text-sm font-semibold">Cancellation Reason</label>
               <textarea
                 className={`w-full rounded-xl border px-3 py-2 text-sm min-h-[120px] ${
                   isDark
@@ -462,11 +474,15 @@ export default function DeliveryDashboard() {
                 value={cancelNote}
                 onChange={(e) => setCancelNote(e.target.value)}
               />
-              <p className="text-xs text-slate-500  -slate-400">
-                If prepaid: tell the customer their amount will be refunded to
-                the original account. If COD: mention the delivery was canceled
-                due to unclear details.
-              </p>
+              <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
+                <p className="text-xs font-semibold text-amber-800 dark:text-amber-200 mb-1">Important:</p>
+                <p className="text-xs text-amber-700 dark:text-amber-300">
+                  <strong>Prepaid orders:</strong> Customer's money was already deducted. Clearly state refund process and timeline.
+                </p>
+                <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                  <strong>COD orders:</strong> No money deducted. Explain why delivery couldn't be completed.
+                </p>
+              </div>
             </div>
 
             <div className="mt-5 flex items-center justify-end gap-3">

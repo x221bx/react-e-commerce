@@ -1,7 +1,7 @@
 // src/pages/OrderDetails.jsx
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { doc, onSnapshot, updateDoc, arrayUnion, Timestamp } from "firebase/firestore";
+import { doc, onSnapshot, updateDoc, arrayUnion, Timestamp, collection, addDoc } from "firebase/firestore";
 import Modal from "../components/ui/Modal";
 import { db } from "../services/firebase";
 import {
@@ -92,6 +92,22 @@ export default function OrderDetails() {
         cancellationBy: "admin",
         cancellationAt: now,
       });
+      
+      // Create notification for the customer
+      if (order.uid) {
+        await addDoc(collection(db, "notifications"), {
+          uid: order.uid,
+          type: "order-cancelled",
+          category: "orders",
+          title: "Order Cancelled",
+          message: `Your order #${order.orderNumber || order.id} has been cancelled. Reason: ${reason}`,
+          createdAt: now,
+          read: false,
+          target: `/account/order-history`,
+          meta: { orderId: order.id }
+        });
+      }
+      
       setCancelling(false);
       alert("Order cancelled successfully.");
     } catch (err) {
@@ -223,8 +239,19 @@ export default function OrderDetails() {
               {order.status}
             </span>
             {order.cancellationNote && (order.status === "Cancelled" || order.status === "Canceled") && (
-              <div className="mt-2 p-3 bg-rose-50 rounded-md text-sm text-rose-700">
-                <strong>Cancellation reason:</strong> {order.cancellationNote}
+              <div className="mt-2 p-3 bg-rose-50 rounded-md text-sm text-rose-700 border border-rose-200">
+                <div className="font-semibold mb-1">⚠️ Order Cancelled</div>
+                <div><strong>Reason:</strong> {order.cancellationNote}</div>
+                {order.paymentMethod && order.paymentMethod !== "cod" && (
+                  <div className="mt-1 text-xs italic">
+                    💳 <strong>Refund:</strong> Your payment will be refunded to the original payment method. Please allow 3-5 business days for the refund to process.
+                  </div>
+                )}
+                {order.paymentMethod === "cod" && (
+                  <div className="mt-1 text-xs italic">
+                    💵 <strong>Cash on Delivery:</strong> No payment was processed. The delivery was cancelled due to the reason above.
+                  </div>
+                )}
               </div>
             )}
           </div>

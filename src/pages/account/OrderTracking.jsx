@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useLocation } from "react-router-dom"; // ⭐ تمت الإضافة هنا
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { UseTheme } from "../../theme/ThemeProvider";
 import { selectCurrentUser } from "../../features/auth/authSlice";
 import { useOrderTracking } from "../../hooks/useOrderTracking";
@@ -17,9 +17,13 @@ export default function OrderTracking() {
   const { theme } = UseTheme();
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const location = useLocation(); // ⭐ تمت الإضافة
+  const location = useLocation();
+  const params = useParams();
   const isDark = theme === "dark";
   const user = useSelector(selectCurrentUser);
+
+  // Get the order ID from URL params
+  const orderIdQuery = params.orderId;
 
   // ⭐ قراءة حالة البادج القادمة من الدفع
   const showPaymentBadge = location.state?.showPaymentBadge;
@@ -102,33 +106,62 @@ export default function OrderTracking() {
   }
 
   // ...no orders state...
+  // Only show "no orders" if there are no orders AND no specific order is being viewed
   if (!orders || !orders.length) {
-    return (
-      <div className="space-y-4 text-center py-12">
-        <p className={`text-sm font-semibold uppercase tracking-wide ${accent}`}>
-          {t("tracking.eyebrow", "Track your recent purchases")}
-        </p>
-        <h1 className={`text-3xl font-semibold ${headingColor}`}>
-          {t("tracking.noOrders.title", "No tracked orders yet")}
-        </h1>
-        <p className={`text-sm ${headerMuted}`}>
-          {t(
-            "tracking.noOrders.subtitle",
-            "Place an order and we'll display live tracking updates here."
-          )}
-        </p>
-        <button
-          onClick={() => navigate("/products")}
-          className="rounded-2xl bg-emerald-500 px-6 py-2 text-sm font-semibold text-white hover:bg-emerald-600"
-        >
-          {t("tracking.noOrders.cta", "Shop now")}
-        </button>
-      </div>
-    );
+    // Check if we're trying to view a specific order
+    if (!orderIdQuery) {
+      return (
+        <div className="space-y-4 text-center py-12">
+          <p className={`text-sm font-semibold uppercase tracking-wide ${accent}`}>
+            {t("tracking.eyebrow", "Track your recent purchases")}
+          </p>
+          <h1 className={`text-3xl font-semibold ${headingColor}`}>
+            {t("tracking.noOrders.title", "No tracked orders yet")}
+          </h1>
+          <p className={`text-sm ${headerMuted}`}>
+            {t(
+              "tracking.noOrders.subtitle",
+              "Place an order and we'll display live tracking updates here."
+            )}
+          </p>
+          <button
+            onClick={() => navigate("/products")}
+            className="rounded-2xl bg-emerald-500 px-6 py-2 text-sm font-semibold text-white hover:bg-emerald-600"
+          >
+            {t("tracking.noOrders.cta", "Shop now")}
+          </button>
+        </div>
+      );
+    }
+    // If viewing a specific order, fall through to the "no selected order" state
+    // The individual order listener will still load the order
   }
 
   // ...no selected order state...
   if (!order) {
+    // If we're waiting for a specific order to load, show loading state
+    if (orderIdQuery) {
+      return (
+        <div className="space-y-6">
+          <OrderTrackingHeader
+            orders={orders}
+            selectedOrder={null}
+            onSelectOrder={handleSelectOrder}
+            isDark={isDark}
+          />
+          <div className="text-center py-12">
+            <div className="inline-flex items-center gap-3">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent"></div>
+              <p className={`text-sm ${headerMuted}`}>
+                {t("tracking.loadingOrder", "Loading your order...")}
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    // If not waiting for a specific order, show select order message
     return (
       <div className="space-y-4">
         <OrderTrackingHeader

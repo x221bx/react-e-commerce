@@ -733,6 +733,7 @@
     "placedOn": "Placed on",
     "awaitingUpdate": "Awaiting update",
     "selectOrder": "Select an order to display live updates.",
+    "loadingOrder": "Loading your order...",
     "noOrders": {
       "title": "No tracked orders yet",
       "subtitle": "Once you place an order, we'll show real-time tracking here.",

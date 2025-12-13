@@ -22,6 +22,7 @@ export const useOrderTracking = (userId) => {
     const { orders: allOrders, loading, connectionError: ordersConnectionError, confirmDelivery } = useUserOrders(userId);
   
     // Filter out completed/canceled orders for tracking - they should only show in Order History
+    // Keep all orders in the list so users can track their recent orders
     const orders = allOrders.filter(order =>
       !['delivered', 'canceled'].includes(order.status?.toLowerCase())
     );

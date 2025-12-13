@@ -1,22 +1,31 @@
 // src/hooks/useOrderSummary.js
 import { useMemo, useState, useEffect } from "react";
-import { getShippingCost } from "../services/shippingService";
+import { getShippingCost, subscribeShippingCost } from "../services/shippingService";
 
 export const useOrderSummary = (cartItems) => {
-    const [shippingCost, setShippingCost] = useState(50);
+    const [shippingCost, setShippingCost] = useState(0);
 
     useEffect(() => {
         const fetchShippingCost = async () => {
             try {
                 const cost = await getShippingCost();
-                setShippingCost(cost);
+                setShippingCost(cost && cost > 0 ? cost : 0);
             } catch (error) {
                 console.error("Error fetching shipping cost:", error);
-                setShippingCost(50); // Fallback to default
+                // No fallback to hardcoded value - use 0 if API fails
             }
         };
 
         fetchShippingCost();
+
+        // Subscribe to real-time shipping cost changes
+        const unsubscribe = subscribeShippingCost((cost) => {
+            setShippingCost(cost && cost > 0 ? cost : 0);
+        });
+
+        return () => {
+            unsubscribe();
+        };
     }, []);
 
     const summary = useMemo(() => {

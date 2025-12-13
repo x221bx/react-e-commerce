@@ -159,8 +159,19 @@ export default function AdminOrderDetails() {
             <strong>Address:</strong> {order.shipping?.addressLine1 || order.address}, {order.shipping?.city || order.city}
           </div>
         {order.cancellationNote && (order.status === "Cancelled" || order.status === "Canceled") && (
-          <div className="mt-4 p-3 bg-rose-50 rounded-md text-sm text-rose-700">
-            <strong>Cancellation reason:</strong> {order.cancellationNote}
+          <div className="mt-4 p-3 bg-rose-50 rounded-md text-sm text-rose-700 border border-rose-200">
+            <div className="font-semibold mb-1">⚠️ Order Cancelled</div>
+            <div><strong>Reason:</strong> {order.cancellationNote}</div>
+            {order.paymentMethod && order.paymentMethod !== "cod" && (
+              <div className="mt-1 text-xs italic">
+                💳 <strong>Refund:</strong> Customer's payment will be refunded to the original payment method. Please process refund within 3-5 business days.
+              </div>
+            )}
+            {order.paymentMethod === "cod" && (
+              <div className="mt-1 text-xs italic">
+                💵 <strong>Cash on Delivery:</strong> No payment was processed. The delivery was cancelled due to the reason above.
+              </div>
+            )}
           </div>
         )}
         <div className="mt-4">
