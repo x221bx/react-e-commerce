@@ -1,3 +1,4 @@
+// scr/pages/delivery/DeliveryDashboard.jsx
 import { useMemo, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
@@ -37,12 +38,11 @@ const statusTone = {
 };
 
 export default function DeliveryDashboard() {
-  const { theme } = UseTheme();
+  const { theme, toggle } = UseTheme(); // هنا استخدم toggle بدل setTheme
   const isDark = theme === "dark";
   const driver = useSelector(selectCurrentUser);
   const dispatch = useDispatch();
 
-  // Use admin=true to reuse the shared hook logic without filtering by uid
   const { orders, loading, updateOrderStatus, refreshOrders } = useOrders(
     null,
     true
@@ -122,28 +122,19 @@ export default function DeliveryDashboard() {
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
 
   return (
-    <div
-      className={`min-h-[70vh] ${
-        isDark ? "text-slate-100" : "text-slate-900"
-      }`}
-    >
+    <div className={`min-h-[70vh] ${isDark ? "text-slate-100" : "text-slate-900"}`}>
       <div className="flex items-center justify-between gap-3 flex-wrap mb-6">
         <div>
-          <p className="text-sm font-semibold text-emerald-600">
-            Delivery workspace
-          </p>
+          <p className="text-sm font-semibold text-emerald-600">Delivery workspace</p>
           <h1 className="text-3xl font-extrabold">Delivery Control</h1>
           <p className="text-sm text-slate-800  -slate-300">
-            Search by order number, phone, or name. Update status or cancel with a
-            note the admin can see.
+            Search by order number, phone, or name. Update status or cancel with a note the admin can see.
           </p>
         </div>
-          <div className="flex items-center gap-3">
-            <div
-              className={`hidden sm:flex items-center gap-2 rounded-xl px-3 py-2 border text-sm ${
-                isDark
-                  ? "bg-slate-900 border-slate-700 text-slate-100"
-                : "bg-white border-slate-200 text-slate-800"
+        <div className="flex items-center gap-3 flex-wrap">
+          <div
+            className={`hidden sm:flex items-center gap-2 rounded-xl px-3 py-2 border text-sm ${
+              isDark ? "bg-slate-900 border-slate-700 text-slate-100" : "bg-white border-slate-200 text-slate-800"
             }`}
           >
             <div className="text-left leading-tight">
@@ -151,22 +142,31 @@ export default function DeliveryDashboard() {
               <div className="text-xs text-slate-700">{driver?.email}</div>
             </div>
           </div>
+
+          {/* زرار تغيير الثيم */}
+          <button
+            onClick={toggle}
+            className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold bg-slate-800 text-white hover:bg-slate-700"
+          >
+            {isDark ? "Light Mode" : "Dark Mode"}
+          </button>
+
           <button
             onClick={() => dispatch(signOut())}
             className="inline-flex items-center gap-2 rounded-lg bg-slate-800 text-white px-3 py-2 text-sm font-semibold hover:bg-slate-700"
-            >
-              <FiLogOut /> Logout
-            </button>
-            <Link
-              to="/delivery/profile"
-              className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50 dark:bg-slate-900  -emerald-200 dark:border-slate-700"
-            >
-              Profile
-            </Link>
-            <button
-              onClick={refreshOrders}
-              className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-sm ${
-                isDark
+          >
+            <FiLogOut /> Logout
+          </button>
+          <Link
+            to="/delivery/profile"
+            className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50 dark:bg-slate-900  -emerald-200 dark:border-slate-700"
+          >
+            Profile
+          </Link>
+          <button
+            onClick={refreshOrders}
+            className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-sm ${
+              isDark
                 ? "bg-slate-900 border-slate-700 text-slate-100 hover:bg-slate-800"
                 : "bg-white border-slate-200 text-slate-800 hover:bg-slate-50"
             }`}
@@ -501,8 +501,7 @@ export default function DeliveryDashboard() {
 }
 
 function ActionButton({ label, onClick, loading, variant = "solid", icon }) {
-  const base =
-    "inline-flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition";
+  const base = "inline-flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition";
 
   const styles =
     variant === "ghost"
@@ -512,11 +511,7 @@ function ActionButton({ label, onClick, loading, variant = "solid", icon }) {
       : "bg-emerald-600 text-white hover:bg-emerald-700";
 
   return (
-    <button
-      onClick={onClick}
-      disabled={loading}
-      className={`${base} ${styles} disabled:opacity-60`}
-    >
+    <button onClick={onClick} disabled={loading} className={`${base} ${styles} disabled:opacity-60`}>
       {loading ? (
         <span className="h-4 w-4 border-2 border-white/60 border-b-transparent rounded-full animate-spin" />
       ) : (
