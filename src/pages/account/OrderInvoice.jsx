@@ -421,8 +421,14 @@ export default function OrderInvoice() {
                         </span>
                       </div>
 
-                      <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-100">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+                      <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${
+                        currentOrder.status === "Cancelled"
+                          ? "border-rose-500/40 bg-rose-500/10 text-rose-100"
+                          : "border-emerald-500/40 bg-emerald-500/10 text-emerald-100"
+                      }`}>
+                        <span className={`h-1.5 w-1.5 rounded-full ${
+                          currentOrder.status === "Cancelled" ? "bg-rose-300" : "bg-emerald-300"
+                        }`} />
                         {currentOrder.status}
                       </span>
                     </div>
@@ -638,6 +644,52 @@ export default function OrderInvoice() {
                   </div>
                 </div>
               </div>
+
+              {/* Cancellation Notice (if order is cancelled) */}
+              {currentOrder.status === "Cancelled" && (
+                <div
+                  className={`rounded-2xl p-6 border backdrop-blur-md space-y-4`}
+                >
+                  <div
+                    className={`flex items-center gap-3 ${isDark ? "bg-rose-950/60 border-rose-900/60" : "bg-rose-50/60 border-rose-200"}`}
+                  >
+                    <div className="flex-1">
+                      <h3
+                        className={`text-sm font-semibold flex items-center gap-2`}
+                      >
+                        <span className={`w-4 h-4 rounded-full flex items-center justify-center text-white`}>
+                          ⚠️
+                        </span>
+                        Order Cancelled
+                      </h3>
+                      <div className="mt-3 space-y-2 text-sm">
+                        <div className="flex items-start gap-2">
+                          <span className={`text-rose-500 mt-0.5`}>•</span>
+                          <span className={`font-medium ${textColor}`}>
+                            Reason: {currentOrder.cancellationNote}
+                          </span>
+                        </div>
+                        {currentOrder.paymentMethod && currentOrder.paymentMethod !== "cod" && (
+                          <div className="flex items-start gap-2">
+                            <span className={`text-rose-500 mt-0.5`}>•</span>
+                            <span className={mutedText}>
+                              💳 Refund: Your payment will be refunded to the original payment method. Please allow 3-5 business days for the refund to process.
+                            </span>
+                          </div>
+                        )}
+                        {currentOrder.paymentMethod === "cod" && (
+                          <div className="flex items-start gap-2">
+                            <span className={`text-rose-500 mt-0.5`}>•</span>
+                            <span className={mutedText}>
+                              💵 Cash on Delivery: No payment was processed. The delivery was cancelled due to the reason above.
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Footer */}
               <div className="text-center pt-2">

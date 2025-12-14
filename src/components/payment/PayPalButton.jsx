@@ -1,5 +1,5 @@
 // src/components/payment/PayPalButton.jsx
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { createPaypalOrder, capturePaypalOrder } from "../../services/paypal";
 
 // Load PayPal SDK once; reuse if already present.
@@ -45,6 +45,7 @@ export default function PayPalButton({
 }) {
   const [sdkReady, setSdkReady] = useState(false);
   const [error, setError] = useState(null);
+  const paypalReferenceRef = useRef(null);
   const containerRef = useRef(null);
 
   // Load SDK
@@ -73,17 +74,28 @@ export default function PayPalButton({
       // Create order on backend to keep currency/amount logic in one place.
       createOrder: async () => {
         try {
-      const ref = orderRef || `WEB-${Date.now()}`;
-      const session = await createPaypalOrder({
-        amountEGP: amount,
-        reference: ref,
-      });
-      const paypalOrderId = session?.paypalOrderId || session?.id;
-      if (!paypalOrderId) {
-        throw new Error("Missing PayPal order id from server");
-      }
-      return paypalOrderId;
+          // Generate a draft reference NOW, before server response
+          const draftRef = orderRef || `WEB-${Date.now()}`;
+          paypalReferenceRef.current = draftRef;
+          localStorage.setItem("lastPaypalReference", draftRef);
+          
+          console.log("Creating PayPal order with amount:", amount, "draftReference:", draftRef);
+          const session = await createPaypalOrder({
+            amountEGP: amount,
+            reference: draftRef,
+          });
+          const paypalOrderId = session?.paypalOrderId || session?.id;
+          if (!paypalOrderId) {
+            throw new Error("Missing PayPal order id from server");
+          }
+          // Server might also return reference, store it if it's different
+          if (session?.reference && session.reference !== draftRef) {
+            console.log("Server returned different reference:", session.reference);
+          }
+          console.log("PayPal order created:", paypalOrderId, "reference:", draftRef);
+          return paypalOrderId;
         } catch (err) {
+          console.error("PayPal order creation error:", err);
           const message =
             err?.message || "Failed to start PayPal checkout";
           setError(message);
@@ -94,10 +106,11 @@ export default function PayPalButton({
       // Capture order through backend
       onApprove: async (data) => {
         try {
+          const reference = paypalReferenceRef.current || localStorage.getItem("lastPaypalReference");
+          console.log("PayPal onApprove:", { orderID: data.orderID, payerID: data.payerID, reference });
           const capture = await capturePaypalOrder({
             orderId: data.orderID,
-            token: data.orderID,
-            payerId: data.payerID,
+            reference,
           });
 
           const details = {
@@ -163,7 +176,7 @@ export default function PayPalButton({
         // ignore
       }
     };
-  }, [sdkReady, amount, currency, clientId, orderRef, onSuccess, onError]);
+  }, [sdkReady, amount, currency, clientId, orderRef, onSuccess, onError, paypalReferenceRef]);
 
   return (
     <div className="space-y-2">

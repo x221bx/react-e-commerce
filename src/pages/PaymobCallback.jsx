@@ -78,12 +78,12 @@ export default function PaymobCallback() {
 
 
         // Avoid duplicate order creation if callback fires twice
+        // But only if the order ID matches the current Paymob order
         try {
           const createdFlagRaw = localStorage.getItem("paymob_created_order");
           const createdFlag = createdFlagRaw ? JSON.parse(createdFlagRaw) : null;
-          if (createdFlag) {
-            // If ANY paymob_created_order flag exists, don't create another order
-            // This prevents duplicates regardless of paymobOrderId
+          if (createdFlag && createdFlag.paymobOrderId === session?.paymobOrderId) {
+            // Only skip if it's the same Paymob order
             setState({
               status: "success",
               message: t(
@@ -116,37 +116,43 @@ export default function PaymobCallback() {
         };
 
         // Prevent concurrent handlers from creating duplicate orders
+        // But only if it's the same Paymob order
         const inflight = localStorage.getItem("paymob_inflight");
         if (inflight) {
-          // If another handler is already processing, wait for created flag or bail
-          try {
-            const createdFlagRaw = localStorage.getItem("paymob_created_order");
-            const createdFlag = createdFlagRaw ? JSON.parse(createdFlagRaw) : null;
-            if (createdFlag && createdFlag.orderId) {
-              setState({
-                status: "success",
-                message: t(
-                  "checkout.payment.paymobSuccess",
-                  "Payment approved and your order has been created."
-                ),
-              });
-              navigate(`/account/tracking/${createdFlag.orderId}`, {
-                state: { showPaymentBadge: true },
-              });
-              return;
+          const inflightData = JSON.parse(inflight);
+          // Only bail if it's the same Paymob order
+          if (inflightData?.paymobOrderId === session?.paymobOrderId) {
+            // If another handler is already processing, wait for created flag or bail
+            try {
+              const createdFlagRaw = localStorage.getItem("paymob_created_order");
+              const createdFlag = createdFlagRaw ? JSON.parse(createdFlagRaw) : null;
+              if (createdFlag && createdFlag.orderId) {
+                setState({
+                  status: "success",
+                  message: t(
+                    "checkout.payment.paymobSuccess",
+                    "Payment approved and your order has been created."
+                  ),
+                });
+                navigate(`/account/tracking/${createdFlag.orderId}`, {
+                  state: { showPaymentBadge: true },
+                });
+                return;
+              }
+            } catch (err) {
+              console.warn("paymob created flag parse error", err);
             }
-          } catch (err) {
-            console.warn("paymob created flag parse error", err);
+            // No created flag yet — show pending and bail
+            setState({
+              status: "pending",
+              message: t(
+                "checkout.payment.paymobChecking",
+                "Confirming card payment..."
+              ),
+            });
+            return;
           }
-          // No created flag yet — show pending and bail
-          setState({
-            status: "pending",
-            message: t(
-              "checkout.payment.paymobChecking",
-              "Confirming card payment..."
-            ),
-          });
-          return;
+          // Different Paymob order - continue with creation
         }
 
         // mark inflight so other handlers won't attempt creation
@@ -156,12 +162,36 @@ export default function PaymobCallback() {
             JSON.stringify({ paymobOrderId: session?.paymobOrderId, ts: Date.now() })
           );
 
+          // Validate draft data before creating order
+          if (!draft?.uid && !draft?.userId) {
+            throw new Error("User ID is missing from order draft");
+          }
+          if (!draft?.items || !Array.isArray(draft.items) || draft.items.length === 0) {
+            throw new Error("No items in order draft");
+          }
+          if (!draft?.totals?.total) {
+            throw new Error("Total amount is missing from order draft");
+          }
+
+          console.log("Creating order with data:", {
+            uid: draft.uid || draft.userId,
+            itemCount: draft.items.length,
+            total: draft.totals.total,
+            paymentMethod: "paymob"
+          });
+
           const { id } = await createOrder({
             ...draft,
             paymentMethod: "paymob",
             paymentSummary: paymentDetails.label,
             paymentDetails,
           });
+
+          if (!id) {
+            throw new Error("Order creation returned no ID");
+          }
+
+          console.log("Order created successfully with ID:", id);
 
           localStorage.setItem(
             "paymob_created_order",
@@ -192,14 +222,32 @@ export default function PaymobCallback() {
           navigate(`/account/tracking/${id}`, {
             state: { showPaymentBadge: true },
           });
+        } catch (orderError) {
+          console.error("Order creation failed:", orderError);
+          // Log detailed error information
+          console.error("Draft data:", draft);
+          console.error("Payment details:", paymentDetails);
+          console.error("Session:", session);
+          console.error("Meta:", meta);
+          
+          // Re-throw to be caught by the outer catch block
+          throw orderError;
         } finally {
           try {
             localStorage.removeItem("paymob_inflight");
-          } catch (e) {}
+          } catch (e) {
+            console.warn("Failed to remove paymob_inflight flag:", e);
+          }
         }
 
       } catch (err) {
         console.error("Paymob callback error", err);
+        
+        // Log detailed error information for debugging
+        console.error("Full error stack:", err.stack);
+        console.error("Error name:", err.name);
+        console.error("Error message:", err.message);
+        
         setState({
           status: "error",
           message:

@@ -19,7 +19,11 @@ import Pager from "../../admin/Pager";
 import { useTranslation } from "react-i18next";
 import { localizeProduct, localizeCategory } from "../../utils/localizeContent";
 import { UseTheme } from "../../theme/ThemeProvider";
-import { getShippingCost, setShippingCost } from "../../services/shippingService";
+import {
+  getShippingCost,
+  setShippingCost as setShippingCostDB,
+  subscribeShippingCost
+} from "../../services/shippingService";
 
 /* ------------------------ constants ------------------------ */
 const SORT_FIELDS = [
@@ -47,7 +51,7 @@ export default function AdminProducts() {
   const [pageSize, setPageSize] = useState(
     Number(params.get("pageSize") || 10)
   );
-  const [shippingCost, setShippingCost] = useState(50);
+  const [shippingCost, setShippingCostState] = useState(0);
   const pageFromUrl = Math.max(1, Number(params.get("page") || 1));
 
   const {
@@ -119,13 +123,22 @@ export default function AdminProducts() {
     const fetchShippingCost = async () => {
       try {
         const cost = await getShippingCost();
-        setShippingCost(cost);
+        setShippingCostState(cost);
       } catch (error) {
         console.error("Error fetching shipping cost:", error);
       }
     };
 
     fetchShippingCost();
+
+    // Subscribe to real-time shipping cost changes
+    const unsubscribe = subscribeShippingCost((cost) => {
+      setShippingCostState(cost);
+    });
+
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -153,8 +166,8 @@ export default function AdminProducts() {
         return;
       }
 
-      await setShippingCost(cost);
-      setShippingCost(cost);
+      await setShippingCostDB(cost);
+      setShippingCostState(cost);
       setShowShippingModal(false);
       toast.success(t("shipping.success", "Shipping cost updated successfully"));
     } catch (err) {

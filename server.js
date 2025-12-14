@@ -83,16 +83,35 @@ async function paymobRequest(path, payload) {
 }
 
 async function paypalRequest(path, { method = "GET", headers = {}, body, token } = {}) {
+  const finalHeaders = {
+    ...headers,
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+  
+  console.log("PayPal Request Details:", {
+    url: `${PAYPAL_BASE}${path}`,
+    method,
+    headers: finalHeaders,
+    bodyLength: body ? body.length : 0,
+    bodyContent: body ? body.substring(0, 200) : "none",
+  });
+  
   const res = await fetch(`${PAYPAL_BASE}${path}`, {
     method,
-    headers: {
-      ...headers,
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
+    headers: finalHeaders,
     body,
   });
 
   const data = await res.json().catch(() => ({}));
+  
+  console.log("PayPal Response:", {
+    url: `${PAYPAL_BASE}${path}`,
+    status: res.status,
+    statusText: res.statusText,
+    ok: res.ok,
+    dataKeys: Object.keys(data).slice(0, 5),
+  });
+  
   if (!res.ok) {
     const message =
       data?.message ||
@@ -501,34 +520,26 @@ app.post("/api/paymob/webhook", (req, res) => {
 // ================ PayPal API ================
 app.post("/api/paypal/create-order", async (req, res) => {
   try {
-    const { amount, currency = PAYPAL_CURRENCY, reference, cartItems = [] } = req.body;
+    const { amount, reference, cartItems = [] } = req.body;
 
-    const rate = Number(PAYPAL_EGP_TO_USD_RATE || 0);
-    if (!rate || rate <= 0) {
-      throw new Error("PAYPAL_EGP_TO_USD_RATE is not configured or invalid");
+    // ✅ التحقق من المبلغ
+    if (!amount || amount <= 0) {
+      throw new Error("Invalid amount. Must be greater than 0");
     }
+
     const amountCents = calculateAmountCents({ amount, cartItems });
-    if (!Number.isFinite(amountCents) || amountCents <= 0) {
-      throw new Error("Invalid amount");
-    }
-
-    if (!PAYPAL_CLIENT_ID || !PAYPAL_SECRET) {
-      throw new Error("PayPal credentials are not configured");
-    }
+    const amountEgp = amountCents / 100;
+    const amountUsd = convertEgpToUsd(amountEgp); // ≥ 1 USD
 
     const accessToken = await getPaypalAccessToken();
 
-    // PayPal sandbox expects USD; align with native app by converting EGP -> USD using a simple rate
-    const amountEgp = amountCents / 100;
-    const amountUsd = convertEgpToUsd(amountEgp);
-
-    const body = JSON.stringify({
+    const orderBody = {
       intent: "CAPTURE",
       purchase_units: [
         {
-          reference_id: reference,
+          reference_id: reference || `ref-${Date.now()}`,
           amount: {
-            value: amountUsd.toFixed(2),
+            value: amountUsd.toFixed(2), // نصيحة: "XX.XX" format
             currency_code: "USD",
           },
         },
@@ -539,26 +550,35 @@ app.post("/api/paypal/create-order", async (req, res) => {
         user_action: "PAY_NOW",
         shipping_preference: "NO_SHIPPING",
       },
-    });
+    };
 
     const order = await paypalRequest("/v2/checkout/orders", {
       method: "POST",
-      headers: { ...jsonHeaders },
       token: accessToken,
-      body,
+      headers: jsonHeaders,
+      body: JSON.stringify(orderBody),
     });
 
+    if (!order || !order.id) {
+      throw new Error("PayPal order not created properly");
+    }
+
+    // حفظ الـ draft محليًا
     const draftId = saveOrderDraft({
-      reference: reference || order?.id,
+      reference: reference || order.id,
       amountCents,
       provider: "paypal",
-      meta: { paypalOrderId: order?.id },
+      meta: { paypalOrderId: order.id },
     });
 
-    const approvalLink = order?.links?.find?.((l) => l.rel === "approve")?.href;
+    const approvalLink = order.links.find((l) => l.rel === "approve")?.href;
+
+    if (!approvalLink) {
+      throw new Error("PayPal approval link missing");
+    }
 
     res.json({
-      paypalOrderId: order?.id,
+      paypalOrderId: order.id,
       approvalUrl: approvalLink,
       reference: draftId,
     });
@@ -570,34 +590,48 @@ app.post("/api/paypal/create-order", async (req, res) => {
 
 app.post("/api/paypal/capture-order", async (req, res) => {
   try {
-    const { orderId, token, payerId, reference } = req.body;
-    if (!orderId) throw new Error("Missing order id");
+    const { orderId, reference } = req.body;
+
+    if (!orderId) throw new Error("Missing orderId for capture");
 
     const accessToken = await getPaypalAccessToken();
 
-    console.log("PayPal capture request", { orderId, token, payerId });
-
-    const capture = await paypalRequest(`/v2/checkout/orders/${orderId}/capture`, {
-      method: "POST",
-      headers: { ...jsonHeaders },
+    // ✅ جلب حالة الطلب أولًا
+    const order = await paypalRequest(`/v2/checkout/orders/${orderId}`, {
+      method: "GET",
       token: accessToken,
     });
 
-    const status = capture?.status;
-    const captureId =
-      capture?.purchase_units?.[0]?.payments?.captures?.[0]?.id ||
-      capture?.purchase_units?.[0]?.payments?.authorizations?.[0]?.id;
+    console.log("PayPal order status before capture:", order.status);
+    if (!order || !order.id) throw new Error("PayPal order not found");
 
+    // باي بال يقبل فقط orders في حالة APPROVED أو CREATED للـ capture
+    if (!["APPROVED", "CREATED"].includes(order.status)) {
+      throw new Error(`Order not ready for capture: ${order.status}`);
+    }
+
+    // ✅ تنفيذ الـ capture
+    const capture = await paypalRequest(`/v2/checkout/orders/${orderId}/capture`, {
+      method: "POST",
+      token: accessToken,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+        Prefer: "return=representation",
+      },
+      body: JSON.stringify({}), // body فارغ
+    });
+
+    const status = capture.status || "UNKNOWN";
+    const captureId = capture.purchase_units?.[0]?.payments?.captures?.[0]?.id;
+
+    // تحديث حالة الـ draft
     if (reference) {
       updateOrderStatus(reference, status?.toLowerCase?.() || status, {
         captureId,
-        token,
-        payerId,
         raw: capture,
       });
     }
-
-    console.log("PayPal capture response", { status, captureId, details: capture?.details, raw: capture });
 
     res.json({ status, captureId, raw: capture });
   } catch (err) {

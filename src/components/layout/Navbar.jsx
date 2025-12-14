@@ -1,5 +1,5 @@
 ﻿// src/components/layout/Navbar.jsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { selectCurrentUser, signOut } from "../../features/auth/authSlice";
@@ -29,11 +29,13 @@ import { useTranslation } from "react-i18next";
 import SearchBar from "../search/SearchBar";
 import Button from "../ui/Button";
 import { useUserNotifications } from "../../hooks/useUserNotifications";
+import { playFullNotification } from "../../utils/voiceNotification";
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [currentLang, setCurrentLang] = useState(i18n.language || "en");
+  const previousUnreadCountRef = useRef(0);
 
   const { theme, toggle } = UseTheme();
   const user = useSelector(selectCurrentUser);
@@ -48,6 +50,17 @@ export default function Navbar() {
   const isRTL = currentLang === "ar";
 
   const { unreadCount } = useUserNotifications(user?.uid);
+
+  // Play voice notification when new unread notifications arrive (customers only, not admins)
+  useEffect(() => {
+    if (unreadCount > previousUnreadCountRef.current && !isAdminUser) {
+      playFullNotification(
+        `You have ${unreadCount} new notification${unreadCount > 1 ? 's' : ''}`,
+        currentLang === "ar" ? "ar-EG" : "en-US"
+      );
+    }
+    previousUnreadCountRef.current = unreadCount;
+  }, [unreadCount, currentLang, isAdminUser]);
 
   const toggleLanguage = async () => {
     const newLang = currentLang === "en" ? "ar" : "en";
