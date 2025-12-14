@@ -36,8 +36,8 @@ function levenshtein(a = "", b = "") {
 function fuzzyMatch(word, target) {
     if (!word || !target) return false;
     if (target.includes(word)) return true;
-    if (word.length <= 3) return false;
-    return levenshtein(word, target) <= 2;
+    if (word.length <= 2) return false;
+    return levenshtein(word, target) <= Math.max(2, Math.floor(word.length / 3));
 }
 
 
@@ -77,6 +77,11 @@ export async function aiSearchProducts({
     }
 
     const kwWords = kw.split(" ").filter((w) => w.length > 1);
+    
+    // If no keywords found, try the original keyword
+    if (!kwWords.length && kw) {
+      kwWords.push(kw);
+    }
 
     const scored = all
         .map((p) => {
@@ -95,10 +100,21 @@ export async function aiSearchProducts({
 
             for (const w of kwWords) {
                 if (!w) continue;
+                
+                // Exact match in title gets highest priority
+                if (title.includes(w)) score += 5;
+                
+                // Exact match in combined text
                 if (combined.includes(w)) score += 3;
                 else if (fuzzyMatch(w, combined)) score += 1.5;
-
-                if (title.includes(w)) score += 2;
+                
+                // Partial match in title (more important than description)
+                if (title.includes(w.slice(0, 3))) score += 1;
+            }
+            
+            // Boost score if multiple keywords match
+            if (kwWords.length > 1 && score > 0) {
+                score *= 1.2;
             }
 
             if (score <= 0) return null;
@@ -107,7 +123,14 @@ export async function aiSearchProducts({
         })
         .filter(Boolean);
 
-    if (!scored.length) return [];
+    if (!scored.length) {
+        // Fallback: try to match by product ID or SKU if keyword looks like a number
+        if (/^\d+$/.test(kw.trim())) {
+            const idMatch = all.find((p) => p.id === kw.trim() || p.sku === kw.trim());
+            if (idMatch) return [idMatch];
+        }
+        return [];
+    }
 
     scored.sort((a, b) => b.score - a.score);
 

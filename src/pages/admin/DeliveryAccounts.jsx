@@ -187,7 +187,7 @@ export default function DeliveryAccounts() {
             Delivery Ops
           </p>
           <h1 className="text-2xl font-bold">Delivery Accounts</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-300">
+          <p className="text-sm text-slate-500  -slate-300">
             Create and manage courier logins. Admin sessions stay intact while creating new users.
           </p>
         </div>
@@ -237,7 +237,7 @@ export default function DeliveryAccounts() {
           </div>
           <div>
             <p className="text-sm font-semibold">Create delivery account</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-500  -slate-400">
               Generates a Firebase auth user with the delivery role.
             </p>
           </div>
@@ -324,13 +324,13 @@ export default function DeliveryAccounts() {
         <div className="border-b px-4 py-3 flex items-center justify-between">
           <div>
             <p className="text-sm font-semibold">Delivery roster</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-500  -slate-400">
               {loading ? "Fetching..." : `${accounts.length} account(s)`}
             </p>
           </div>
           <button
             onClick={loadAccounts}
-            className="inline-flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-300"
+            className="inline-flex items-center gap-2 text-sm text-emerald-600  -emerald-300"
           >
             <FiRefreshCw className={loading ? "animate-spin" : ""} />
             Reload
@@ -382,11 +382,11 @@ export default function DeliveryAccounts() {
                             onChange={(e) =>
                               setEditForm((f) => ({ ...f, name: e.target.value }))
                             }
-                            className="w-full rounded-md border px-2 py-1 text-sm bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700"
+                            className="w-full rounded-md border px-2 py-1 text-sm bg-white   border-slate-300 dark:border-slate-700"
                           />
                         ) : (
                           <>
-                            <div className="font-semibold text-emerald-700 dark:text-emerald-300">
+                            <div className="font-semibold text-emerald-700  -emerald-300">
                               {acc.name || acc.username}
                             </div>
                             <div className="text-xs text-slate-500">
@@ -403,7 +403,7 @@ export default function DeliveryAccounts() {
                             onChange={(e) =>
                               setEditForm((f) => ({ ...f, phone: e.target.value }))
                             }
-                            className="w-full rounded-md border px-2 py-1 text-sm bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700"
+                            className="w-full rounded-md border px-2 py-1 text-sm bg-white   border-slate-300 dark:border-slate-700"
                           />
                         ) : (
                           acc.phone || "-"
@@ -416,7 +416,7 @@ export default function DeliveryAccounts() {
                             onChange={(e) =>
                               setEditForm((f) => ({ ...f, zone: e.target.value }))
                             }
-                            className="w-full rounded-md border px-2 py-1 text-sm bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700"
+                            className="w-full rounded-md border px-2 py-1 text-sm bg-white   border-slate-300 dark:border-slate-700"
                           />
                         ) : (
                           acc.zone || "-"
@@ -429,7 +429,7 @@ export default function DeliveryAccounts() {
                             onChange={(e) =>
                               setEditForm((f) => ({ ...f, vehicleType: e.target.value }))
                             }
-                            className="w-full rounded-md border px-2 py-1 text-sm bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700"
+                            className="w-full rounded-md border px-2 py-1 text-sm bg-white   border-slate-300 dark:border-slate-700"
                           />
                         ) : (
                           acc.vehicleType || "-"
@@ -442,7 +442,7 @@ export default function DeliveryAccounts() {
                             onChange={(e) =>
                               setEditForm((f) => ({ ...f, username: e.target.value }))
                             }
-                            className="w-full rounded-md border px-2 py-1 text-sm bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700"
+                            className="w-full rounded-md border px-2 py-1 text-sm bg-white   border-slate-300 dark:border-slate-700"
                           />
                         ) : (
                           <span>@{acc.username}</span>
@@ -464,8 +464,8 @@ export default function DeliveryAccounts() {
                           <span
                             className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${
                               acc.active !== false
-                                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200"
-                                : "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-200"
+                                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40  -emerald-200"
+                                : "bg-rose-100 text-rose-700 dark:bg-rose-900/40  -rose-200"
                             }`}
                           >
                             {acc.active !== false ? "Active" : "Inactive"}
@@ -561,7 +561,7 @@ function StatCard({ title, value, icon, isDark }) {
         {icon}
       </div>
       <div>
-        <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+        <p className="text-xs uppercase tracking-wide text-slate-500  -slate-400">
           {title}
         </p>
         <p className="text-xl font-bold">{value}</p>
@@ -579,7 +579,7 @@ function Input({ label, helper, icon, ...rest }) {
 
   return (
     <label className="flex flex-col gap-1 text-sm font-medium">
-      <span className="text-slate-700 dark:text-slate-800 flex items-center gap-2">
+      <span className="text-slate-700  -slate-800 flex items-center gap-2">
         {icon && <span className="text-emerald-500">{icon}</span>}
         {label}
       </span>
@@ -588,7 +588,7 @@ function Input({ label, helper, icon, ...rest }) {
         className={`w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500/60 ${inputClass}`}
       />
       {helper && (
-        <span className="text-xs text-slate-500 dark:text-slate-500">
+        <span className="text-xs text-slate-500  -slate-500">
           {helper}
         </span>
       )}
@@ -598,7 +598,7 @@ function Input({ label, helper, icon, ...rest }) {
 
 function Th({ children }) {
   return (
-    <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">
+    <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500  -slate-300">
       {children}
     </th>
   );

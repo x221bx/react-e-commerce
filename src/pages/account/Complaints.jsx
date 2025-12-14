@@ -178,6 +178,7 @@ export default function Complaints() {
   const chatContainerRef = useRef(null);
   const lastMessageRef = useRef(null);
   const [activeFollowUp, setActiveFollowUp] = useState(null);
+  const [chatUpdateTrigger, setChatUpdateTrigger] = useState(0);
 
   // Pagination
   const {
@@ -205,6 +206,11 @@ export default function Complaints() {
       return bDate - aDate;
     });
     setComplaints(merged);
+    
+    // If we have an active chat, update it with the latest data
+    if (activeChat && map.has(activeChat.id)) {
+      setActiveChat(map.get(activeChat.id));
+    }
   };
 
   // ───────────────── Firestore subscriptions ─────────────────
@@ -409,7 +415,7 @@ export default function Complaints() {
           chatContainerRef.current.scrollHeight;
       }, 100);
     }
-  }, [complaints]);
+  }, [complaints, activeChat, chatUpdateTrigger]);
 
   // ───────────────── Follow-up modal ─────────────────
   const FollowUpModal = () =>
@@ -613,6 +619,23 @@ export default function Complaints() {
       );
       setFollowUps((prev) => ({ ...prev, [complaintId]: "" }));
       setActiveFollowUp(null);
+      
+      // Immediately update the active chat to show the new message
+      if (activeChat && activeChat.id === complaintId) {
+        const complaintRef = doc(db, "support", complaintId);
+        const complaintSnap = await getDoc(complaintRef);
+        const updatedComplaint = complaintSnap.data();
+        if (updatedComplaint) {
+          setActiveChat({
+            ...activeChat,
+            userMessages: [...(activeChat.userMessages || []), newUserMessage],
+            updatedAt: new Date()
+          });
+        }
+      }
+      
+      // Force a re-render to ensure the UI updates
+      setChatUpdateTrigger(prev => prev + 1);
     } catch (error) {
       console.error("Error sending follow-up:", error);
       toast.error("Failed to send follow-up");
