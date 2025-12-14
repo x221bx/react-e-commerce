@@ -83,16 +83,35 @@ async function paymobRequest(path, payload) {
 }
 
 async function paypalRequest(path, { method = "GET", headers = {}, body, token } = {}) {
+  const finalHeaders = {
+    ...headers,
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+  
+  console.log("PayPal Request Details:", {
+    url: `${PAYPAL_BASE}${path}`,
+    method,
+    headers: finalHeaders,
+    bodyLength: body ? body.length : 0,
+    bodyContent: body ? body.substring(0, 200) : "none",
+  });
+  
   const res = await fetch(`${PAYPAL_BASE}${path}`, {
     method,
-    headers: {
-      ...headers,
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
+    headers: finalHeaders,
     body,
   });
 
   const data = await res.json().catch(() => ({}));
+  
+  console.log("PayPal Response:", {
+    url: `${PAYPAL_BASE}${path}`,
+    status: res.status,
+    statusText: res.statusText,
+    ok: res.ok,
+    dataKeys: Object.keys(data).slice(0, 5),
+  });
+  
   if (!res.ok) {
     const message =
       data?.message ||
@@ -501,171 +520,68 @@ app.post("/api/paymob/webhook", (req, res) => {
 // ================ PayPal API ================
 app.post("/api/paypal/create-order", async (req, res) => {
   try {
-    const { amount, currency = PAYPAL_CURRENCY, reference, cartItems = [] } = req.body;
+    const { amount, reference, cartItems = [] } = req.body;
 
-    const rate = Number(PAYPAL_EGP_TO_USD_RATE || 0);
-    if (!rate || rate <= 0) {
-      throw new Error("PAYPAL_EGP_TO_USD_RATE is not configured or invalid. Current value: " + PAYPAL_EGP_TO_USD_RATE);
+    // ✅ التحقق من المبلغ
+    if (!amount || amount <= 0) {
+      throw new Error("Invalid amount. Must be greater than 0");
     }
-    
-    // Validate that the conversion rate is reasonable (1 USD = ~30-40 EGP typically)
-    // So the rate should be around 0.025 to 0.033 (1/40 to 1/30)
-    if (rate < 0.01 || rate > 0.1) {
-      throw new Error("PAYPAL_EGP_TO_USD_RATE is out of reasonable range. Expected ~0.025-0.033, got: " + rate);
-    }
-    
+
     const amountCents = calculateAmountCents({ amount, cartItems });
-    if (!Number.isFinite(amountCents) || amountCents <= 0) {
-      throw new Error("Invalid amount");
-    }
-    
-    // Ensure minimum amount for PayPal (at least 1 USD after conversion)
     const amountEgp = amountCents / 100;
-    const amountUsd = convertEgpToUsd(amountEgp);
-    
-    if (amountUsd < 1.00) {
-      throw new Error(`Amount too small for PayPal. Minimum 1 USD required. Current amount: ${amountUsd.toFixed(2)} USD (${amountEgp.toFixed(2)} EGP)`);
-    }
-
-    if (!PAYPAL_CLIENT_ID || !PAYPAL_SECRET) {
-      throw new Error("PayPal credentials are not configured");
-    }
+    const amountUsd = convertEgpToUsd(amountEgp); // ≥ 1 USD
 
     const accessToken = await getPaypalAccessToken();
-   
-    if (!accessToken) {
-      throw new Error("Failed to obtain PayPal access token. Check your PAYPAL_CLIENT_ID and PAYPAL_SECRET credentials.");
-    }
-  
-    console.log("PayPal access token obtained successfully");
-  
-    // Ensure amount is valid for PayPal
-    if (amountUsd <= 0) {
-      throw new Error("Invalid amount: USD amount must be greater than 0");
-    }
-  
-    // Validate PayPal configuration
-    if (!PAYPAL_RETURN_URL || !PAYPAL_CANCEL_URL) {
-      throw new Error("PayPal return and cancel URLs are not configured");
-    }
-  
-    console.log("Creating PayPal order with:", {
-      amountCents,
-      amountEgp: amountEgp.toFixed(2),
-      amountUsd: amountUsd.toFixed(2),
-      currency: "USD",
-      reference,
-      returnUrl: PAYPAL_RETURN_URL,
-      cancelUrl: PAYPAL_CANCEL_URL,
-      clientId: PAYPAL_CLIENT_ID,
-      environment: PAYPAL_BASE,
-      conversionRate: PAYPAL_EGP_TO_USD_RATE,
-      cartItems: cartItems.length,
-    });
-  
-    // Log shipping information if included
-    if (cartItems.length > 0) {
-      const shippingCostEgp = amountCents / 100 - (amountCents / 100 - (amountCents / 100) / (1 / PAYPAL_EGP_TO_USD_RATE));
-      const shippingCostUsd = convertEgpToUsd(shippingCostEgp);
-      console.log("Shipping cost breakdown:", {
-        totalAmountEgp: amountEgp.toFixed(2),
-        totalAmountUsd: amountUsd.toFixed(2),
-        shippingCostEgp: shippingCostEgp.toFixed(2),
-        shippingCostUsd: shippingCostUsd.toFixed(2),
-      });
-    }
-  
-    // Additional validation for PayPal sandbox
-    if (PAYPAL_BASE.includes("sandbox")) {
-      console.log("WARNING: Using PayPal SANDBOX environment. Ensure:");
-      console.log("1. Sandbox business account is properly funded");
-      console.log("2. Return URLs are configured in PayPal Developer Dashboard");
-      console.log("3. Using sandbox test accounts (not real accounts)");
-    }
-  
-    const body = JSON.stringify({
-      intent: "AUTHORIZE", // Use AUTHORIZE first, then capture with auth ID
+
+    const orderBody = {
+      intent: "CAPTURE",
       purchase_units: [
         {
-          reference_id: reference,
-          description: "Farm-Vet E-Shop Purchase",
-          custom_id: reference,
+          reference_id: reference || `ref-${Date.now()}`,
           amount: {
-            value: amountUsd.toFixed(2),
+            value: amountUsd.toFixed(2), // نصيحة: "XX.XX" format
             currency_code: "USD",
-            breakdown: {
-              item_total: {
-                currency_code: "USD",
-                value: amountUsd.toFixed(2),
-              },
-            },
           },
-          items: [
-            {
-              name: "Farm-Vet Products",
-              unit_amount: {
-                currency_code: "USD",
-                value: amountUsd.toFixed(2),
-              },
-              quantity: "1",
-              category: "PHYSICAL_GOODS",
-            },
-          ],
         },
       ],
       application_context: {
         return_url: PAYPAL_RETURN_URL,
         cancel_url: PAYPAL_CANCEL_URL,
-        user_action: "CONTINUE", // Changed to CONTINUE for better UX
+        user_action: "PAY_NOW",
         shipping_preference: "NO_SHIPPING",
-        brand_name: "Farm-Vet E-Shop",
       },
+    };
+
+    const order = await paypalRequest("/v2/checkout/orders", {
+      method: "POST",
+      token: accessToken,
+      headers: jsonHeaders,
+      body: JSON.stringify(orderBody),
     });
-  
-    try {
-      const order = await paypalRequest("/v2/checkout/orders", {
-        method: "POST",
-        headers: { ...jsonHeaders },
-        token: accessToken,
-        body,
-      });
-  
-      console.log("PayPal order created:", { orderId: order?.id, status: order?.status });
-  
-      const draftId = saveOrderDraft({
-        reference: reference || order?.id,
-        amountCents,
-        provider: "paypal",
-        meta: { paypalOrderId: order?.id },
-      });
-  
-      const approvalLink = order?.links?.find?.((l) => l.rel === "approve")?.href;
-  
-      res.json({
-        paypalOrderId: order?.id,
-        approvalUrl: approvalLink,
-        reference: draftId,
-      });
-    } catch (err) {
-      console.error("PayPal create order error details:", {
-        error: err.message,
-        amountCents,
-        amountEgp: amountEgp.toFixed(2),
-        amountUsd: amountUsd.toFixed(2),
-      });
-      
-      // Log detailed PayPal error information
-      if (err.payload?.details) {
-        console.error("PayPal validation errors:");
-        err.payload.details.forEach((detail, index) => {
-          console.error(`  [${index}] Issue: ${detail.issue || 'N/A'}`);
-          console.error(`     Field: ${detail.field || 'N/A'}`);
-          console.error(`     Description: ${detail.description || 'N/A'}`);
-        });
-      }
-      
-      throw err;
+
+    if (!order || !order.id) {
+      throw new Error("PayPal order not created properly");
     }
+
+    // حفظ الـ draft محليًا
+    const draftId = saveOrderDraft({
+      reference: reference || order.id,
+      amountCents,
+      provider: "paypal",
+      meta: { paypalOrderId: order.id },
+    });
+
+    const approvalLink = order.links.find((l) => l.rel === "approve")?.href;
+
+    if (!approvalLink) {
+      throw new Error("PayPal approval link missing");
+    }
+
+    res.json({
+      paypalOrderId: order.id,
+      approvalUrl: approvalLink,
+      reference: draftId,
+    });
   } catch (err) {
     console.error("PayPal create error:", err);
     res.status(400).json({ message: err.message, payload: err.payload });
@@ -675,56 +591,41 @@ app.post("/api/paypal/create-order", async (req, res) => {
 app.post("/api/paypal/capture-order", async (req, res) => {
   try {
     const { orderId, reference } = req.body;
-    if (!orderId) throw new Error("Missing order id");
+
+    if (!orderId) throw new Error("Missing orderId for capture");
 
     const accessToken = await getPaypalAccessToken();
 
-    console.log("PayPal capture request", { orderId, reference });
-    
-    // First, check if the order is approved before attempting capture
+    // ✅ جلب حالة الطلب أولًا
     const order = await paypalRequest(`/v2/checkout/orders/${orderId}`, {
       method: "GET",
-      headers: { ...jsonHeaders },
       token: accessToken,
     });
-    
-    if (order?.status !== "APPROVED") {
-      // Log order details for debugging
-      console.warn("Order status check:", {
-        status: order?.status,
-        expected: "APPROVED",
-        orderId,
-        purchaseUnits: order?.purchase_units,
-      });
-      
-      // For AUTHORIZE intent, we may need to capture from authorization
-      if (order?.status === "APPROVED" || order?.purchase_units?.[0]?.payments?.authorizations?.length > 0) {
-        console.log("Order found with authorization, proceeding to capture");
-      } else {
-        return res.status(409).json({
-          message: `Order is not approved yet (status=${order?.status}). Please complete the payment approval in PayPal.`,
-          orderStatus: order?.status,
-          orderId,
-          debug: "Try completing the payment approval step in PayPal",
-        });
-      }
+
+    console.log("PayPal order status before capture:", order.status);
+    if (!order || !order.id) throw new Error("PayPal order not found");
+
+    // باي بال يقبل فقط orders في حالة APPROVED أو CREATED للـ capture
+    if (!["APPROVED", "CREATED"].includes(order.status)) {
+      throw new Error(`Order not ready for capture: ${order.status}`);
     }
-    
-    console.log("Order status verified, proceeding with capture");
-    
-    // PayPal v2 capture endpoint requires an empty JSON body
+
+    // ✅ تنفيذ الـ capture
     const capture = await paypalRequest(`/v2/checkout/orders/${orderId}/capture`, {
       method: "POST",
-      headers: { ...jsonHeaders },
       token: accessToken,
-      body: JSON.stringify({}), // Empty body is required for PayPal v2 API
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+        Prefer: "return=representation",
+      },
+      body: JSON.stringify({}), // body فارغ
     });
 
-    const status = capture?.status;
-    const captureId =
-      capture?.purchase_units?.[0]?.payments?.captures?.[0]?.id ||
-      capture?.purchase_units?.[0]?.payments?.authorizations?.[0]?.id;
+    const status = capture.status || "UNKNOWN";
+    const captureId = capture.purchase_units?.[0]?.payments?.captures?.[0]?.id;
 
+    // تحديث حالة الـ draft
     if (reference) {
       updateOrderStatus(reference, status?.toLowerCase?.() || status, {
         captureId,
@@ -732,23 +633,9 @@ app.post("/api/paypal/capture-order", async (req, res) => {
       });
     }
 
-    console.log("PayPal capture response", { status, captureId, details: capture?.details, raw: capture });
-
     res.json({ status, captureId, raw: capture });
   } catch (err) {
     console.error("PayPal capture error:", err);
-    console.log("PAYPAL DEBUG_ID:", err?.payload?.debug_id);
-    console.dir(err?.payload, { depth: null });
-    
-    // Handle COMPLIANCE_VIOLATION specifically
-    if (err?.payload?.details?.[0]?.issue === "COMPLIANCE_VIOLATION") {
-      return res.status(400).json({
-        message: "PayPal Sandbox account needs activation. Please:\n1. Go to https://developer.paypal.com/dashboard\n2. Verify your Sandbox business account\n3. Enable Instant Payments for this account\n4. Or use a different test account",
-        issue: "COMPLIANCE_VIOLATION",
-        debugId: err?.payload?.debug_id,
-      });
-    }
-    
     res.status(400).json({ message: err.message, payload: err.payload });
   }
 });
