@@ -3,17 +3,24 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, updateProfile } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
-import { getStorage, ref, uploadBytes, getDownloadURL, uploadBytesResumable } from "firebase/storage";
+import {
+  getStorage,
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  uploadBytesResumable,
+} from "firebase/storage";
 import { getFunctions } from "firebase/functions";
+import { getEnv } from "../utils/env";
 
 // ✅ إعدادات Firebase الخاصة بمشروعك
 export const firebaseConfig = {
-  apiKey: "REDACTED",
-  authDomain: "farm-vet-shop.firebaseapp.com",
-  projectId: "farm-vet-shop",
-  storageBucket: "farm-vet-shop.appspot.com",
-  messagingSenderId: "772008902258",
-  appId: "1:772008902258:web:bba8970585f2dd89228ceb",
+  apiKey: getEnv("VITE_FIREBASE_API_KEY", ""),
+  authDomain: getEnv("VITE_FIREBASE_AUTH_DOMAIN", ""),
+  projectId: getEnv("VITE_FIREBASE_PROJECT_ID", ""),
+  storageBucket: getEnv("VITE_FIREBASE_STORAGE_BUCKET", ""),
+  messagingSenderId: getEnv("VITE_FIREBASE_MESSAGING_SENDER_ID", ""),
+  appId: getEnv("VITE_FIREBASE_APP_ID", ""),
 };
 
 // ✅ تشغيل Firebase

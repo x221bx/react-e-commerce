@@ -1,9 +1,12 @@
 // src/utils/gemini.js
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { getEnv } from "./env";
 
-const genAI = new GoogleGenerativeAI("REDACTED");
+const geminiKey = getEnv("VITE_GEMINI_API_KEY", "");
 
-const model = genAI.getGenerativeModel({
+const model =
+  geminiKey &&
+  new GoogleGenerativeAI(geminiKey).getGenerativeModel({
   model: "gemini-2.5-flash", // غيّر لـ "gemini-1.5-pro-latest" لو عايز قوة أكبر (لسه مجاني)
   generationConfig: {
     temperature: 0.7,
@@ -15,6 +18,9 @@ const model = genAI.getGenerativeModel({
 });
 
 export const analyzeWithGemini = async (firebaseData, customPrompt = null) => {
+  if (!model) {
+    throw new Error("Gemini API key not configured (set VITE_GEMINI_API_KEY)");
+  }
   const defaultPrompt = `
 أنت خبير تحليل بيانات ومحلل أعمال متقدم وبتتكلم عربي ممتاز.
 
