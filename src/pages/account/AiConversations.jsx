@@ -1,120 +1,206 @@
-// src/pages/account/AiConversations.jsx
-import { useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { UseTheme } from "../../theme/ThemeProvider";
-import { MessageSquare, Bot, Clock, Sparkles } from "lucide-react";
-import Footer from "../../Authcomponents/Footer";
+import { useSelector } from "react-redux";
+import { selectCurrentUser } from "../../features/auth/authSlice";
+import { subscribeToUserChatHistory } from "../../services/userDataService";
 
-const mockThreads = [
-  {
-    id: "thread-1",
-    title: "Product usage tips for Nitro Plus",
-    summary: "AI suggested a step-by-step foliar spray routine with mixing ratios.",
-    updatedAt: "2025-11-25T12:30:00Z",
-    tone: "guide",
-  },
-  {
-    id: "thread-2",
-    title: "Troubleshooting irrigation clogging",
-    summary: "Assistant provided a checklist to flush lines and monitor pressure.",
-    updatedAt: "2025-11-20T09:15:00Z",
-    tone: "technical",
-  },
-];
+const HISTORY_NAMESPACE = "chatHistory";
+const getHistoryKey = (uid) => (uid ? `${HISTORY_NAMESPACE}_${uid}` : `${HISTORY_NAMESPACE}_guest`);
 
-const toneBadge = {
-  guide: { label: "Guide", color: "bg-emerald-100 text-emerald-700" },
-  technical: { label: "Technical", color: "bg-sky-100 text-sky-700" },
-  general: { label: "General", color: "bg-slate-100 text-slate-700" },
+const readLocalHistory = (uid) => {
+  if (typeof window === "undefined") return [];
+  try {
+    let saved = localStorage.getItem(getHistoryKey(uid));
+    if (!saved && !uid) {
+      saved = localStorage.getItem(HISTORY_NAMESPACE);
+    }
+    if (!saved) return [];
+    const parsed = JSON.parse(saved);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const sanitizeText = (value = "") =>
+  value
+    .replace(/<productCard[^>]*>/gi, "[Product recommendation]")
+    .replace(/<\/productCard>/gi, "")
+    .replace(/<[^>]+>/g, "")
+    .trim();
+
+const formatTimestamp = (value, t) => {
+  if (!value) return t("account.aiConversations.justNow", "Just now");
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return t("account.aiConversations.justNow", "Just now");
+  return date.toLocaleString("en-US", {
+    weekday: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const buildEntries = (history = []) => {
+  const entries = [];
+  for (let i = 0; i < history.length; i += 1) {
+    const current = history[i];
+    if (!current || current.role !== "user") continue;
+    const assistant = history.slice(i + 1).find((msg) => msg.role === "assistant");
+    entries.push({
+      id: `${current.createdAt || assistant?.createdAt || i}`,
+      prompt: sanitizeText(current.content || ""),
+      response: sanitizeText(assistant?.content || ""),
+      createdAt: current.createdAt || assistant?.createdAt || new Date().toISOString(),
+    });
+  }
+  return entries.reverse();
 };
 
 export default function AiConversations() {
   const { theme } = UseTheme();
+  const { t } = useTranslation();
+  const user = useSelector(selectCurrentUser);
+  const [history, setHistory] = useState(() => readLocalHistory(null));
+
+  const hydrateHistory = useCallback(() => {
+    setHistory(readLocalHistory(user?.uid || null));
+  }, [user?.uid]);
+
+  useEffect(() => {
+    if (user?.uid) {
+      // hydrate from local cache while waiting for firestore
+      hydrateHistory();
+      const unsubscribe = subscribeToUserChatHistory(user.uid, (chatHistory) => {
+        setHistory(chatHistory || []);
+      });
+      return () => unsubscribe();
+    }
+
+    hydrateHistory();
+    const handleUpdate = () => hydrateHistory();
+    window.addEventListener("chat-history-updated", handleUpdate);
+    window.addEventListener("storage", handleUpdate);
+    return () => {
+      window.removeEventListener("chat-history-updated", handleUpdate);
+      window.removeEventListener("storage", handleUpdate);
+    };
+  }, [hydrateHistory, user?.uid]);
+
+  const entries = useMemo(() => buildEntries(history), [history]);
+  const hasEntries = entries.length > 0;
+
   const isDark = theme === "dark";
+  const pageText = isDark ? "text-slate-100" : "text-slate-900";
+  const muted = isDark ? "text-slate-400" : "text-slate-500";
+  const cardSurface = isDark
+    ? "border-slate-800 bg-slate-900/70"
+    : "border-slate-100 bg-white";
+  const ghostButton = isDark
+    ? "border-slate-700 text-slate-200 hover:bg-slate-800"
+    : "border-slate-200 text-slate-600 hover:bg-slate-50";
+  const solidButton = isDark
+    ? "bg-emerald-600 hover:bg-emerald-500"
+    : "bg-emerald-500 hover:bg-emerald-600";
 
-  const threads = useMemo(() => mockThreads, []);
+  const handleExport = (entry) => {
+    const lines = [
+      `Prompt:\n${entry.prompt}`,
+      entry.response ? `Assistant:\n${entry.response}` : "",
+    ].filter(Boolean);
+    const blob = new Blob([lines.join("\n\n")], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `conversation-${entry.id}.txt`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
 
-  // Unified theme like Products
-  const containerBg = isDark
-    ? "bg-gradient-to-b from-transparent to-slate-800/30 text-white"
-    : "bg-gradient-to-b from-transparent to-gray-50/50 text-slate-900";
+  const handleReopen = (entry) => {
+    window.dispatchEvent(
+      new CustomEvent("open-chatbot", {
+        detail: { prefill: entry.prompt },
+      })
+    );
+  };
 
-  const cardBg = isDark
-    ? "bg-[#0f1d1d]/70 border border-white/10 shadow-lg"
-    : "bg-white border border-gray-200 shadow-md";
-
-  const emptyBg = isDark
-    ? "bg-[#0f1d1d]/70 border border-white/10 shadow-lg"
-    : "bg-white border border-gray-200 shadow-md";
-
-  const textMuted = isDark ? "text-white/60" : "text-slate-600";
+  const handleStartChat = () => {
+    window.dispatchEvent(new CustomEvent("open-chatbot"));
+  };
 
   return (
-    <section className={`min-h-screen px-4 py-8 sm:px-6 lg:px-8 ${containerBg}`}>
-      <div className="mx-auto max-w-4xl space-y-6">
-        
-        {/* Header */}
-        <header className="text-center space-y-3">
-          <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-200">
-            <Bot className="h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-semibold">AI Conversations</h1>
-            <p className={`text-sm ${textMuted}`}>
-              Review the latest interactions with your farming assistant. Use them as quick playbooks for repeating tasks.
-            </p>
-          </div>
-        </header>
+    <div className={`space-y-6 ${pageText}`}>
+      <header>
+        <p
+          className={`text-sm font-semibold uppercase tracking-wide ${
+            isDark ? "text-emerald-300" : "text-emerald-600"
+          }`}
+        >
+          {t("account.aiConversations.eyebrow", "Coaching assistant")}
+        </p>
+        <h1 className="text-3xl font-semibold">{t("account.aiConversations.title", "AI Conversations")}</h1>
+        <p className={`text-sm ${muted}`}>
+          {hasEntries
+            ? t("account.aiConversations.subtitleWithEntries", "Revisit strategic chats with the agronomy copilot and resume from where you left off.")
+            : t("account.aiConversations.subtitleWithoutEntries", "You have not started any copilot chats yet. Launch the assistant to begin a new conversation.")}
+        </p>
+      </header>
 
-        {/* Empty State */}
-        {threads.length === 0 ? (
-          <div className={`rounded-3xl p-8 text-center text-sm ${emptyBg}`}>
-            <Sparkles className="mx-auto mb-3 h-6 w-6 text-emerald-500" />
-            <p className="font-medium">No conversations yet</p>
-            <p className={`mt-1 ${textMuted}`}>
-              Start chatting with the AI assistant to see your history here.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {threads.map((thread) => (
-              <article
-                key={thread.id}
-                className={`rounded-2xl p-5 ${cardBg}`}
-              >
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <MessageSquare className="h-5 w-5 text-emerald-500" />
-                    <h2 className="text-lg font-semibold">{thread.title}</h2>
-                  </div>
+      {!hasEntries && (
+        <div
+          className={`rounded-3xl border px-6 py-10 text-center ${cardSurface}`}
+        >
+          <p className={`text-base ${muted}`}>
+            {t("account.aiConversations.emptySubtitle", "No saved transcripts yet. Every prompt you send to the floating AI assistant will appear here for quick reference.")}
+          </p>
+          <button
+            onClick={handleStartChat}
+            className={`mt-4 inline-flex items-center justify-center rounded-xl px-5 py-2 font-semibold text-white ${solidButton}`}
+          >
+            {t("account.aiConversations.startChat", "Start a new chat")}
+          </button>
+        </div>
+      )}
 
-                  {/* Tone Badge */}
-                  <span
-                    className={`
-                      inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold 
-                      ${toneBadge[thread.tone]?.color || toneBadge.general.color}
-                    `}
-                  >
-                    {toneBadge[thread.tone]?.label || toneBadge.general.label}
-                  </span>
+      {hasEntries && (
+        <div className="space-y-4">
+          {entries.map((conversation) => (
+            <article
+              key={conversation.id}
+              className={`rounded-3xl border p-5 shadow-sm transition-colors ${cardSurface}`}
+            >
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-xl font-semibold line-clamp-1">
+                    {conversation.prompt || t("account.aiConversations.untitledPrompt", "Untitled prompt")}
+                  </h2>
+                  <p className={`mt-1 text-sm line-clamp-2 ${muted}`}>
+                    {conversation.response || t("account.aiConversations.waitingResponse", "Waiting for assistant response...")}
+                  </p>
                 </div>
-
-                {/* Summary */}
-                <p className={`mt-3 text-sm ${textMuted}`}>
-                  {thread.summary}
-                </p>
-
-                {/* Timestamp */}
-                <div className={`mt-4 flex items-center gap-2 text-xs ${textMuted}`}>
-                  <Clock className="h-4 w-4" />
-                  <span>{new Date(thread.updatedAt).toLocaleString()}</span>
-                </div>
-              </article>
-            ))}
-          </div>
-        )}
-
-        <Footer />
-      </div>
-    </section>
+                <span className={`text-xs uppercase tracking-wide ${muted}`}>
+                  {formatTimestamp(conversation.createdAt, t)}
+                </span>
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <button
+                  className={`rounded-xl border px-3 py-1.5 text-sm font-semibold transition ${ghostButton}`}
+                  onClick={() => handleExport(conversation)}
+                >
+                  {t("account.aiConversations.exportTranscript", "Export transcript")}
+                </button>
+                <button
+                  className={`rounded-xl px-4 py-1.5 text-sm font-semibold text-white transition ${solidButton}`}
+                  onClick={() => handleReopen(conversation)}
+                >
+                  {t("account.aiConversations.reopenChat", "Reopen chat")}
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

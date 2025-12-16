@@ -1,32 +1,12 @@
 // src/utils/voiceNotification.js
 /**
- * Voice notification utilities using Web Speech API
- * Plays audio sounds and text-to-speech notifications
- */
-
-/**
- * Play notification sound effect
- */
-export const playNotificationSound = () => {
-  try {
-    const audio = new Audio('/notify.mp3');
-    audio.volume = 0.7;
-    audio.play().catch(error => {
-      console.debug('Audio play failed:', error);
-    });
-  } catch (error) {
-    console.debug('Error playing notification sound:', error);
-  }
-};
-
-/**
- * Play voice notification using Web Speech API
+ * Plays a text message using the Web Speech API
  * @param {string} text - The text to speak
- * @param {string} lang - Language code (e.g., 'en-US', 'ar-EG')
+ * @param {string} [lang='en-US'] - The language to use for speech synthesis
  */
 export const playVoiceNotification = (text, lang = 'en-US') => {
   if (!('speechSynthesis' in window)) {
-    console.debug('Speech synthesis not supported in this browser');
+    console.warn('Speech synthesis not supported in this browser');
     return;
   }
 
@@ -41,27 +21,28 @@ export const playVoiceNotification = (text, lang = 'en-US') => {
 
     window.speechSynthesis.speak(utterance);
   } catch (error) {
-    console.debug('Error in speech synthesis:', error);
+    console.error('Error playing voice notification:', error);
   }
 };
 
 /**
- * Play full notification (sound + voice)
- * @param {string} text - The text to speak
- * @param {string} lang - Language code (e.g., 'en-US', 'ar-EG')
+ * Plays a notification sound
  */
-export const playFullNotification = (text, lang = 'en-US') => {
-  // Play sound first
-  playNotificationSound();
-
-  // Play voice after a small delay to ensure sound starts
-  setTimeout(() => {
-    playVoiceNotification(text, lang);
-  }, 100);
+export const playNotificationSound = () => {
+  try {
+    const audio = new Audio('/notify.mp3');
+    audio.play().catch(e => console.error('Error playing notification sound:', e));
+  } catch (error) {
+    console.error('Error playing notification sound:', error);
+  }
 };
 
-export default {
-  playNotificationSound,
-  playVoiceNotification,
-  playFullNotification,
+/**
+ * Plays both voice and sound notification
+ * @param {string} text - The text to speak
+ * @param {string} [lang='en-US'] - The language to use for speech synthesis
+ */
+export const playFullNotification = (text, lang = 'en-US') => {
+  playNotificationSound();
+  playVoiceNotification(text, lang);
 };
