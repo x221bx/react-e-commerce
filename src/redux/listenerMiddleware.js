@@ -97,78 +97,91 @@ export const startAuthListener = (store) => {
     cleanupAll();
 
     // ---------------------------
-// LOGOUT
+    // LOGOUT
     // ---------------------------
     if (!fbUser) {
-    const previousUser = store.getState().auth.currentUser;
+      const previousUser = store.getState().auth.currentUser;
 
-    // عند تسجيل الخروج نريد مسح الحالة في الذاكرة لكن لا نمسح التخزين الخاص بالمستخدم
-    if (previousUser?.uid) {
-      store.dispatch(setCurrentUser(null));
-      store.dispatch(clearCartLocal());
-      store.dispatch(clearFavoritesData());
+      if (previousUser?.uid) {
+        store.dispatch(setCurrentUser(null));
+        store.dispatch(clearCartLocal());
+        store.dispatch(clearFavoritesData());
+        try {
+          localStorage.removeItem("authUser");
+          // signOut thunk clears user-specific keys; avoid deleting here to prevent races.
+        } catch (error) {
+          console.warn("Failed to clear auth cache on logout", error);
+        }
+      }
+
+      ensureInit();
+      return;
     }
 
-  ensureInit();
-  return;
-}
-
-
     // ---------------------------
-// LOGIN
+    // LOGIN
     // ---------------------------
     profileUnsub = onSnapshot(doc(db, "users", fbUser.uid), async (snap) => {
       const rawData = snap.exists() ? serializeFirestoreData(snap.data()) : {};
-      const isAdmin = rawData.isAdmin || rawData.role === "admin";
-      const profile = {
-        uid: fbUser.uid,
-        ...rawData,
-        email: rawData.email || fbUser.email || "",
-        name: rawData.name || fbUser.displayName || fbUser.email || "",
-        photoURL:
-          rawData.photoURL || fbUser.photoURL || rawData.photoUrl || null,
-        isAdmin,
-        role: isAdmin ? "admin" : "user",
-      };
+      let username = rawData.username;
 
-      // Resolve username if missing
-      if (!profile.username) {
+      if (!username) {
         try {
           const usernameQuery = query(
             collection(db, "usernames"),
             where("uid", "==", fbUser.uid)
           );
           const usernameDocs = await getDocs(usernameQuery);
-          if (!usernameDocs.empty) profile.username = usernameDocs.docs[0].id;
+          if (!usernameDocs.empty) username = usernameDocs.docs[0].id;
         } catch (error) {
           console.error("Failed to resolve username", error);
         }
       }
 
+      const isAdmin = rawData.isAdmin || rawData.role === "admin";
+      const isDelivery =
+        !isAdmin && (rawData.isDelivery || rawData.role === "delivery");
+      const profile = {
+        uid: fbUser.uid,
+        ...rawData,
+        username,
+        email: rawData.email || fbUser.email || "",
+        name: rawData.name || fbUser.displayName || fbUser.email || "",
+        photoURL:
+          rawData.photoURL || fbUser.photoURL || rawData.photoUrl || null,
+        isAdmin,
+        isDelivery,
+        role: isAdmin ? "admin" : isDelivery ? "delivery" : rawData.role || "user",
+      };
+
+      // Persist the authenticated user so cart/favorites use per-user storage keys
+      try {
+        localStorage.setItem("authUser", JSON.stringify(profile));
+        // Clear guest storage to avoid mixing guest data into user cart/favorites
+        localStorage.removeItem("cartItems");
+        localStorage.removeItem("favoritesItems");
+      } catch (error) {
+        console.warn("Failed to persist auth user locally", error);
+      }
+
       store.dispatch(setCurrentUser(profile));
 
       // ---------------------------
-// CART Subscription
-cartUnsub = subscribeToUserCart(profile.uid, (cartItems) => {
-  if (!Array.isArray(cartItems)) return;
+      // CART Subscription
+      cartUnsub = subscribeToUserCart(profile.uid, (cartItems) => {
+        if (!Array.isArray(cartItems)) return;
+        store.dispatch(setCartItems(cartItems));
+      });
 
-  const existingCart = store.getState().cart.items ?? [];
-  if (existingCart.length > 0 && cartItems.length === 0) {
-    return;
-  }
-
-  store.dispatch(setCartItems(cartItems));
-});
-
-// FAVORITES Subscription
-favoritesUnsub = subscribeToUserFavorites(profile.uid, (favorites) => {
-  if (Array.isArray(favorites)) {
-    store.dispatch(setFavoritesItems(favorites));
-  }
-});
+      // FAVORITES Subscription
+      favoritesUnsub = subscribeToUserFavorites(profile.uid, (favorites) => {
+        if (Array.isArray(favorites)) {
+          store.dispatch(setFavoritesItems(favorites));
+        }
+      });
 
       // ---------------------------
-// Apply locale
+      // Apply locale
       // ---------------------------
       const locale = profile?.preferences?.locale || i18n.language || "en";
       if (i18n.language !== locale) {

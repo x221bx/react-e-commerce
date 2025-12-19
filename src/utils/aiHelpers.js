@@ -75,6 +75,43 @@ export const translateText = async ({
   }
 };
 
+// Smarter translation that prefers OpenRouter if an API key is available, with Google fallback.
+export const translateSmart = async ({ text, targetLang = "ar", sourceLang = "auto" }) => {
+  const cleanText = text?.toString().trim();
+  if (!cleanText) return "";
+
+  const hasAiKey = Boolean(import.meta.env.VITE_OR_KEY);
+
+  // Try OpenRouter first if key exists
+  if (hasAiKey) {
+    try {
+      const completion = await callOpenRouter({
+        model: "openai/gpt-4o-mini",
+        temperature: 0.2,
+        maxTokens: 400,
+        messages: [
+          {
+            role: "system",
+            content: `Translate the user text from ${sourceLang} to ${targetLang}. Return plain text only.`,
+          },
+          { role: "user", content: cleanText },
+        ],
+      });
+      if (completion) return normalizeParagraphs(completion);
+    } catch (err) {
+      console.error("translateSmart (OpenRouter) failed:", err);
+    }
+  }
+
+  // Fallback to Google
+  try {
+    return await translateText({ text: cleanText, targetLang, sourceLang });
+  } catch (err) {
+    console.error("translateSmart fallback failed:", err);
+    return cleanText; // last resort: return original text
+  }
+};
+
 const sanitize = (value = "", max = 600) =>
   (value || "")
     .toString()

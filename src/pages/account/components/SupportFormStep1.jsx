@@ -2,7 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { MessageSquare, FileText, Shield, Star, Zap, User } from "lucide-react";
 
-const SupportFormStep1 = ({ formData, updateFormData, errors, isDark }) => {
+const SupportFormStep1 = ({ formData = {}, updateFormData, errors = {}, isDark }) => {
   const { t } = useTranslation();
   const categories = [
     {

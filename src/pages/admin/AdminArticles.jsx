@@ -15,9 +15,12 @@ import {
   generateSEOWithAI,
   buildArticleRagContext,
   askArticlesRag,
+  translateSmart,
 } from "../../utils/aiHelpers";
-import { UseTheme } from "../../theme/ThemeProvider";
 import { ArticleForm, ArticleList, PublishOverlay, PreviewModal } from "./components";
+import Section from "../../components/ui/Section";
+import Badge from "../../components/ui/Badge";
+import EmptyState from "../../components/ui/EmptyState";
 
 const defaultForm = {
   title: "",
@@ -109,10 +112,22 @@ const serializePublishDate = (value) => {
   }
 };
 
+const sanitizeBlock = (value = "") =>
+  value
+    ?.toString()
+    .replace(/^#{1,6}\s*/gm, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+
+const summarizeFallback = (text = "") => {
+  const sentences = text.split(/(?<=[.!؟\n])/).filter((s) => s.trim());
+  return sentences.slice(0, 2).join(" ").trim() || text.slice(0, 400);
+};
+
 const AdminArticles = () => {
   const { t } = useTranslation();
-  UseTheme(); // ensures CSS variables are set for theming
   const { articles } = useArticles();
+  const hasAiKey = Boolean(import.meta.env.VITE_OR_KEY);
 
   const savedDraft = localStorage.getItem('articleDraft');
   const parsedDraft = savedDraft ? JSON.parse(savedDraft) : null;
@@ -222,6 +237,10 @@ const AdminArticles = () => {
   };
 
   const handleGenerate = async () => {
+    if (!hasAiKey) {
+      toast.error("AI key missing. Add VITE_OR_KEY to use generation.");
+      return;
+    }
     if (!aiTopic) {
       toast.error("Select a topic focus before generating.");
       return;
@@ -257,6 +276,10 @@ const AdminArticles = () => {
   };
 
   const handleGenerateTitle = async () => {
+    if (!hasAiKey) {
+      toast.error("AI key missing. Add VITE_OR_KEY to use generation.");
+      return;
+    }
     if (!form.content && !form.summary) {
       toast.error("Add content or summary first");
       return;
@@ -278,22 +301,72 @@ const AdminArticles = () => {
     }
   };
 
-  const handleGenerateSummary = async () => {
-    if (!form.content) {
+  const handleGenerateSummary = async (sourceOverride = "") => {
+    const englishSource = (form.content || form.summary || "").trim();
+    const arabicSource = (form.contentAr || form.summaryAr || "").trim();
+    let sourceText = sourceOverride?.trim() || englishSource || arabicSource;
+    if (!sourceText) {
       toast.error("Add content first");
-      return;
+      return null;
     }
+
+    const applySummary = async (summaryEn, summaryArSource) => {
+      let summaryArFinal = summaryArSource || form.summaryAr || "";
+      if (!summaryArFinal && summaryEn) {
+        try {
+          summaryArFinal = await translateSmart({
+            text: summaryEn,
+            targetLang: "ar",
+            sourceLang: "en",
+          });
+        } catch {
+          summaryArFinal = "";
+        }
+      }
+      setForm((prev) => ({
+        ...prev,
+        ...(summaryEn ? { summary: sanitizeBlock(summaryEn) } : {}),
+        ...(summaryArFinal ? { summaryAr: sanitizeBlock(summaryArFinal) } : {}),
+      }));
+      return summaryEn;
+    };
+
+    // If no AI key, fallback to simple summary
+    if (!hasAiKey) {
+      const summaryEn = englishSource
+        ? summarizeFallback(englishSource)
+        : summarizeFallback(sourceText);
+      const summaryAr = arabicSource ? summarizeFallback(arabicSource) : "";
+      const result = await applySummary(summaryEn, summaryAr);
+      toast.success("Summary generated (fallback).");
+      return result;
+    }
+
     setAiDrafting(true);
     try {
+      if (!englishSource && arabicSource) {
+        sourceText = await translateSmart({
+          text: arabicSource,
+          targetLang: "en",
+          sourceLang: "ar",
+        });
+      }
       const generatedSummary = await generateAiDraft({
-        content: form.content,
+        content: sourceText,
         type: "summary",
         ragContext,
       });
-      setForm(prev => ({ ...prev, summary: generatedSummary.summary }));
+      const summaryEn = sanitizeBlock(generatedSummary.summary || sourceText);
+      const result = await applySummary(summaryEn, null);
       toast.success("Summary generated!");
+      return result;
     } catch (error) {
-      toast.error("Failed to generate summary");
+      // Fallback to simple summary if AI call fails
+      const summaryEn = summarizeFallback(sourceText);
+      const summaryAr = arabicSource ? summarizeFallback(arabicSource) : "";
+      const result = await applySummary(summaryEn, summaryAr);
+      toast.error("AI summary failed, used fallback.");
+      return result;
     } finally {
       setAiDrafting(false);
     }
@@ -301,6 +374,10 @@ const AdminArticles = () => {
 
 
   const handleRewrite = async (style) => {
+    if (!hasAiKey) {
+      toast.error("AI key missing. Add VITE_OR_KEY to use rewrite.");
+      return;
+    }
     if (!form.content) {
       toast.error("Add content first");
       return;
@@ -349,6 +426,10 @@ const AdminArticles = () => {
   };
 
   const handleAiReview = async () => {
+    if (!hasAiKey) {
+      toast.error("AI key missing. Add VITE_OR_KEY to use AI review.");
+      return;
+    }
     setReviewing(true);
     try {
       const review = await reviewArticleWithAI(form, ragContext);
@@ -371,6 +452,10 @@ const AdminArticles = () => {
   };
 
   const handleGenerateSEO = async () => {
+    if (!hasAiKey) {
+      toast.error("AI key missing. Add VITE_OR_KEY to use AI SEO.");
+      return false;
+    }
     setGeneratingSEO(true);
     try {
       const seoData = await generateSEOWithAI(form, ragContext);
@@ -618,69 +703,72 @@ const AdminArticles = () => {
   );
 
   return (
-    <div className="min-h-screen bg-surface text-[var(--text-main)]">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <header className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-4 py-2 text-xs font-semibold uppercase text-emerald-800">
-              📚 {t("articles.admin.eyebrow", "Knowledge center")}
+    <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)]">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
+        <Section
+          title={t("articles.admin.title", "Manage Articles")}
+          subtitle={t("articles.admin.subtitle", "Create, edit, and publish articles with AI assistance and product integration.")}
+          actions={
+            hasAiKey ? (
+              <Badge tone="success">{t("articles.admin.enabled", "AI enabled")}</Badge>
+            ) : (
+              <Badge tone="warning">{t("articles.admin.missing", "Add VITE_OR_KEY to enable AI")}</Badge>
+            )
+          }
+        />
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-[var(--shadow-sm)]">
+            <p className="text-xs font-semibold uppercase text-[var(--color-text-muted)]">{t("articles.admin.count", "Total articles")}</p>
+            <p className="mt-1 text-2xl font-semibold">{articles.length}</p>
+          </div>
+          <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-[var(--shadow-sm)]">
+            <p className="text-xs font-semibold uppercase text-[var(--color-text-muted)]">{t("articles.admin.published", "Published")}</p>
+            <p className="mt-1 text-2xl font-semibold text-[var(--color-accent)]">{articles.filter((a) => a.status === "published").length}</p>
+          </div>
+          <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-[var(--shadow-sm)]">
+            <p className="text-xs font-semibold uppercase text-[var(--color-text-muted)]">{t("articles.admin.drafts", "Drafts")}</p>
+            <p className="mt-1 text-2xl font-semibold">{articles.filter((a) => a.status !== "published").length}</p>
+          </div>
+        </div>
+
+        <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-[var(--shadow-sm)] max-w-xl">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-accent)]/10 text-[var(--color-accent)] font-semibold">AI</span>
+              <div>
+                <p className="text-sm font-semibold">{t("articles.admin.ai_support", "AI Support")}</p>
+                <p className="text-xs text-[var(--color-text-muted)]">{t("articles.admin.ai_support_hint", "Drafts, translation, SEO, review")}</p>
+              </div>
             </div>
-            <h1 className="mt-3 text-3xl font-bold leading-tight">
-              {t("articles.admin.title", "Manage Articles")}
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm text-[var(--text-muted)]">
-              {t(
-                "articles.admin.subtitle",
-                "Create, edit, and publish articles with AI assistance and product integration."
-              )}
+            {hasAiKey ? (
+              <Badge tone="success">{t("articles.admin.enabled", "Enabled")}</Badge>
+            ) : (
+              <Badge tone="warning">{t("articles.admin.missing", "Missing key")}</Badge>
+            )}
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-[var(--color-text-muted)]">
+            <span>Generate</span>
+            <span className="text-[var(--color-text)] font-semibold">✓</span>
+            <span>Translate</span>
+            <span className="text-[var(--color-text)] font-semibold">{hasAiKey ? "✓" : "–"}</span>
+            <span>SEO</span>
+            <span className="text-[var(--color-text)] font-semibold">{hasAiKey ? "✓" : "–"}</span>
+            <span>Review</span>
+            <span className="text-[var(--color-text)] font-semibold">{hasAiKey ? "✓" : "–"}</span>
+          </div>
+          {!hasAiKey && (
+            <p className="mt-3 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-[var(--radius-sm)] p-2">
+              {t("articles.admin.ai_missing_hint", "Set VITE_OR_KEY in your .env to enable AI helpers.")}
             </p>
-
-            <div className="mt-5 grid gap-3 sm:grid-cols-3">
-              <div className="card-surface rounded-xl border border-muted p-4 shadow-sm">
-                <p className="text-xs font-semibold uppercase text-[var(--text-muted)]">
-                  {t("articles.admin.count", "Total articles")}
-                </p>
-                <p className="mt-1 text-2xl font-semibold text-[var(--text-main)]">
-                  {articles.length}
-                </p>
-              </div>
-              <div className="card-surface rounded-xl border border-muted p-4 shadow-sm">
-                <p className="text-xs font-semibold uppercase text-[var(--text-muted)]">
-                  {t("articles.admin.published", "Published")}
-                </p>
-                <p className="mt-1 text-2xl font-semibold text-emerald-600">
-                  {articles.filter(a => a.status === 'published').length}
-                </p>
-              </div>
-              <div className="card-surface rounded-xl border border-muted p-4 shadow-sm">
-                <p className="text-xs font-semibold uppercase text-[var(--text-muted)]">
-                  {t("articles.admin.drafts", "Drafts")}
-                </p>
-                <p className="mt-1 text-2xl font-semibold text-amber-600">
-                  {articles.filter(a => a.status !== 'published').length}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-3">
-            <button
-              type="button"
-              onClick={handleAiReview}
-              disabled={reviewing || !form.content}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-600 disabled:opacity-50"
-            >
-              {reviewing ? "🔄" : "🤖"} {t("articles.admin.review", "AI Review")}
-            </button>
-          </div>
-        </header>
-
+          )}
+        </div>
         <div className="mt-6 grid gap-4 lg:grid-cols-3">
-          <div className="rounded-2xl border border-muted bg-panel p-4 shadow-sm">
-            <p className="text-xs font-semibold uppercase text-[var(--text-muted)] mb-2">
+          <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-[var(--shadow-sm)]">
+            <p className="text-xs font-semibold uppercase text-[var(--color-text-muted)] mb-2">
               AI RAG Workbench
             </p>
-            <p className="text-sm text-[var(--text-muted)] mb-3">
+            <p className="text-sm text-[var(--color-text-muted)] mb-3">
               Ask about trends or gaps using the existing article knowledge base.
             </p>
             <textarea
@@ -688,14 +776,14 @@ const AdminArticles = () => {
               onChange={(e) => setRagQuestion(e.target.value)}
               rows={3}
               placeholder="Example: What topics are missing for irrigation safety?"
-              className="w-full rounded-xl border border-muted bg-surface px-3 py-2 text-sm text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
             />
             <div className="mt-3 flex items-center gap-2">
               <button
                 type="button"
                 onClick={handleRagAsk}
                 disabled={ragLoading || !ragContext}
-                className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-500 disabled:opacity-60"
+                className="inline-flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-white shadow-[var(--shadow-sm)] transition hover:brightness-95 disabled:opacity-60"
               >
                 {ragLoading ? "Thinking..." : "Ask AI"}
               </button>
@@ -706,18 +794,18 @@ const AdminArticles = () => {
               )}
             </div>
             {ragAnswer && (
-              <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50/40 p-3 text-sm text-[var(--text-main)]">
+              <div className="mt-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-3 text-sm text-[var(--color-text)]">
                 {ragAnswer}
               </div>
             )}
           </div>
 
-          <div className="lg:col-span-2 rounded-2xl border border-muted bg-panel p-4 shadow-sm">
+          <div className="lg:col-span-2 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-[var(--shadow-sm)]">
             <div className="flex items-center justify-between gap-2 mb-3">
-              <p className="text-xs font-semibold uppercase text-[var(--text-muted)]">
+              <p className="text-xs font-semibold uppercase text-[var(--color-text-muted)]">
                 Top articles (likes + views)
               </p>
-              <span className="text-[11px] text-[var(--text-muted)]">
+              <span className="text-[11px] text-[var(--color-text-muted)]">
                 Auto-ranked by engagement
               </span>
             </div>
@@ -725,29 +813,29 @@ const AdminArticles = () => {
               {topArticles.map((article) => (
                 <div
                   key={article.id}
-                  className="rounded-xl border border-muted bg-surface p-3 shadow-sm flex flex-col gap-2"
+                  className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-3 shadow-[var(--shadow-sm)] flex flex-col gap-2"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1">
-                      <p className="text-sm font-semibold text-[var(--text-main)] line-clamp-2">
+                      <p className="text-sm font-semibold text-[var(--color-text)] line-clamp-2">
                         {article.title}
                       </p>
-                      <p className="text-[11px] text-[var(--text-muted)]">
+                      <p className="text-[11px] text-[var(--color-text-muted)]">
                         {article.tag || "General"}
                       </p>
                     </div>
-                    <div className="text-right text-xs text-[var(--text-muted)]">
+                    <div className="text-right text-xs text-[var(--color-text-muted)]">
                       <div>👍 {article.likes || 0}</div>
                       <div>👁️ {article.views || 0}</div>
                     </div>
                   </div>
-                  <p className="text-xs text-[var(--text-muted)] line-clamp-3">
+                  <p className="text-xs text-[var(--color-text-muted)] line-clamp-3">
                     {article.summary || "No summary provided."}
                   </p>
                 </div>
               ))}
               {topArticles.length === 0 && (
-                <div className="col-span-3 rounded-xl border border-dashed border-muted bg-surface p-4 text-sm text-[var(--text-muted)]">
+                <div className="col-span-3 rounded-[var(--radius-md)] border border-dashed border-[var(--color-border)] bg-surface p-4 text-sm text-[var(--color-text-muted)]">
                   No published articles yet. Add content to power the leaderboard.
                 </div>
               )}

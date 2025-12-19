@@ -1,31 +1,51 @@
 // src/pages/account/OrderTracking.jsx
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
-import { UseTheme } from "../../theme/ThemeProvider";
+import { FiClock, FiTruck, FiMapPin, FiCreditCard } from "react-icons/fi";
+import toast from "react-hot-toast";
+
 import { selectCurrentUser } from "../../features/auth/authSlice";
 import { useOrderTracking } from "../../hooks/useOrderTracking";
 import OrderTrackingHeader from "../../components/orderTracking/OrderTrackingHeader";
 import OrderTimeline from "../../components/orderTracking/OrderTimeline";
 import OrderItemsList from "../../components/orderTracking/OrderItemsList";
 import ShippingInfoCard from "../../components/orderTracking/ShippingInfoCard";
-import { CheckCircle, FileText } from "lucide-react";
-import toast from "react-hot-toast";
+
+import Section from "../../components/ui/Section";
+import EmptyState from "../../components/ui/EmptyState";
+import Button from "../../components/ui/Button";
+import Badge from "../../components/ui/Badge";
+import LoadingGrid from "../../components/ui/LoadingGrid";
+
+const statusTone = (statusRaw) => {
+  const status = statusRaw?.toLowerCase();
+  if (status === "shipped" || status === "processing") return "accent";
+  if (status === "delivered") return "success";
+  if (status === "canceled") return "danger";
+  return "neutral";
+};
+
+const formatDate = (val) => {
+  if (!val) return "";
+  try {
+    const d = val.seconds ? new Date(val.seconds * 1000) : new Date(val);
+    return d.toLocaleString();
+  } catch {
+    return "";
+  }
+};
 
 export default function OrderTracking() {
-  const { theme } = UseTheme();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRTL = (i18n.language || "en").startsWith("ar");
   const navigate = useNavigate();
   const location = useLocation();
   const params = useParams();
-  const isDark = theme === "dark";
   const user = useSelector(selectCurrentUser);
 
-  // Get the order ID from URL params
   const orderIdQuery = params.orderId;
-
-  // ⭐ قراءة حالة البادج القادمة من الدفع
   const showPaymentBadge = location.state?.showPaymentBadge;
 
   const {
@@ -39,283 +59,170 @@ export default function OrderTracking() {
     confirmDelivery,
   } = useOrderTracking(user?.uid);
 
-  const [confirmingDelivery, setConfirmingDelivery] = useState(false);
+  useEffect(() => {
+    if (orderIdQuery && orders?.length) {
+      const exists = orders.find((o) => String(o.id) === String(orderIdQuery));
+      if (exists) handleSelectOrder(exists);
+    }
+  }, [orderIdQuery, orders, handleSelectOrder]);
 
   const handleConfirmDelivery = async () => {
     if (!order || order.status !== "Shipped") return;
-
     try {
-      setConfirmingDelivery(true);
       await confirmDelivery(order.id);
-      toast.success("Order marked as delivered! Thank you for confirming.");
+      toast.success(t("tracking.confirmed", "Order marked as delivered!"));
     } catch (err) {
-      console.error("Confirm delivery error:", err);
-      toast.error(err.message || "Failed to confirm delivery");
-    } finally {
-      setConfirmingDelivery(false);
+      toast.error(err.message || t("tracking.confirmFailed", "Failed to confirm delivery"));
     }
   };
 
-  const headingColor = isDark ? "text-white" : "text-slate-900";
-  const headerMuted = isDark ? "text-slate-400" : "text-slate-500";
-  const accent = isDark ? "text-emerald-300" : "text-emerald-600";
-  const shellSurface = isDark
-    ? "bg-gradient-to-br from-emerald-950/60 via-slate-900/50 to-slate-950/60 border-emerald-900/40 shadow-[0_20px_60px_rgba(0,0,0,0.45)] backdrop-blur"
-    : "bg-gradient-to-br from-white via-emerald-50/60 to-slate-50 border-emerald-100 shadow-[0_20px_60px_rgba(16,185,129,0.18)]";
-
-
-  const Shell = ({ children }) => (
-    <div
-      className={`min-h-screen ${isDark ? "bg-gradient-to-b from-slate-950 via-emerald-950/40 to-slate-950 text-white" : "bg-gradient-to-b from-emerald-50 via-white to-slate-50 text-slate-900"}`}
-    >
-      <div className="max-w-6xl mx-auto px-4 py-10 space-y-6">{children}</div>
-    </div>
-  );
-
-  // ...loading state...
+  // Loading
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="h-8 w-48 rounded bg-slate-200 dark:bg-slate-700 animate-pulse" />
-        <div className="h-6 w-80 rounded bg-slate-200 dark:bg-slate-700 animate-pulse" />
+      <div dir={isRTL ? "rtl" : "ltr"} className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)]">
+        <div className="mx-auto max-w-6xl px-4 py-10 space-y-4">
+          <LoadingGrid items={3} />
+          <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4 animate-pulse h-48" />
+        </div>
       </div>
     );
   }
 
-  // ...connection error state...
+  // Connection blocked
   if (ordersConnectionError || orderConnectionError) {
     return (
-      <div className="space-y-4 text-center py-12">
-        <p className={`text-sm font-semibold uppercase tracking-wide ${accent}`}>
-          Connection Blocked
-        </p>
-        <h1 className={`text-3xl font-semibold ${headingColor}`}>
-          Unable to Load Order Data
-        </h1>
-        <p className={`text-sm ${headerMuted}`}>
-          Real-time connections are blocked by your browser. Please disable ad blockers for this site.
-        </p>
-        <button
-          onClick={() => window.location.reload()}
-          className="rounded-2xl bg-emerald-500 px-6 py-2 text-sm font-semibold text-white hover:bg-emerald-600"
-        >
-          Refresh Page
-        </button>
+      <div dir={isRTL ? "rtl" : "ltr"} className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)]">
+        <div className="mx-auto max-w-6xl px-4 py-12">
+          <EmptyState
+            title={t("tracking.connectionBlocked", "Unable to load order data")}
+            message={t("tracking.disableBlockers", "Real-time connections are blocked. Disable ad blockers and try again.")}
+            action={
+              <Button onClick={() => window.location.reload()} size="md">
+                {t("common.refresh", "Refresh")}
+              </Button>
+            }
+          />
+        </div>
       </div>
     );
   }
 
-  // ...no orders state...
-  // Only show "no orders" if there are no orders AND no specific order is being viewed
+  // No orders
   if (!orders || !orders.length) {
-    // Check if we're trying to view a specific order
     if (!orderIdQuery) {
       return (
-        <div className="space-y-4 text-center py-12">
-          <p className={`text-sm font-semibold uppercase tracking-wide ${accent}`}>
-            {t("tracking.eyebrow", "Track your recent purchases")}
-          </p>
-          <h1 className={`text-3xl font-semibold ${headingColor}`}>
-            {t("tracking.noOrders.title", "No tracked orders yet")}
-          </h1>
-          <p className={`text-sm ${headerMuted}`}>
-            {t(
-              "tracking.noOrders.subtitle",
-              "Place an order and we'll display live tracking updates here."
-            )}
-          </p>
-          <button
-            onClick={() => navigate("/products")}
-            className="rounded-2xl bg-emerald-500 px-6 py-2 text-sm font-semibold text-white hover:bg-emerald-600"
-          >
-            {t("tracking.noOrders.cta", "Shop now")}
-          </button>
-        </div>
-      );
-    }
-    // If viewing a specific order, fall through to the "no selected order" state
-    // The individual order listener will still load the order
-  }
-
-  // ...no selected order state...
-  if (!order) {
-    // If we're waiting for a specific order to load, show loading state
-    if (orderIdQuery) {
-      return (
-        <div className="space-y-6">
-          <OrderTrackingHeader
-            orders={orders}
-            selectedOrder={null}
-            onSelectOrder={handleSelectOrder}
-            isDark={isDark}
-          />
-          <div className="text-center py-12">
-            <div className="inline-flex items-center gap-3">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent"></div>
-              <p className={`text-sm ${headerMuted}`}>
-                {t("tracking.loadingOrder", "Loading your order...")}
-              </p>
-            </div>
+        <div dir={isRTL ? "rtl" : "ltr"} className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)]">
+          <div className="mx-auto max-w-6xl px-4 py-12">
+            <EmptyState
+              title={t("tracking.noOrders.title", "No tracked orders yet")}
+              message={t("tracking.noOrders.subtitle", "After you place an order, it will appear here for tracking.")}
+              action={
+                <Button onClick={() => navigate("/products")} size="md">
+                  {t("tracking.noOrders.cta", "Shop products")}
+                </Button>
+              }
+            />
           </div>
         </div>
       );
     }
-    
-    // If not waiting for a specific order, show select order message
-    return (
-      <div className="space-y-4">
-        <OrderTrackingHeader
-          orders={orders}
-          selectedOrder={null}
-          onSelectOrder={handleSelectOrder}
-          isDark={isDark}
-        />
-        <p className={`text-sm ${headerMuted}`}>
-          {t("tracking.selectOrder", "Select an order to display live updates.")}
-        </p>
-      </div>
-    );
   }
 
-  const shippingInfo = order?.shipping || {
-    recipient: order?.shippingTo || "Not specified",
-    address: order?.shippingAddress || "Not specified",
-    carrier: order?.shippingCarrier || "Pending",
-    trackingNumber: order?.trackingNumber || "",
-  };
-
-  const trackingUrl = shippingInfo.trackingNumber
-    ? buildTrackingUrl(shippingInfo.trackingNumber)
-    : null;
+  const status = order?.status || order?.payment_status || "pending";
+  const trackingUrl = order ? buildTrackingUrl(order) : null;
 
   return (
-    <div className="space-y-8">
-
-      {/* ⭐⭐⭐ البادج الاحترافية بعد الدفع ⭐⭐⭐ */}
-      {showPaymentBadge && (
-        <div className="rounded-2xl border px-6 py-4 shadow-md bg-emerald-600/10 border-emerald-500/50 animate-in slide-in-from-top duration-300">
-          <div className="flex items-center gap-3">
-            <span className="px-4 py-1.5 rounded-full bg-emerald-600 text-white font-semibold text-sm shadow">
-              ✅ Payment Successful
-            </span>
-
-            <span className="px-4 py-1.5 rounded-full bg-emerald-700 text-white font-semibold text-sm shadow">
-              📦 Tracking Activated
-            </span>
-
-            <span className="px-4 py-1.5 rounded-full bg-slate-900 text-white font-medium text-sm shadow">
-              🕒 {new Date().toLocaleString()}
-            </span>
-          </div>
-
-          <p className={`mt-3 text-sm ${isDark ? "text-emerald-200" : "text-emerald-800"}`}>
-            Your payment has been confirmed and your order is now being tracked in real time.
-          </p>
-        </div>
-      )}
-
-      {/* Header */}
-      <OrderTrackingHeader
-        orders={orders}
-        selectedOrder={order}
-        onSelectOrder={handleSelectOrder}
-        isDark={isDark}
-      />
-
-      <div className={`rounded-3xl border shadow-sm ${shellSurface}`}>
-
-        {/* Order Header Info */}
-        <div
-          className={`flex flex-wrap items-center justify-between gap-4 border-b px-6 py-5 ${
-            isDark ? "border-slate-800" : "border-slate-100"
-          }`}
+    <div dir={isRTL ? "rtl" : "ltr"} className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)]">
+      <div className="mx-auto max-w-6xl px-4 py-10 space-y-6">
+        <Section
+          title={t("tracking.title", "Order Tracking")}
+          subtitle={t("tracking.subtitle", "Check your recent purchases, status, and delivery details.")}
+          actions={
+            order && showPaymentBadge ? (
+              <Badge tone="success">{t("tracking.paymentReceived", "Payment received")}</Badge>
+            ) : null
+          }
         >
-          <div>
-            <p
-              className={`text-xs font-semibold uppercase tracking-wide ${
-                isDark ? "text-slate-500" : "text-slate-400"
-              }`}
-            >
-              {t("tracking.order", "Order")}
-            </p>
-            <p className={`mt-1 text-lg font-semibold ${headingColor}`}>
-              {order.reference}
-            </p>
-            <p className={`text-xs ${headerMuted}`}>
-              {order.createdAt
-                ? new Date(order.createdAt).toLocaleString()
-                : t("tracking.awaitingUpdate", "Awaiting update")}
-            </p>
-          </div>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate(`/account/invoice/${order.id}`)}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-colors text-sm font-medium"
-            >
-              <FileText size={16} />
-              {t("confirmation.actions.viewInvoice", "View Invoice")}
-            </button>
-            <div className="text-right">
-              <p
-                className={`text-xs font-semibold uppercase tracking-wide ${
-                  isDark ? "text-slate-500" : "text-slate-400"
-                }`}
-              >
-                {t("tracking.total", "Total")}
-              </p>
-              <p className={`mt-1 text-3xl font-bold ${headingColor}`}>
-                {order.totals?.total
-                  ? `${Number(order.totals.total).toLocaleString()} EGP`
-                  : "-"}
-              </p>
+          <div className="grid gap-4 lg:grid-cols-[320px,1fr]">
+            {/* Orders list */}
+            <div className="space-y-2">
+              {orders.map((o) => (
+                <button
+                  key={o.id}
+                  onClick={() => handleSelectOrder(o)}
+                  className={`w-full text-left rounded-[var(--radius-md)] border px-4 py-3 transition hover:bg-[var(--color-surface-muted)] ${
+                    order?.id === o.id ? "border-[var(--color-accent)] bg-[var(--color-accent)]/10" : "border-[var(--color-border)] bg-[var(--color-surface)]"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-semibold text-[var(--color-text)]">
+                      {t("tracking.orderLabel", "Order")} #{o.id}
+                    </span>
+                    <Badge tone={statusTone(o.status || o.payment_status)}>{o.status || o.payment_status || "pending"}</Badge>
+                  </div>
+                  <p className="text-xs text-[var(--color-text-muted)] mt-1">
+                    <FiClock className="inline-block mr-1" /> {formatDate(o.createdAt)}
+                  </p>
+                </button>
+              ))}
             </div>
-          </div>
-        </div>
 
-        {/* Delivery Confirmation */}
-        {order.status === "Shipped" && (
-          <div
-            className={`border-b px-6 py-4 ${
-              isDark ? "border-slate-800" : "border-slate-100"
-            }`}
-          >
-            <div className="flex items-center justify-between animate-in slide-in-from-top-2 duration-500">
-              <div>
-                <p className={`text-sm font-semibold ${headingColor}`}>
-                  Package Delivered?
-                </p>
-                <p className={`text-xs ${headerMuted}`}>
-                  Confirm that you've received your order
-                </p>
+            {/* Order detail */}
+            {order ? (
+              <div className="space-y-4">
+                <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+                  <div className="flex flex-wrap items-center gap-3 justify-between">
+                    <div className="space-y-1">
+                      <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
+                        {t("tracking.orderLabel", "Order")} #{order.id}
+                      </p>
+                      <h3 className="text-xl font-semibold text-[var(--color-text)]">
+                        <FiTruck className="inline-block mr-2" />
+                        {t("tracking.status", "Status")}: {status}
+                      </h3>
+                      <p className="text-sm text-[var(--color-text-muted)]">
+                        <FiClock className="inline-block mr-2" />
+                        {formatDate(order.updatedAt || order.createdAt)}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Badge tone={statusTone(status)}>{status}</Badge>
+                      {trackingUrl && (
+                        <Button size="sm" onClick={() => window.open(trackingUrl, "_blank")}>
+                          {t("tracking.viewTracking", "View tracking")}
+                        </Button>
+                      )}
+                      {status === "Shipped" && (
+                        <Button size="sm" onClick={handleConfirmDelivery}>
+                          {t("tracking.confirmDelivery", "Confirm delivery")}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid gap-3 md:grid-cols-2 text-sm text-[var(--color-text-muted)]">
+                    <div className="flex items-center gap-2">
+                      <FiMapPin /> {order.address || t("tracking.noAddress", "No address provided")}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <FiCreditCard /> {order.payment_method || t("tracking.paymentMethod", "Payment method")}
+                    </div>
+                  </div>
+                </div>
+
+                <OrderTrackingHeader order={order} />
+                <OrderTimeline order={order} />
+                <ShippingInfoCard order={order} />
+                <OrderItemsList order={order} />
               </div>
-              <button
-                onClick={handleConfirmDelivery}
-                disabled={confirmingDelivery}
-                className="flex items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600 hover:scale-105 disabled:opacity-70 transition-all duration-200 shadow-lg hover:shadow-xl active:scale-95"
-              >
-                <CheckCircle
-                  size={16}
-                  className={confirmingDelivery ? "animate-spin" : ""}
-                />
-                {confirmingDelivery ? "Confirming..." : "Mark as Delivered"}
-              </button>
-            </div>
+            ) : (
+              <EmptyState
+                title={t("tracking.selectOrder", "Select an order")}
+                message={t("tracking.selectOrderMessage", "Choose an order on the left to view details.")}
+              />
+            )}
           </div>
-        )}
-
-        {/* Timeline and Shipping Grid */}
-        <div className="grid gap-8 p-6 lg:grid-cols-[2fr,1fr]">
-          <div className="space-y-8">
-            <OrderTimeline order={order} isDark={isDark} />
-            <OrderItemsList items={order.items} isDark={isDark} />
-          </div>
-
-          <ShippingInfoCard
-            shippingInfo={shippingInfo}
-            trackingUrl={trackingUrl}
-            isDark={isDark}
-          />
-        </div>
+        </Section>
       </div>
     </div>
   );

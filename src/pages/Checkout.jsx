@@ -1,5 +1,5 @@
 // src/pages/Checkout.jsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -8,11 +8,12 @@ import toast from "react-hot-toast";
 import CheckoutContactForm from "../components/checkout/CheckoutContactForm";
 import CheckoutShippingForm from "../components/checkout/CheckoutShippingForm";
 import CheckoutPaymentSection from "../components/checkout/CheckoutPaymentSection";
-import CheckoutSavedCards, {
-  NEW_CARD_OPTION,
-} from "../components/checkout/CheckoutSavedCards";
-import CheckoutCardModal from "../components/checkout/CheckoutCardModal";
 import CheckoutSummary from "../components/checkout/CheckoutSummary";
+import CheckoutEmpty from "../components/checkout/CheckoutEmpty";
+import CheckoutLoginPrompt from "../components/checkout/CheckoutLoginPrompt";
+import OrderConfirmModal from "../components/checkout/OrderConfirmModal";
+import PaymobSheet from "../components/checkout/PaymobSheet";
+import PaypalSheet from "../components/checkout/PaypalSheet";
 
 import { clearCart } from "../features/cart/cartSlice";
 import { selectCurrentUser } from "../features/auth/authSlice";
@@ -20,50 +21,13 @@ import { createOrder } from "../services/ordersService";
 import { auth } from "../services/firebase";
 
 import { useCheckoutForm } from "../hooks/useCheckoutForm";
-import { usePaymentMethods } from "../hooks/usePaymentMethods";
 import { useUserProfile } from "../hooks/useUserProfile";
 import { useOrderSummary } from "../hooks/useOrderSummary";
-import { useCardValidation } from "../hooks/useCardValidation";
+import { usePaymobGateway } from "../hooks/usePaymobGateway";
+import { usePaypalGateway } from "../hooks/usePaypalGateway";
 import { UseTheme } from "../theme/ThemeProvider";
 import Footer from "../Authcomponents/Footer";
-import PayPalButton from "../components/payment/PayPalButton";
-import paymobLogo from "../assets/paymob.png";
 import { ensureProductLocalization } from "../utils/productLocalization";
-
-// ✅ خدمات الدفع للويب
-import { createPaymobCardPayment, createPaymobWalletPayment } from "../services/paymob";
-
-const formatSavedMethod = (method) => {
-  if (!method) return "";
-  if (method.type === "card") {
-    const brand = method.brand
-      ? method.brand.charAt(0).toUpperCase() + method.brand.slice(1)
-      : "Card";
-    return `${brand} **** ${method.last4 || "----"}`;
-  }
-  if (method.type === "wallet") {
-    const provider = method.provider
-      ? method.provider.charAt(0).toUpperCase() + method.provider.slice(1)
-      : "Wallet";
-    return `${provider} (${method.email})`;
-  }
-  return method.nickname || "Saved method";
-};
-
-const generatePaymentMethodId = () => {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-    return crypto.randomUUID();
-  }
-  return `payment-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-};
-
-const hashCardNumber = async (number) => {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(number);
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-};
 
 export default function Checkout() {
   const dispatch = useDispatch();
@@ -82,7 +46,6 @@ export default function Checkout() {
   const userName =
     user?.name || user?.displayName || user?.username || userEmail || "";
 
-  // form hooks
   const {
     form,
     setForm,
@@ -91,72 +54,13 @@ export default function Checkout() {
     validate,
     handlePhoneChange,
   } = useCheckoutForm(user);
-
-  const {
-    methods,
-    loading: savedPaymentLoading,
-    defaultMethod,
-    addCard,
-  } = usePaymentMethods(user?.uid);
-
-  const savedCards = useMemo(
-    () => methods.filter((method) => method.type === "card"),
-    [methods]
-  );
-
-  const [selectedSavedCardId, setSelectedSavedCardId] = useState(() => {
-    const defaultCard =
-      defaultMethod?.type === "card"
-        ? defaultMethod
-        : savedCards.find((card) => card.isDefault);
-    return defaultCard?.id || savedCards[0]?.id || NEW_CARD_OPTION;
-  });
-
-  useEffect(() => {
-    setSelectedSavedCardId((prev) => {
-      if (
-        prev &&
-        (prev === NEW_CARD_OPTION || savedCards.some((card) => card.id === prev))
-      ) {
-        return prev;
-      }
-      const defaultCard =
-        defaultMethod?.type === "card"
-          ? defaultMethod
-          : savedCards.find((card) => card.isDefault);
-      return defaultCard?.id || savedCards[0]?.id || NEW_CARD_OPTION;
-    });
-  }, [defaultMethod, savedCards]);
-
   useUserProfile(user?.uid, form, setForm);
 
   const summary = useOrderSummary(cartItems);
 
-  const cardValidation = useCardValidation();
-  const { cardForm, validateCard, resetCard, detectBrand } = cardValidation;
-
   const [loading, setLoading] = useState(false);
-
-  // 🔸 طرق الدفع:
-  // cod = دفع عند الاستلام (زي الأول)
-  // card = الكروت المتخزنة/الجديدة (زي الأول)
-  // paymob = الدفع أونلاين عن طريق Paymob
-  // paypal = الدفع عن طريق PayPal
   const [paymentMethod, setPaymentMethod] = useState("cod");
-  const [showCardModal, setShowCardModal] = useState(false);
-  const [saveCardForLater, setSaveCardForLater] = useState(false);
   const [showOrderConfirm, setShowOrderConfirm] = useState(false);
-  const [showPaypalSheet, setShowPaypalSheet] = useState(false);
-  const [paypalOrderRef, setPaypalOrderRef] = useState("");
-  const [paypalError, setPaypalError] = useState("");
-  const [pendingPaypalDraft, setPendingPaypalDraft] = useState(null);
-  const [showPaymobSheet, setShowPaymobSheet] = useState(false);
-  const [paymobSession, setPaymobSession] = useState({
-    url: "",
-    orderId: "",
-    label: "",
-    integrationId: null,
-  });
   const [walletNumber, setWalletNumber] = useState("");
 
   const paypalClientId =
@@ -176,10 +80,7 @@ export default function Checkout() {
       {
         value: "paymob",
         type: "paymob",
-        title: t(
-          "checkout.payment.paymobTitle",
-          "Pay with card (Paymob)"
-        ),
+        title: t("checkout.payment.paymobTitle", "Pay with card (Paymob)"),
         subtitle: t(
           "checkout.payment.paymobSubtitle",
           "Secure Visa/Mastercard via Paymob"
@@ -203,22 +104,11 @@ export default function Checkout() {
           "Use your PayPal balance or saved cards"
         ),
       },
-      {
-        value: "card",
-        type: "card",
-        title: t("checkout.payment.card.title"),
-        subtitle: savedCards.length
-          ? t(
-              "checkout.payment.card.dropdownHint",
-              "Choose an existing card or add a new one."
-            )
-          : t("checkout.payment.card.subtitle"),
-      },
     ],
-    [savedCards.length, t]
+    [t]
   );
 
-  const buildPaymentDetails = (cardDetailsOverride) => {
+  const buildPaymentDetails = () => {
     if (paymentMethod === "paymob" || paymentMethod === "paymob_wallet") {
       return {
         type: paymentMethod,
@@ -228,60 +118,13 @@ export default function Checkout() {
             : t("checkout.payment.paymobLabel", "Pay with card (Paymob)"),
       };
     }
-
-    if (paymentMethod === "paymob_wallet") {
-      return {
-        type: "paymob_wallet",
-        label: t("checkout.payment.paymobWalletTitle", "Paymob Wallet"),
-      };
-    }
-
     if (paymentMethod === "paypal") {
-      return {
-        type: "paypal",
-        label: t("checkout.payment.paypalLabel", "PayPal"),
-      };
+      return { type: "paypal", label: t("checkout.payment.paypalLabel", "PayPal") };
     }
-
-    if (
-      paymentMethod === "card" &&
-      selectedSavedCardId &&
-      selectedSavedCardId !== NEW_CARD_OPTION
-    ) {
-      const selectedCard = savedCards.find(
-        (card) => card.id === selectedSavedCardId
-      );
-      if (selectedCard) {
-        return {
-          type: "saved-card",
-          label: formatSavedMethod(selectedCard),
-          methodId: selectedCard.id,
-          brand: selectedCard.brand || "",
-          last4: selectedCard.last4 || "",
-          nickname: selectedCard.nickname || "",
-        };
-      }
-    }
-    if (paymentMethod === "card") {
-      const cardDetails = cardDetailsOverride || cardForm || {};
-      const digits = (cardDetails.number || "").replace(/\D/g, "");
-      const brand = detectBrand(digits);
-      const formattedBrand = brand.charAt(0).toUpperCase() + brand.slice(1);
-      return {
-        type: "card",
-        label: `${formattedBrand} **** ${digits.slice(-4)}`,
-        holder: (cardDetails.holder || "").trim(),
-        last4: digits.slice(-4),
-      };
-    }
-    return {
-      type: "cod",
-      label: t("checkout.payment.cod.title"),
-    };
+    return { type: "cod", label: t("checkout.payment.cod.title") };
   };
 
-  // ✅ بنبني draft للأوردر (بدون تفاصيل الدفع)
-  const buildOrderDraft = () => {
+  const buildOrderDraft = useCallback(() => {
     const normalizedItems = cartItems.map((item) => {
       const normalized = ensureProductLocalization(item);
       return {
@@ -314,10 +157,9 @@ export default function Checkout() {
       items: normalizedItems,
       notes: form.notes.trim(),
     };
-  };
+  }, [cartItems, firebaseUser?.uid, form.address, form.city, form.fullName, form.notes, form.phone, summary, user?.uid, userEmail, userName]);
 
-  // ✅ نفس منطق الأوردر القديم (لـ COD و card فقط)
-  const placeOrder = async (cardDetailsOverride) => {
+  const placeOrder = useCallback(async () => {
     if (!user?.uid && !firebaseUser?.uid) {
       toast.error(t("checkout.messages.loginRequired"));
       return;
@@ -331,15 +173,13 @@ export default function Checkout() {
       return requested > available;
     });
     if (stockIssue) {
-      toast.error(
-        t("checkout.messages.stockIssue", "Some items exceed stock.")
-      );
+      toast.error(t("checkout.messages.stockIssue", "Some items exceed stock."));
       return;
     }
 
     setLoading(true);
     try {
-      const paymentDetails = buildPaymentDetails(cardDetailsOverride);
+      const paymentDetails = buildPaymentDetails();
       const draft = buildOrderDraft();
 
       const { id } = await createOrder({
@@ -350,314 +190,56 @@ export default function Checkout() {
       });
 
       dispatch(clearCart());
-      resetCard();
       toast.success(t("checkout.messages.success"));
-      setSaveCardForLater(false);
       navigate(`/account/invoice/${id}`, { state: { orderId: id } });
     } catch (err) {
       console.error("Checkout error:", err);
-      toast.error(
-        err?.message || t("checkout.messages.failure", "Something went wrong.")
-      );
+      toast.error(err?.message || t("checkout.messages.failure", "Something went wrong."));
     } finally {
       setLoading(false);
     }
-  };
+  }, [buildOrderDraft, buildPaymentDetails, cartItems, dispatch, firebaseUser?.uid, navigate, t, user?.uid]);
 
-  // ✅ Paymob flow (الويب) – بس بنبدأ العملية، الأوردر هيتعمل في callback
-  const startPaymobPayment = async () => {
-    setLoading(true);
-    try {
-      const orderRef = `WEB-${Date.now()}`;
+  const {
+    paymobSession,
+    showPaymobSheet,
+    startPaymobPayment,
+    closePaymobSheet,
+  } = usePaymobGateway({
+    t,
+    paymentMethod,
+    walletNumber,
+    summary,
+    cartItems,
+    form,
+    userEmail,
+    userName,
+    navigate,
+    dispatch,
+    clearCart,
+    createOrderFn: createOrder,
+    setLoading,
+  });
 
-      const isWallet = paymentMethod === "paymob_wallet";
-      const basePayload = {
-        amount: summary.total,
-        cartItems,
-        form,
-        user: {
-          email: userEmail,
-          displayName: userName,
-        },
-        merchantOrderId: orderRef,
-      };
+  const {
+    showPaypalSheet,
+    paypalOrderRef,
+    paypalError,
+    openPaypalSheet,
+    closePaypalSheet,
+    handlePaypalSuccess,
+    handlePaypalError,
+  } = usePaypalGateway({
+    t,
+    summary,
+    createOrderFn: createOrder,
+    navigate,
+    dispatch,
+    clearCart,
+    setLoading,
+  });
 
-      const session = isWallet
-        ? await createPaymobWalletPayment({
-            ...basePayload,
-            walletNumber,
-          })
-        : await createPaymobCardPayment(basePayload);
-
-      // نخزن بيانات Paymob علشان نستخدمها في callback
-      try {
-        localStorage.setItem(
-          "farmvet_last_paymob_session",
-          JSON.stringify({
-            paymobOrderId: session.paymobOrderId,
-            paymentKey: session.paymentKey,
-            amountCents: session.amountCents,
-          })
-        );
-      } catch (e) {
-        console.warn("Failed to persist Paymob session", e);
-      }
-
-      setPaymobSession({
-        url: session.paymentUrl,
-        orderId: session.paymobOrderId,
-        label:
-          isWallet
-            ? t("checkout.payment.paymobWalletTitle", "Paymob Wallet")
-            : t("checkout.payment.paymobTitle", "Pay with card (Paymob)"),
-        integrationId:
-          isWallet
-            ? import.meta.env.VITE_PAYMOB_WALLET_INTEGRATION_ID
-            : null,
-      });
-      setShowPaymobSheet(true);
-    } catch (err) {
-      console.error("Failed to initialize Paymob payment", err);
-      toast.error(
-        err?.message ||
-          t(
-            "checkout.payment.paymobInitError",
-            "Could not start Paymob checkout. Please try again."
-          )
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const closePaymobSheet = () => {
-    setShowPaymobSheet(false);
-    setPaymobSession({ url: "", orderId: "" });
-  };
-
-  // Listen for Paymob result messages from the callback inside the iframe
-  useEffect(() => {
-    const onPaymobMessage = async (event) => {
-      if (!event?.data || event.origin !== window.location.origin) return;
-      if (event.data.provider !== "paymob") return;
-
-      const meta = event.data;
-      setShowPaymobSheet(false);
-
-      if (meta.status !== "success") {
-        const codeText = meta.txnCode ? ` (code ${meta.txnCode})` : "";
-        toast.error(
-          t(
-            "checkout.payment.paymobFailed",
-            "Payment was not completed. Please try again."
-          ) + codeText
-        );
-        localStorage.removeItem("farmvet_pending_order");
-        localStorage.removeItem("farmvet_pending_payment_method");
-        return;
-      }
-
-      try {
-        const rawDraft = localStorage.getItem("farmvet_pending_order");
-        if (!rawDraft) {
-          toast.error(
-            t(
-              "checkout.payment.orderDraftMissing",
-              "Payment approved but no pending order data was found."
-            )
-          );
-          return;
-        }
-
-        const draft = JSON.parse(rawDraft);
-        const pendingMethod = localStorage.getItem(
-          "farmvet_pending_payment_method"
-        );
-        const isWalletPayment = pendingMethod === "paymob_wallet";
-        const storedWalletNumber =
-          localStorage.getItem("farmvet_paymob_wallet_number") || "";
-
-        let session = null;
-        try {
-          const rawSession = localStorage.getItem("farmvet_last_paymob_session");
-          if (rawSession) session = JSON.parse(rawSession);
-        } catch (err) {
-          console.warn("Failed to parse Paymob session", err);
-        }
-
-        // Prevent concurrent handlers from creating duplicate orders
-        try {
-          const inflight = localStorage.getItem("paymob_inflight");
-          if (inflight) {
-            const createdFlagRaw = localStorage.getItem("paymob_created_order");
-            const createdFlag = createdFlagRaw ? JSON.parse(createdFlagRaw) : null;
-            if (createdFlag && createdFlag.orderId) {
-              toast.success(
-                t(
-                  "checkout.payment.paymobSuccess",
-                  "Payment approved and your order has been created."
-                )
-              );
-              navigate(`/account/tracking/${createdFlag.orderId}`, {
-                state: { showPaymentBadge: true },
-              });
-              return;
-            }
-            // Another handler is processing — bail for now
-            toast(t("checkout.payment.paymobChecking", "Confirming payment..."));
-            return;
-          }
-
-          localStorage.setItem(
-            "paymob_inflight",
-            JSON.stringify({ paymobOrderId: session?.paymobOrderId, ts: Date.now() })
-          );
-
-          const paymentDetails = {
-            type: isWalletPayment ? "paymob_wallet" : "paymob",
-            label: isWalletPayment
-              ? t("checkout.payment.paymobWalletTitle", "Paymob Wallet")
-              : t("checkout.payment.paymobLabel", "Pay with card (Paymob)"),
-            provider: "paymob",
-            paymobOrderId: session?.paymobOrderId,
-            paymentKey: session?.paymentKey,
-            amountCents: session?.amountCents,
-            transactionId: meta.transactionId,
-            txnCode: meta.txnCode,
-            status: meta.status,
-            walletNumber: isWalletPayment ? storedWalletNumber : undefined,
-          };
-
-          const { id } = await createOrder({
-            ...draft,
-            paymentMethod: isWalletPayment ? "paymob_wallet" : "paymob",
-            paymentSummary: paymentDetails.label,
-            paymentDetails,
-          });
-
-          localStorage.setItem(
-            "paymob_created_order",
-            JSON.stringify({ paymobOrderId: session?.paymobOrderId, orderId: id })
-          );
-
-          // Clear the created flag after 5 minutes to handle edge cases
-          setTimeout(() => {
-            localStorage.removeItem("paymob_created_order");
-          }, 5 * 60 * 1000);
-
-          localStorage.removeItem("farmvet_pending_order");
-          localStorage.removeItem("farmvet_pending_payment_method");
-          localStorage.removeItem("farmvet_last_paymob_session");
-          localStorage.removeItem("farmvet_paymob_wallet_number");
-
-          dispatch(clearCart());
-
-          toast.success(
-            t(
-              "checkout.payment.paymobSuccess",
-              "Payment approved and your order has been created."
-            )
-          );
-
-          navigate(`/account/invoice/${id}`, { state: { orderId: id } });
-        } finally {
-          try {
-            localStorage.removeItem("paymob_inflight");
-          } catch (e) {}
-        }
-      } catch (err) {
-        console.error("Paymob completion error", err);
-        toast.error(
-          err?.message ||
-            t(
-              "checkout.payment.paymobCaptureError",
-              "Could not finalize order after Paymob payment."
-            )
-        );
-      }
-    };
-
-    window.addEventListener("message", onPaymobMessage);
-    return () => window.removeEventListener("message", onPaymobMessage);
-  }, [dispatch, navigate, t]);
-
-  // PayPal inline flow (smart buttons instead of redirect)
-  const closePaypalSheet = () => {
-    setShowPaypalSheet(false);
-    setPendingPaypalDraft(null);
-    setPaypalError("");
-  };
-
-  const handlePaypalSuccess = async (capture) => {
-    setShowPaypalSheet(false);
-    setLoading(true);
-    try {
-      const paypalOrderId =
-        capture?.orderId || capture?.token || capture?.raw?.id || null;
-      const paypalCaptureId =
-        capture?.captureId ??
-        capture?.id ??
-        capture?.raw?.id ??
-        capture?.raw?.purchase_units?.[0]?.payments?.captures?.[0]?.id ??
-        null;
-
-      const paymentDetails = {
-        type: "paypal",
-        label: t("checkout.payment.paypalLabel", "PayPal"),
-        provider: "paypal",
-        paypalOrderId,
-        paypalCaptureId,
-        status: capture?.status || capture?.raw?.status || null,
-        payerEmail:
-          capture?.raw?.payer?.email_address ||
-          capture?.payer?.email_address ||
-          null,
-      };
-
-      const draft = pendingPaypalDraft || buildOrderDraft();
-
-      const { id } = await createOrder({
-        ...draft,
-        paymentMethod: "paypal",
-        paymentSummary: paymentDetails.label,
-        paymentDetails,
-      });
-
-      dispatch(clearCart());
-      toast.success(
-        t(
-          "checkout.payment.paypalSuccess",
-          "Payment completed and your order has been created."
-        )
-      );
-      navigate(`/account/invoice/${id}`, { state: { orderId: id } });
-    } catch (err) {
-      console.error("PayPal completion error", err);
-      toast.error(
-        err?.message ||
-          t(
-            "checkout.payment.paypalCaptureError",
-            "Could not confirm PayPal payment."
-          )
-      );
-    } finally {
-      setLoading(false);
-      setPendingPaypalDraft(null);
-    }
-  };
-
-  const handlePaypalError = (message) => {
-    const msg =
-      message ||
-      t(
-        "checkout.payment.paypalInitError",
-        "Could not start PayPal checkout. Please try again."
-      );
-    setPaypalError(msg);
-    toast.error(msg);
-  };
-
-  const handleSubmit = async (event) => {
+  const handleSubmit = (event) => {
     event.preventDefault();
     if (!user) {
       toast.error(t("checkout.messages.loginRequired"));
@@ -668,63 +250,9 @@ export default function Checkout() {
       return;
     }
     if (!validate()) return;
-
-    if (
-      paymentMethod === "card" &&
-      (!selectedSavedCardId || selectedSavedCardId === NEW_CARD_OPTION)
-    ) {
-      setShowCardModal(true);
-      return;
-    }
-
     setShowOrderConfirm(true);
   };
 
-  const handleCardSubmit = async (cardData, shouldSave) => {
-    if (!cardData) return;
-    if (!validateCard()) return;
-
-    const sanitized = cardData.number.replace(/\s+/g, "");
-    const hashed = await hashCardNumber(sanitized);
-    const isDuplicate = methods.some(
-      (m) => m.type === "card" && m.cardHash === hashed
-    );
-    if (isDuplicate) {
-      toast.error(
-        t(
-          "payments.duplicateCardError",
-          "This card already exists in your saved payment methods."
-        )
-      );
-      return;
-    }
-
-    setShowCardModal(false);
-
-    if (shouldSave && user?.uid) {
-      try {
-        await addCard(cardData, detectBrand, generatePaymentMethodId);
-        toast.success(
-          t(
-            "payments.form.saveCard",
-            "Card saved to your payment methods"
-          )
-        );
-      } catch (err) {
-        console.error("Failed to save card from checkout", err);
-        toast.error(
-          t(
-            "payments.form.saveFailed",
-            "Card used for this order but not saved."
-          )
-        );
-      }
-    }
-
-    setShowOrderConfirm(true);
-  };
-
-  // ✅ دي اللي بتقرر هنعمل إيه بعد ما اليوزر يوافق في المودال
   const handleConfirmOrder = async () => {
     setShowOrderConfirm(false);
 
@@ -733,225 +261,103 @@ export default function Checkout() {
       const isValidEgyptian = /^01[0-9]{9}$/.test(digits);
       if (!isValidEgyptian) {
         toast.error(
-          t(
-            "checkout.payment.paymobWalletNumberError",
-            "Please enter a valid wallet number."
-          )
+          t("checkout.payment.paymobWalletNumberError", "Please enter a valid wallet number.")
         );
         return;
       }
     }
 
-    // Paymob flow keeps old redirect/iframe logic
     if (paymentMethod === "paymob" || paymentMethod === "paymob_wallet") {
       const draft = buildOrderDraft();
-
       try {
-        localStorage.setItem(
-          "farmvet_pending_order",
-          JSON.stringify(draft)
-        );
-        localStorage.setItem(
-          "farmvet_pending_payment_method",
-          paymentMethod
-        );
+        localStorage.setItem("farmvet_pending_order", JSON.stringify(draft));
+        localStorage.setItem("farmvet_pending_payment_method", paymentMethod);
         if (paymentMethod === "paymob_wallet") {
           localStorage.setItem("farmvet_paymob_wallet_number", walletNumber);
         }
       } catch (err) {
         console.warn("Failed to persist pending order", err);
       }
-
       await startPaymobPayment();
       return;
     }
 
-    // PayPal now uses inline smart buttons
     if (paymentMethod === "paypal") {
       if (!paypalClientId) {
         toast.error(
-          t(
-            "checkout.payment.paypalMissingClient",
-            "PayPal client ID is missing in environment config."
-          )
+          t("checkout.payment.paypalMissingClient", "PayPal client ID is missing in environment config.")
         );
         return;
       }
-
-      setPendingPaypalDraft(buildOrderDraft());
-      setPaypalOrderRef(`WEB-${Date.now()}`);
-      setPaypalError("");
-      setShowPaypalSheet(true);
+      const draft = buildOrderDraft();
+      openPaypalSheet(draft);
       return;
     }
 
-    // COD / card العادي → نشتغل بنفس اللوجيك القديم
     await placeOrder();
   };
 
   const handlePaymentSelection = (value) => {
     setPaymentMethod(value);
-    if (value !== "card") return;
-    setSelectedSavedCardId((prev) => {
-      if (
-        prev &&
-        (prev === NEW_CARD_OPTION ||
-          savedCards.some((card) => card.id === prev))
-      ) {
-        return prev;
-      }
-      return savedCards[0]?.id || NEW_CARD_OPTION;
-    });
   };
 
-  const headingColor = isDark ? "text-slate-50" : "text-slate-50";
-  const muted = isDark ? "text-slate-300" : "text-slate-500";
+  const headingColor = "text-[var(--color-text)]";
+  const muted = "text-[var(--color-text-muted)]";
+  const shellSurface =
+    "bg-[var(--color-surface)] border border-[var(--color-border)] shadow-[var(--shadow-sm)]";
+  const summarySurface =
+    "bg-[var(--color-surface)] border border-[var(--color-border)] shadow-[var(--shadow-sm)]";
+  const pillBg =
+    "bg-[var(--color-accent)]/10 text-[var(--color-accent)] border border-[var(--color-border)]";
 
-  const shellSurface = isDark
-    ? "bg-slate-900/70 border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.75)] backdrop-blur-xl"
-    : "bg-white/90 border-slate-200 shadow-[0_18px_50px_rgba(15,23,42,0.12)] backdrop-blur-xl";
+  if (!cartItems.length) return <CheckoutEmpty t={t} isRTL={isRTL} muted={muted} />;
+  if (!user) return <CheckoutLoginPrompt t={t} isRTL={isRTL} />;
 
-  const summarySurface = isDark
-    ? "bg-slate-900/70 border-emerald-500/30 shadow-[0_20px_60px_rgba(0,0,0,0.8)] backdrop-blur-xl"
-    : "bg-white/95 border-emerald-200 shadow-[0_18px_55px_rgba(16,185,129,0.25)] backdrop-blur-xl";
-
-  const pillBg = isDark
-    ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"
-    : "bg-emerald-50 text-emerald-700 border border-emerald-100";
-
-  // Legacy Paymob overlay listener removed (handled in Paymob iframe/callback handlers above)
-
-  // 🧺 Cart empty state
-  if (!cartItems.length) {
-    return (
-      <main
-        dir={isRTL ? "rtl" : "ltr"}
-        className="min-h-screen flex flex-col bg-[#f9f9f9] text-slate-900 dark:bg-[#021a15] dark:text-slate-100 transition-colors duration-300"
-      >
-        <div className="flex-1 flex items-center justify-center px-4 py-16">
-          <section
-            className={`mx-auto max-w-2xl rounded-3xl border border-dashed p-10 text-center shadow-sm ${
-              isDark
-                ? "border-emerald-900/40 bg-[#0f1d1d]/70 text-slate-100"
-                : "border-emerald-200 bg-emerald-50/80 text-slate-800"
-            }`}
-          >
-            <p className="text-xl font-semibold">
-              {t("checkout.empty.title", "Your cart is empty")}
-            </p>
-            <p className={`mt-2 text-sm ${muted}`}>
-              {t("checkout.empty.subtitle", "Please add some products first.")}
-            </p>
-            <div className="mt-6 flex justify-center gap-3">
-              <Link
-                to="/products"
-                className="rounded-2xl bg-emerald-500 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-500/40 hover:bg-emerald-600"
-              >
-                {t("checkout.empty.cta", "Go to Products")}
-              </Link>
-            </div>
-          </section>
-        </div>
-        <Footer />
-      </main>
-    );
-  }
-
-  // 👤 Login required state
-  if (!user) {
-    return (
-      <main
-        dir={isRTL ? "rtl" : "ltr"}
-        className="min-h-screen flex flex-col bg-[#f9f9f9] text-slate-900 dark:bg-[#021a15] dark:text-slate-100 transition-colors duration-300"
-      >
-        <div className="flex-1 flex items-center justify-center px-4 py-16">
-          <section
-            className={`mx-auto max-w-2xl rounded-3xl border p-10 text-center shadow-sm ${
-              isDark
-                ? "border-amber-900/40 bg-slate-900/80 text-amber-100"
-                : "border-amber-200 bg-amber-50/90 text-amber-900"
-            }`}
-          >
-            <p className="text-lg font-semibold">
-              {t("checkout.loginRequired.title", "You need to login")}
-            </p>
-            <p className="mt-2 text-sm">
-              {t("checkout.loginRequired.subtitle", "Please login to continue.")}
-            </p>
-            <div className="mt-6 flex justify-center gap-3">
-              <Link
-                to="/login"
-                className="rounded-2xl bg-emerald-500 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-500/40 hover:bg-emerald-600"
-              >
-                {t("checkout.loginRequired.cta", "Login")}
-              </Link>
-            </div>
-          </section>
-        </div>
-        <Footer />
-      </main>
-    );
-  }
-
-  // 🌿 Main checkout UI
   return (
     <main
       dir={isRTL ? "rtl" : "ltr"}
       className="
         min-h-screen flex flex-col
-        bg-[#f9f9f9] text-slate-900
-        dark:bg-[#021a15] dark:text-slate-100
+        bg-[var(--color-bg)] text-[var(--color-text)]
         transition-colors duration-300
       "
     >
-      {/* Gradient header similar to Home */}
-      <div className="bg-gradient-to-b from-emerald-500/20 via-emerald-500/5 to-transparent dark:from-emerald-400/20 dark:via-emerald-400/5">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 pt-10 pb-6">
-          <div className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-semibold tracking-[0.18em] uppercase bg-black/5 dark:bg-white/5 text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-500/20 backdrop-blur">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+      <div className="border-b border-[var(--color-border)] bg-[var(--color-surface)]/60">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-8 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3 text-sm font-semibold text-[var(--color-accent)]">
+            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[var(--color-accent)] text-white text-[11px]">
+              1
+            </span>
             {t("checkout.header.eyebrow", "Checkout")}
           </div>
-          <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <h1
-                className={`text-3xl md:text-4xl font-semibold ${headingColor}`}
-              >
-                {t("checkout.header.title", "Review and confirm")}
-              </h1>
-              <p className={`mt-2 text-sm md:text-[15px] ${muted}`}>
-                {t(
-                  "checkout.header.subtitle",
-                  "Confirm your contact info, address, and payment method to place your order."
-                )}
-              </p>
-            </div>
-            <div
-              className={`flex items-center gap-3 rounded-2xl px-3 py-2 text-xs md:text-[13px] ${pillBg}`}
-            >
-              <span className="inline-flex h-6 w-6 items-center justify-center rounded-xl bg-emerald-500 text-white text-[11px] font-bold shadow-md shadow-emerald-500/40">
-                3
+          <div className={`flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2 text-xs md:text-[13px] ${pillBg}`}>
+            <span className="inline-flex h-6 w-6 items-center justify-center rounded-xl bg-[var(--color-accent)] text-white text-[11px] font-bold">
+              3
+            </span>
+            <div className="flex flex-col">
+              <span className="font-semibold text-[var(--color-text)]">
+                {t("checkout.progress.title", "Almost there")}
               </span>
-              <div className="flex flex-col">
-                <span className="font-semibold">
-                  {t("checkout.progress.title", "Almost there")}
-                </span>
-                <span className="text-[11px] opacity-80">
-                  {t(
-                    "checkout.progress.caption",
-                    "Complete your details and place your order securely."
-                  )}
-                </span>
-              </div>
+              <span className={`text-[11px] ${muted}`}>
+                {t("checkout.progress.caption", "Complete your details and place your order securely.")}
+              </span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* MAIN CONTENT */}
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 pt-6">
+        <h1 className={`text-3xl md:text-4xl font-semibold ${headingColor}`}>
+          {t("checkout.header.title", "Review and confirm")}
+        </h1>
+        <p className={`mt-2 text-sm md:text-[15px] ${muted}`}>
+          {t("checkout.header.subtitle", "Confirm your contact info, address, and payment method to place your order.")}
+        </p>
+      </div>
+
       <div className="flex-1 pb-10 pt-2">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="grid gap-6 lg:grid-cols-[2fr,1fr] lg:items-start">
-            {/* Left column - form */}
             <form
               className={`rounded-3xl border p-6 md:p-7 space-y-6 ${shellSurface}`}
               onSubmit={handleSubmit}
@@ -976,48 +382,31 @@ export default function Checkout() {
                 handlePhoneChange={handlePhoneChange}
               />
 
-              <div className="border-t border-slate-200/60 dark:border-slate-700/60 pt-5">
-                <CheckoutShippingForm
-                  form={form}
-                  setForm={setForm}
-                  errors={errors}
-                />
+              <div className="border-t border-[var(--color-border)] pt-5">
+                <CheckoutShippingForm form={form} setForm={setForm} errors={errors} />
               </div>
 
-              <div className="border-t border-slate-200/60 dark:border-slate-700/60 pt-5 space-y-4">
+              <div className="border-t border-[var(--color-border)] pt-5 space-y-4">
                 <CheckoutPaymentSection
                   paymentMethod={paymentMethod}
                   handlePaymentSelection={handlePaymentSelection}
                   paymentOptions={paymentOptions}
-                  savedCards={savedCards}
                   walletNumber={walletNumber}
                   onWalletNumberChange={setWalletNumber}
-                />
-
-                <CheckoutSavedCards
-                  paymentMethod={paymentMethod}
-                  savedCards={savedCards}
-                  selectedSavedCardId={selectedSavedCardId}
-                  setSelectedSavedCardId={setSelectedSavedCardId}
-                  savedPaymentLoading={savedPaymentLoading}
                 />
               </div>
 
               <div className="flex flex-wrap gap-3 pt-3">
                 <Link
                   to="/cart"
-                  className={`rounded-2xl border px-5 py-2 text-sm font-semibold transition ${
-                    isDark
-                      ? "border-slate-700 text-slate-200 hover:bg-slate-800/70"
-                      : "border-slate-200 text-slate-600 hover:bg-slate-50"
-                  }`}
+                  className="rounded-[var(--radius-md)] border border-[var(--color-border)] px-5 py-2 text-sm font-semibold text-[var(--color-text)] transition hover:bg-[var(--color-surface-muted)]"
                 >
                   {t("checkout.actions.backToCart", "Back to Cart")}
                 </Link>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="inline-flex items-center rounded-2xl bg-emerald-500 px-6 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-500/40 hover:bg-emerald-600 disabled:opacity-70"
+                  className="inline-flex items-center rounded-[var(--radius-md)] bg-[var(--color-accent)] px-6 py-2 text-sm font-semibold text-white shadow-[var(--shadow-sm)] hover:brightness-95 disabled:opacity-70"
                 >
                   {loading
                     ? t("checkout.actions.processing", "Processing...")
@@ -1026,22 +415,13 @@ export default function Checkout() {
               </div>
             </form>
 
-            {/* Right column - summary */}
             <aside className="space-y-4">
               <div className={`rounded-3xl border p-6 ${summarySurface}`}>
                 <CheckoutSummary cartItems={cartItems} summary={summary} />
               </div>
-
-              {/* small reassurance box */}
-              <div
-                className={`rounded-2xl px-4 py-3 text-xs md:text-[13px] flex items-start gap-3 ${
-                  isDark
-                    ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-100"
-                    : "bg-emerald-50 border border-emerald-100 text-emerald-800"
-                }`}
-              >
-                <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white text-[10px] font-bold">
-                  ✓
+              <div className="rounded-[var(--radius-md)] px-4 py-3 text-xs md:text-[13px] flex items-start gap-3 border border-[var(--color-border)] bg-[var(--color-surface-muted)] text-[var(--color-text)]">
+                <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-accent)] text-white text-[10px] font-bold">
+                  *
                 </span>
                 <p>
                   {t(
@@ -1054,224 +434,41 @@ export default function Checkout() {
           </div>
         </div>
 
-        {/* Card modal */}
-        <CheckoutCardModal
-          isOpen={showCardModal}
-          onClose={() => setShowCardModal(false)}
-          onSubmit={handleCardSubmit}
-          cardValidation={cardValidation}
-          saveCardForLater={saveCardForLater}
-          onSaveCardToggle={setSaveCardForLater}
+        <OrderConfirmModal
+          isOpen={showOrderConfirm}
+          onCancel={() => setShowOrderConfirm(false)}
+          onConfirm={handleConfirmOrder}
+          loading={loading}
+          summary={summary}
+          cartItems={cartItems}
+          mutedClass={muted}
+          t={t}
         />
-
-        {/* Order confirmation modal */}
-        {showOrderConfirm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6 bg-black/40 backdrop-blur-sm">
-            <div
-              className={`w-full max-w-lg rounded-3xl border shadow-2xl shadow-black/40 p-6 md:p-7 transform transition-all ${
-                isDark
-                  ? "bg-slate-950/90 border-slate-700 text-white"
-                  : "bg-white border-slate-200 text-slate-900"
-              }`}
-            >
-              <div className="text-center">
-                <h3 className="text-lg font-semibold mb-3">
-                  {t(
-                    "checkout.confirmOrder.title",
-                    "Confirm Your Order"
-                  )}
-                </h3>
-                <p className="text-sm mb-6 text-slate-500 dark:text-slate-300">
-                  {t(
-                    "checkout.confirmOrder.message",
-                    "Are you sure you want to place this order?"
-                  )}
-                </p>
-
-                {/* Order Summary */}
-                <div
-                  className={`rounded-2xl p-4 mb-6 text-left ${
-                    isDark ? "bg-slate-900/80" : "bg-slate-50"
-                  }`}
-                >
-                  <h4 className="font-semibold mb-3 text-sm">
-                    {t(
-                      "checkout.summary.title",
-                      "Order Summary"
-                    )}
-                  </h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>
-                        {t(
-                          "checkout.summary.subtotal",
-                          "Subtotal"
-                        )}
-                        :
-                      </span>
-                      <span>
-                        {summary.subtotal?.toLocaleString()} EGP
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>
-                        {t(
-                          "checkout.summary.shipping",
-                          "Shipping"
-                        )}
-                        :
-                      </span>
-                      <span>
-                        {summary.shipping?.toLocaleString()} EGP
-                      </span>
-                    </div>
-                    <div className="flex justify-between font-semibold border-t pt-2 border-slate-200 dark:border-slate-700">
-                      <span>
-                        {t("checkout.summary.total", "Total")}:
-                      </span>
-                      <span>
-                        {summary.total?.toLocaleString()} EGP
-                      </span>
-                    </div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                      {t("checkout.summary.note", "Items: {{count}}", {
-                        count: cartItems.length,
-                      })}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setShowOrderConfirm(false)}
-                    className={`flex-1 rounded-xl px-4 py-2 text-sm font-semibold border transition ${
-                      isDark
-                        ? "border-slate-700 text-slate-300 hover:bg-slate-900"
-                        : "border-slate-300 text-slate-600 hover:bg-slate-50"
-                    }`}
-                  >
-                    {t("common.cancel", "Cancel")}
-                  </button>
-                  <button
-                    onClick={handleConfirmOrder}
-                    disabled={loading}
-                    className="flex-1 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600 disabled:opacity-70 shadow-md shadow-emerald-500/40"
-                  >
-                    {loading
-                      ? t(
-                          "checkout.actions.processing",
-                          "Processing..."
-                        )
-                      : paymentMethod === "card"
-                      ? t(
-                          "checkout.confirmOrder.confirmDeduction",
-                          "Confirm Deduction"
-                        )
-                      : t(
-                          "checkout.actions.confirmOrder",
-                          "Confirm Order"
-                        )}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       <Footer />
 
-      {showPaymobSheet && paymobSession.url && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6 bg-black/50 backdrop-blur-sm">
-          <div
-            className={`w-full max-w-3xl rounded-3xl border p-6 shadow-2xl ${
-              isDark
-                ? "bg-slate-950/90 border-slate-700 text-white"
-                : "bg-white border-slate-200 text-slate-900"
-            }`}
-          >
-            <div className="flex items-start justify-between gap-4 mb-4">
-              <div className="flex items-start gap-3">
-                <img src={paymobLogo} alt="Paymob" className="h-8 w-auto object-contain" />
-                <div>
-                  <h3 className="text-lg font-semibold">
-                    {paymobSession.label ||
-                      t("checkout.payment.paymobTitle", "Pay with card (Paymob)")}
-                  </h3>
-                  <p className="text-sm text-slate-500 dark:text-slate-300">
-                    {t(
-                      "checkout.payment.paymobInlineNote",
-                      "Complete your card payment securely without leaving the page."
-                    )}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={closePaymobSheet}
-                className="rounded-lg px-3 py-1 text-sm border border-slate-300 text-slate-600 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
-              >
-                {t("common.close", "Close")}
-              </button>
-            </div>
+      <PaymobSheet
+        isOpen={showPaymobSheet}
+        session={paymobSession}
+        onClose={closePaymobSheet}
+        mutedClass={muted}
+        t={t}
+      />
 
-            <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-inner">
-              <iframe
-                src={paymobSession.url}
-                title="Paymob"
-                className="w-full h-[70vh] border-0"
-                allow="payment *; fullscreen; clipboard-write"
-                sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-top-navigation allow-top-navigation-by-user-activation"
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showPaypalSheet && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6 bg-black/50 backdrop-blur-sm">
-          <div
-            className={`w-full max-w-xl rounded-3xl border p-6 shadow-2xl ${
-              isDark
-                ? "bg-slate-950/90 border-slate-700 text-white"
-                : "bg-white border-slate-200 text-slate-900"
-            }`}
-          >
-            <div className="flex items-start justify-between gap-4 mb-4">
-              <div>
-                <h3 className="text-lg font-semibold">
-                  {t("checkout.payment.paypalTitle", "Pay with PayPal")}
-                </h3>
-                <p className="text-sm text-slate-500 dark:text-slate-300">
-                  {t(
-                    "checkout.payment.paypalInlineNote",
-                    "Complete your payment with the PayPal button below."
-                  )}
-                </p>
-              </div>
-              <button
-                onClick={closePaypalSheet}
-                className="rounded-lg px-3 py-1 text-sm border border-slate-300 text-slate-600 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
-              >
-                {t("common.close", "Close")}
-              </button>
-            </div>
-
-            <PayPalButton
-              clientId={paypalClientId}
-              amount={Number(summary.total || 0)}
-              currency={paypalCurrency}
-              orderRef={paypalOrderRef}
-              onSuccess={handlePaypalSuccess}
-              onError={handlePaypalError}
-            />
-
-            {paypalError && (
-              <p className="mt-3 text-sm text-red-500">{paypalError}</p>
-            )}
-          </div>
-        </div>
-      )}
-
+      <PaypalSheet
+        isOpen={showPaypalSheet}
+        onClose={closePaypalSheet}
+        summary={summary}
+        paypalClientId={paypalClientId}
+        paypalCurrency={paypalCurrency}
+        paypalOrderRef={paypalOrderRef}
+        onSuccess={handlePaypalSuccess}
+        onError={handlePaypalError}
+        errorMessage={paypalError}
+        mutedClass={muted}
+        t={t}
+      />
     </main>
   );
 }

@@ -10,7 +10,6 @@ export default function CheckoutPaymentSection({
   paymentMethod,
   handlePaymentSelection,
   paymentOptions,
-  savedCards = [],
   walletNumber = "",
   onWalletNumberChange,
 }) {
@@ -220,17 +219,6 @@ export default function CheckoutPaymentSection({
                       </div>
                     )}
 
-                    {option.type === "card" && !!savedCards.length && (
-                      <p
-                        className={`text-xs ${
-                          isDark ? "text-emerald-300" : "text-emerald-700"
-                        }`}
-                      >
-                        {t("checkout.payment.savedCardsHint", {
-                          defaultValue: "{{count}} saved card(s) available",
-                          count: savedCards.length,
-                        })}
-                      </p>
                     )}
                   </div>
                 </div>

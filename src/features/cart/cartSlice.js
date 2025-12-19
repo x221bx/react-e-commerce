@@ -149,7 +149,7 @@ const cartSlice = createSlice({
       }
     },
 
-    // 🔥 ضروري علشان الميدلواير
+    // Replace cart with incoming list
     setCartItems: (state, action) => {
       // Deep clone to avoid reference sharing with favorites
       state.items = Array.isArray(action.payload)

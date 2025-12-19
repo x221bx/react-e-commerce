@@ -17,12 +17,12 @@ export default function AuthActions({
   return (
     <>
       <button type="submit" disabled={isSubmitting} className={btnClass}>
-        {isSubmitting ? `${submitLabel}…` : submitLabel}
+        {isSubmitting ? `${submitLabel}...` : submitLabel}
       </button>
 
       {altText && (
         <p className="text-center text-sm text-gray-700">
-          {altText} {" "}
+          {altText}{" "}
           <Link to={altLink} className="text-[var(--brand-primary)] font-semibold hover:underline">
             {altLabel}
           </Link>

@@ -1,4 +1,4 @@
-﻿// src/components/layout/Navbar.jsx
+// src/components/layout/Navbar.jsx
 import { useState, useEffect, useRef } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
@@ -82,7 +82,7 @@ export default function Navbar() {
 
   const isDark = theme === "dark";
 
-  // 🎨 ألوان الناف بار (Glass + Gradient)
+  
   const navbarColorDark = `
     bg-[#020a0a]/90 
     backdrop-blur-2xl 
@@ -140,7 +140,7 @@ export default function Navbar() {
       className={`sticky top-0 z-50 ${navbarBg}`}
       dir={isRTL ? "rtl" : "ltr"}
     >
-      {/* خط إضاءة خفيف تحت النافبار عند السكرول */}
+      {}
       <div
         className={`absolute inset-x-0 bottom-0 h-px pointer-events-none ${
           scrolled
@@ -525,7 +525,7 @@ export default function Navbar() {
                       isRTL ? "text-right" : "text-left"
                     } inline-flex items-center gap-2`}
                   >
-                    👤 {t("navbar.account")}
+                    ?? {t("navbar.account")}
                   </button>
                   <button
                     onClick={(e) => {
@@ -537,7 +537,7 @@ export default function Navbar() {
                       isRTL ? "text-right" : "text-left"
                     } inline-flex items-center gap-2`}
                   >
-                    🚪 {t("navbar.logout")}
+                    ?? {t("navbar.logout")}
                   </button>
                 </>
               )}
@@ -579,3 +579,4 @@ export default function Navbar() {
     </header>
   );
 }
+

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { translateText } from "../../../utils/aiHelpers";
+import { translateSmart } from "../../../utils/aiHelpers";
 import toast from "react-hot-toast";
 import ArticleFormHeader from "./ArticleFormHeader";
 import ArticleFormTabs from "./ArticleFormTabs";
@@ -45,10 +45,15 @@ const ArticleForm = ({
   const { t } = useTranslation();
   const [uploadingImage, setUploadingImage] = useState(false);
   const [translating, setTranslating] = useState(false);
+  const [translateDirection, setTranslateDirection] = useState("en-to-ar"); // en-to-ar | ar-to-en
+  const [summarizing, setSummarizing] = useState(false);
   const [seoSynced, setSeoSynced] = useState(Boolean(seoSuggestions));
-  const hasTranslatableSource = Boolean(
-    form.content?.trim() || form.summary?.trim() || form.title?.trim(),
-  );
+  const hasAiKey = Boolean(import.meta.env.VITE_OR_KEY);
+  const aiUnavailable = !hasAiKey;
+  const hasTranslatableSource =
+    translateDirection === "en-to-ar"
+      ? Boolean(form.content?.trim() || form.summary?.trim() || form.title?.trim())
+      : Boolean(form.contentAr?.trim() || form.summaryAr?.trim() || form.titleAr?.trim());
   const sanitizeGeneratedBlock = (value) =>
     value
       ?.replace(/^#{1,6}\s*/gm, "")
@@ -84,33 +89,103 @@ const ArticleForm = ({
     ? aiReview.suggestions
     : [];
   const reviewIssues = Array.isArray(aiReview?.issues) ? aiReview.issues : [];
-  const handleTranslateToArabic = async () => {
+  const handleTranslate = async () => {
+    const sourceIsEnglish = translateDirection === "en-to-ar";
     if (!hasTranslatableSource) {
-      toast.error("Add English content before translating");
+      toast.error(
+        sourceIsEnglish
+          ? "Add English content/title/summary to translate"
+          : "Add Arabic content/title/summary to translate"
+      );
       return;
     }
     setTranslating(true);
     const translateField = (value) =>
       value?.trim()
-        ? translateText({ text: value, targetLang: "ar" })
+        ? translateSmart({
+            text: value,
+            targetLang: sourceIsEnglish ? "ar" : "en",
+            sourceLang: sourceIsEnglish ? "en" : "ar",
+          })
         : Promise.resolve("");
     try {
-      const [contentAr, summaryAr, titleAr] = await Promise.all([
-        translateField(form.content),
-        translateField(form.summary),
-        translateField(form.title),
+      const [translatedContent, translatedSummary, translatedTitle] = await Promise.all([
+        translateField(sourceIsEnglish ? form.content : form.contentAr),
+        translateField(sourceIsEnglish ? form.summary : form.summaryAr),
+        translateField(sourceIsEnglish ? form.title : form.titleAr),
       ]);
       setForm((prev) => ({
         ...prev,
-        ...(contentAr ? { contentAr: sanitizeGeneratedBlock(contentAr) } : {}),
-        ...(summaryAr ? { summaryAr: sanitizeGeneratedBlock(summaryAr) } : {}),
-        ...(titleAr ? { titleAr: sanitizeGeneratedBlock(titleAr) } : {}),
+        ...(sourceIsEnglish
+          ? {
+              ...(translatedContent ? { contentAr: sanitizeGeneratedBlock(translatedContent) } : {}),
+              ...(translatedSummary ? { summaryAr: sanitizeGeneratedBlock(translatedSummary) } : {}),
+              ...(translatedTitle ? { titleAr: sanitizeGeneratedBlock(translatedTitle) } : {}),
+            }
+          : {
+              ...(translatedContent ? { content: sanitizeGeneratedBlock(translatedContent) } : {}),
+              ...(translatedSummary ? { summary: sanitizeGeneratedBlock(translatedSummary) } : {}),
+              ...(translatedTitle ? { title: sanitizeGeneratedBlock(translatedTitle) } : {}),
+            }),
       }));
-      toast.success("Content translated to Arabic!");
+      toast.success(sourceIsEnglish ? "Translated to Arabic" : "Translated to English");
     } catch (error) {
-      toast.error("Failed to translate content");
+      toast.error("Translation service blocked. Fields unchanged.");
     } finally {
       setTranslating(false);
+    }
+  };
+
+  const handleSummarize = async () => {
+    const englishSource = (form.content || form.summary || "").trim();
+    const arabicSource = (form.contentAr || form.summaryAr || "").trim();
+    let sourceText = englishSource || arabicSource;
+    if (!sourceText) {
+      toast.error("Add content to summarize");
+      return;
+    }
+    setSummarizing(true);
+    try {
+      // If AI key is available, reuse the main summary generator (includes translation)
+      if (hasAiKey) {
+        await handleGenerateSummary(sourceText);
+      } else {
+        // Simple local summary: take first two sentences
+        const sentences = sourceText.split(/(?<=[.!؟\n])/).filter((s) => s.trim());
+        const summaryPlain = sentences.slice(0, 2).join(" ").trim() || sourceText.slice(0, 400);
+        if (englishSource) {
+          setForm((prev) => ({
+            ...prev,
+            summary: sanitizeGeneratedBlock(summaryPlain),
+          }));
+        } else if (arabicSource) {
+          // Arabic source only
+          setForm((prev) => ({
+            ...prev,
+            summaryAr: sanitizeGeneratedBlock(summaryPlain),
+          }));
+          // Try to generate English if possible
+          try {
+            const en = await translateSmart({
+              text: summaryPlain,
+              targetLang: "en",
+              sourceLang: "ar",
+            });
+            if (en) {
+              setForm((prev) => ({
+                ...prev,
+                summary: sanitizeGeneratedBlock(en),
+              }));
+            }
+          } catch (err) {
+            /* ignore */
+          }
+        }
+      }
+    } catch (error) {
+      toast.error("Failed to summarize");
+    } finally {
+      setSummarizing(false);
     }
   };
   const handleSeoClick = async () => {
@@ -153,82 +228,136 @@ const ArticleForm = ({
           )}
           {activeTab === "ai" && (
             <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-2 rounded-xl border border-muted bg-panel p-3 text-xs text-[var(--text-main)] shadow-sm">
-                <label className="flex flex-col gap-1">
-                  <span className="font-semibold">
-                    {t("articles.admin.aiTopic", "Topic focus")}
-                  </span>
-                  <select
-                    value={aiTopic}
-                    onChange={(e) => setAiTopic(e.target.value)}
-                    className="rounded-lg border border-muted bg-surface px-2 py-2 text-sm"
-                  >
-                    <option value="" disabled>
-                      {t("articles.admin.selectTopic", "Select a topic")}
-                    </option>
-                    {aiTopics.map((topic) => (
-                      <option key={topic.value} value={topic.value}>
-                        {topic.label}
+              <div className="space-y-4 rounded-xl border border-muted bg-panel p-4 shadow-sm">
+                <div className="grid grid-cols-2 gap-2 text-xs text-[var(--text-main)]">
+                  <label className="flex flex-col gap-1">
+                    <span className="font-semibold">
+                      {t("articles.admin.aiTopic", "Topic focus")}
+                    </span>
+                    <select
+                      value={aiTopic}
+                      onChange={(e) => setAiTopic(e.target.value)}
+                      className="rounded-lg border border-muted bg-surface px-2 py-2 text-sm"
+                    >
+                      <option value="" disabled>
+                        {t("articles.admin.selectTopic", "Select a topic")}
                       </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="flex flex-col gap-1">
-                  <span className="font-semibold">
-                    {t("articles.admin.aiLines", "Summary lines")}
-                  </span>
-                  <input
-                    type="number"
-                    min={3}
-                    max={12}
-                    value={aiLines}
-                    onChange={(e) => setAiLines(Number(e.target.value) || 5)}
-                    className="rounded-lg border border-muted bg-surface px-2 py-2 text-sm"
-                  />
-                </label>
-                <label className="col-span-2 flex flex-col gap-1">
-                  <span className="font-semibold">
+                      {aiTopics.map((topic) => (
+                        <option key={topic.value} value={topic.value}>
+                          {topic.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="flex flex-col gap-1">
+                    <span className="font-semibold">
+                      {t("articles.admin.aiLines", "Summary lines")}
+                    </span>
+                    <input
+                      type="number"
+                      min={3}
+                      max={12}
+                      value={aiLines}
+                      onChange={(e) => setAiLines(Number(e.target.value) || 5)}
+                      className="rounded-lg border border-muted bg-surface px-2 py-2 text-sm"
+                    />
+                  </label>
+                  <label className="col-span-2 flex flex-col gap-1">
+                    <span className="font-semibold">
+                      {t(
+                        "articles.admin.productContext",
+                        "Product name / context",
+                      )}
+                    </span>
+                    <input
+                      type="text"
+                      value={productContext}
+                      onChange={(e) => setProductContext(e.target.value)}
+                      placeholder={t(
+                        "articles.admin.productPlaceholder",
+                        "Enter the product or crop name",
+                      )}
+                      className="w-full rounded-lg border border-muted bg-surface px-3 py-2 text-sm"
+                    />
+                  </label>
+                  <p className="col-span-2 text-[11px] text-[var(--text-muted)]">
                     {t(
-                      "articles.admin.productContext",
-                      "Product name / context",
+                      "articles.admin.helper",
+                      "AI will generate content based on the product and topic selected.",
                     )}
-                  </span>
-                  <input
-                    type="text"
-                    value={productContext}
-                    onChange={(e) => setProductContext(e.target.value)}
-                    placeholder={t(
-                      "articles.admin.productPlaceholder",
-                      "Enter the product or crop name",
-                    )}
-                    className="w-full rounded-lg border border-muted bg-surface px-3 py-2 text-sm"
-                  />
-                </label>
-                <p className="col-span-2 text-[11px] text-[var(--text-muted)]">
-                  {t(
-                    "articles.admin.helper",
-                    "AI will generate content based on the product and topic selected.",
-                  )}
-                </p>
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={handleGenerate}
+                    disabled={aiDrafting || aiUnavailable}
+                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600 disabled:opacity-60"
+                  >
+                    {aiDrafting ? "..." : "AI"}{" "}
+                    {t("articles.admin.generate", "Generate with AI")}
+                  </button>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={handleGenerate}
-                  disabled={aiDrafting}
-                  className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600 disabled:opacity-60"
-                >
-                  {aiDrafting ? "..." : "AI"}{" "}
-                  {t("articles.admin.generate", "Generate with AI")}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleTranslateToArabic}
-                  disabled={!hasTranslatableSource || translating}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-purple-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-purple-600 disabled:opacity-50"
-                >
-                  {translating ? "Translating..." : "Translate to Arabic"}
-                </button>
+
+              <div className="space-y-3 rounded-xl border border-muted bg-panel p-4 shadow-sm">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h4 className="text-sm font-semibold text-[var(--text-main)]">
+                      Translation & Summary
+                    </h4>
+                    <p className="text-[11px] text-[var(--text-muted)]">
+                      Two-way EN/AR translation and quick summary from content.
+                    </p>
+                  </div>
+                  <div className="inline-flex overflow-hidden rounded-lg border border-muted text-xs font-semibold">
+                    <button
+                      type="button"
+                      onClick={() => setTranslateDirection("en-to-ar")}
+                      className={`px-3 py-2 transition ${
+                        translateDirection === "en-to-ar"
+                          ? "bg-purple-600 text-white"
+                          : "bg-surface text-[var(--text-main)] hover:bg-panel"
+                      }`}
+                    >
+                      EN → AR
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTranslateDirection("ar-to-en")}
+                      className={`px-3 py-2 transition ${
+                        translateDirection === "ar-to-en"
+                          ? "bg-purple-600 text-white"
+                          : "bg-surface text-[var(--text-main)] hover:bg-panel"
+                      }`}
+                    >
+                      AR → EN
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={handleTranslate}
+                    disabled={!hasTranslatableSource || translating}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-purple-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-purple-600 disabled:opacity-50"
+                  >
+                    {translating ? "Translating..." : "Translate"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSummarize}
+                    disabled={summarizing || aiDrafting || aiUnavailable}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600 disabled:opacity-50"
+                  >
+                    {summarizing ? "Summarizing..." : "Summarize content"}
+                  </button>
+                </div>
+                <p className="text-[11px] text-[var(--text-muted)]">
+                  Uses the filled fields (title, summary, content) in the selected language and mirrors into the opposite language fields.
+                  {aiUnavailable && " AI generation buttons disabled until VITE_OR_KEY is set."}
+                </p>
               </div>
             </div>
           )}

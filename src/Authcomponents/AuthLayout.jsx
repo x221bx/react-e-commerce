@@ -1,36 +1,23 @@
 // src/Authcomponents/AuthLayout.jsx
 import Footer from "./Footer";
 
-export default function AuthLayout({ title, subtitle, children }) {
+function AuthLayout({ title, subtitle, children }) {
   return (
-  <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* 🔥 خلفية جديدة واضحة */}
-      <div className="absolute inset-0">
-        <img
-          src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=90&w=1920"
-          alt="Farm & Veterinary"
-          className="w-full h-full object-cover brightness-105"
-        />
-
-        {/* طبقة تفتيح + بلور */}
-        <div className="absolute inset-0 bg-white/50 backdrop-blur-sm" />
-      </div>
-
-      {/* 🟩 الفورم */}
-      <div
-        className="relative z-10 w-full max-w-2xl p-10 rounded-3xl
-                   bg-white/70 backdrop-blur-xl border border-white/50 shadow-2xl"
-      >
-        <header className="mb-8 text-center">
-          <h1 className="text-4xl font-extrabold text-gray-800">{title}</h1>
-          {subtitle && <p className="text-gray-700 mt-2 text-lg">{subtitle}</p>}
-        </header>
-
-        <div className="bg-white p-8 rounded-2xl shadow-inner border border-gray-200">
+    <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] flex flex-col">
+      <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center px-4 py-10">
+        <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-sm)] p-6 md:p-8">
+          <header className="mb-6 text-center space-y-2">
+            <h1 className="text-3xl font-bold text-[var(--color-text)]">{title}</h1>
+            {subtitle && <p className="text-sm text-[var(--color-text-muted)]">{subtitle}</p>}
+          </header>
           {children}
         </div>
       </div>
-
+      <Footer />
     </div>
   );
 }
+
+AuthLayout.Footer = Footer;
+
+export default AuthLayout;

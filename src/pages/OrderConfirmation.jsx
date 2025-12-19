@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { getOrderById } from "../services/ordersService";
-import { UseTheme } from "../theme/ThemeProvider";
 import { useTranslation } from "react-i18next";
 import Footer from "../Authcomponents/Footer";
 
@@ -10,19 +9,12 @@ const OrderConfirmation = () => {
   const isRTL = i18n.language === "ar";
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const { theme } = UseTheme();
-  const isDark = theme === "dark";
-  const pageBackground = isDark ? "bg-slate-950" : "bg-slate-50";
-  const cardSurface = isDark
-    ? "bg-slate-900/70 border-slate-800 text-slate-100"
-    : "bg-white border-slate-100 text-slate-900";
-  const mutedText = isDark ? "text-slate-400" : "text-slate-500";
-  const labelColor = isDark ? "text-slate-300" : "text-slate-600";
-  const accentColor = isDark ? "text-emerald-300" : "text-emerald-600";
-  const dividerColor = isDark ? "border-slate-800" : "border-slate-100";
-  const ctaOutline = isDark
-    ? "border-slate-700 text-slate-200 hover:bg-slate-800/70"
-    : "border-slate-200 text-slate-600 hover:bg-slate-50";
+  const mutedText = "text-[var(--color-text-muted)]";
+  const labelColor = "text-[var(--color-text-muted)]";
+  const accentColor = "text-[var(--color-accent)]";
+  const dividerColor = "border-[var(--color-border)]";
+  const ctaOutline = "border-[var(--color-border)] text-[var(--color-text)] hover:bg-[var(--color-surface-muted)]";
+  const cardSurface = "border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)]";
 
   const fallbackOrderId = location.state?.orderId;
   const orderId = searchParams.get("orderId") || fallbackOrderId || "";
@@ -62,11 +54,11 @@ const OrderConfirmation = () => {
   }, [orderId, t]);
 
   return (
-    <div dir={isRTL ? "rtl" : "ltr"} className={`min-h-screen ${pageBackground} py-12 px-4 sm:px-8`}>
+    <div dir={isRTL ? "rtl" : "ltr"} className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] py-12 px-4 sm:px-8">
       <div className="mx-auto flex max-w-5xl flex-col gap-6">
         {loading && (
           <div
-            className={`rounded-3xl border ${cardSurface} px-6 py-8 text-center`}
+            className={`rounded-[var(--radius-lg)] border ${cardSurface} px-6 py-8 text-center shadow-[var(--shadow-sm)]`}
           >
             <p className={`text-sm ${mutedText}`}>
               {t("confirmation.messages.loading")}
@@ -76,12 +68,12 @@ const OrderConfirmation = () => {
 
         {!loading && error && (
           <div
-            className={`rounded-3xl border ${cardSurface} px-6 py-8 text-center`}
+            className={`rounded-[var(--radius-lg)] border ${cardSurface} px-6 py-8 text-center shadow-[var(--shadow-sm)]`}
           >
             <p className="text-lg font-semibold text-red-500">{error}</p>
             <Link
               to="/products"
-              className="mt-4 inline-flex items-center rounded-2xl bg-emerald-500 px-6 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-600"
+              className="mt-4 inline-flex items-center rounded-[var(--radius-md)] bg-[var(--color-accent)] px-6 py-2 text-sm font-semibold text-white shadow-[var(--shadow-sm)] hover:brightness-95"
             >
               {t("confirmation.actions.goShopping")}
             </Link>
@@ -90,11 +82,9 @@ const OrderConfirmation = () => {
 
         {!loading && !error && order && (
           <>
-            <header
-              className={`rounded-3xl border ${cardSurface} px-6 py-8 shadow-sm`}
-            >
+            <header className={`rounded-[var(--radius-lg)] border ${cardSurface} px-6 py-8 shadow-[var(--shadow-sm)]`}>
               <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-accent)]/10 text-[var(--color-accent)]">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-8 w-8"
@@ -111,9 +101,7 @@ const OrderConfirmation = () => {
                   </svg>
                 </div>
                 <div className="flex-1">
-                  <p
-                    className={`text-sm font-semibold uppercase tracking-wide ${accentColor}`}
-                  >
+                  <p className={`text-sm font-semibold uppercase tracking-wide ${accentColor}`}>
                     {t("confirmation.header.eyebrow")}
                   </p>
                   <h1 className="text-3xl font-semibold">
@@ -133,9 +121,7 @@ const OrderConfirmation = () => {
             </header>
 
             <section className="grid gap-6 lg:grid-cols-[2fr,1fr]">
-              <div
-                className={`rounded-3xl border ${cardSurface} px-6 py-6 shadow-sm`}
-              >
+              <div className={`rounded-[var(--radius-lg)] border ${cardSurface} px-6 py-6 shadow-[var(--shadow-sm)]`}>
                 <div className="grid gap-6 md:grid-cols-3">
                   <div>
                     <p className={`text-xs font-semibold ${labelColor}`}>
@@ -151,7 +137,7 @@ const OrderConfirmation = () => {
                     <p className={`text-xs font-semibold ${labelColor}`}>
                       {t("confirmation.meta.status")}
                     </p>
-                    <p className="mt-1 inline-flex rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200">
+                    <p className="mt-1 inline-flex rounded-full bg-[var(--color-accent)]/10 px-3 py-1 text-sm font-semibold text-[var(--color-accent)]">
                       {order.status}
                     </p>
                   </div>
@@ -206,9 +192,7 @@ const OrderConfirmation = () => {
                 </div>
               </div>
 
-              <div
-                className={`rounded-3xl border ${cardSurface} px-6 py-6 shadow-sm`}
-              >
+              <div className={`rounded-[var(--radius-lg)] border ${cardSurface} px-6 py-6 shadow-[var(--shadow-sm)]`}>
                 <p className={`text-xs font-semibold uppercase ${labelColor}`}>
                   {t("confirmation.summary.title", "Order summary")}
                 </p>
@@ -265,9 +249,7 @@ const OrderConfirmation = () => {
               </div>
             </section>
 
-            <section
-              className={`rounded-3xl border ${cardSurface} px-6 py-6 shadow-sm`}
-            >
+            <section className={`rounded-[var(--radius-lg)] border ${cardSurface} px-6 py-6 shadow-[var(--shadow-sm)]`}>
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold">
                   {t("confirmation.items.title")}
@@ -282,7 +264,7 @@ const OrderConfirmation = () => {
                 {order.items.map((item) => (
                   <div
                     key={item.productId || item.id}
-                    className={`flex items-center gap-4 rounded-2xl border px-4 py-3 text-sm ${dividerColor}`}
+                    className={`flex items-center gap-4 rounded-[var(--radius-md)] border px-4 py-3 text-sm ${dividerColor}`}
                   >
                     <img
                       src={item.image || item.imageUrl || item.thumbnailUrl || item.img || "/placeholder.png"}
@@ -308,19 +290,19 @@ const OrderConfirmation = () => {
             <div className="flex flex-wrap justify-center gap-4">
               <Link
                 to={`/account/invoice/${orderId}`}
-                className="rounded-2xl bg-blue-500 px-5 py-2 text-sm font-semibold text-white shadow hover:bg-blue-600"
+                className="rounded-[var(--radius-md)] bg-[var(--color-accent)] px-5 py-2 text-sm font-semibold text-white shadow-[var(--shadow-sm)] hover:brightness-95"
               >
                 {t("confirmation.actions.viewInvoice", "View Invoice")}
               </Link>
               <Link
                 to="/account/OrderHistory"
-                className={`rounded-2xl border px-5 py-2 text-sm font-semibold transition ${ctaOutline}`}
+                className={`rounded-[var(--radius-md)] border px-5 py-2 text-sm font-semibold transition ${ctaOutline}`}
               >
                 {t("confirmation.actions.viewOrders")}
               </Link>
               <Link
                 to="/products"
-                className="rounded-2xl bg-emerald-500 px-5 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-600"
+                className="rounded-[var(--radius-md)] bg-[var(--color-accent)] px-5 py-2 text-sm font-semibold text-white shadow-[var(--shadow-sm)] hover:brightness-95"
               >
                 {t("confirmation.actions.continueShopping")}
               </Link>
