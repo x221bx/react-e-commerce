@@ -16,7 +16,7 @@ export default function PasswordField({
     <div>
       <label
         htmlFor={name}
-        className="block text-[0.95rem] font-medium text-gray-800"
+        className="block text-[0.95rem] font-semibold text-[var(--color-text)]"
       >
         {label}
       </label>
@@ -28,14 +28,14 @@ export default function PasswordField({
           type={show ? "text" : "password"}
           placeholder={placeholder}
           autoComplete={autoComplete}
-          className="w-full rounded-2xl border border-gray-300 bg-white px-3.5 py-3 pr-12 text-[16px] shadow-sm focus:ring-2 focus:ring-blue-600 focus:outline-none"
+          className="w-full rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-4 py-3 pr-12 text-[16px] text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] placeholder:opacity-70 shadow-[var(--shadow-sm)] transition focus:border-[var(--color-accent)] focus:outline-none focus:ring-4 focus:ring-[rgba(15,118,110,0.2)]"
         />
         <button
           type="button"
           onClick={toggle}
           aria-label={show ? "Hide password" : "Show password"}
           aria-pressed={show}
-          className="absolute inset-y-0 right-2 my-1 flex items-center rounded-lg px-2 icon-secondary hover:icon-primary focus:ring-2 focus:ring-blue-600 focus:outline-none"
+          className="absolute inset-y-0 right-2 my-1 flex items-center rounded-[var(--radius-sm)] px-2 text-[var(--color-text-muted)] transition hover:text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[rgba(15,118,110,0.4)]"
         >
           {show ? (
             <FiEyeOff className="h-5 w-5" />
@@ -48,12 +48,11 @@ export default function PasswordField({
         </button>
       </div>
 
-      {/* fixed error row to avoid layout shift */}
       <div className="mt-1 h-5">
         <ErrorMessage
           name={name}
           component="p"
-          className="text-xs text-red-600"
+          className="text-xs font-medium text-[var(--color-danger)]"
         />
       </div>
     </div>

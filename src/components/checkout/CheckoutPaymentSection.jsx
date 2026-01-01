@@ -2,14 +2,13 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { FaMoneyBillWave, FaPaypal, FaCreditCard, FaWallet } from "react-icons/fa";
-import { MdLockOutline } from "react-icons/md";
 import paymobLogo from "../../assets/paymob.png";
 import { UseTheme } from "../../theme/ThemeProvider";
 
 export default function CheckoutPaymentSection({
   paymentMethod,
   handlePaymentSelection,
-  paymentOptions,
+  paymentOptions = [],
   walletNumber = "",
   onWalletNumberChange,
 }) {
@@ -99,12 +98,27 @@ export default function CheckoutPaymentSection({
           const isPaymobCard = option.type === "paymob";
           const isPaymobWallet = option.type === "paymob_wallet";
           const isPaymob = isPaymobCard || isPaymobWallet;
+          const optionId = `payment-${option.value}`;
+          const descId = `${optionId}-desc`;
+
+          const selectOption = () => handlePaymentSelection(option.value);
+          const handleKey = (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              selectOption();
+            }
+          };
 
           return (
-            <button
-              type="button"
+            <div
               key={option.value}
-              onClick={() => handlePaymentSelection(option.value)}
+              role="radio"
+              aria-checked={selected}
+              tabIndex={0}
+              aria-labelledby={optionId}
+              aria-describedby={descId}
+              onClick={selectOption}
+              onKeyDown={handleKey}
               className={`${baseCard} ${
                 selected
                   ? isDark
@@ -152,6 +166,7 @@ export default function CheckoutPaymentSection({
                   <div className="flex-1 text-left space-y-1">
                     <div className="flex items-center justify-between gap-2">
                       <p
+                        id={optionId}
                         className={`text-sm font-semibold ${
                           isDark ? "text-slate-100" : "text-slate-900"
                         }`}
@@ -172,6 +187,7 @@ export default function CheckoutPaymentSection({
                     </div>
 
                     <p
+                      id={descId}
                       className={`text-xs ${
                         isDark ? "text-slate-400" : "text-slate-600"
                       }`}
@@ -218,12 +234,10 @@ export default function CheckoutPaymentSection({
                         />
                       </div>
                     )}
-
-                    )}
                   </div>
                 </div>
               </div>
-            </button>
+            </div>
           );
         })}
       </div>
